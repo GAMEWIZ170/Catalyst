@@ -1,5 +1,6 @@
 const Joi = require("joi");
 
+
 const validateCourse = (req, res, next) => {
   const schema = Joi.object({
     code: Joi.string().trim().required(),
@@ -15,6 +16,7 @@ const validateCourse = (req, res, next) => {
   req.body = value;
   next();
 };
+
 
 const validateUnit = (req, res, next) => {
     const objectId = Joi.string().hex().length(24);
@@ -32,6 +34,7 @@ const validateUnit = (req, res, next) => {
     req.body = value;
     next();
 };
+
 
 const validateLesson = (req, res, next) => {
     const objectId = Joi.string().hex().length(24);
