@@ -1,15 +1,13 @@
+// src/routes/course.route.js
 const express = require("express");
-
 const router = express.Router();
 
+const authenticate = require("../middleware/authenticate");
 const { getAllCourses, getCourseByID } = require("../controllers/course.controller");
 
-router.get('/', getAllCourses);
+router.use(authenticate);
 
-router.get('/:courseId', getCourseByID);
-
+router.get("/", getAllCourses);
+router.get("/:id", getCourseByID);
 
 module.exports = router;
-
-
-

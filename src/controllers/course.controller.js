@@ -123,10 +123,27 @@ const deleteCourse = async (req, res, next) => {
   }
 };
 
+
+// ADMIN: every course that isn't deleted, drafts included
+const getAllCoursesForAdmin = async (req, res, next) => {
+  try {
+    const courses = await Course.find({ deletedAt: null })
+      .select("code title description isPublished")
+      .sort({ code: 1 })
+      .lean();
+
+    return res.status(200).json({ count: courses.length, data: courses });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
 module.exports = {
   createCourse,
   getCourseByID,
   getAllCourses,
   updateCourse,
-  deleteCourse
+  deleteCourse,
+  getAllCoursesForAdmin
 };

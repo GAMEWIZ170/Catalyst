@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Question = require("../models/question.models");
 const Lesson = require("../models/lesson.models");
 const { lessonIsVisible } = require("../utils/visibility");
+const normalize = require("../utils/normalize");
 
 const badId = (id) => !mongoose.isObjectIdOrHexString(id);
 
@@ -9,8 +10,6 @@ const badId = (id) => !mongoose.isObjectIdOrHexString(id);
 const sendValidationError = (error, res) =>
   res.status(400).json({ message: Object.values(error.errors)[0].message });
 
-// Lowercase, trim and collapse spaces, so "  Mitochondria " matches "mitochondria"
-const normalize = (text) => text.trim().toLowerCase().replace(/\s+/g, " ");
 
 // STUDENT: check an answer and reveal the correct one with its explanation
 const checkAnswer = async (req, res, next) => {

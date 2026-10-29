@@ -118,6 +118,21 @@ const validateAnswer = validateWith(
   Joi.object({ answer: Joi.string().trim().max(1000) })
 );
 
+// ---------- Completing a lesson ----------
+const validateCompletion = validateWith(
+  Joi.object({
+    answers: Joi.array()
+      .items(
+        Joi.object({
+          questionId: objectId.required(),
+          answer: Joi.string().trim().allow("").max(1000).required()
+        })
+      )
+      .max(100)
+      .required()
+  })
+);
+
 module.exports = {
   validateRegister,
   validateLogin,
@@ -129,5 +144,6 @@ module.exports = {
   validateLessonUpdate,
   validateQuestion,
   validateQuestionUpdate,
-  validateAnswer
+  validateAnswer,
+  validateCompletion
 };
