@@ -2,14 +2,14 @@
 const express = require("express");
 const router = express.Router();
 
-const authenticate = require("../middleware/authenticate");
-const authorizeRole = require("../middleware/authorizeRole");
+const authenticate = require("../middlewares/authenticate");
+const authorizeRole = require("../middlewares/authorizeRole");
 const {
   validateCourse, validateCourseUpdate,
   validateUnit, validateUnitUpdate,
   validateLesson, validateLessonUpdate,
   validateQuestion, validateQuestionUpdate
-} = require("../middleware/validate");
+} = require("../middlewares/validate");
 
 const course = require("../controllers/course.controller");
 const unit = require("../controllers/unit.controller");

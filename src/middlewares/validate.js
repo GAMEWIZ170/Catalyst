@@ -1,10 +1,10 @@
-// src/middleware/validate.js
+// src/middlewares/validate.js
 const Joi = require("joi");
 
 const objectId = Joi.string().hex().length(24);
 
 // The part that used to be copied into every validator, written once.
-// You give it a schema; it hands back a middleware that validates req.body.
+// You give it a schema; it hands back a middlewares that validates req.body.
 const validateWith = (schema) => (req, res, next) => {
   const { error, value } = schema.validate(req.body, { stripUnknown: true });
   if (error) {

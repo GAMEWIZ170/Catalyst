@@ -66,8 +66,15 @@ const checkAnswer = async (req, res, next) => {
 // ADMIN
 const createQuestion = async (req, res, next) => {
   try {
-    const lessonExists = await Lesson.exists({ _id: req.body.lesson, deletedAt: null });
-    if (!lessonExists) {
+    const lesson = await Lesson.findOne({ _id: req.body.lesson, deletedAt: null })
+      .populate({
+        path: "unit",
+        select: "deletedAt course",
+        populate: { path: "course", select: "deletedAt" }
+      });
+    const unit = lesson && lesson.unit;
+    const course = unit && unit.course;
+    if (!lesson || !unit || unit.deletedAt || !course || course.deletedAt) {
       return res.status(404).json({ message: "Lesson not found" });
     }
 
@@ -89,8 +96,15 @@ const updateQuestion = async (req, res, next) => {
   }
   try {
     if (req.body.lesson) {
-      const lessonExists = await Lesson.exists({ _id: req.body.lesson, deletedAt: null });
-      if (!lessonExists) {
+      const lesson = await Lesson.findOne({ _id: req.body.lesson, deletedAt: null })
+        .populate({
+          path: "unit",
+          select: "deletedAt course",
+          populate: { path: "course", select: "deletedAt" }
+        });
+      const unit = lesson && lesson.unit;
+      const course = unit && unit.course;
+      if (!lesson || !unit || unit.deletedAt || !course || course.deletedAt) {
         return res.status(404).json({ message: "Lesson not found" });
       }
     }

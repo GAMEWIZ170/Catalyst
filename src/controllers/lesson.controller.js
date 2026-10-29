@@ -86,10 +86,9 @@ const getLessonForAdmin = async (req, res, next) => {
 
 const createLesson = async (req, res, next) => {
   try {
-    // The Joi validator only checks that req.body.unit LOOKS like an ID.
-    // Here we check that the unit really exists.
-    const unitExists = await Unit.exists({ _id: req.body.unit, deletedAt: null });
-    if (!unitExists) {
+    const unit = await Unit.findOne({ _id: req.body.unit, deletedAt: null })
+      .populate("course", "deletedAt");
+    if (!unit || !unit.course || unit.course.deletedAt) {
       return res.status(404).json({ message: "Unit not found" });
     }
 
@@ -109,10 +108,11 @@ const updateLesson = async (req, res, next) => {
     return res.status(400).json({ message: "Invalid lesson ID" });
   }
   try {
-    // If the update moves the lesson to another unit, that unit must exist
+    // If the update moves the lesson, the target unit and course must be active.
     if (req.body.unit) {
-      const unitExists = await Unit.exists({ _id: req.body.unit, deletedAt: null });
-      if (!unitExists) {
+      const unit = await Unit.findOne({ _id: req.body.unit, deletedAt: null })
+        .populate("course", "deletedAt");
+      if (!unit || !unit.course || unit.course.deletedAt) {
         return res.status(404).json({ message: "Unit not found" });
       }
     }

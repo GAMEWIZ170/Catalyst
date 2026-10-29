@@ -2,8 +2,8 @@
 const express = require("express");
 const router = express.Router();
 
-const authenticate = require("../middleware/authenticate");
-const { validateCompletion } = require("../middleware/validate");
+const authenticate = require("../middlewares/authenticate");
+const { validateCompletion } = require("../middlewares/validate");
 const { getLessonByID } = require("../controllers/lesson.controller");
 const { completeLesson } = require("../controllers/progress.controller");
 

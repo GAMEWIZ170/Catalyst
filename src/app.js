@@ -9,6 +9,7 @@ const app = express();
 const logger = require("./middlewares/logger");
 const errorHandler = require("./middlewares/error");
 const notFound = require("./middlewares/notFound");
+const generalLimiter = require("./middlewares/generalLimiter");
 
 const authRoutes = require("./routes/auth.routes");
 const courseRoutes = require("./routes/course.routes");
@@ -26,6 +27,7 @@ app.use(cors({
 app.use(express.json());                 // CHANGED: brackets added
 app.use(cookieParser());                 // CHANGED: added, so req.cookies works
 app.use(logger);
+app.use(generalLimiter);
 
 // routes
 app.use("/api/v1/auth", authRoutes);
