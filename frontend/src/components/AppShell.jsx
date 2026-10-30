@@ -2,6 +2,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
+import ThemeToggle from "./ThemeToggle";
 
 export default function AppShell({ children }) {
   const { user, logout } = useAuth();
@@ -25,6 +26,7 @@ export default function AppShell({ children }) {
           <span>Catalyst</span>
         </Link>
         <div className="topbar-tools">
+          <ThemeToggle />
           {streak !== null && <Link className="streak-link" to="/progress">{streak} day streak</Link>}
           <details className="account-menu">
             <summary className="account-summary">

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 export default function Login() {
   const { login } = useAuth();
@@ -39,6 +40,7 @@ export default function Login() {
 
 export function AuthLayout({ title, subtitle, children }) {
   return <div className="auth-page">
+    <ThemeToggle />
     <div className="auth-brand"><span className="brand-mark">C</span><span>Catalyst</span></div>
     <section className="auth-card">
       <div className="eyebrow">LEARN WITH MOMENTUM</div>

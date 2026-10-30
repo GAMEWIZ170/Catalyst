@@ -16,4 +16,23 @@
   --radius-control: 8px;
   --radius-panel: 14px;
   --shadow-subtle: 0 8px 24px rgb(27 36 48 / 6%);
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --ink: #F5F9FC;
+  --muted: #B8C6D3;
+  --paper: #102A43;
+  --surface: #17324D;
+  --line: #36566D;
+  --accent: #0E7490;
+  --correct: #6EE7B7;
+  --correct-tint: #123C2D;
+  --wrong: #FBBF24;
+  --wrong-tint: #4A350F;
+  --error: #FB7185;
+  --error-tint: #4A1423;
+  --streak: #5DD3EE;
+  --focus: 0 0 0 3px rgb(93 211 238 / 35%);
+  color-scheme: dark;
 }
