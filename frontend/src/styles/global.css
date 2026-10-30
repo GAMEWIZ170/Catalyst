@@ -554,7 +554,7 @@ h3 {
 }
 
 .button-primary {
-  background: var(--accent);
+  background: var(--accent-button);
   color: var(--surface);
 }
 

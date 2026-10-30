@@ -1,10 +1,11 @@
 :root {
   --ink: #17324D;
-  --muted: #6B8498;
+  --muted: #5B7185;
   --paper: #F5F9FC;
   --surface: #FFFFFF;
   --line: #E3EDF3;
   --accent: #0E7490;
+  --accent-button: #0E7490;
   --correct: #047857;
   --correct-tint: #ECFDF5;
   --wrong: #A16207;
@@ -25,7 +26,8 @@
   --paper: #102A43;
   --surface: #17324D;
   --line: #36566D;
-  --accent: #0E7490;
+  --accent: #5DD3EE;
+  --accent-button: #0E7490;
   --correct: #6EE7B7;
   --correct-tint: #123C2D;
   --wrong: #FBBF24;

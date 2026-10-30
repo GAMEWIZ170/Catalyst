@@ -14,6 +14,10 @@ export default function Login() {
   async function submit(event) {
     event.preventDefault();
     setError("");
+    if (form.password.length < 8) {
+      setError("Use at least 8 characters for your password.");
+      return;
+    }
     setBusy(true);
     try {
       await login(form);
@@ -31,8 +35,8 @@ export default function Login() {
         onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
       <label>Password<input type="password" required autoComplete="current-password" value={form.password}
         onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
-      {error && <p className="form-error">{error}</p>}
-      <button className="button button-primary button-wide" disabled={busy}>{busy ? "Signing in..." : "Sign in"}</button>
+      {error && <p className="form-error" role="alert">{error}</p>}
+      <button className="button button-primary button-wide" disabled={busy}>Log in</button>
     </form>
     <p className="auth-switch">New to Catalyst? <Link to="/register">Create an account</Link></p>
   </AuthLayout>;

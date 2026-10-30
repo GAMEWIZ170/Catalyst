@@ -13,6 +13,10 @@ export default function Register() {
   async function submit(event) {
     event.preventDefault();
     setError("");
+    if (form.password.length < 8) {
+      setError("Use at least 8 characters for your password.");
+      return;
+    }
     setBusy(true);
     try {
       await register(form);
@@ -32,8 +36,8 @@ export default function Register() {
         onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
       <label>Password<input type="password" required minLength="8" maxLength="72" autoComplete="new-password" value={form.password}
         onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
-      {error && <p className="form-error">{error}</p>}
-      <button className="button button-primary button-wide" disabled={busy}>{busy ? "Creating account..." : "Create account"}</button>
+      {error && <p className="form-error" role="alert">{error}</p>}
+      <button className="button button-primary button-wide" disabled={busy}>Create account</button>
     </form>
     <p className="auth-switch">Already have an account? <Link to="/login">Sign in</Link></p>
   </AuthLayout>;
