@@ -13,11 +13,18 @@ html {
 body {
   margin: 0;
   min-width: 320px;
+  overflow-wrap: anywhere;
 }
 
 a {
   color: inherit;
   text-decoration: none;
+}
+
+img,
+iframe,
+video {
+  max-width: 100%;
 }
 
 button,
@@ -136,6 +143,7 @@ h3 {
 
 .topbar-tools {
   gap: 1rem;
+  min-width: 0;
 }
 
 .streak-link {
@@ -297,6 +305,10 @@ h3 {
   padding: 1rem 0;
 }
 
+.course-card > * {
+  min-width: 0;
+}
+
 .course-card:first-child {
   border-top: 1px solid var(--line);
 }
@@ -442,6 +454,10 @@ h3 {
   gap: 0.75rem;
   min-height: 56px;
   padding: 0.5rem 0;
+}
+
+.lesson-row > * {
+  min-width: 0;
 }
 
 .lesson-status {
@@ -604,7 +620,7 @@ h3 {
   flex-direction: column;
   justify-content: center;
   position: relative;
-  min-height: 100vh;
+  min-height: 100dvh;
   padding: 2rem 1rem;
 }
 
@@ -652,6 +668,7 @@ h3 {
   color: var(--ink);
   min-height: 44px;
   padding: 0.65rem 0.75rem;
+  font-size: 16px;
   width: 100%;
 }
 
@@ -686,7 +703,7 @@ h3 {
   color: var(--muted);
   display: flex;
   justify-content: center;
-  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .screen-center.inline {
@@ -712,7 +729,7 @@ h3 {
 }
 
 .error-state strong {
-  color: var(--ink);
+  color: var(--error);
 }
 
 .error-state p {
@@ -921,11 +938,25 @@ h3 {
 
 @media (max-width: 640px) {
   .topbar {
+    gap: 0.5rem;
     padding: 0 1rem;
   }
 
+  .brand {
+    flex-shrink: 0;
+    font-size: 1rem;
+  }
+
+  .topbar-tools {
+    gap: 0.4rem;
+  }
+
+  .streak-link {
+    font-size: 0.75rem;
+  }
+
   .account-name {
-    max-width: 7rem;
+    max-width: 4.5rem;
   }
 
   .page-wrap {
