@@ -1,4 +1,7 @@
 const Course = require("../models/course.models");
+const Unit = require("../models/unit.models");
+const Lesson = require("../models/lesson.models");
+const Progress = require("../models/progress.models");
 const mongoose = require("mongoose");
 
 const createCourse = async (req, res, next) => {
@@ -21,16 +24,20 @@ const createCourse = async (req, res, next) => {
   }
 };
 
+// STUDENT: one course with its units and lessons, plus what this student has finished
 const getCourseByID = async (req, res, next) => {
   if (!mongoose.isObjectIdOrHexString(req.params.id)) {
     return res.status(400).json({ message: "Invalid course ID" });
   }
   try {
+    // 1. The course itself
     const course = await Course.findOne({
       _id: req.params.id,
       isPublished: true,
-      deletedAt: null // CHANGED: deleted courses are hidden
-    });
+      deletedAt: null
+    })
+      .select("code title description")
+      .lean();
 
     if (!course) {
       return res.status(404).json({
@@ -38,8 +45,62 @@ const getCourseByID = async (req, res, next) => {
       });
     }
 
-    // CHANGED: removed the "created" message; a read just returns the data
-    return res.status(200).json({ data: course });
+    // 2. Its units, in order
+    const units = await Unit.find({ course: course._id, deletedAt: null })
+      .select("title order")
+      .sort({ order: 1 })
+      .lean();
+
+    // 3. All the lessons in those units, in one query
+    const lessons = await Lesson.find({
+      unit: { $in: units.map((u) => u._id) },
+      isPublished: true,
+      deletedAt: null
+    })
+      .select("unit title order videoId")
+      .sort({ order: 1 })
+      .lean();
+
+    // 4. Which of those lessons this student has completed
+    const done = await Progress.find({
+      user: req.user.id,
+      lesson: { $in: lessons.map((l) => l._id) },
+      completed: true
+    })
+      .select("lesson score")
+      .lean();
+
+    const scoreByLesson = new Map(done.map((p) => [p.lesson.toString(), p.score]));
+
+    // 5. Put the pieces together: each unit gets its own lessons
+    const outline = units
+      .map((unit) => ({
+        _id: unit._id,
+        title: unit.title,
+        order: unit.order,
+        lessons: lessons
+          .filter((lesson) => lesson.unit.toString() === unit._id.toString())
+          .map((lesson) => ({
+            _id: lesson._id,
+            title: lesson.title,
+            order: lesson.order,
+            hasVideo: Boolean(lesson.videoId),
+            completed: scoreByLesson.has(lesson._id.toString()),
+            score: scoreByLesson.get(lesson._id.toString()) ?? null
+          }))
+      }))
+      .filter((unit) => unit.lessons.length > 0); // hide units with nothing published yet
+
+    return res.status(200).json({
+      data: {
+        ...course,
+        units: outline,
+        progress: {
+          completedLessons: done.length,
+          totalLessons: lessons.length
+        }
+      }
+    });
   } catch (error) {
     next(error);
   }
@@ -131,8 +192,45 @@ const getAllCoursesForAdmin = async (req, res, next) => {
       .select("code title description isPublished")
       .sort({ code: 1 })
       .lean();
+    const courseIds = courses.map((course) => course._id);
+    const units = await Unit.find({ course: { $in: courseIds }, deletedAt: null })
+      .select("course title order")
+      .sort({ order: 1 })
+      .lean();
+    const lessons = await Lesson.find({
+      unit: { $in: units.map((unit) => unit._id) },
+      deletedAt: null
+    })
+      .select("unit title order")
+      .sort({ order: 1 })
+      .lean();
 
-    return res.status(200).json({ count: courses.length, data: courses });
+    const lessonsByUnit = new Map();
+    for (const lesson of lessons) {
+      const unitId = lesson.unit.toString();
+      const unitLessons = lessonsByUnit.get(unitId) || [];
+      unitLessons.push(lesson);
+      lessonsByUnit.set(unitId, unitLessons);
+    }
+
+    const unitsByCourse = new Map();
+    for (const unit of units) {
+      const courseId = unit.course.toString();
+      const courseUnits = unitsByCourse.get(courseId) || [];
+      courseUnits.push({
+        ...unit,
+        lessons: lessonsByUnit.get(unit._id.toString()) || []
+      });
+      unitsByCourse.set(courseId, courseUnits);
+    }
+
+    return res.status(200).json({
+      count: courses.length,
+      data: courses.map((course) => ({
+        ...course,
+        units: unitsByCourse.get(course._id.toString()) || []
+      }))
+    });
   } catch (error) {
     next(error);
   }
