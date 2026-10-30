@@ -12,7 +12,7 @@ html {
 
 body {
   margin: 0;
-  min-width: 320px;
+  min-width: 0;
   overflow-wrap: anywhere;
 }
 
@@ -103,6 +103,7 @@ h3 {
   font-size: 1.25rem;
   font-weight: 600;
   gap: 0.6rem;
+  min-height: 44px;
 }
 
 .brand-mark {
@@ -838,6 +839,7 @@ h3 {
 .admin-list {
   display: grid;
   gap: 0.5rem;
+  min-width: 0;
 }
 
 .admin-row {
@@ -846,6 +848,8 @@ h3 {
   display: flex;
   gap: 1rem;
   justify-content: space-between;
+  min-width: 0;
+  width: 100%;
   padding: 0.85rem 0;
 }
 
@@ -866,6 +870,7 @@ h3 {
   align-items: center;
   display: flex;
   gap: 0.8rem;
+  flex-wrap: wrap;
 }
 
 .status-live,
@@ -1019,6 +1024,10 @@ h3 {
 
   .admin-row > div:last-child {
     justify-content: space-between;
+    width: 100%;
+  }
+
+  .admin-row > div:first-child {
     width: 100%;
   }
 }
