@@ -128,7 +128,7 @@ const getMe = async (req, res, next) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.status(200).json({ data: user });
+    res.status(200).json({ data: { id: user._id, name: user.name, email: user.email, role: user.role, avatar: user.avatar } });
   } catch (error) {
     next(error);
   }
@@ -138,7 +138,7 @@ const updateAvatar = async (req, res, next) => {
   try {
     const user = await User.findByIdAndUpdate(req.user.id, { avatar: req.body.avatar }, { returnDocument: "after", runValidators: true }).select("name email role avatar");
     if (!user) return res.status(404).json({ message: "User not found" });
-    return res.status(200).json({ data: user });
+    return res.status(200).json({ data: { id: user._id, name: user.name, email: user.email, role: user.role, avatar: user.avatar } });
   } catch (error) {
     next(error);
   }
