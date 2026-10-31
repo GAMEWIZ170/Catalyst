@@ -6,6 +6,7 @@ const Test = require("../models/test.models");
 const TestResult = require("../models/testresult.models");
 const mongoose = require("mongoose");
 const Question = require("../models/question.models");
+const Flashcard = require("../models/flashcard.models");
 
 const createCourse = async (req, res, next) => {
   try {
@@ -81,6 +82,11 @@ const getCourseByID = async (req, res, next) => {
     ]);
     const countByTest = new Map(counts.map((item) => [item._id.toString(), item.questionCount]));
     const testsWithQuestions = tests.filter((test) => countByTest.has(test._id.toString()));
+    const flashcardCounts = await Flashcard.aggregate([
+      { $match: { lesson: { $in: lessonIds }, isPublished: true, deletedAt: null } },
+      { $group: { _id: "$lesson", count: { $sum: 1 } } }
+    ]);
+    const flashcardCountByLesson = new Map(flashcardCounts.map((item) => [item._id.toString(), item.count]));
     const results = await TestResult.find({ user: req.user.id, test: { $in: testsWithQuestions.map((test) => test._id) } })
       .select("test bestScore").lean();
     const scoreByTest = new Map(results.map((result) => [result.test.toString(), result.bestScore]));
@@ -128,7 +134,8 @@ const getCourseByID = async (req, res, next) => {
             hasVideo: Boolean(lesson.videoId),
             completed: scoreByLesson.has(lesson._id.toString()),
             score: scoreByLesson.get(lesson._id.toString()) ?? null,
-            testCount: (testsByLesson.get(lesson._id.toString()) || []).length
+            testCount: (testsByLesson.get(lesson._id.toString()) || []).length,
+            flashcardCount: flashcardCountByLesson.get(lesson._id.toString()) || 0
           }))
         ,
         tests: testsByUnit.get(unit._id.toString()) || []

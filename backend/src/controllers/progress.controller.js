@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Progress = require("../models/progress.models");
 const TestResult = require("../models/testresult.models");
+const FlashcardProgress = require("../models/flashcardprogress.models");
 const Test = require("../models/test.models");
 const Question = require("../models/question.models");
 const { findVisibleLesson } = require("../utils/visibility");
@@ -59,12 +60,15 @@ const getMyProgress = async (req, res, next) => {
 
 const getStreak = async (req, res, next) => {
   try {
-    const [progress, results] = await Promise.all([
+    const [progress, results, flashcardProgress] = await Promise.all([
       Progress.find({ user: req.user.id }).select("completedDays").lean(),
-      TestResult.find({ user: req.user.id }).select("completedDays").lean()
+      TestResult.find({ user: req.user.id }).select("completedDays").lean(),
+      FlashcardProgress.find({ user: req.user.id }).select("reviewedDays").lean()
     ]);
-    const days = [...progress, ...results].flatMap((record) => record.completedDays);
-    return res.status(200).json({ data: { streak: calculateStreak(days), completedToday: days.includes(todayKey()) } });
+    const days = [...progress, ...results].flatMap((record) => record.completedDays || []);
+    const reviewedDays = flashcardProgress.flatMap((record) => record.reviewedDays || []);
+    const activeDays = [...days, ...reviewedDays];
+    return res.status(200).json({ data: { streak: calculateStreak(activeDays), completedToday: activeDays.includes(todayKey()) } });
   } catch (error) {
     next(error);
   }

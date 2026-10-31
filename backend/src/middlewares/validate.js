@@ -187,6 +187,32 @@ const validateTestSubmission = validateWith(Joi.object({
     answer: Joi.string().trim().allow("").max(1000).required()
   })).max(100).required()
 }));
+  const flashcardSide = Joi.object({
+    text: Joi.string().trim().max(500),
+    image: optionalImage
+  }).custom((value, helpers) => {
+    if (!value.text && !(value.image && value.image.url)) {
+      return helpers.error("any.invalid", { message: "Each flashcard side needs text or an image" });
+    }
+    return value;
+  }).messages({ "any.invalid": "{{#message}}" });
+  const validateFlashcard = validateWith(Joi.object({
+    lesson: objectId.required(),
+    front: flashcardSide.required(),
+    back: flashcardSide.required(),
+    order: Joi.number().integer().min(1),
+    isPublished: Joi.boolean().default(false)
+  }));
+  const validateFlashcardUpdate = validateWith(Joi.object({
+    lesson: objectId,
+    front: flashcardSide,
+    back: flashcardSide,
+    order: Joi.number().integer().min(1),
+    isPublished: Joi.boolean()
+  }).min(1));
+  const validateRating = validateWith(Joi.object({
+    confidence: Joi.string().valid("confident", "unsure", "unknown").required()
+  }));
 
 module.exports = {
   objectId,
@@ -205,5 +231,8 @@ module.exports = {
   validateQuestion,
   validateQuestionUpdate,
   validateAnswer,
-  validateTestSubmission
+  validateTestSubmission,
+  validateFlashcard,
+  validateFlashcardUpdate,
+  validateRating
 };
