@@ -1,6 +1,6 @@
 # Catalyst API
 
-The backend for Catalyst, a low-cost learning platform for university students. It serves course material, tutorial video references and practice questions, and keeps track of each student's progress and daily streak. The first course is CHEM113.
+The backend for Catalyst, a low-cost learning platform for university students. It serves courses, lessons, tests, flashcards and lesson materials, and records student progress and streaks.
 
 Built with Express and MongoDB. A React frontend talks to it over JSON, and students stay logged in with an HTTP-only cookie.
 
@@ -16,9 +16,11 @@ Built with Express and MongoDB. A React frontend talks to it over JSON, and stud
 
 ## Overview
 
-Content is organised as a chain: a **course** has **units**, a unit has **lessons**, and a lesson has **questions**. A student reads a lesson, answers its questions, and submits it. The server grades the answers, keeps the best score, and updates the student's streak.
+Content is organised as **course > unit > lesson**. Lessons can have tests, flashcards and materials. Tests may belong to a lesson, unit or course. Students see only published content whose parents are not deleted.
 
-There are two kinds of user. **Students** read published content and record progress. **Admins** write and edit the content. Everyone registers as a student, and an admin is a student whose role has been changed by hand in the database.
+Students can complete a lesson by finishing a published test, rating every published flashcard, or using **Mark as done** when the lesson has neither a qualifying test nor a flashcard. A test with no non-deleted questions gives no credit. The streak combines completed progress days, test-result days and flashcard-review days.
+
+There are two kinds of user. **Students** read published content and record progress. **Admins** write and edit content. Everyone registers as a student; an admin is promoted by hand in the database.
 
 ## Quick start
 
@@ -34,344 +36,304 @@ npm install
 
 ### 2. Configure
 
-Copy `.env.example` to `.env` (on Windows: `copy .env.example .env`) and fill it in. Never commit `.env`: it holds your database password and token secret.
+Copy `.env.example` to `.env` and fill it in. On Windows:
+
+```powershell
+copy .env.example .env
+```
+
+Never commit `.env`: it holds database credentials, the token secret and the Cloudinary secret.
 
 | Variable | Purpose | Example |
 | --- | --- | --- |
 | `PORT` | Port to listen on. Falls back to 5000 | `5000` |
-| `MONGODB_URI` | MongoDB connection string | `mongodb+srv://user:password@cluster.mongodb.net/catalyst_dev` |
-| `JWT_SECRET` | Signs login tokens. Use a different one in production | 32 or more random characters |
+| `MONGODB_URI` | MongoDB connection string | `mongodb+srv://.../catalyst_dev` |
+| `JWT_SECRET` | Signs login tokens | 32 or more random characters |
 | `JWT_EXPIRES_IN` | How long a login lasts | `7d` |
-| `NODE_ENV` | In `production`, the login cookie is sent over HTTPS only | `development` |
-| `CLIENT_URL` | Exact address of the frontend. CORS allows only this origin | `http://localhost:5173` |
+| `NODE_ENV` | Production enables secure cookies | `development` |
+| `CLIENT_URL` | Exact frontend origin allowed by CORS | `http://localhost:5173` |
+| `CLOUDINARY_URL` | Cloudinary SDK configuration | `cloudinary://API_KEY:API_SECRET@CLOUD_NAME` |
 
-The server will not start if `JWT_SECRET` or `JWT_EXPIRES_IN` is missing. To generate a secret:
+Find `CLOUDINARY_URL` in the Cloudinary Console under the product environment's API environment variable or API keys area. Never commit it or paste the API secret into source control.
 
-```bash
-node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
-```
+Startup checks that `JWT_SECRET`, `JWT_EXPIRES_IN` and `CLOUDINARY_URL` exist before connecting to MongoDB. It then prints `Server running on port ...` after the database connection succeeds.
 
 ### 3. Connect a database
 
-Use a different database name for testing and for the live app, for example `catalyst_dev` and `catalyst`. The name is the last part of the connection string.
+Use separate database names for development and testing, such as `catalyst_dev` and `catalyst_test`. The name is the last part of the connection string.
 
 <details>
 <summary><strong>MongoDB Atlas (cloud)</strong></summary>
 
-1. Create a free cluster and a database user. The user is separate from your Atlas login.
-2. Copy the connection string into `MONGODB_URI`. Replace `<password>` with the user's password and remove the angle brackets. If the password contains characters like `@` or `#`, use a simpler one or URL-encode it.
-3. Add your IP address under Network Access.
-
-Atlas only accepts connections from addresses on that list, so if your connection changes address often, connections will start timing out. You can allow `0.0.0.0/0` while the database holds only test data, but remove it once real accounts exist. The free tier has no backups, so keep your lesson content in files you control.
+Create a cluster and database user, put the connection string in `MONGODB_URI`, URL-encode special password characters, and add the machine's IP address under Network Access. Atlas only accepts connections from addresses on that list.
 
 </details>
 
 <details>
 <summary><strong>MongoDB on your own computer</strong></summary>
 
-Install MongoDB Community Server and set:
-
-```
+```text
 MONGODB_URI=mongodb://127.0.0.1:27017/catalyst_dev
 ```
-
-A local database has no allowlist and works offline.
 
 </details>
 
 ### 4. Run
 
 ```bash
-npm run dev     # restarts automatically when files change
-npm start       # runs once
+npm run dev
+npm start
 ```
 
-The API is at `http://localhost:5000/api/v1`, or on whatever port you set. There is no automated test suite yet, so `npm test` is not configured.
+The API is at `http://localhost:5000/api/v1`, or on the port in `PORT`.
 
 ### 5. Create the first admin
 
-Registration always creates a student, so the first admin is made by hand:
-
-1. Register with `POST /api/v1/auth/register`.
-2. In Atlas (Browse Collections) or MongoDB Compass, open the `users` collection, find your user and change `role` from `"student"` to `"admin"`.
-3. Log in again with `POST /api/v1/auth/login`.
-
-The role is checked against the database on every request, so the change applies as soon as you log in again.
+Register with `POST /api/v1/auth/register`, change that user's `role` from `student` to `admin` in the `users` collection, and log in again.
 
 ### 6. Try it
 
-Use an HTTP client that keeps cookies, such as Thunder Client or the Postman desktop app. The browser version of Postman cannot reach `localhost`. Send raw JSON bodies and use `http://`, not `https://`.
+Use an HTTP client that keeps cookies. Browser clients must send `credentials: "include"` with requests.
 
 <details>
-<summary><strong>A first test session, step by step</strong></summary>
+<summary><strong>A first content session</strong></summary>
 
-| Step | Request | Body |
-| --- | --- | --- |
-| 1 | `POST /api/v1/auth/register` | `{ "name": "Ama Mensah", "email": "ama@example.com", "password": "a-long-password" }` |
-| 2 | `GET /api/v1/auth/me` | none |
-| 3 | Make yourself admin (step 5 above), then log in again | |
-| 4 | `POST /api/v1/admin/courses` | `{ "code": "CHEM113", "title": "General Chemistry", "description": "Introductory chemistry.", "isPublished": true }` |
-| 5 | `POST /api/v1/admin/units` | `{ "course": "<course id>", "title": "Atomic structure", "order": 1 }` |
-| 6 | `POST /api/v1/admin/lessons` | `{ "unit": "<unit id>", "title": "The atom", "order": 1, "explanation": "...", "isPublished": true }` |
-| 7 | `POST /api/v1/admin/questions` | `{ "lesson": "<lesson id>", "type": "mcq", "text": "...", "options": ["A", "B", "C"], "correctAnswer": "B", "explanation": "...", "order": 1 }` |
-| 8 | `GET /api/v1/courses/<course id>` | none |
-
-Each ID comes from the `data` in the previous response. Content is created unpublished unless you send `"isPublished": true`, and students cannot see unpublished content. Once the outline appears, try answering the question, completing the lesson, and then `GET /progress` and `GET /progress/streak`.
+1. Register and log in.
+2. Promote the account to admin and log in again.
+3. Create a course, unit and published lesson.
+4. Create a published test and questions, or create flashcards and materials.
+5. Open the course outline as a student.
+6. Submit a test, rate flashcards, or mark an otherwise empty lesson done.
 
 </details>
 
 ## API reference
 
-All routes start with `/api/v1`. Requests and responses are JSON. Successful responses have a `data` key, lists also have a `count`, and errors always look like `{ "message": "..." }`. A browser frontend must send requests with credentials (`credentials: "include"` in `fetch`).
+All routes start with `/api/v1`. Successful responses use `{ "data": ... }` where applicable. Errors use `{ "message": "..." }`.
 
 **Access levels:** *Public* means anyone, *Student* means logged in, and *Admin* means logged in with the `admin` role.
 
 | Status | Meaning |
 | --- | --- |
-| 400 | Malformed ID, invalid or missing field, or an empty update |
-| 401 | Not logged in, or the login is invalid or expired |
-| 403 | Not allowed, or the account is deactivated |
+| 400 | Invalid ID, body, upload or empty update |
+| 401 | Not logged in or invalid credentials |
+| 403 | Authenticated but not allowed |
 | 404 | Not found, unpublished or deleted |
-| 409 | Duplicate course code or email |
+| 409 | Conflict, including an empty test submission |
 | 429 | Rate limit exceeded |
 
 ### Auth
 
 | Method | Path | Access | Purpose |
 | --- | --- | --- | --- |
-| POST | `/auth/register` | Public | Create a student account and log in. Body: `name`, `email`, `password`. 409 if the email exists |
-| POST | `/auth/login` | Public | Log in. Body: `email`, `password` |
-| POST | `/auth/logout` | Public | Clear the login cookie |
-| GET | `/auth/me` | Student | The logged-in user |
+| POST | `/auth/register` | Public | Create a student and set the cookie |
+| POST | `/auth/login` | Public | Log in |
+| POST | `/auth/logout` | Public | Clear the cookie |
+| GET | `/auth/me` | Student | Return `id`, `name`, `email`, `role` and `avatar` |
+| PUT | `/auth/me/avatar` | Student | Body `{ "avatar": "beaker" }` or `{ "avatar": null }` |
 
-Register and login return the user's `id`, `name`, `email` and `role` and set the cookie. A wrong email and a wrong password give the same 401, `Invalid credentials`, so the API does not reveal which emails have accounts. Logout is public so that someone whose login has expired can still clear their cookie.
+Example avatar response:
 
-### Courses
+```json
+{ "data": { "id": "...", "name": "Ama", "email": "ama@example.com", "role": "student", "avatar": "beaker" } }
+```
+
+### Courses and lessons
 
 | Method | Path | Access | Purpose |
 | --- | --- | --- | --- |
-| GET | `/courses` | Student | Published courses, sorted by code |
-| GET | `/courses/:id` | Student | One course with its units, lessons and this student's progress |
+| GET | `/courses` | Student | Published courses |
+| GET | `/courses/:id` | Student | Course outline, tests and lesson progress |
+| GET | `/lessons/:id` | Student | Visible lesson summary |
+| GET | `/lessons/:id/flashcards` | Student | Published flashcards and confidence summary |
+| GET | `/lessons/:id/materials` | Student | Published lesson materials |
+| POST | `/lessons/:id/mark-done` | Student | Mark a lesson done only when it has neither qualifying tests nor flashcards |
 
-<details>
-<summary>Example response for <code>GET /courses/:id</code></summary>
+`GET /lessons/:id` returns lesson fields, published test summaries, flashcard counts by confidence (`total`, `confident`, `unsure`, `unknown`, `unrated`) and `materialCount`. The course outline adds `testCount`, `flashcardCount` and `materialCount` to each lesson.
+
+Example outline lesson:
 
 ```json
-{
-  "data": {
-    "_id": "...",
-    "code": "CHEM113",
-    "title": "General Chemistry",
-    "description": "Introductory chemistry.",
-    "units": [
-      {
-        "_id": "...",
-        "title": "Atomic structure",
-        "order": 1,
-        "lessons": [
-          { "_id": "...", "title": "The atom", "order": 1, "hasVideo": true, "completed": true, "score": 80 }
-        ]
-      }
-    ],
-    "progress": { "completedLessons": 1, "totalLessons": 4 }
-  }
-}
+{ "_id": "...", "title": "The atom", "testCount": 1, "flashcardCount": 3, "materialCount": 2, "completed": false, "score": null }
 ```
 
-Units with no published lessons are left out. `score` is `null` for lessons not yet completed. `hasVideo` tells the frontend whether to show a video icon; the video itself comes with the lesson.
-
-</details>
-
-### Lessons and questions
+### Tests and questions
 
 | Method | Path | Access | Purpose |
 | --- | --- | --- | --- |
-| GET | `/lessons/:id` | Student | A lesson with its questions, without the answers |
-| POST | `/lessons/:id/complete` | Student | Submit all answers for a lesson. The server grades them |
-| POST | `/questions/:id/answer` | Student | Check one answer and reveal the correct one |
+| GET | `/tests/:id` | Student | Published test with student-safe questions |
+| POST | `/tests/:id/submit` | Student | Grade answers and update test result |
+| POST | `/questions/:id/answer` | Student | Check one answer |
+| POST | `/admin/tests` | Admin | Create a lesson-, unit- or course-scope test |
+| GET | `/admin/tests/:id` | Admin | Full test and questions |
+| PUT | `/admin/tests/:id` | Admin | Update title, order or publication |
+| DELETE | `/admin/tests/:id` | Admin | Soft-delete a test |
+| POST | `/admin/questions` | Admin | Create a question |
+| PUT | `/admin/questions/:id` | Admin | Update a question |
+| DELETE | `/admin/questions/:id` | Admin | Soft-delete a question |
 
-`GET /lessons/:id` returns the lesson's `title`, `order`, `explanation`, `videoHost` and `videoId`, and its questions in order, each with only `_id`, `type`, `text`, `options` and `order`. Videos are hosted elsewhere, for example on YouTube (unlisted). The API stores only the host name and the video's ID.
+MCQ updates send `options` and `correctIndex` together in the validator contract; saved options receive IDs and the correct option is stored by option ID. A true/false question has no options or `correctIndex` and requires `correctAnswer` equal to `"true"` or `"false"`. Question and explanation images use `{ "url", "publicId", "alt" }`; `alt` is required when a URL is present.
 
-<details>
-<summary>Request and response examples</summary>
-
-**`POST /lessons/:id/complete`**
-
-```json
-{ "answers": [ { "questionId": "...", "answer": "B" }, { "questionId": "...", "answer": "true" } ] }
-```
-
-```json
-{ "message": "Lesson completed", "data": { "score": 80, "correct": 4, "total": 5, "bestScore": 80 } }
-```
-
-The response has totals only, so a student cannot collect a lesson's answers by submitting blanks.
-
-**`POST /questions/:id/answer`**
+Example:
 
 ```json
-{ "answer": "B" }
+{ "data": { "score": 80, "correct": 4, "total": 5, "bestScore": 80, "attempts": 2 } }
 ```
+
+Submitting a visible test with no non-deleted questions returns `409` with `This test has no questions yet` and creates no result or progress.
+
+### Flashcards
+
+| Method | Path | Access | Purpose |
+| --- | --- | --- | --- |
+| GET | `/lessons/:id/flashcards` | Student | Return published cards in order; `?filter=review` excludes confident cards |
+| POST | `/flashcards/:id/rate` | Student | Body `{ "confidence": "confident" }`; update review progress |
+| POST | `/admin/flashcards` | Admin | Create a flashcard |
+| PUT | `/admin/flashcards/:id` | Admin | Update lesson, sides, order or publication |
+| DELETE | `/admin/flashcards/:id` | Admin | Soft-delete a flashcard |
+
+Each card has `front` and `back` sides. Each side needs text or an image. Rating every published card completes the lesson without changing its score. The rate response includes the updated summary.
+
+### Materials
+
+| Method | Path | Access | Purpose |
+| --- | --- | --- | --- |
+| GET | `/lessons/:id/materials` | Student | Published materials with safe delivery fields |
+| POST | `/admin/uploads/material` | Admin | Upload one PDF |
+| POST | `/admin/materials` | Admin | Create a file or link material |
+| PUT | `/admin/materials/:id` | Admin | Update any subset except `kind` |
+| DELETE | `/admin/materials/:id` | Admin | Soft-delete a material |
+| GET | `/admin/lessons/:id` | Admin | Include full materials, including drafts |
+
+File materials use `{ "url", "publicId", "format", "bytes" }`. File URLs are HTTPS Cloudinary URLs and public IDs start with `catalyst/materials/` and end in `.pdf`. Link URLs are HTTPS and cannot contain credentials or a port.
+
+The upload response is:
 
 ```json
-{ "data": { "isCorrect": false, "correctAnswer": "B", "explanation": "..." } }
+{ "data": { "url": "https://res.cloudinary.com/.../catalyst/materials/<20-char>.pdf", "publicId": "catalyst/materials/<20-char>.pdf", "format": "pdf", "bytes": 1024 } }
 ```
 
-For a flashcard, no answer is needed and `isCorrect` is `null`. For the other types, a missing answer returns 400.
+### Image uploads
 
-</details>
+| Method | Path | Access | Purpose |
+| --- | --- | --- | --- |
+| POST | `/admin/uploads` | Admin | Upload one JPEG, PNG or WEBP image in field `image` |
+
+Images are limited to 2 MB. The declared MIME type is a cheap first rejection; the bytes must contain a JPEG, PNG or WEBP signature. Images go to `catalyst/images` and return `url`, `publicId`, `width` and `height`.
 
 ### Progress
 
 | Method | Path | Access | Purpose |
 | --- | --- | --- | --- |
-| GET | `/progress` | Student | This student's records: `lesson`, `completed`, `score`, `completedAt` |
-| GET | `/progress/streak` | Student | `{ "data": { "streak": 3, "completedToday": true } }` |
+| GET | `/progress` | Student | Student lesson progress |
+| GET | `/progress/streak` | Student | Streak from progress, test results and flashcard reviews |
 
-### Admin
+### Admin content
 
-Every route below needs the admin role. Create routes need the parent's ID in the body, and the parent must exist and not be deleted, or the route returns 404. Update routes accept any subset of the fields, but an empty body returns 400. Delete routes are soft deletes.
+Every admin route requires authentication and the `admin` role. Create routes require an available parent. Delete routes are soft deletes.
 
-| Method | Path | Body or query | Purpose |
-| --- | --- | --- | --- |
-| GET | `/admin/courses` | | All courses not deleted, drafts included |
-| POST | `/admin/courses` | `code`, `title`, `description`, `isPublished`* | Create a course. 409 if the code exists |
-| PUT | `/admin/courses/:id` | any of the above | Update a course |
-| DELETE | `/admin/courses/:id` | | Soft-delete a course |
-| POST | `/admin/units` | `course`, `title`, `order` | Create a unit |
-| PUT | `/admin/units/:id` | any of the above | Update a unit |
-| DELETE | `/admin/units/:id` | | Soft-delete a unit |
-| POST | `/admin/lessons` | `unit`, `title`, `order`, `explanation`, `videoHost`*, `videoId`*, `isPublished`* | Create a lesson |
-| GET | `/admin/lessons/:id` | | A lesson in full, with its questions and answers, drafts included |
-| PUT | `/admin/lessons/:id` | any of the above | Update a lesson |
-| DELETE | `/admin/lessons/:id` | | Soft-delete a lesson |
-| POST | `/admin/questions` | `lesson`, `type`, `text`, `options`, `correctAnswer`, `explanation`*, `order` | Create a question |
-| PUT | `/admin/questions/:id` | any of the above | Update a question. Its type rules are checked again |
-| DELETE | `/admin/questions/:id` | | Soft-delete a question |
-| GET | `/admin/users` | `page` (default 1), `limit` (default 20, max 100) | List users, newest first, with pagination |
-
-\* optional. `options` is required for `mcq` questions only.
-
-`GET /admin/users` returns `name`, `email`, `role`, `isActive` and `createdAt` for each user, never the password hash, plus a `pagination` object with `currentPage`, `limit`, `totalUsers` and `totalPages`.
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET/POST/PUT/DELETE | `/admin/courses`, `/admin/courses/:id` | Course administration |
+| POST/PUT/DELETE | `/admin/units`, `/admin/units/:id` | Unit administration |
+| POST/GET/PUT/DELETE | `/admin/lessons`, `/admin/lessons/:id` | Lesson administration |
+| GET | `/admin/users` | Paginated user list without password hashes |
 
 ## How it works
 
-### Visibility and soft deletes
+### Visibility, completion and soft deletes
 
-A student can only see a lesson if the lesson, its unit and its course are all visible: the lesson and course must be published, and none of the three can be deleted. Units have no published flag and are visible whenever their course is. Anything hidden returns 404, the same as something that does not exist, so a student cannot tell that an unpublished item is there.
+A visible lesson requires a published lesson and course, an available unit, and no `deletedAt` on any parent. Tests count toward completion and outline counts only when published and containing at least one non-deleted question. Flashcards and materials use their own published, non-deleted filters.
 
-Deleting never removes anything. The API sets a `deletedAt` date and every query skips records that have one, so students' progress is not broken and a delete can be undone by setting `deletedAt` back to `null`. Course codes are unique across all records, so a deleted course still holds its code, and creating a new course with the same code returns 409 until the old one is renamed or restored.
+`deletedAt` is set instead of removing records. Students receive 404 for hidden content. Cloudinary assets are not automatically deleted when content is soft-deleted.
 
-### Questions and grading
+### Question types
 
-| Type | `text` | `options` | `correctAnswer` |
-| --- | --- | --- | --- |
-| `mcq` | The question | 2 to 6 choices | Must exactly match one option |
-| `true_false` | The statement | Not used | `true` or `false` |
-| `flashcard` | Front of the card | Not used | Back of the card |
+| Type | Fields | Rules |
+| --- | --- | --- |
+| `mcq` | `text`, `options`, `correctOption` | 2 to 6 option objects; each option has text or an image; correct option must be one option |
+| `true_false` | `text`, `correctAnswer` | No options or `correctOption`; answer is `"true"` or `"false"` |
 
-These rules are enforced by the model itself, so they apply on create and on update.
-
-The server never sends `correctAnswer` or `explanation` with a lesson's questions. A student receives them only after answering, and lessons are graded on the server: the client sends answers, never a score. Answers are compared after trimming spaces, collapsing repeated spaces and ignoring capital letters. Flashcards are flipped, not answered, so they are not graded. Only `mcq` and `true_false` questions count towards a score, a skipped question counts as wrong, and a lesson with nothing to grade scores 100.
-
-Submitting a lesson always marks it completed, whatever the score, and the stored score is the best one achieved, so replaying never lowers it.
+Student serializers omit correct answers. Scores are calculated on the server. An empty test cannot be submitted for credit.
 
 ### Streaks
 
-Each submission records today's date against the lesson. A streak is the number of consecutive days, ending today or yesterday, on which the student completed at least one lesson. If they have not studied yet today, the count runs up to yesterday so it does not drop to zero before the day is over. Dates are in UTC, which matches Ghana time.
+The streak is calculated from distinct UTC `YYYY-MM-DD` dates in lesson progress, test results and `FlashcardProgress.reviewedDays`. Consecutive activity ending today or yesterday is counted.
 
 ### Security
 
-- **Login.** Registering or logging in sets an HTTP-only cookie named `token`, holding a signed token with the user's ID and role. The cookie is `sameSite: lax`, and `secure` in production. The token is never returned in a response body.
-- **Checked on every request.** `authenticate` verifies the token, then loads the user from the database and rejects the request if the account no longer exists or is deactivated. Demoting or deactivating someone takes effect immediately, not when their token expires.
-- **Cross-origin frontends.** A frontend on another origin must send credentials, and `CLIENT_URL` must match its address exactly, or the browser will not send the cookie.
-- **Passwords** are hashed with bcrypt and hidden from database queries unless a query asks for them.
-- **Registration** always creates a student and strips any other fields, so nobody can register as an admin.
-- **Answers** are never sent with questions.
-- **Secrets.** Never commit `.env`. If a database password or `JWT_SECRET` is ever exposed, change it immediately.
+Login sets an HTTP-only `token` cookie. Authentication verifies the token and reloads the user on every request. Password hashes are excluded from auth responses. CORS requires the exact `CLIENT_URL` and credentials.
 
 ### Validation and rate limits
 
-Every route that accepts a body is validated with Joi before it reaches a controller. Strings are trimmed and unknown fields are removed.
-
-<details>
-<summary><strong>Validation limits</strong></summary>
-
-| Field | Rule |
-| --- | --- |
-| `name` | 2 to 60 characters |
-| `email` | Valid address, up to 254 characters, stored in lower case |
-| `password` | 8 to 72 characters |
-| Course `description` | Up to 200 characters |
-| Lesson `explanation` | Up to 10,000 characters |
-| Question `text` | Up to 1,000 characters |
-| Question `options` | Up to 6 items, each up to 300 characters |
-| `order` | A whole number of 1 or more |
-| IDs | 24-character hexadecimal strings |
-| Lesson `answers` | Up to 100 items |
-
-</details>
+Joi validators trim strings, strip unknown fields and reject malformed IDs. Image and material URLs must use HTTPS, host `res.cloudinary.com`, and begin with `/<configured-cloud-name>/`.
 
 | Limiter | Applies to | Limit |
 | --- | --- | --- |
-| General | Every route | 1,000 requests per IP every 15 minutes |
-| Strict | Register and login | 20 failed attempts per IP every 15 minutes. Successful requests are not counted |
-| Answer | `POST /questions/:id/answer` | 100 requests per logged-in user every 15 minutes |
-
-Most limits are per IP address, and many students on a campus network may share one, which is why the general limit is generous and the login limit counts only failures. The answer limiter counts per user instead. Rejected requests get a 429.
+| General | Every route | 1,000 requests/IP/15 minutes |
+| Strict | Register and login failures | 20/IP/15 minutes |
+| Answer | `POST /questions/:id/answer` | 100/user/15 minutes |
+| Submit | `POST /tests/:id/submit` | 60/user/15 minutes |
+| Mark done | `POST /lessons/:id/mark-done` | 60/user/15 minutes |
+| Upload | Admin image and PDF uploads | 30/user/15 minutes |
+| Flashcard rate | `POST /flashcards/:id/rate` | 300/user/15 minutes |
 
 ## Reference
 
 <details>
 <summary><strong>Data models</strong></summary>
 
-Every model has `createdAt` and `updatedAt`, added automatically. `deletedAt` is `null` until the record is soft-deleted.
+All schemas have timestamps. Soft-deletable content has `deletedAt`.
 
-| Model | Fields |
+| Model | Main fields |
 | --- | --- |
-| **User** | `name`, `email` (unique, lower case), `password` (bcrypt hash, hidden by default), `role` (`student` or `admin`, default `student`), `enrolledCourses` (reserved, not used yet), `isActive` (`false` blocks login and every request) |
-| **Course** | `code` (unique, trimmed), `title`, `description` (up to 200 characters), `isPublished` (default `false`), `deletedAt` |
-| **Unit** | `course` (reference), `title`, `order`, `deletedAt` |
-| **Lesson** | `unit` (reference), `title`, `order`, `explanation`, `videoHost` and `videoId` (optional), `isPublished` (default `false`), `deletedAt` |
-| **Question** | `lesson` (reference), `type`, `text`, `options`, `correctAnswer`, `explanation`, `order`, `deletedAt` |
-| **Progress** | `user` and `lesson` (references, unique together, so one record per student per lesson), `completed`, `score` (best, 0 to 100), `completedAt` (first completion), `completedDays` (every day it was completed, as `YYYY-MM-DD`) |
+| **User** | `name`, `email`, hidden bcrypt `password`, `role`, `avatar`, `isActive` |
+| **Course** | `code`, `title`, `description`, `isPublished`, `deletedAt` |
+| **Unit** | `course`, `title`, `order`, `deletedAt` |
+| **Lesson** | `unit`, `title`, `order`, `explanation`, optional `explanationImage`, `videoHost`, `videoId`, `isPublished`, `deletedAt` |
+| **Test** | `scope`, one of `lesson`/`unit`/`course`, `title`, `order`, `isPublished`, `deletedAt` |
+| **Question** | `test`, `type`, `text`, option objects, `correctOption`, `correctAnswer`, explanation images, `order`, `deletedAt` |
+| **TestResult** | `user`, `test`, `bestScore`, `lastScore`, `attempts`, `completedAt`, `completedDays` |
+| **Progress** | `user`, `lesson`, `completed`, best `score`, `completedAt`, `completedDays` |
+| **Flashcard** | `lesson`, `front`, `back`, `order`, `isPublished`, `deletedAt` |
+| **FlashcardProgress** | `user`, `flashcard`, `confidence`, `reviewCount`, `lastReviewedAt`, `reviewedDays` |
+| **Material** | `lesson`, `title`, `description`, `kind`, file metadata or `linkUrl`, `order`, `isPublished`, `deletedAt` |
+
+Allowed avatar keys are `beaker`, `flask`, `atom`, `test-tube`, `microscope`, `flame`, `molecule`, `magnet`, `crystal`, `dna`, `leaf` and `periodic-tile`. The default avatar is `null`.
+
+</details>
+
+<details>
+<summary><strong>Uploads</strong></summary>
+
+Image uploads accept JPEG, PNG and WEBP bytes, up to 2 MB, and use `catalyst/images`. PDF uploads accept only bytes beginning `%PDF-`, up to 10 MB, and use `catalyst/materials`. PDF public IDs are server-generated lowercase 20-character names ending `.pdf`.
+
+Saved Cloudinary image and file URLs must use HTTPS, exactly `res.cloudinary.com`, no credentials or port, and a pathname starting with `/<cloud name>/`. Image public IDs start with `catalyst/`; material file IDs start with `catalyst/materials/`, end with `.pdf`, and appear in the URL.
 
 </details>
 
 <details>
 <summary><strong>Middleware</strong></summary>
 
-| Middleware | What it does |
-| --- | --- |
-| `helmet` | Adds security headers to every response |
-| `cors` | Allows browser requests only from `CLIENT_URL`, with credentials |
-| `express.json` | Parses JSON request bodies |
-| `cookie-parser` | Makes the login cookie available as `req.cookies` |
-| `logger` | Logs the method, URL and client IP of each request |
-| `generalLimiter`, `strictLimiter`, `answerLimiter` | The three rate limits above |
-| `authenticate` | Verifies the login and loads the user |
-| `authorizeRole` | Allows a route only for the listed roles. Always placed after `authenticate` |
-| `validate` | Joi validators that check and clean the request body |
-| `notFound` | Replies 404 when no route matched |
-| `error` | Logs unexpected errors and returns a safe 500 |
+`helmet`, `cors`, `express.json`, `cookie-parser` and `logger` are global middleware. Route middleware includes `generalLimiter`, `strictLimiter`, `answerLimiter`, `submitLimiter`, `markDoneLimiter`, `uploadLimiter`, `flashcardRateLimiter`, `authenticate`, `authorizeRole`, `validate`, `upload`, `materialUpload`, `notFound` and `error`.
 
-`notFound` and `error` are the last two middleware in the app, in that order, so they only see what nothing else handled.
+`notFound` and `error` are the final middleware and return safe errors without exposing internal messages.
 
 </details>
 
 <details>
 <summary><strong>Project structure</strong></summary>
 
-```
+```text
 src/
-  app.js          Express app: middleware, routes, error handling
-  server.js       Loads .env, checks required settings, connects to the database, starts listening
-  config/         Database connection
-  controllers/    The logic behind each route
-  middlewares/    Authentication, validation, rate limiting, logging, errors
-  models/         Mongoose schemas
-  routes/         Which URL goes to which controller, plus the middleware guarding it
-  utils/          Password hashing, answer normalisation, visibility checks, streak calculation
+  app.js
+  server.js
+  config/
+  controllers/
+  middlewares/
+  models/
+  routes/
+  utils/
 ```
 
 </details>
@@ -380,20 +342,19 @@ src/
 
 | Symptom | Likely cause |
 | --- | --- |
-| Connection times out | Your IP is not on the Atlas allowlist |
-| `bad auth : authentication failed` | Wrong database username or password, or the `<password>` placeholder was left in |
-| Requests hang with no response | `express.json()` was written without its brackets in `app.js` |
-| `401` right after logging in | The client is not keeping cookies |
-| `403` on an admin route | The `role` change did not save, or you have not logged in again since |
-| Lists come back empty | The content was created with `isPublished` left as `false` |
-| `409` creating a course | The code exists already, possibly on a deleted course |
+| Startup says `JWT_SECRET, JWT_EXPIRES_IN and CLOUDINARY_URL must be set in .env` | One required environment variable is missing |
+| Connection times out | The IP is not on the Atlas allowlist |
+| `bad auth : authentication failed` | Wrong database credentials |
+| `400` from an upload | The field name, byte signature, file size, URL host or public ID rule is invalid |
+| `401` after login | The client is not keeping cookies |
+| `403` on an admin route | The account is not an admin or the role change was not followed by a new login |
+| Lists are empty | Content is unpublished or deleted |
 
 ## Known limitations
 
-- **No subscriptions or payments yet.** Every logged-in student can reach all published lessons. A subscription check and a payment integration are planned.
-- **Answers can be collected by a determined script.** The answer limiter slows it down, but only the subscription check will properly stop non-paying users from reading answers.
-- **No automated tests.** The API is tested by hand through an HTTP client.
-- **Proxy settings.** Behind a hosting provider's proxy, every user can appear to share one IP address unless the app is told to trust the proxy. This, and the cookie settings for a live domain, must be configured at deployment.
-- **Deleted courses keep their code.** A later change may let a code be reused.
-- **Admins are made by hand.** There is no route for promoting a user.
-- **Planned:** a mode where students turn their own material into flashcards and quizzes, and support for more than one course.
+- Materials are served through public links until subscription checks exist.
+- Cloudinary's free plan has monthly usage limits.
+- Soft-deleted content keeps its Cloudinary images and files.
+- The frontend has not yet been updated for tests, flashcards, materials and avatars.
+- There are no automated tests; verification is currently performed with isolated scripts and HTTP checks.
+- Admin promotion is manual.
