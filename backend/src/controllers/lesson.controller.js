@@ -5,7 +5,7 @@ const Test = require("../models/test.models");
 const Question = require("../models/question.models");
 const TestResult = require("../models/testresult.models");
 const Flashcard = require("../models/flashcard.models");
-const FlashcardProgress = require("../models/flashcardprogress.models");
+const getFlashcardSummary = require("../utils/flashcardSummary");
 const { findVisibleLesson, findTestsWithQuestions, findTestQuestionCounts } = require("../utils/visibility");
 
 const badId = (id) => !mongoose.isObjectIdOrHexString(id);
@@ -30,19 +30,6 @@ const adminTestSummary = (tests) => tests.map((test) => ({
   questionCount: test.questionCount
 }));
 
-const studentFlashcardSummary = async (lessonId, userId) => {
-  const cards = await Flashcard.find({ lesson: lessonId, isPublished: true, deletedAt: null }).select("_id").lean();
-  const progress = await FlashcardProgress.find({ user: userId, flashcard: { $in: cards.map((card) => card._id) } })
-    .select("flashcard confidence").lean();
-  const confidence = new Map(progress.map((item) => [item.flashcard.toString(), item.confidence]));
-  const summary = { total: cards.length, confident: 0, unsure: 0, unknown: 0, unrated: 0 };
-  for (const card of cards) {
-    const rating = confidence.get(card._id.toString());
-    if (rating) summary[rating]++;
-    else summary.unrated++;
-  }
-  return summary;
-};
 
 const getLessonByID = async (req, res, next) => {
   if (badId(req.params.id)) return res.status(400).json({ message: "Invalid lesson ID" });
@@ -61,7 +48,7 @@ const getLessonByID = async (req, res, next) => {
         videoHost: lesson.videoHost,
         videoId: lesson.videoId,
         tests: await studentTestSummary(tests, req.user.id),
-        flashcards: await studentFlashcardSummary(lesson._id, req.user.id)
+        flashcards: await getFlashcardSummary(lesson._id, req.user.id)
       }
     });
   } catch (error) {

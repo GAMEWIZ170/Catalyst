@@ -24,6 +24,9 @@ const validateSide = (side, path, invalidate) => {
   if (!side || (!side.text && !(side.image && side.image.url))) {
     invalidate(path, "Each flashcard side needs text or an image");
   }
+  if (side.image && side.image.url && !side.image.alt) {
+    invalidate(`${path}.image`, "Image alt text is required when a URL is provided");
+  }
 };
 
 flashcardSchema.pre("validate", function () {

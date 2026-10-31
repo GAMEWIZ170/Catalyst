@@ -11,8 +11,7 @@ const validateFlashcardId = (req, res, next) => {
   next();
 };
 
-router.use(authenticate);
-router.get("/lessons/:id/flashcards", getLessonFlashcards);
-router.post("/flashcards/:id/rate", validateFlashcardId, flashcardRateLimiter, validators.validateRating, rateFlashcard);
+router.get("/lessons/:id/flashcards", authenticate, getLessonFlashcards);
+router.post("/flashcards/:id/rate", authenticate, validateFlashcardId, flashcardRateLimiter, validators.validateRating, rateFlashcard);
 
 module.exports = router;
