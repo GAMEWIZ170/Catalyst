@@ -11,14 +11,24 @@ const imageSchema = Joi.object({
     } catch {
       return helpers.error("string.uri");
     }
-    if (parsed.hostname !== "res.cloudinary.com" || !cloudName || !parsed.pathname.split("/").includes(cloudName)) {
+    if (parsed.protocol !== "https:" || parsed.hostname !== "res.cloudinary.com" ||
+      parsed.username || parsed.password || parsed.port || !cloudName ||
+      !parsed.pathname.startsWith(`/${cloudName}/`)) {
       return helpers.error("any.invalid", { message: "Image URL must be a Cloudinary URL for this account" });
     }
     return value;
   }).messages({ "any.invalid": "{{#message}}" }),
   publicId: Joi.string(),
   alt: Joi.string().trim().min(1).max(200)
-}).with("url", ["publicId", "alt"]);
+}).with("url", ["publicId", "alt"]).custom((value, helpers) => {
+  if (value.url && (!value.publicId || !value.publicId.startsWith("catalyst/"))) {
+    return helpers.error("any.invalid", { message: "publicId must start with catalyst/ when a URL is provided" });
+  }
+  if (value.url && !decodeURIComponent(new URL(value.url).pathname).includes(`/${value.publicId}`)) {
+    return helpers.error("any.invalid", { message: "publicId must appear in the image URL" });
+  }
+  return value;
+}).messages({ "any.invalid": "{{#message}}" });
 const optionalImage = imageSchema.allow(null);
 
 const validateWith = (schema) => (req, res, next) => {
