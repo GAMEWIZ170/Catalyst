@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const crypto = require("crypto");
 const Material = require("../models/material.models");
 const Lesson = require("../models/lesson.models");
 const cloudinary = require("../config/cloudinary");
@@ -33,9 +34,13 @@ const updateMaterial = async (req, res, next) => {
 };
 const deleteMaterial = async (req, res, next) => {
   if (badId(req.params.id)) return res.status(400).json({ message: "Invalid material ID" });
-  const material = await Material.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, { deletedAt: new Date() }, { returnDocument: "after" });
-  if (!material) return res.status(404).json({ message: "Material not found" });
-  return res.status(200).json({ message: "Material deleted successfully" });
+  try {
+    const material = await Material.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, { deletedAt: new Date() }, { returnDocument: "after" });
+    if (!material) return res.status(404).json({ message: "Material not found" });
+    return res.status(200).json({ message: "Material deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
 };
 const getLessonMaterials = async (req, res, next) => {
   if (badId(req.params.id)) return res.status(400).json({ message: "Invalid lesson ID" });
@@ -46,7 +51,15 @@ const getLessonMaterials = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 const uploadMaterialFile = (req, res, next) => {
-  const stream = cloudinary.uploader.upload_stream({ folder: "catalyst/materials", resource_type: "raw", timeout: 30000 }, (error, result) => {
+  const publicId = `${crypto.randomBytes(20).toString("hex").slice(0, 20)}.pdf`;
+  const stream = cloudinary.uploader.upload_stream({
+    folder: "catalyst/materials",
+    public_id: publicId,
+    unique_filename: false,
+    overwrite: false,
+    resource_type: "raw",
+    timeout: 30000
+  }, (error, result) => {
     if (error) { const e = new Error("Material upload failed"); e.status = 502; return next(e); }
     return res.status(201).json({ data: { url: result.secure_url, publicId: result.public_id, format: "pdf", bytes: req.file.size } });
   });

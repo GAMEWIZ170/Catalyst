@@ -37,8 +37,8 @@ const cloudinaryFile = Joi.object({
     const parsed = new URL(value);
     if (parsed.protocol !== "https:" || parsed.hostname !== "res.cloudinary.com" || parsed.username || parsed.password || parsed.port || !parsed.pathname.startsWith(`/${cloudName}/`)) return helpers.error("any.invalid", { message: "Invalid Cloudinary file URL" });
     return value;
-  }),
-  publicId: Joi.string().pattern(/^catalyst\/materials\//).required(),
+  }).messages({ "any.invalid": "{{#message}}" }).required(),
+  publicId: Joi.string().pattern(/^catalyst\/materials\/.+\.pdf$/).required(),
   format: Joi.string().required(),
   bytes: Joi.number().integer().positive().required()
 }).custom((value, helpers) => {
@@ -47,9 +47,9 @@ const cloudinaryFile = Joi.object({
 }).messages({ "any.invalid": "{{#message}}" });
 const linkUrl = Joi.string().uri({ scheme: ["https"] }).custom((value, helpers) => {
   const parsed = new URL(value);
-  if (parsed.username || parsed.password || parsed.port) return helpers.error("any.invalid");
+  if (parsed.username || parsed.password || parsed.port) return helpers.error("any.invalid", { message: "Link URL cannot contain credentials or a port" });
   return value;
-});
+}).messages({ "any.invalid": "{{#message}}" });
 
 const validateWith = (schema) => (req, res, next) => {
   const { error, value } = schema.validate(req.body, { stripUnknown: true });
@@ -247,7 +247,16 @@ const validateTestSubmission = validateWith(Joi.object({
     if (value.kind === "link" && (!value.linkUrl || value.file)) return helpers.error("any.invalid", { message: "Link materials require a link" });
     return value;
   }).messages({ "any.invalid": "{{#message}}" }));
-  const validateMaterialUpdate = validateWith(Joi.object({ lesson: materialFields.lesson, title: materialFields.title, description: materialFields.description, kind: materialFields.kind, file: materialFields.file, linkUrl: materialFields.linkUrl, order: Joi.number().integer().min(1), isPublished: Joi.boolean() }).min(1));
+  const validateMaterialUpdate = validateWith(Joi.object({
+    lesson: materialFields.lesson,
+    title: materialFields.title,
+    description: materialFields.description,
+    file: materialFields.file,
+    linkUrl: materialFields.linkUrl,
+    order: Joi.number().integer().min(1),
+    isPublished: Joi.boolean(),
+    kind: Joi.any().forbidden().messages({ "any.unknown": "Material kind cannot be changed" })
+  }).min(1));
 
 module.exports = {
   objectId,
