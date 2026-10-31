@@ -4,35 +4,36 @@ const Unit = require("../models/unit.models");
 const Test = require("../models/test.models");
 const Question = require("../models/question.models");
 const TestResult = require("../models/testresult.models");
-const { findVisibleLesson } = require("../utils/visibility");
+const { findVisibleLesson, findTestsWithQuestions, findTestQuestionCounts } = require("../utils/visibility");
 
 const badId = (id) => !mongoose.isObjectIdOrHexString(id);
 
-const testSummary = async (tests, userId) => {
-  const counts = await Question.aggregate([
-    { $match: { test: { $in: tests.map((test) => test._id) }, deletedAt: null } },
-    { $group: { _id: "$test", questionCount: { $sum: 1 } } }
-  ]);
+const studentTestSummary = async (tests, userId) => {
   const results = await TestResult.find({ user: userId, test: { $in: tests.map((test) => test._id) } })
     .select("test bestScore").lean();
-  const countByTest = new Map(counts.map((item) => [item._id.toString(), item.questionCount]));
   const scoreByTest = new Map(results.map((item) => [item.test.toString(), item.bestScore]));
   return tests.map((test) => ({
     _id: test._id,
     title: test.title,
     order: test.order,
-    questionCount: countByTest.get(test._id.toString()) || 0,
+    questionCount: test.questionCount,
     bestScore: scoreByTest.get(test._id.toString()) ?? null
   }));
 };
+
+const adminTestSummary = (tests) => tests.map((test) => ({
+  _id: test._id,
+  title: test.title,
+  order: test.order,
+  questionCount: test.questionCount
+}));
 
 const getLessonByID = async (req, res, next) => {
   if (badId(req.params.id)) return res.status(400).json({ message: "Invalid lesson ID" });
   try {
     const lesson = await findVisibleLesson(req.params.id);
     if (!lesson) return res.status(404).json({ message: `Lesson with ID ${req.params.id} not found` });
-    const tests = await Test.find({ scope: "lesson", lesson: lesson._id, isPublished: true, deletedAt: null })
-      .sort({ order: 1 }).lean();
+    const tests = await findTestsWithQuestions({ scope: "lesson", lesson: lesson._id, isPublished: true, deletedAt: null });
     return res.status(200).json({
       data: {
         _id: lesson._id,
@@ -43,7 +44,7 @@ const getLessonByID = async (req, res, next) => {
         explanationImage: lesson.explanationImage,
         videoHost: lesson.videoHost,
         videoId: lesson.videoId,
-        tests: await testSummary(tests, req.user.id)
+        tests: await studentTestSummary(tests, req.user.id)
       }
     });
   } catch (error) {
@@ -56,8 +57,8 @@ const getLessonForAdmin = async (req, res, next) => {
   try {
     const lesson = await Lesson.findOne({ _id: req.params.id, deletedAt: null }).lean();
     if (!lesson) return res.status(404).json({ message: "Lesson not found" });
-    const tests = await Test.find({ scope: "lesson", lesson: lesson._id, deletedAt: null }).sort({ order: 1 }).lean();
-    return res.status(200).json({ data: { ...lesson, tests: await testSummary(tests, req.user.id) } });
+    const tests = await findTestQuestionCounts({ scope: "lesson", lesson: lesson._id, deletedAt: null });
+    return res.status(200).json({ data: { ...lesson, tests: adminTestSummary(tests) } });
   } catch (error) {
     next(error);
   }

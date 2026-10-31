@@ -1,4 +1,3 @@
-// src/controllers/admin.controller.js
 const User = require("../models/user.models");
 
 const getAllUsers = async (req, res, next) => {

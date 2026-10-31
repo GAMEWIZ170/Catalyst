@@ -2,6 +2,7 @@ const Lesson = require("../models/lesson.models");
 const Unit = require("../models/unit.models");
 const Course = require("../models/course.models");
 const Test = require("../models/test.models");
+const Question = require("../models/question.models");
 
 const courseIsVisible = (course) => Boolean(
   course && course.isPublished && !course.deletedAt
@@ -71,6 +72,25 @@ const findVisibleTest = async (id) => {
   return testIsVisible(test) ? test : null;
 };
 
+const findTestQuestionCounts = async (query) => {
+  const tests = await Test.find(query).sort({ order: 1 }).lean();
+  if (!tests.length) return [];
+  const counts = await Question.aggregate([
+    { $match: { test: { $in: tests.map((test) => test._id) }, deletedAt: null } },
+    { $group: { _id: "$test", questionCount: { $sum: 1 } } }
+  ]);
+  const countByTest = new Map(counts.map((item) => [item._id.toString(), item.questionCount]));
+  return tests.map((test) => ({
+    ...test,
+    questionCount: countByTest.get(test._id.toString()) || 0
+  }));
+};
+
+const findTestsWithQuestions = async (query) => {
+  const tests = await findTestQuestionCounts(query);
+  return tests.filter((test) => test.questionCount > 0);
+};
+
 const findVisibleQuestionTest = async (testId) => findVisibleTest(testId);
 
 module.exports = {
@@ -80,5 +100,7 @@ module.exports = {
   testIsVisible,
   findVisibleLesson,
   findVisibleTest,
+  findTestQuestionCounts,
+  findTestsWithQuestions,
   parentIsAvailable
 };

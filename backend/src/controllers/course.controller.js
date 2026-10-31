@@ -5,6 +5,7 @@ const Progress = require("../models/progress.models");
 const Test = require("../models/test.models");
 const TestResult = require("../models/testresult.models");
 const mongoose = require("mongoose");
+const Question = require("../models/question.models");
 
 const createCourse = async (req, res, next) => {
   try {
@@ -74,13 +75,19 @@ const getCourseByID = async (req, res, next) => {
         { scope: "lesson", lesson: { $in: lessonIds } }
       ]
     }).select("_id scope lesson unit course title order").sort({ order: 1 }).lean();
-    const results = await TestResult.find({ user: req.user.id, test: { $in: tests.map((test) => test._id) } })
+    const counts = await Question.aggregate([
+      { $match: { test: { $in: tests.map((test) => test._id) }, deletedAt: null } },
+      { $group: { _id: "$test", questionCount: { $sum: 1 } } }
+    ]);
+    const countByTest = new Map(counts.map((item) => [item._id.toString(), item.questionCount]));
+    const testsWithQuestions = tests.filter((test) => countByTest.has(test._id.toString()));
+    const results = await TestResult.find({ user: req.user.id, test: { $in: testsWithQuestions.map((test) => test._id) } })
       .select("test bestScore").lean();
     const scoreByTest = new Map(results.map((result) => [result.test.toString(), result.bestScore]));
     const testsByLesson = new Map();
     const testsByUnit = new Map();
     const courseTests = [];
-    for (const test of tests) {
+    for (const test of testsWithQuestions) {
       const summary = { _id: test._id, title: test.title, order: test.order, bestScore: scoreByTest.get(test._id.toString()) ?? null };
       if (test.scope === "lesson") {
         const list = testsByLesson.get(test.lesson.toString()) || [];

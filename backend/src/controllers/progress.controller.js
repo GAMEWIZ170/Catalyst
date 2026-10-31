@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Progress = require("../models/progress.models");
 const TestResult = require("../models/testresult.models");
 const Test = require("../models/test.models");
+const Question = require("../models/question.models");
 const { findVisibleLesson } = require("../utils/visibility");
 const calculateStreak = require("../utils/streak");
 
@@ -12,17 +13,21 @@ const markLessonDone = async (req, res, next) => {
   try {
     const lesson = await findVisibleLesson(req.params.id);
     if (!lesson) return res.status(404).json({ message: "Lesson not found" });
-    const publishedTest = await Test.exists({
+    const publishedTests = await Test.find({
       scope: "lesson",
       lesson: lesson._id,
       isPublished: true,
+      deletedAt: null
+    }).select("_id").lean();
+    const publishedTestIds = await Question.distinct("test", {
+      test: { $in: publishedTests.map((test) => test._id) },
       deletedAt: null
     });
     const Flashcard = mongoose.models.Flashcard;
     const publishedFlashcard = Flashcard
       ? await Flashcard.exists({ lesson: lesson._id, isPublished: true, deletedAt: null })
       : false;
-    if (publishedTest || publishedFlashcard) {
+    if (publishedTestIds.length || publishedFlashcard) {
       return res.status(409).json({ message: "Finish a test or the flashcards to complete this lesson" });
     }
     const progress = await Progress.findOneAndUpdate(

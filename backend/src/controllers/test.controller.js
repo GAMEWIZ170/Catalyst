@@ -34,6 +34,9 @@ const submitTest = async (req, res, next) => {
     const questions = await Question.find({ test: test._id, deletedAt: null })
       .select("type correctOption correctAnswer")
       .lean();
+    if (!questions.length) {
+      return res.status(409).json({ message: "This test has no questions yet" });
+    }
     const given = new Map(req.body.answers.map((answer) => [answer.questionId, answer.answer]));
     let correct = 0;
     for (const question of questions) {
