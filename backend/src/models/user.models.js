@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const avatarKeys = require("../config/avatars");
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -27,6 +28,11 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['student', 'admin'],
         default: 'student'
+    },
+    avatar: {
+        type: String,
+        enum: avatarKeys,
+        default: null
     },
     enrolledCourses: [{
         type: mongoose.Schema.Types.ObjectId,

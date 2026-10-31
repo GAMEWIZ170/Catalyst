@@ -7,6 +7,7 @@ const TestResult = require("../models/testresult.models");
 const mongoose = require("mongoose");
 const Question = require("../models/question.models");
 const Flashcard = require("../models/flashcard.models");
+const Material = require("../models/material.models");
 
 const createCourse = async (req, res, next) => {
   try {
@@ -87,6 +88,11 @@ const getCourseByID = async (req, res, next) => {
       { $group: { _id: "$lesson", count: { $sum: 1 } } }
     ]);
     const flashcardCountByLesson = new Map(flashcardCounts.map((item) => [item._id.toString(), item.count]));
+    const materialCounts = await Material.aggregate([
+      { $match: { lesson: { $in: lessonIds }, isPublished: true, deletedAt: null } },
+      { $group: { _id: "$lesson", count: { $sum: 1 } } }
+    ]);
+    const materialCountByLesson = new Map(materialCounts.map((item) => [item._id.toString(), item.count]));
     const results = await TestResult.find({ user: req.user.id, test: { $in: testsWithQuestions.map((test) => test._id) } })
       .select("test bestScore").lean();
     const scoreByTest = new Map(results.map((result) => [result.test.toString(), result.bestScore]));
@@ -136,6 +142,7 @@ const getCourseByID = async (req, res, next) => {
             score: scoreByLesson.get(lesson._id.toString()) ?? null,
             testCount: (testsByLesson.get(lesson._id.toString()) || []).length,
             flashcardCount: flashcardCountByLesson.get(lesson._id.toString()) || 0
+            , materialCount: materialCountByLesson.get(lesson._id.toString()) || 0
           }))
         ,
         tests: testsByUnit.get(unit._id.toString()) || []

@@ -1,4 +1,5 @@
 const Joi = require("joi");
+const avatarKeys = require("../config/avatars");
 
 const objectId = Joi.string().hex().length(24);
 const imageSchema = Joi.object({
@@ -30,6 +31,25 @@ const imageSchema = Joi.object({
   return value;
 }).messages({ "any.invalid": "{{#message}}" });
 const optionalImage = imageSchema.allow(null);
+const cloudinaryFile = Joi.object({
+  url: Joi.string().uri({ scheme: ["https"] }).custom((value, helpers) => {
+    const cloudName = require("../config/cloudinary").config().cloud_name;
+    const parsed = new URL(value);
+    if (parsed.protocol !== "https:" || parsed.hostname !== "res.cloudinary.com" || parsed.username || parsed.password || parsed.port || !parsed.pathname.startsWith(`/${cloudName}/`)) return helpers.error("any.invalid", { message: "Invalid Cloudinary file URL" });
+    return value;
+  }),
+  publicId: Joi.string().pattern(/^catalyst\/materials\//).required(),
+  format: Joi.string().required(),
+  bytes: Joi.number().integer().positive().required()
+}).custom((value, helpers) => {
+  if (!decodeURIComponent(new URL(value.url).pathname).includes(`/${value.publicId}`)) return helpers.error("any.invalid", { message: "File publicId must appear in the URL" });
+  return value;
+}).messages({ "any.invalid": "{{#message}}" });
+const linkUrl = Joi.string().uri({ scheme: ["https"] }).custom((value, helpers) => {
+  const parsed = new URL(value);
+  if (parsed.username || parsed.password || parsed.port) return helpers.error("any.invalid");
+  return value;
+});
 
 const validateWith = (schema) => (req, res, next) => {
   const { error, value } = schema.validate(req.body, { stripUnknown: true });
@@ -47,6 +67,7 @@ const validateLogin = validateWith(Joi.object({
   email: Joi.string().trim().lowercase().email().required(),
   password: Joi.string().max(72).required()
 }));
+const validateAvatar = validateWith(Joi.object({ avatar: Joi.alternatives().try(Joi.string().valid(...avatarKeys), Joi.valid(null)).required() }));
 
 const courseFields = {
   code: Joi.string().trim(),
@@ -213,6 +234,20 @@ const validateTestSubmission = validateWith(Joi.object({
   const validateRating = validateWith(Joi.object({
     confidence: Joi.string().valid("confident", "unsure", "unknown").required()
   }));
+  const materialFields = {
+    lesson: objectId,
+    title: Joi.string().trim().max(120),
+    description: Joi.string().trim().max(300).allow(""),
+    kind: Joi.string().valid("file", "link"),
+    file: cloudinaryFile,
+    linkUrl
+  };
+  const validateMaterial = validateWith(Joi.object({ ...materialFields, lesson: objectId.required(), title: materialFields.title.required(), kind: materialFields.kind.required(), order: Joi.number().integer().min(1), isPublished: Joi.boolean().default(false) }).custom((value, helpers) => {
+    if (value.kind === "file" && (!value.file || value.linkUrl)) return helpers.error("any.invalid", { message: "File materials require a file" });
+    if (value.kind === "link" && (!value.linkUrl || value.file)) return helpers.error("any.invalid", { message: "Link materials require a link" });
+    return value;
+  }).messages({ "any.invalid": "{{#message}}" }));
+  const validateMaterialUpdate = validateWith(Joi.object({ lesson: materialFields.lesson, title: materialFields.title, description: materialFields.description, kind: materialFields.kind, file: materialFields.file, linkUrl: materialFields.linkUrl, order: Joi.number().integer().min(1), isPublished: Joi.boolean() }).min(1));
 
 module.exports = {
   objectId,
@@ -220,6 +255,7 @@ module.exports = {
   optionalImage,
   validateRegister,
   validateLogin,
+  validateAvatar,
   validateCourse,
   validateCourseUpdate,
   validateUnit,
@@ -235,4 +271,5 @@ module.exports = {
   validateFlashcard,
   validateFlashcardUpdate,
   validateRating
+  , validateMaterial, validateMaterialUpdate
 };

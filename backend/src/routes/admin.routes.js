@@ -10,6 +10,7 @@ const {
   validateQuestion, validateQuestionUpdate,
   validateTest, validateTestUpdate,
   validateFlashcard, validateFlashcardUpdate
+  , validateMaterial, validateMaterialUpdate
 } = require("../middlewares/validate");
 
 const course = require("../controllers/course.controller");
@@ -22,6 +23,8 @@ const upload = require("../controllers/upload.controller");
 const { uploadImage } = require("../middlewares/upload");
 const uploadLimiter = require("../middlewares/uploadLimiter");
 const flashcard = require("../controllers/flashcard.controller");
+const material = require("../controllers/material.controller");
+const { uploadMaterial } = require("../middlewares/materialUpload");
 
 // Everything below this line requires a login AND the admin role
 router.use(authenticate, authorizeRole("admin"));
@@ -57,6 +60,10 @@ router.delete("/questions/:id", question.deleteQuestion);
 router.post("/flashcards", validateFlashcard, flashcard.createFlashcard);
 router.put("/flashcards/:id", validateFlashcardUpdate, flashcard.updateFlashcard);
 router.delete("/flashcards/:id", flashcard.deleteFlashcard);
+router.post("/uploads/material", uploadLimiter, uploadMaterial, material.uploadMaterialFile);
+router.post("/materials", validateMaterial, material.createMaterial);
+router.put("/materials/:id", validateMaterialUpdate, material.updateMaterial);
+router.delete("/materials/:id", material.deleteMaterial);
 
 // Uploads
 router.post("/uploads", uploadLimiter, uploadImage, upload.uploadImage);

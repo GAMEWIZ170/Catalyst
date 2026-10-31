@@ -5,6 +5,7 @@ const Test = require("../models/test.models");
 const Question = require("../models/question.models");
 const TestResult = require("../models/testresult.models");
 const Flashcard = require("../models/flashcard.models");
+const Material = require("../models/material.models");
 const getFlashcardSummary = require("../utils/flashcardSummary");
 const { findVisibleLesson, findTestsWithQuestions, findTestQuestionCounts } = require("../utils/visibility");
 
@@ -49,6 +50,7 @@ const getLessonByID = async (req, res, next) => {
         videoId: lesson.videoId,
         tests: await studentTestSummary(tests, req.user.id),
         flashcards: await getFlashcardSummary(lesson._id, req.user.id)
+        , materialCount: await Material.countDocuments({ lesson: lesson._id, isPublished: true, deletedAt: null })
       }
     });
   } catch (error) {
@@ -63,7 +65,8 @@ const getLessonForAdmin = async (req, res, next) => {
     if (!lesson) return res.status(404).json({ message: "Lesson not found" });
     const tests = await findTestQuestionCounts({ scope: "lesson", lesson: lesson._id, deletedAt: null });
     const flashcards = await Flashcard.find({ lesson: lesson._id, deletedAt: null }).sort({ order: 1 }).lean();
-    return res.status(200).json({ data: { ...lesson, tests: adminTestSummary(tests), flashcards } });
+    const materials = await Material.find({ lesson: lesson._id, deletedAt: null }).sort({ order: 1 }).lean();
+    return res.status(200).json({ data: { ...lesson, tests: adminTestSummary(tests), flashcards, materials } });
   } catch (error) {
     next(error);
   }

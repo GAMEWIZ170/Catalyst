@@ -29,6 +29,7 @@ const sendTokenResponse = (user, statusCode, res) => {
         name: user.name,
         email: user.email,
         role: user.role
+        , avatar: user.avatar
       }
     });
 };
@@ -121,7 +122,7 @@ const logout = async (req, res, next) => {
 
 const getMe = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id).select("name email role");
+    const user = await User.findById(req.user.id).select("name email role avatar");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -133,9 +134,20 @@ const getMe = async (req, res, next) => {
   }
 };
 
+const updateAvatar = async (req, res, next) => {
+  try {
+    const user = await User.findByIdAndUpdate(req.user.id, { avatar: req.body.avatar }, { returnDocument: "after", runValidators: true }).select("name email role avatar");
+    if (!user) return res.status(404).json({ message: "User not found" });
+    return res.status(200).json({ data: user });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   register,
   login,
   logout,
-  getMe
+  getMe,
+  updateAvatar
 };
