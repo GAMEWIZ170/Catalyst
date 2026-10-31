@@ -16,6 +16,7 @@ const courseRoutes = require("./routes/course.routes");
 const lessonRoutes = require("./routes/lesson.routes");
 const questionRoutes = require("./routes/question.routes");
 const progressRoutes = require("./routes/progress.routes");
+const testRoutes = require("./routes/test.routes");
 const adminRoutes = require("./routes/admin.routes");
 
 // middlewares that run on every request, in this order
@@ -35,6 +36,7 @@ app.use("/api/v1/courses", courseRoutes);
 app.use("/api/v1/lessons", lessonRoutes);
 app.use("/api/v1/questions", questionRoutes);
 app.use("/api/v1/progress", progressRoutes);
+app.use("/api/v1/tests", testRoutes);
 app.use("/api/v1/admin", adminRoutes);
 
 // these two must come after all the routes, in this order

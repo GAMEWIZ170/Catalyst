@@ -8,7 +8,8 @@ const {
   validateCourse, validateCourseUpdate,
   validateUnit, validateUnitUpdate,
   validateLesson, validateLessonUpdate,
-  validateQuestion, validateQuestionUpdate
+  validateQuestion, validateQuestionUpdate,
+  validateTest, validateTestUpdate
 } = require("../middlewares/validate");
 
 const course = require("../controllers/course.controller");
@@ -16,6 +17,7 @@ const unit = require("../controllers/unit.controller");
 const lesson = require("../controllers/lesson.controller");
 const question = require("../controllers/question.controller");
 const admin = require("../controllers/admin.controller");
+const test = require("../controllers/test.controller");
 
 // Everything below this line requires a login AND the admin role
 router.use(authenticate, authorizeRole("admin"));
@@ -36,6 +38,12 @@ router.post("/lessons", validateLesson, lesson.createLesson);
 router.get("/lessons/:id", lesson.getLessonForAdmin);
 router.put("/lessons/:id", validateLessonUpdate, lesson.updateLesson);
 router.delete("/lessons/:id", lesson.deleteLesson);
+
+// Tests
+router.post("/tests", validateTest, test.createTest);
+router.get("/tests/:id", test.getTestForAdmin);
+router.put("/tests/:id", validateTestUpdate, test.updateTest);
+router.delete("/tests/:id", test.deleteTest);
 
 // Questions
 router.post("/questions", validateQuestion, question.createQuestion);

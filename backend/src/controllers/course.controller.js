@@ -2,6 +2,8 @@ const Course = require("../models/course.models");
 const Unit = require("../models/unit.models");
 const Lesson = require("../models/lesson.models");
 const Progress = require("../models/progress.models");
+const Test = require("../models/test.models");
+const TestResult = require("../models/testresult.models");
 const mongoose = require("mongoose");
 
 const createCourse = async (req, res, next) => {
@@ -61,6 +63,38 @@ const getCourseByID = async (req, res, next) => {
       .sort({ order: 1 })
       .lean();
 
+    const lessonIds = lessons.map((lesson) => lesson._id);
+    const unitIds = units.map((unit) => unit._id);
+    const tests = await Test.find({
+      deletedAt: null,
+      isPublished: true,
+      $or: [
+        { scope: "course", course: course._id },
+        { scope: "unit", unit: { $in: unitIds } },
+        { scope: "lesson", lesson: { $in: lessonIds } }
+      ]
+    }).select("_id scope lesson unit course title order").sort({ order: 1 }).lean();
+    const results = await TestResult.find({ user: req.user.id, test: { $in: tests.map((test) => test._id) } })
+      .select("test bestScore").lean();
+    const scoreByTest = new Map(results.map((result) => [result.test.toString(), result.bestScore]));
+    const testsByLesson = new Map();
+    const testsByUnit = new Map();
+    const courseTests = [];
+    for (const test of tests) {
+      const summary = { _id: test._id, title: test.title, order: test.order, bestScore: scoreByTest.get(test._id.toString()) ?? null };
+      if (test.scope === "lesson") {
+        const list = testsByLesson.get(test.lesson.toString()) || [];
+        list.push(summary);
+        testsByLesson.set(test.lesson.toString(), list);
+      } else if (test.scope === "unit") {
+        const list = testsByUnit.get(test.unit.toString()) || [];
+        list.push(summary);
+        testsByUnit.set(test.unit.toString(), list);
+      } else {
+        courseTests.push(summary);
+      }
+    }
+
     // 4. Which of those lessons this student has completed
     const done = await Progress.find({
       user: req.user.id,
@@ -86,8 +120,11 @@ const getCourseByID = async (req, res, next) => {
             order: lesson.order,
             hasVideo: Boolean(lesson.videoId),
             completed: scoreByLesson.has(lesson._id.toString()),
-            score: scoreByLesson.get(lesson._id.toString()) ?? null
+            score: scoreByLesson.get(lesson._id.toString()) ?? null,
+            testCount: (testsByLesson.get(lesson._id.toString()) || []).length
           }))
+        ,
+        tests: testsByUnit.get(unit._id.toString()) || []
       }))
       .filter((unit) => unit.lessons.length > 0); // hide units with nothing published yet
 
@@ -98,7 +135,8 @@ const getCourseByID = async (req, res, next) => {
         progress: {
           completedLessons: done.length,
           totalLessons: lessons.length
-        }
+        },
+        tests: courseTests
       }
     });
   } catch (error) {
