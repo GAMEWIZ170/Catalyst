@@ -1,4 +1,3 @@
-// src/utils/streak.js
 const DAY = 24 * 60 * 60 * 1000;
 const toKey = (date) => date.toISOString().slice(0, 10); // "2026-10-29"
 

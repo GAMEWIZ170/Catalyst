@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const crypto = require("crypto");
 const Material = require("../models/material.models");
-const Lesson = require("../models/lesson.models");
 const cloudinary = require("../config/cloudinary");
 const { findVisibleLesson, parentIsAvailable } = require("../utils/visibility");
 const materialUrl = require("../utils/materialUrl");

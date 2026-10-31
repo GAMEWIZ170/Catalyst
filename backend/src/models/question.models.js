@@ -12,7 +12,7 @@ const optionSchema = new mongoose.Schema({
 });
 
 const questionSchema = new mongoose.Schema({
-  test: { type: mongoose.Schema.Types.ObjectId, ref: "Test" },
+  test: { type: mongoose.Schema.Types.ObjectId, ref: "Test", required: true },
   type: { type: String, enum: ["mcq", "true_false"], required: true },
   text: { type: String, required: true, trim: true, maxlength: 1500 },
   image: { type: imageSchema, default: null },

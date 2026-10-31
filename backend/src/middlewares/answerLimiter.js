@@ -1,4 +1,3 @@
-// src/middlewares/answerLimiter.js
 const { rateLimit } = require("express-rate-limit");
 
 const answerLimiter = rateLimit({

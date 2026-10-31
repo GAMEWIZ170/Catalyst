@@ -27,8 +27,8 @@ app.use(cors({
   origin: process.env.CLIENT_URL,        // only your frontend may call the API
   credentials: true                      // lets the browser send the login cookie
 }));
-app.use(express.json());                 // CHANGED: brackets added
-app.use(cookieParser());                 // CHANGED: added, so req.cookies works
+app.use(express.json());
+app.use(cookieParser());
 app.use(logger);
 app.use(generalLimiter);
 

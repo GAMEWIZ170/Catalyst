@@ -18,11 +18,7 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: [true, 'Password is required'],
-        // CHANGED: select: false hides the hash from normal queries;
-        // login asks for it with .select("+password")
         select: false
-        // CHANGED: removed minlength, because this field holds the hash,
-        // not the typed password. Length is checked in the Joi validator.
     },
     role: {
         type: String,
