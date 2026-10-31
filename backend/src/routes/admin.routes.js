@@ -17,6 +17,9 @@ const lesson = require("../controllers/lesson.controller");
 const question = require("../controllers/question.controller");
 const admin = require("../controllers/admin.controller");
 const test = require("../controllers/test.controller");
+const upload = require("../controllers/upload.controller");
+const { uploadImage } = require("../middlewares/upload");
+const uploadLimiter = require("../middlewares/uploadLimiter");
 
 // Everything below this line requires a login AND the admin role
 router.use(authenticate, authorizeRole("admin"));
@@ -48,6 +51,9 @@ router.delete("/tests/:id", test.deleteTest);
 router.post("/questions", validateQuestion, question.createQuestion);
 router.put("/questions/:id", validateQuestionUpdate, question.updateQuestion);
 router.delete("/questions/:id", question.deleteQuestion);
+
+// Uploads
+router.post("/uploads", uploadLimiter, uploadImage, upload.uploadImage);
 
 // Users
 router.get("/users", admin.getAllUsers);

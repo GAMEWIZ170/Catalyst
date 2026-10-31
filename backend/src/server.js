@@ -1,8 +1,8 @@
 require("dotenv").config();
 
 
-if (!process.env.JWT_SECRET || !process.env.JWT_EXPIRES_IN) {
-  throw new Error("JWT_SECRET and JWT_EXPIRES_IN must be set in .env");
+if (!process.env.JWT_SECRET || !process.env.JWT_EXPIRES_IN || !process.env.CLOUDINARY_URL) {
+  throw new Error("JWT_SECRET, JWT_EXPIRES_IN and CLOUDINARY_URL must be set in .env");
 }
 
 const app = require("./app");

@@ -2,7 +2,20 @@ const Joi = require("joi");
 
 const objectId = Joi.string().hex().length(24);
 const imageSchema = Joi.object({
-  url: Joi.string().uri({ scheme: ["https"] }),
+  url: Joi.string().uri({ scheme: ["https"] }).custom((value, helpers) => {
+    const cloudinary = require("../config/cloudinary");
+    const cloudName = cloudinary.config().cloud_name;
+    let parsed;
+    try {
+      parsed = new URL(value);
+    } catch {
+      return helpers.error("string.uri");
+    }
+    if (parsed.hostname !== "res.cloudinary.com" || !cloudName || !parsed.pathname.split("/").includes(cloudName)) {
+      return helpers.error("any.invalid", { message: "Image URL must be a Cloudinary URL for this account" });
+    }
+    return value;
+  }).messages({ "any.invalid": "{{#message}}" }),
   publicId: Joi.string(),
   alt: Joi.string().trim().min(1).max(200)
 }).with("url", ["publicId", "alt"]);
