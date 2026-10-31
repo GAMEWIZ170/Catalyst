@@ -38,7 +38,8 @@ const cloudinaryFile = Joi.object({
     if (parsed.protocol !== "https:" || parsed.hostname !== "res.cloudinary.com" || parsed.username || parsed.password || parsed.port || !parsed.pathname.startsWith(`/${cloudName}/`)) return helpers.error("any.invalid", { message: "Invalid Cloudinary file URL" });
     return value;
   }).messages({ "any.invalid": "{{#message}}" }).required(),
-  publicId: Joi.string().pattern(/^catalyst\/materials\/.+\.pdf$/).required(),
+  publicId: Joi.string().pattern(/^catalyst\/materials\/.+\.pdf$/).required()
+    .messages({ "string.pattern.base": "publicId must start with catalyst/materials/ and end with .pdf" }),
   format: Joi.string().required(),
   bytes: Joi.number().integer().positive().required()
 }).custom((value, helpers) => {
@@ -49,7 +50,12 @@ const linkUrl = Joi.string().uri({ scheme: ["https"] }).custom((value, helpers) 
   const parsed = new URL(value);
   if (parsed.username || parsed.password || parsed.port) return helpers.error("any.invalid", { message: "Link URL cannot contain credentials or a port" });
   return value;
-}).messages({ "any.invalid": "{{#message}}" });
+}).messages({
+  "string.uri": "Links must start with https://",
+  "string.uriCustomScheme": "Links must start with https://",
+  "string.pattern.base": "Links must start with https://",
+  "any.invalid": "{{#message}}"
+});
 
 const validateWith = (schema) => (req, res, next) => {
   const { error, value } = schema.validate(req.body, { stripUnknown: true });
