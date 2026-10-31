@@ -5,7 +5,8 @@ const imageSchema = Joi.object({
   url: Joi.string().uri({ scheme: ["https"] }),
   publicId: Joi.string(),
   alt: Joi.string().trim().min(1).max(200)
-}).when("url", { is: Joi.exist(), then: Joi.object({ alt: Joi.string().trim().min(1).max(200).required() }) });
+}).with("url", ["publicId", "alt"]);
+const optionalImage = imageSchema.allow(null);
 
 const validateWith = (schema) => (req, res, next) => {
   const { error, value } = schema.validate(req.body, { stripUnknown: true });
@@ -49,7 +50,7 @@ const lessonFields = {
   title: Joi.string().trim(),
   order: Joi.number().integer().min(1),
   explanation: Joi.string().trim().max(10000),
-  explanationImage: imageSchema,
+  explanationImage: optionalImage,
   videoHost: Joi.string().trim().allow(""),
   videoId: Joi.string().trim().allow(""),
   isPublished: Joi.boolean()
@@ -98,27 +99,29 @@ const validateTestUpdate = validateWith(Joi.object({
 
 const optionFields = Joi.object({
   text: Joi.string().trim().max(300),
-  image: imageSchema
+  image: optionalImage
 }).or("text", "image");
 const questionFields = {
   test: objectId,
   type: Joi.string().valid("mcq", "true_false"),
   text: Joi.string().trim().max(1500),
-  image: imageSchema,
-  options: Joi.array().items(optionFields).min(2).max(6),
+  image: optionalImage,
+  options: Joi.array().items(optionFields).max(6),
   correctIndex: Joi.number().integer().min(0),
   correctAnswer: Joi.string().valid("true", "false"),
   explanation: Joi.string().trim().allow("").max(4000),
-  explanationImage: imageSchema,
+  explanationImage: optionalImage,
   order: Joi.number().integer().min(1)
 };
 const questionSchema = Joi.object(questionFields).custom((value, helpers) => {
   if (value.type === "mcq") {
-    if (!value.options || value.correctIndex == null) return helpers.error("any.invalid", { message: "MCQ requires options and correctIndex" });
+    if (!value.options || value.options.length < 2 || value.options.length > 6 || value.correctIndex == null) {
+      return helpers.error("any.invalid", { message: "MCQ requires 2 to 6 options and correctIndex" });
+    }
     if (value.correctIndex >= value.options.length) return helpers.error("any.invalid", { message: "correctIndex is out of range" });
     if (value.correctAnswer != null) return helpers.error("any.invalid", { message: "MCQ cannot include correctAnswer" });
   }
-  if (value.type === "true_false" && (value.options || value.correctIndex != null || !value.correctAnswer)) {
+  if (value.type === "true_false" && ((value.options && value.options.length > 0) || value.correctIndex != null || !value.correctAnswer)) {
     return helpers.error("any.invalid", { message: "True/false requires correctAnswer and no options" });
   }
   return value;
@@ -147,6 +150,10 @@ const validateQuestionUpdate = validateWith(Joi.object({
   if (value.correctIndex !== undefined && value.options === undefined) {
     return helpers.error("any.invalid", { message: "options and correctIndex must be sent together" });
   }
+  if (value.options !== undefined && value.correctIndex !== undefined &&
+    value.correctIndex >= value.options.length) {
+    return helpers.error("any.invalid", { message: "correctIndex is out of range" });
+  }
   return value;
 }).messages({ "any.invalid": "{{#message}}" }));
 
@@ -161,6 +168,7 @@ const validateTestSubmission = validateWith(Joi.object({
 module.exports = {
   objectId,
   imageSchema,
+  optionalImage,
   validateRegister,
   validateLogin,
   validateCourse,

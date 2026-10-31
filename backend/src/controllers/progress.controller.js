@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Progress = require("../models/progress.models");
 const TestResult = require("../models/testresult.models");
+const Test = require("../models/test.models");
 const { findVisibleLesson } = require("../utils/visibility");
 const calculateStreak = require("../utils/streak");
 
@@ -11,12 +12,32 @@ const markLessonDone = async (req, res, next) => {
   try {
     const lesson = await findVisibleLesson(req.params.id);
     if (!lesson) return res.status(404).json({ message: "Lesson not found" });
+    const publishedTest = await Test.exists({
+      scope: "lesson",
+      lesson: lesson._id,
+      isPublished: true,
+      deletedAt: null
+    });
+    const Flashcard = mongoose.models.Flashcard;
+    const publishedFlashcard = Flashcard
+      ? await Flashcard.exists({ lesson: lesson._id, isPublished: true, deletedAt: null })
+      : false;
+    if (publishedTest || publishedFlashcard) {
+      return res.status(409).json({ message: "Finish a test or the flashcards to complete this lesson" });
+    }
     const progress = await Progress.findOneAndUpdate(
       { user: req.user.id, lesson: lesson._id },
       { $set: { completed: true }, $setOnInsert: { completedAt: new Date() }, $addToSet: { completedDays: todayKey() } },
       { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
     );
-    return res.status(200).json({ message: "Lesson completed", data: progress });
+    return res.status(200).json({
+      message: "Lesson completed",
+      data: {
+        lesson: progress.lesson,
+        completed: progress.completed,
+        completedAt: progress.completedAt
+      }
+    });
   } catch (error) {
     next(error);
   }
