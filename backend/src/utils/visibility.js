@@ -47,13 +47,11 @@ const parentIsAvailable = async (scope, id) => {
     return Boolean(unit && unit.course && !unit.course.deletedAt);
   }
   if (scope === "lesson") {
-    const lesson = await Lesson.findOne({ _id: id, deletedAt: null }).select("unit").populate({
-      path: "unit",
-      select: "deletedAt course",
-      populate: { path: "course", select: "deletedAt" }
-    }).lean();
-    return Boolean(lesson && lesson.unit && !lesson.unit.deletedAt &&
-      lesson.unit.course && !lesson.unit.course.deletedAt);
+    const lesson = await Lesson.findOne({ _id: id, deletedAt: null }).select("unit").lean();
+    if (!lesson) return false;
+    const unit = await Unit.findOne({ _id: lesson.unit, deletedAt: null }).select("course").lean();
+    if (!unit) return false;
+    return Boolean(await Course.exists({ _id: unit.course, deletedAt: null }));
   }
   return false;
 };

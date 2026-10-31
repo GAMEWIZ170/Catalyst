@@ -22,7 +22,7 @@ materialSchema.pre("validate", function () {
   if (this.kind === "file" && (!this.file || !this.file.url || this.linkUrl)) {
     this.invalidate("file", "File materials require a file and cannot have a link");
   }
-  if (this.kind === "link" && (!this.linkUrl || this.file)) {
+  if (this.kind === "link" && (!this.linkUrl || (this.file && this.file.url))) {
     this.invalidate("linkUrl", "Link materials require a link and cannot have a file");
   }
 });
