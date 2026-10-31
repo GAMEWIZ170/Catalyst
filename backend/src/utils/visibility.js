@@ -37,6 +37,26 @@ const testPopulate = [
   { path: "course", select: "isPublished deletedAt" }
 ];
 
+const parentIsAvailable = async (scope, id) => {
+  if (scope === "course") {
+    return Boolean(await Course.exists({ _id: id, deletedAt: null }));
+  }
+  if (scope === "unit") {
+    const unit = await Unit.findOne({ _id: id, deletedAt: null }).select("course").populate("course", "deletedAt").lean();
+    return Boolean(unit && unit.course && !unit.course.deletedAt);
+  }
+  if (scope === "lesson") {
+    const lesson = await Lesson.findOne({ _id: id, deletedAt: null }).select("unit").populate({
+      path: "unit",
+      select: "deletedAt course",
+      populate: { path: "course", select: "deletedAt" }
+    }).lean();
+    return Boolean(lesson && lesson.unit && !lesson.unit.deletedAt &&
+      lesson.unit.course && !lesson.unit.course.deletedAt);
+  }
+  return false;
+};
+
 const findVisibleLesson = async (id) => {
   const lesson = await Lesson.findOne({ _id: id, isPublished: true, deletedAt: null })
     .populate({ path: "unit", select: "deletedAt course", populate: { path: "course", select: "isPublished deletedAt" } })
@@ -60,7 +80,5 @@ module.exports = {
   testIsVisible,
   findVisibleLesson,
   findVisibleTest,
-  findVisibleQuestionTest,
-  Course,
-  Unit
+  parentIsAvailable
 };

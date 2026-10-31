@@ -90,7 +90,11 @@ const validateTest = validateWith(Joi.object({
   }
   return value;
 }).messages({ "any.invalid": "{{#message}}" }));
-const validateTestUpdate = validateWith(Joi.object(testFields).min(1));
+const validateTestUpdate = validateWith(Joi.object({
+  title: testFields.title,
+  order: testFields.order,
+  isPublished: testFields.isPublished
+}).min(1));
 
 const optionFields = Joi.object({
   text: Joi.string().trim().max(300),
@@ -125,9 +129,28 @@ const validateQuestion = validateWith(questionSchema.keys({
   text: questionFields.text.required(),
   order: questionFields.order.required()
 }));
-const validateQuestionUpdate = validateWith(questionSchema.min(1));
+const validateQuestionUpdate = validateWith(Joi.object({
+  test: questionFields.test,
+  type: Joi.any().forbidden().messages({ "any.unknown": "Question type cannot be changed" }),
+  text: questionFields.text,
+  image: questionFields.image,
+  options: questionFields.options,
+  correctIndex: questionFields.correctIndex,
+  correctAnswer: questionFields.correctAnswer,
+  explanation: questionFields.explanation,
+  explanationImage: questionFields.explanationImage,
+  order: questionFields.order
+}).min(1).custom((value, helpers) => {
+  if (value.options !== undefined && value.correctIndex === undefined) {
+    return helpers.error("any.invalid", { message: "options and correctIndex must be sent together" });
+  }
+  if (value.correctIndex !== undefined && value.options === undefined) {
+    return helpers.error("any.invalid", { message: "options and correctIndex must be sent together" });
+  }
+  return value;
+}).messages({ "any.invalid": "{{#message}}" }));
 
-const validateAnswer = validateWith(Joi.object({ answer: Joi.string().trim().allow("").max(1000).required() }));
+const validateAnswer = validateWith(Joi.object({ answer: Joi.string().trim().min(1).max(1000).required() }));
 const validateTestSubmission = validateWith(Joi.object({
   answers: Joi.array().items(Joi.object({
     questionId: objectId.required(),

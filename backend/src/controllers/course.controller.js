@@ -172,7 +172,7 @@ const updateCourse = async (req, res, next) => {
     const updatedCourse = await Course.findOneAndUpdate(
       { _id: req.params.id, deletedAt: null },
       req.body,
-      { new: true, runValidators: true }
+      { returnDocument: "after", runValidators: true }
     );
 
     if (!updatedCourse) {
@@ -207,7 +207,7 @@ const deleteCourse = async (req, res, next) => {
     const deletedCourse = await Course.findOneAndUpdate(
       { _id: req.params.id, deletedAt: null },
       { deletedAt: new Date() },
-      { new: true }
+      { returnDocument: "after" }
     );
 
     if (!deletedCourse) {

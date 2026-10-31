@@ -38,7 +38,7 @@ const updateUnit = async (req, res, next) => {
     const updatedUnit = await Unit.findOneAndUpdate(
       { _id: req.params.id, deletedAt: null },
       req.body,
-      { new: true, runValidators: true }
+      { returnDocument: "after", runValidators: true }
     );
 
     if (!updatedUnit) {
@@ -65,7 +65,7 @@ const deleteUnit = async (req, res, next) => {
     const deletedUnit = await Unit.findOneAndUpdate(
       { _id: req.params.id, deletedAt: null },
       { deletedAt: new Date() },
-      { new: true }
+      { returnDocument: "after" }
     );
 
     if (!deletedUnit) {

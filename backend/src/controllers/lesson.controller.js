@@ -81,7 +81,7 @@ const updateLesson = async (req, res, next) => {
       const unit = await Unit.findOne({ _id: req.body.unit, deletedAt: null }).populate("course", "deletedAt");
       if (!unit || !unit.course || unit.course.deletedAt) return res.status(404).json({ message: "Unit not found" });
     }
-    const lesson = await Lesson.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, req.body, { new: true, runValidators: true });
+    const lesson = await Lesson.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, req.body, { returnDocument: "after", runValidators: true });
     if (!lesson) return res.status(404).json({ message: "Lesson not found" });
     return res.status(200).json({ message: "Lesson updated successfully", data: lesson });
   } catch (error) {
@@ -92,7 +92,7 @@ const updateLesson = async (req, res, next) => {
 const deleteLesson = async (req, res, next) => {
   if (badId(req.params.id)) return res.status(400).json({ message: "Invalid lesson ID" });
   try {
-    const lesson = await Lesson.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, { deletedAt: new Date() }, { new: true });
+    const lesson = await Lesson.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, { deletedAt: new Date() }, { returnDocument: "after" });
     if (!lesson) return res.status(404).json({ message: "Lesson not found" });
     return res.status(200).json({ message: "Lesson deleted successfully" });
   } catch (error) {

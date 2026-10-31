@@ -11,6 +11,10 @@ const testSchema = new mongoose.Schema({
   deletedAt: { type: Date, default: null }
 }, { timestamps: true });
 
+testSchema.index({ lesson: 1 });
+testSchema.index({ unit: 1 });
+testSchema.index({ course: 1 });
+
 testSchema.pre("validate", async function () {
   const parents = [this.lesson, this.unit, this.course].filter(Boolean);
   if (parents.length !== 1 || !this[this.scope]) {

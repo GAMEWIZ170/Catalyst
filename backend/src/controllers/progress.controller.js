@@ -14,7 +14,7 @@ const markLessonDone = async (req, res, next) => {
     const progress = await Progress.findOneAndUpdate(
       { user: req.user.id, lesson: lesson._id },
       { $set: { completed: true }, $setOnInsert: { completedAt: new Date() }, $addToSet: { completedDays: todayKey() } },
-      { new: true, upsert: true, setDefaultsOnInsert: true }
+      { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
     );
     return res.status(200).json({ message: "Lesson completed", data: progress });
   } catch (error) {

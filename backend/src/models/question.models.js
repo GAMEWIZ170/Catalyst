@@ -25,6 +25,8 @@ const questionSchema = new mongoose.Schema({
   deletedAt: { type: Date, default: null }
 }, { timestamps: true });
 
+questionSchema.index({ test: 1, order: 1 });
+
 const validateImage = (image, path, invalidate) => {
   if (!image) return;
   if (image.url && !image.alt) invalidate(path, "Image alt text is required when a URL is provided");
