@@ -9,6 +9,7 @@ import CourseOutline from "./pages/CourseOutline";
 import Lesson from "./pages/Lesson";
 import Progress from "./pages/Progress";
 import Admin from "./pages/Admin";
+import Settings from "./pages/Settings";
 
 function ProtectedPage({ children }) {
   return <ProtectedRoute><AppShell>{children}</AppShell></ProtectedRoute>;
@@ -31,6 +32,7 @@ export default function App() {
     <Route path="/courses/:id" element={<ProtectedPage><CourseOutline /></ProtectedPage>} />
     <Route path="/lessons/:id" element={<ProtectedPage><Lesson /></ProtectedPage>} />
     <Route path="/progress" element={<ProtectedPage><Progress /></ProtectedPage>} />
+    <Route path="/settings" element={<ProtectedPage><Settings /></ProtectedPage>} />
     <Route path="/admin/*" element={<AdminPage><Admin /></AdminPage>} />
     <Route path="*" element={<Navigate to={user ? "/courses" : "/login"} replace />} />
   </Routes>;

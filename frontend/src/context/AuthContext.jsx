@@ -30,6 +30,11 @@ export function AuthProvider({ children }) {
     async logout() {
       await api.logout();
       setUser(null);
+    },
+    async updateAvatar(avatar) {
+      const response = await api.updateAvatar({ avatar });
+      setUser(response.data);
+      return response;
     }
   }), [loading, user]);
 
