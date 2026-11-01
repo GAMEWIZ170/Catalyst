@@ -8,13 +8,16 @@
     <title>Catalyst Learning</title>
     <script>
       try {
-        const key = "catalyst-theme";
-        const saved = localStorage.getItem(key);
+        const validThemes = ["light", "dark"];
+        const validPalettes = ["lagoon", "indigo", "ember", "orchid", "graphite"];
+        const savedTheme = localStorage.getItem("catalyst-theme");
+        const savedPalette = localStorage.getItem("catalyst-palette");
         const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        document.documentElement.dataset.theme = saved || (systemDark ? "dark" : "light");
-        document.querySelector('meta[name="theme-color"]').setAttribute("content", saved === "dark" || (!saved && systemDark) ? "rgb(16 42 67)" : "rgb(245 249 252)");
+        document.documentElement.dataset.theme = validThemes.includes(savedTheme) ? savedTheme : (systemDark ? "dark" : "light");
+        document.documentElement.dataset.palette = validPalettes.includes(savedPalette) ? savedPalette : "lagoon";
       } catch {
         document.documentElement.dataset.theme = "light";
+        document.documentElement.dataset.palette = "lagoon";
       }
     </script>
   </head>
