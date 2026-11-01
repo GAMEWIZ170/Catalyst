@@ -263,6 +263,33 @@ const validateTestSubmission = validateWith(Joi.object({
     isPublished: Joi.boolean(),
     kind: Joi.any().forbidden().messages({ "any.unknown": "Material kind cannot be changed" })
   }).min(1));
+  const reorderIds = Joi.array().items(objectId).min(1).max(500).unique()
+    .required().messages({ "array.unique": "ids must list every item exactly once" });
+  const validateReorderUnits = validateWith(Joi.object({
+    course: objectId.required(),
+    ids: reorderIds
+  }));
+  const validateReorderLessons = validateWith(Joi.object({
+    unit: objectId.required(),
+    ids: reorderIds
+  }));
+  const validateReorderTests = validateWith(Joi.object({
+    scope: Joi.string().valid("lesson", "unit", "course").required(),
+    parent: objectId.required(),
+    ids: reorderIds
+  }));
+  const validateReorderQuestions = validateWith(Joi.object({
+    test: objectId.required(),
+    ids: reorderIds
+  }));
+  const validateReorderFlashcards = validateWith(Joi.object({
+    lesson: objectId.required(),
+    ids: reorderIds
+  }));
+  const validateReorderMaterials = validateWith(Joi.object({
+    lesson: objectId.required(),
+    ids: reorderIds
+  }));
 
 module.exports = {
   objectId,
@@ -286,5 +313,7 @@ module.exports = {
   validateFlashcard,
   validateFlashcardUpdate,
   validateRating
-  , validateMaterial, validateMaterialUpdate
+  , validateMaterial, validateMaterialUpdate,
+  validateReorderUnits, validateReorderLessons, validateReorderTests,
+  validateReorderQuestions, validateReorderFlashcards, validateReorderMaterials
 };

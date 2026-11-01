@@ -286,6 +286,96 @@ const getAllCoursesForAdmin = async (req, res, next) => {
   }
 };
 
+const getCourseForAdmin = async (req, res, next) => {
+  if (!mongoose.isObjectIdOrHexString(req.params.id)) {
+    return res.status(400).json({ message: "Invalid course ID" });
+  }
+  try {
+    const course = await Course.findOne({ _id: req.params.id, deletedAt: null })
+      .select("_id code title description isPublished")
+      .lean();
+    if (!course) return res.status(404).json({ message: "Course not found" });
+
+    const units = await Unit.find({ course: course._id, deletedAt: null })
+      .select("_id title order")
+      .sort({ order: 1 })
+      .lean();
+    const unitIds = units.map((unit) => unit._id);
+    const lessons = await Lesson.find({ unit: { $in: unitIds }, deletedAt: null })
+      .select("_id unit title order isPublished videoId")
+      .sort({ order: 1 })
+      .lean();
+    const lessonIds = lessons.map((lesson) => lesson._id);
+    const tests = await Test.find({
+      deletedAt: null,
+      $or: [
+        { scope: "course", course: course._id },
+        { scope: "unit", unit: { $in: unitIds } },
+        { scope: "lesson", lesson: { $in: lessonIds } }
+      ]
+    }).select("_id scope course unit lesson title order isPublished").sort({ order: 1 }).lean();
+    const testIds = tests.map((test) => test._id);
+    const [questionCounts, flashcardCounts, materialCounts] = await Promise.all([
+      Question.aggregate([
+        { $match: { test: { $in: testIds }, deletedAt: null } },
+        { $group: { _id: "$test", questionCount: { $sum: 1 } } }
+      ]),
+      Flashcard.aggregate([
+        { $match: { lesson: { $in: lessonIds }, deletedAt: null } },
+        { $group: { _id: "$lesson", flashcardCount: { $sum: 1 } } }
+      ]),
+      Material.aggregate([
+        { $match: { lesson: { $in: lessonIds }, deletedAt: null } },
+        { $group: { _id: "$lesson", materialCount: { $sum: 1 } } }
+      ])
+    ]);
+
+    const questionCountByTest = new Map(questionCounts.map((item) => [item._id.toString(), item.questionCount]));
+    const flashcardCountByLesson = new Map(flashcardCounts.map((item) => [item._id.toString(), item.flashcardCount]));
+    const materialCountByLesson = new Map(materialCounts.map((item) => [item._id.toString(), item.materialCount]));
+    const testsByParent = (scope, parentKey, parentId) => tests
+      .filter((test) => test.scope === scope && test[parentKey]?.toString() === parentId.toString())
+      .map((test) => ({
+        _id: test._id,
+        title: test.title,
+        order: test.order,
+        isPublished: test.isPublished,
+        questionCount: questionCountByTest.get(test._id.toString()) || 0
+      }));
+    const lessonsByUnit = new Map();
+    for (const lesson of lessons) {
+      const items = lessonsByUnit.get(lesson.unit.toString()) || [];
+      items.push({
+        _id: lesson._id,
+        title: lesson.title,
+        order: lesson.order,
+        isPublished: lesson.isPublished,
+        hasVideo: Boolean(lesson.videoId),
+        testCount: testsByParent("lesson", "lesson", lesson._id).length,
+        flashcardCount: flashcardCountByLesson.get(lesson._id.toString()) || 0,
+        materialCount: materialCountByLesson.get(lesson._id.toString()) || 0
+      });
+      lessonsByUnit.set(lesson.unit.toString(), items);
+    }
+
+    return res.status(200).json({
+      data: {
+        ...course,
+        tests: testsByParent("course", "course", course._id),
+        units: units.map((unit) => ({
+          _id: unit._id,
+          title: unit.title,
+          order: unit.order,
+          tests: testsByParent("unit", "unit", unit._id),
+          lessons: lessonsByUnit.get(unit._id.toString()) || []
+        }))
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 
 module.exports = {
   createCourse,
@@ -293,5 +383,6 @@ module.exports = {
   getAllCourses,
   updateCourse,
   deleteCourse,
-  getAllCoursesForAdmin
+  getAllCoursesForAdmin,
+  getCourseForAdmin
 };
