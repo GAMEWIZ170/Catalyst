@@ -274,30 +274,37 @@ Create routes require an available parent. Delete routes are soft deletes.
 | Method | Path | Purpose |
 | --- | --- | --- |
 | GET | `/admin/courses` | List all non-deleted courses |
+| GET | `/admin/courses/:id` | Full editor tree with drafts, tests and lesson counts |
 | POST | `/admin/courses` | Create a course |
 | PUT | `/admin/courses/:id` | Update a course |
 | DELETE | `/admin/courses/:id` | Soft-delete a course |
 | POST | `/admin/units` | Create a unit |
 | PUT | `/admin/units/:id` | Update a unit |
 | DELETE | `/admin/units/:id` | Soft-delete a unit |
+| PUT | `/admin/units/reorder` | Reorder units with `{ "course", "ids" }` |
 | POST | `/admin/lessons` | Create a lesson |
 | GET | `/admin/lessons/:id` | Get a lesson with tests, flashcards and materials |
 | PUT | `/admin/lessons/:id` | Update a lesson |
 | DELETE | `/admin/lessons/:id` | Soft-delete a lesson |
+| PUT | `/admin/lessons/reorder` | Reorder lessons with `{ "unit", "ids" }` |
 | POST | `/admin/tests` | Create a test |
 | GET | `/admin/tests/:id` | Get a test with questions and answers |
 | PUT | `/admin/tests/:id` | Update a test |
 | DELETE | `/admin/tests/:id` | Soft-delete a test |
+| PUT | `/admin/tests/reorder` | Reorder tests with `{ "scope", "parent", "ids" }` |
 | POST | `/admin/questions` | Create a question |
 | PUT | `/admin/questions/:id` | Update a question |
 | DELETE | `/admin/questions/:id` | Soft-delete a question |
+| PUT | `/admin/questions/reorder` | Reorder questions with `{ "test", "ids" }` |
 | POST | `/admin/flashcards` | Create a flashcard |
 | PUT | `/admin/flashcards/:id` | Update a flashcard |
 | DELETE | `/admin/flashcards/:id` | Soft-delete a flashcard |
+| PUT | `/admin/flashcards/reorder` | Reorder flashcards with `{ "lesson", "ids" }` |
 | POST | `/admin/uploads/material` | Upload a PDF material |
 | POST | `/admin/materials` | Create a material |
 | PUT | `/admin/materials/:id` | Update a material |
 | DELETE | `/admin/materials/:id` | Soft-delete a material |
+| PUT | `/admin/materials/reorder` | Reorder materials with `{ "lesson", "ids" }` |
 | POST | `/admin/uploads` | Upload an image |
 | GET | `/admin/users` | Paginated user list without password hashes |
 
