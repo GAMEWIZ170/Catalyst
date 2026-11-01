@@ -33,7 +33,7 @@ export default function ThemeToggle() {
       }
     })();
 
-    if (!stored) {
+    if (stored !== "light" && stored !== "dark") {
       const handleSystemTheme = (event) => {
         const nextTheme = event.matches ? "dark" : "light";
         applyTheme(nextTheme);
