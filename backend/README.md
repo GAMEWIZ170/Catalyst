@@ -54,7 +54,7 @@ Never commit `.env`: it holds database credentials, the token secret and the Clo
 | `CLIENT_URL` | Exact frontend origin allowed by CORS | `http://localhost:5173` |
 | `CLOUDINARY_URL` | Cloudinary SDK configuration | `cloudinary://API_KEY:API_SECRET@CLOUD_NAME` |
 
-Find `CLOUDINARY_URL` in the Cloudinary Console under the product environment's API environment variable or API keys area. Never commit it or paste the API secret into source control.
+Find `CLOUDINARY_URL` in the Cloudinary Console under the product environment's API environment variable or API keys area. Never commit it or paste the API secret into source control. In Cloudinary, go to Settings, then Security, and tick "Allow delivery of PDF and ZIP files"; without it every PDF link returns 401.
 
 Startup checks that `JWT_SECRET`, `JWT_EXPIRES_IN` and `CLOUDINARY_URL` exist before connecting to MongoDB. It then prints `Server running on port ...` after the database connection succeeds.
 
@@ -111,7 +111,7 @@ Use an HTTP client that keeps cookies. Browser clients must send `credentials: "
 
 All routes start with `/api/v1`. Successful responses use `{ "data": ... }` where applicable. Errors use `{ "message": "..." }`.
 
-**Access levels:** *Public* means anyone, *Student* means logged in, and *Admin* means logged in with the `admin` role.
+**Access levels:** *Public* means anyone, *Student* means logged in, and *Admin* means logged in with the `admin` role. Every admin route also runs `authenticate -> authorizeRole("admin")`.
 
 | Status | Meaning |
 | --- | --- |
@@ -172,9 +172,48 @@ Example outline lesson:
 | PUT | `/admin/questions/:id` | Admin | Update a question |
 | DELETE | `/admin/questions/:id` | Admin | Soft-delete a question |
 
-MCQ updates send `options` and `correctIndex` together in the validator contract; saved options receive IDs and the correct option is stored by option ID. A true/false question has no options or `correctIndex` and requires `correctAnswer` equal to `"true"` or `"false"`. Question and explanation images use `{ "url", "publicId", "alt" }`; `alt` is required when a URL is present.
+To create or update a multiple-choice question, send options (a list without ids) and correctIndex (the position of the correct option) together. The server saves the options, gives each an id, and stores the id of the correct one. A question's type and a material's kind cannot be changed after creation. A true/false question has no options or correctIndex and requires correctAnswer equal to `"true"` or `"false"`. Question and explanation images use `{ "url", "publicId", "alt" }`; `alt` is required when a URL is present.
 
-Example:
+`POST /questions/:id/answer` example:
+
+```json
+{
+  "data": {
+    "isCorrect": false,
+    "correctAnswer": { "_id": "...", "text": "B", "image": null },
+    "explanation": "...",
+    "explanationImage": null
+  }
+}
+```
+
+`GET /tests/:id` example:
+
+```json
+{
+  "data": {
+    "_id": "...",
+    "title": "Atomic structure",
+    "scope": "lesson",
+    "order": 1,
+    "questions": [
+      {
+        "_id": "...",
+        "type": "mcq",
+        "text": "Which particle is negatively charged?",
+        "image": null,
+        "options": [
+          { "_id": "...", "text": "Electron", "image": null },
+          { "_id": "...", "text": "Proton", "image": null }
+        ],
+        "order": 1
+      }
+    ]
+  }
+}
+```
+
+`POST /tests/:id/submit` example:
 
 ```json
 { "data": { "score": 80, "correct": 4, "total": 5, "bestScore": 80, "attempts": 2 } }
@@ -230,13 +269,36 @@ Images are limited to 2 MB. The declared MIME type is a cheap first rejection; t
 
 ### Admin content
 
-Every admin route requires authentication and the `admin` role. Create routes require an available parent. Delete routes are soft deletes.
+Create routes require an available parent. Delete routes are soft deletes.
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| GET/POST/PUT/DELETE | `/admin/courses`, `/admin/courses/:id` | Course administration |
-| POST/PUT/DELETE | `/admin/units`, `/admin/units/:id` | Unit administration |
-| POST/GET/PUT/DELETE | `/admin/lessons`, `/admin/lessons/:id` | Lesson administration |
+| GET | `/admin/courses` | List all non-deleted courses |
+| POST | `/admin/courses` | Create a course |
+| PUT | `/admin/courses/:id` | Update a course |
+| DELETE | `/admin/courses/:id` | Soft-delete a course |
+| POST | `/admin/units` | Create a unit |
+| PUT | `/admin/units/:id` | Update a unit |
+| DELETE | `/admin/units/:id` | Soft-delete a unit |
+| POST | `/admin/lessons` | Create a lesson |
+| GET | `/admin/lessons/:id` | Get a lesson with tests, flashcards and materials |
+| PUT | `/admin/lessons/:id` | Update a lesson |
+| DELETE | `/admin/lessons/:id` | Soft-delete a lesson |
+| POST | `/admin/tests` | Create a test |
+| GET | `/admin/tests/:id` | Get a test with questions and answers |
+| PUT | `/admin/tests/:id` | Update a test |
+| DELETE | `/admin/tests/:id` | Soft-delete a test |
+| POST | `/admin/questions` | Create a question |
+| PUT | `/admin/questions/:id` | Update a question |
+| DELETE | `/admin/questions/:id` | Soft-delete a question |
+| POST | `/admin/flashcards` | Create a flashcard |
+| PUT | `/admin/flashcards/:id` | Update a flashcard |
+| DELETE | `/admin/flashcards/:id` | Soft-delete a flashcard |
+| POST | `/admin/uploads/material` | Upload a PDF material |
+| POST | `/admin/materials` | Create a material |
+| PUT | `/admin/materials/:id` | Update a material |
+| DELETE | `/admin/materials/:id` | Soft-delete a material |
+| POST | `/admin/uploads` | Upload an image |
 | GET | `/admin/users` | Paginated user list without password hashes |
 
 ## How it works
@@ -254,7 +316,7 @@ A visible lesson requires a published lesson and course, an available unit, and 
 | `mcq` | `text`, `options`, `correctOption` | 2 to 6 option objects; each option has text or an image; correct option must be one option |
 | `true_false` | `text`, `correctAnswer` | No options or `correctOption`; answer is `"true"` or `"false"` |
 
-Student serializers omit correct answers. Scores are calculated on the server. An empty test cannot be submitted for credit.
+Student serializers omit correct answers. Scores are calculated on the server. An empty test cannot be submitted for credit. Unit tests and course tests record a result but never complete a lesson. Mark as done returns `409` for any lesson with a test that has questions or a published flashcard.
 
 ### Streaks
 
@@ -348,6 +410,7 @@ src/
 | `400` from an upload | The field name, byte signature, file size, URL host or public ID rule is invalid |
 | `401` after login | The client is not keeping cookies |
 | `403` on an admin route | The account is not an admin or the role change was not followed by a new login |
+| `401` on a material URL | In Cloudinary, go to Settings, then Security, and tick "Allow delivery of PDF and ZIP files" |
 | Lists are empty | Content is unpublished or deleted |
 
 ## Known limitations
