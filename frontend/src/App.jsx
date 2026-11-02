@@ -10,7 +10,7 @@ import Lesson from "./pages/Lesson";
 import Progress from "./pages/Progress";
 import AdminCourses from "./pages/AdminCourses";
 import AdminCourseEditor from "./pages/AdminCourseEditor";
-import AdminTestPlaceholder from "./pages/AdminTestPlaceholder";
+import AdminTestEditor from "./pages/AdminTestEditor";
 import AdminLessonEditor from "./pages/AdminLessonEditor";
 import Settings from "./pages/Settings";
 import AdminLayout from "./components/admin/AdminLayout";
@@ -38,7 +38,7 @@ export default function App() {
     <Route path="/progress" element={<ProtectedPage><Progress /></ProtectedPage>} />
     <Route path="/settings" element={<ProtectedPage><Settings /></ProtectedPage>} />
     <Route path="/admin/courses/:id" element={<AdminPage><AdminCourseEditor /></AdminPage>} />
-    <Route path="/admin/tests/:id" element={<AdminPage><AdminTestPlaceholder /></AdminPage>} />
+    <Route path="/admin/tests/:id" element={<AdminPage><AdminTestEditor /></AdminPage>} />
     <Route path="/admin/lessons/:id" element={<AdminPage><AdminLessonEditor /></AdminPage>} />
     <Route path="/admin/*" element={<AdminPage><AdminCourses /></AdminPage>} />
     <Route path="*" element={<Navigate to={user ? "/courses" : "/login"} replace />} />
