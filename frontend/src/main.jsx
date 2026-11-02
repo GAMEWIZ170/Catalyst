@@ -12,7 +12,11 @@ import "./styles/global.css";
 const router = createBrowserRouter([
   {
     path: "*",
-    element: <AuthProvider><App /></AuthProvider>
+    element: <AuthProvider><App /></AuthProvider>,
+    future: {
+      v7_startTransition: true,
+      v7_relativeSplatPath: true
+    }
   }
 ]);
 

@@ -99,7 +99,13 @@ export default function AdminCourseEditor() {
       if (kind === "unit") await api.reorderUnits({ course: parent, ids });
       else await api.reorderLessons({ unit: parent, ids });
       setMessage("Moved");
-      setFocusTarget({ kind, id: idOf(items[index]), direction: direction < 0 ? "up" : "down" });
+      const movedToEnd = target === items.length - 1;
+      const movedToStart = target === 0;
+      setFocusTarget({
+        kind,
+        id: idOf(items[index]),
+        direction: movedToEnd ? "up" : movedToStart ? "down" : direction < 0 ? "up" : "down"
+      });
       await load();
     } catch (err) {
       setError(err.message);
