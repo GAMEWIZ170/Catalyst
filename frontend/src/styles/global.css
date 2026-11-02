@@ -935,6 +935,130 @@ h3 {
   resize: vertical;
 }
 
+.admin-editor-section {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  margin-bottom: 1rem;
+  padding: clamp(1rem, 3vw, 1.5rem);
+}
+
+.admin-editor-section h2 {
+  margin-top: 0;
+}
+
+.admin-details-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.editor-actions,
+.tree-controls,
+.tree-add-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.editor-actions {
+  justify-content: flex-end;
+}
+
+.editor-actions .muted {
+  margin-right: auto;
+}
+
+.admin-tree {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.unit-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  padding: 1rem;
+}
+
+.tree-item-header,
+.lesson-row,
+.test-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.tree-item-header {
+  justify-content: space-between;
+}
+
+.lesson-row,
+.test-row {
+  border-top: 1px solid var(--line);
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+}
+
+.lesson-row > a {
+  flex: 1 1 180px;
+}
+
+.lesson-meta {
+  align-items: center;
+  display: flex;
+  flex: 1 1 260px;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.count-chip {
+  background: var(--paper);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+}
+
+.icon-button {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  color: var(--ink);
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.45rem;
+}
+
+.inline-add-form {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.inline-add-form input {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  color: var(--ink);
+  flex: 1 1 220px;
+  min-height: 44px;
+  padding: 0.5rem 0.65rem;
+}
+
+.test-row {
+  color: var(--ink);
+  justify-content: flex-start;
+}
+
+.test-row span:first-child {
+  flex: 1;
+  font-weight: 600;
+}
+
 .breadcrumbs {
   margin-bottom: 1rem;
 }
