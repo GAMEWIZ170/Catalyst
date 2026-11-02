@@ -39,7 +39,7 @@ export default function AdminCourseEditor() {
   const unitButtonRefs = useRef({});
   const lessonButtonRefs = useRef({});
   const dirty = Boolean(details && JSON.stringify(details) !== JSON.stringify({ code: course.code, title: course.title, description: course.description }));
-  useUnsavedChanges(dirty);
+  const blocker = useUnsavedChanges(dirty);
 
   async function load() {
     setLoading(true);
@@ -59,7 +59,7 @@ export default function AdminCourseEditor() {
 
   useEffect(() => {
     if (!focusTarget) return;
-    const ref = focusTarget.kind === "unit" ? unitButtonRefs.current[focusTarget.id] : lessonButtonRefs.current[focusTarget.id];
+    const ref = focusTarget.kind === "unit" ? unitButtonRefs.current[`${focusTarget.id}-${focusTarget.direction}`] : lessonButtonRefs.current[`${focusTarget.id}-${focusTarget.direction}`];
     ref?.focus();
     setFocusTarget(null);
   }, [course, focusTarget]);
@@ -98,7 +98,7 @@ export default function AdminCourseEditor() {
       if (kind === "unit") await api.reorderUnits({ course: parent, ids });
       else await api.reorderLessons({ unit: parent, ids });
       setMessage("Moved");
-      setFocusTarget({ kind, id: idOf(items[index]) });
+      setFocusTarget({ kind, id: idOf(items[index]), direction: direction < 0 ? "up" : "down" });
       await load();
     } catch (err) {
       setError(err.message);
@@ -109,7 +109,7 @@ export default function AdminCourseEditor() {
     event.preventDefault();
     if (!newUnit.trim()) return;
     try {
-      await api.createUnit({ course: id, title: newUnit.trim() });
+      await api.createUnit({ course: id, title: newUnit.trim(), order: (course.units || []).length + 1 });
       setNewUnit("");
       setAddUnit(false);
       setMessage("Saved");
@@ -123,7 +123,7 @@ export default function AdminCourseEditor() {
     event.preventDefault();
     if (!newLesson.trim()) return;
     try {
-      await api.createLesson({ unit: idOf(unit), title: newLesson.trim(), explanation: "Explanation coming soon.", isPublished: false });
+      await api.createLesson({ unit: idOf(unit), title: newLesson.trim(), order: (unit.lessons || []).length + 1, explanation: "Explanation coming soon.", isPublished: false });
       setNewLesson("");
       setAddLesson(null);
       setMessage("Saved");
@@ -135,7 +135,8 @@ export default function AdminCourseEditor() {
 
   async function createTest(scope, parent) {
     try {
-      await api.createTest({ scope, [scope]: parent, title: "Untitled test", isPublished: false });
+      const currentTests = scope === "course" ? (course.tests || course.courseTests || []) : (course.units || []).find((unit) => idOf(unit) === parent)?.tests || [];
+      await api.createTest({ scope, [scope]: parent, title: "Untitled test", order: currentTests.length + 1, isPublished: false });
       setMessage("Saved");
       await load();
     } catch (err) {
@@ -190,13 +191,13 @@ export default function AdminCourseEditor() {
           const unitId = idOf(unit);
           const lessons = unit.lessons || [];
           return <article className="unit-card" key={unitId}>
-            <header className="tree-item-header"><InlineRename name={unit.title} onSave={(title) => renameUnit(unit, title)} /><div className="tree-controls"><MoveButton buttonRef={(element) => { unitButtonRefs.current[unitId] = element; }} label="Move unit up" disabled={index === 0} onClick={() => reorder("unit", id, units, index, -1)} /><MoveButton label="Move unit down" disabled={index === units.length - 1} onClick={() => reorder("unit", id, units, index, 1)} /><ActionMenu actions={[{ label: "Delete unit", onSelect: () => setConfirmTarget({ type: "unit", item: unit }) }]} /></div></header>
+            <header className="tree-item-header"><InlineRename name={unit.title} onSave={(title) => renameUnit(unit, title)} /><div className="tree-controls"><MoveButton buttonRef={(element) => { unitButtonRefs.current[`${unitId}-up`] = element; }} label="Move unit up" disabled={index === 0} onClick={() => reorder("unit", id, units, index, -1)} /><MoveButton buttonRef={(element) => { unitButtonRefs.current[`${unitId}-down`] = element; }} label="Move unit down" disabled={index === units.length - 1} onClick={() => reorder("unit", id, units, index, 1)} /><ActionMenu actions={[{ label: "Delete unit", onSelect: () => setConfirmTarget({ type: "unit", item: unit }) }]} /></div></header>
             {lessons.map((lesson, lessonIndex) => {
               const lessonId = idOf(lesson);
               return <div className="lesson-row" key={lessonId}>
                 <Link to={`/admin/lessons/${lessonId}`}><strong>{lesson.title}</strong></Link>
                 <div className="lesson-meta"><StatusBadge isPublished={lesson.isPublished} /><span className="count-chip">{lesson.testCount || 0} tests</span><span className="count-chip">{lesson.flashcardCount || 0} flashcards</span><span className="count-chip">{lesson.materialCount || 0} materials</span>{lesson.hasVideo && <span className="count-chip">Video</span>}</div>
-                <div className="tree-controls"><MoveButton buttonRef={(element) => { lessonButtonRefs.current[lessonId] = element; }} label="Move lesson up" disabled={lessonIndex === 0} onClick={() => reorder("lesson", unitId, lessons, lessonIndex, -1)} /><MoveButton label="Move lesson down" disabled={lessonIndex === lessons.length - 1} onClick={() => reorder("lesson", unitId, lessons, lessonIndex, 1)} /><Switch checked={lesson.isPublished} onChange={(value) => api.updateLesson(lessonId, { isPublished: value }).then(load).catch((err) => setError(err.message))} label={lesson.isPublished ? "Published" : "Publish"} /><ActionMenu actions={[{ label: "Delete lesson", onSelect: () => setConfirmTarget({ type: "lesson", item: lesson }) }]} /></div>
+                <div className="tree-controls"><MoveButton buttonRef={(element) => { lessonButtonRefs.current[`${lessonId}-up`] = element; }} label="Move lesson up" disabled={lessonIndex === 0} onClick={() => reorder("lesson", unitId, lessons, lessonIndex, -1)} /><MoveButton buttonRef={(element) => { lessonButtonRefs.current[`${lessonId}-down`] = element; }} label="Move lesson down" disabled={lessonIndex === lessons.length - 1} onClick={() => reorder("lesson", unitId, lessons, lessonIndex, 1)} /><Switch checked={lesson.isPublished} onChange={(value) => api.updateLesson(lessonId, { isPublished: value }).then(load).catch((err) => setError(err.message))} label={lesson.isPublished ? "Published" : "Publish"} /><ActionMenu actions={[{ label: "Delete lesson", onSelect: () => setConfirmTarget({ type: "lesson", item: lesson }) }]} /></div>
               </div>;
             })}
             {unit.tests?.map((test) => <Link className="test-row" key={idOf(test)} to={`/admin/tests/${idOf(test)}`}><span>{test.title}</span><StatusBadge isPublished={test.isPublished} /><span>{test.questionCount || test.questions?.length || 0} questions</span></Link>)}
@@ -208,5 +209,6 @@ export default function AdminCourseEditor() {
     </section>
     <section className="admin-editor-section"><h2>Course tests</h2>{courseTests.map((test) => <Link className="test-row" key={idOf(test)} to={`/admin/tests/${idOf(test)}`}><span>{test.title}</span><StatusBadge isPublished={test.isPublished} /><span>{test.questionCount || test.questions?.length || 0} questions</span></Link>)}<button className="button button-secondary" type="button" onClick={() => createTest("course", id)}>Add course test</button></section>
     <ConfirmDialog open={Boolean(confirmTarget)} title={`Delete ${confirmTarget?.type || "item"}?`} description="This content will be removed from the course." confirmLabel="Delete" onConfirm={removeTarget} onCancel={() => setConfirmTarget(null)} />
+    <ConfirmDialog open={blocker.state === "blocked"} title="Leave without saving?" description="Your unsaved changes will be lost." cancelLabel="Stay" confirmLabel="Leave" onConfirm={() => blocker.proceed()} onCancel={() => blocker.reset()} />
   </div></div>;
 }
