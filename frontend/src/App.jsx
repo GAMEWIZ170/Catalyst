@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Link, Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import AppShell from "./components/AppShell";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -10,6 +10,7 @@ import Lesson from "./pages/Lesson";
 import Progress from "./pages/Progress";
 import Admin from "./pages/Admin";
 import Settings from "./pages/Settings";
+import AdminLayout from "./components/admin/AdminLayout";
 
 function ProtectedPage({ children }) {
   return <ProtectedRoute><AppShell>{children}</AppShell></ProtectedRoute>;
@@ -19,7 +20,7 @@ function AdminPage({ children }) {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
-  if (user.role !== "admin") return <Navigate to="/courses" replace />;
+  if (user.role !== "admin") return <AppShell><AdminLayout><div className="access-denied"><h1>You do not have access to this page</h1><p>Only administrators can manage Catalyst content.</p><Link className="button button-primary" to="/courses">Back to courses</Link></div></AdminLayout></AppShell>;
   return <AppShell>{children}</AppShell>;
 }
 
