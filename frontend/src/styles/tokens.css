@@ -31,6 +31,7 @@
   --accent-button: #2B5CE6;
   --streak: #2B5CE6;
   --focus: 0 0 0 3px rgb(43 92 230 / 22%);
+  color-scheme: light;
 }
 
 :root[data-palette="ember"] {
@@ -43,6 +44,7 @@
   --accent-button: #C2410C;
   --streak: #C2410C;
   --focus: 0 0 0 3px rgb(194 65 12 / 22%);
+  color-scheme: light;
 }
 
 :root[data-palette="orchid"] {
@@ -55,6 +57,7 @@
   --accent-button: #7E3FC4;
   --streak: #7E3FC4;
   --focus: 0 0 0 3px rgb(126 63 196 / 22%);
+  color-scheme: light;
 }
 
 :root[data-palette="graphite"] {
@@ -67,6 +70,7 @@
   --accent-button: #334155;
   --streak: #334155;
   --focus: 0 0 0 3px rgb(51 65 85 / 22%);
+  color-scheme: light;
 }
 
 :root[data-palette="lagoon"][data-theme="dark"] {
