@@ -130,7 +130,7 @@ export default function AdminCourses() {
     <ConfirmDialog
       open={Boolean(deleteTarget)}
       title="Delete course?"
-      description="This course will disappear for students and can be restored by an administrator later."
+      description="The course will disappear for students. Its content is kept, but it cannot be restored from this page yet."
       confirmLabel="Delete course"
       onConfirm={deleteCourse}
       onCancel={() => setDeleteTarget(null)}
