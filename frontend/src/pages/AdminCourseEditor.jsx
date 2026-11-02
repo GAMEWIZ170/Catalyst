@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import Breadcrumbs from "../components/admin/Breadcrumbs";
 import ConfirmDialog from "../components/admin/ConfirmDialog";
@@ -24,6 +24,7 @@ function MoveButton({ label, disabled, onClick, buttonRef }) {
 
 export default function AdminCourseEditor() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [course, setCourse] = useState(null);
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -143,9 +144,8 @@ export default function AdminCourseEditor() {
   async function createTest(scope, parent) {
     try {
       const currentTests = scope === "course" ? (course.tests || course.courseTests || []) : (course.units || []).find((unit) => idOf(unit) === parent)?.tests || [];
-      await api.createTest({ scope, [scope]: parent, title: "Untitled test", order: currentTests.length + 1, isPublished: false });
-      setMessage("Saved");
-      await load();
+      const created = dataOf(await api.createTest({ scope, [scope]: parent, title: "Untitled test", order: currentTests.length + 1, isPublished: false }));
+      navigate(`/admin/tests/${idOf(created)}`, { state: { trail: [{ label: "Courses", to: "/admin" }, { label: course.code || course.title, to: `/admin/courses/${id}` }, ...(scope === "unit" ? [{ label: (course.units || []).find((unit) => idOf(unit) === parent)?.title || "Unit" }] : []), { label: created.title || "Untitled test" }] } });
     } catch (err) {
       setError(err.message);
     }
@@ -207,14 +207,14 @@ export default function AdminCourseEditor() {
                 <div className="tree-controls"><button data-focus-key={`${lessonId}-up`} ref={(element) => { lessonButtonRefs.current[`${lessonId}-up`] = element; }} className="icon-button" type="button" aria-label="Move lesson up" disabled={lessonIndex === 0} onClick={() => reorder("lesson", unitId, lessons, lessonIndex, -1)}>Up</button><button data-focus-key={`${lessonId}-down`} ref={(element) => { lessonButtonRefs.current[`${lessonId}-down`] = element; }} className="icon-button" type="button" aria-label="Move lesson down" disabled={lessonIndex === lessons.length - 1} onClick={() => reorder("lesson", unitId, lessons, lessonIndex, 1)}>Down</button><Switch checked={lesson.isPublished} onChange={(value) => api.updateLesson(lessonId, { isPublished: value }).then(load).catch((err) => setError(err.message))} label={lesson.isPublished ? "Published" : "Publish"} /><ActionMenu actions={[{ label: "Delete lesson", onSelect: () => setConfirmTarget({ type: "lesson", item: lesson }) }]} /></div>
               </div>;
             })}
-            {unit.tests?.map((test) => <Link className="test-row" key={idOf(test)} to={`/admin/tests/${idOf(test)}`}><span>{test.title}</span><StatusBadge isPublished={test.isPublished} /><span>{test.questionCount || test.questions?.length || 0} questions</span></Link>)}
+            {unit.tests?.map((test) => <Link className="test-row" key={idOf(test)} to={`/admin/tests/${idOf(test)}`} state={{ trail: [{ label: "Courses", to: "/admin" }, { label: course.code || course.title, to: `/admin/courses/${id}` }, { label: unit.title, to: `/admin/courses/${id}` }, { label: test.title }] }}><span>{test.title}</span><StatusBadge isPublished={test.isPublished} /><span>{test.questionCount || test.questions?.length || 0} questions</span></Link>)}
             {addLesson === unitId ? <form className="inline-add-form" onSubmit={(event) => createLesson(event, unit)}><input autoFocus required value={newLesson} onChange={(event) => setNewLesson(event.target.value)} aria-label="Lesson title" /><button className="button button-primary" type="submit">Add lesson</button><button className="button button-secondary" type="button" onClick={() => setAddLesson(null)}>Cancel</button></form> : <div className="tree-add-actions"><button className="button button-secondary" type="button" onClick={() => setAddLesson(unitId)}>Add lesson</button><button className="button button-secondary" type="button" onClick={() => createTest("unit", unitId)}>Add unit test</button></div>}
           </article>;
         })}
       </div>
       {addUnit ? <form className="inline-add-form" onSubmit={createUnit}><input autoFocus required value={newUnit} onChange={(event) => setNewUnit(event.target.value)} aria-label="Unit title" /><button className="button button-primary" type="submit">Add unit</button><button className="button button-secondary" type="button" onClick={() => setAddUnit(false)}>Cancel</button></form> : <button className="button button-secondary" type="button" onClick={() => setAddUnit(true)}>Add unit</button>}
     </section>
-    <section className="admin-editor-section"><h2>Course tests</h2>{courseTests.map((test) => <Link className="test-row" key={idOf(test)} to={`/admin/tests/${idOf(test)}`}><span>{test.title}</span><StatusBadge isPublished={test.isPublished} /><span>{test.questionCount || test.questions?.length || 0} questions</span></Link>)}<button className="button button-secondary" type="button" onClick={() => createTest("course", id)}>Add course test</button></section>
+    <section className="admin-editor-section"><h2>Course tests</h2>{courseTests.map((test) => <Link className="test-row" key={idOf(test)} to={`/admin/tests/${idOf(test)}`} state={{ trail: [{ label: "Courses", to: "/admin" }, { label: course.code || course.title, to: `/admin/courses/${id}` }, { label: test.title }] }}><span>{test.title}</span><StatusBadge isPublished={test.isPublished} /><span>{test.questionCount || test.questions?.length || 0} questions</span></Link>)}<button className="button button-secondary" type="button" onClick={() => createTest("course", id)}>Add course test</button></section>
     <ConfirmDialog open={Boolean(confirmTarget)} title={`Delete ${confirmTarget?.type || "item"}?`} description="This content will be removed from the course." confirmLabel="Delete" onConfirm={removeTarget} onCancel={() => setConfirmTarget(null)} />
     <ConfirmDialog open={blocker.state === "blocked"} title="Leave without saving?" description="Your unsaved changes will be lost." cancelLabel="Stay" confirmLabel="Leave" onConfirm={() => blocker.proceed()} onCancel={() => blocker.reset()} />
   </div></div>;
