@@ -7,6 +7,9 @@ import StatusBadge from "../components/admin/StatusBadge";
 import StatusMessage from "../components/admin/StatusMessage";
 import Switch from "../components/admin/Switch";
 import useUnsavedChanges from "../hooks/useUnsavedChanges";
+import RichText from "../components/RichText";
+import FormulaHelp from "../components/admin/FormulaHelp";
+import ImageField from "../components/admin/ImageField";
 
 function dataOf(payload) {
   return payload.data || payload;
@@ -35,7 +38,7 @@ export default function AdminLessonEditor() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const dirty = Boolean(lesson && form && JSON.stringify(form) !== JSON.stringify({ title: lesson.title, explanation: lesson.explanation, videoHost: lesson.videoHost || "", videoId: lesson.videoId || "" }));
+  const dirty = Boolean(lesson && form && JSON.stringify(form) !== JSON.stringify({ title: lesson.title, explanation: lesson.explanation, explanationImage: lesson.explanationImage || null, videoHost: lesson.videoHost || "", videoId: lesson.videoId || "" }));
   const blocker = useUnsavedChanges(dirty);
 
   async function load() {
@@ -44,7 +47,7 @@ export default function AdminLessonEditor() {
     try {
       const next = dataOf(await api.getAdminLesson(id));
       setLesson(next);
-      setForm({ title: next.title, explanation: next.explanation, videoHost: next.videoHost || "", videoId: next.videoId || "" });
+      setForm({ title: next.title, explanation: next.explanation, explanationImage: next.explanationImage || null, videoHost: next.videoHost || "", videoId: next.videoId || "" });
       if (next.courseCode || next.unitTitle) setContext({ courseCode: next.courseCode || "", unitTitle: next.unitTitle || "" });
       else {
         const courses = dataOf(await api.getAdminCourses());
@@ -122,11 +125,12 @@ export default function AdminLessonEditor() {
     {tab === "details" ? <form className="admin-editor-section lesson-details-form" onSubmit={save}>
       <label className="admin-field">Title<input required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></label>
       <label className="admin-field">Explanation<textarea required rows="12" value={form.explanation} onChange={(event) => setForm({ ...form, explanation: event.target.value })} /></label>
-      <p className="preview-label">Preview</p><div className="explanation-preview">{form.explanation.split("\n").map((line, index) => <span key={index}>{line}{index < form.explanation.split("\n").length - 1 && <br />}</span>)}</div>
+      <div className="field-heading"><p className="preview-label">Preview</p><FormulaHelp /></div><div className="explanation-preview"><RichText>{form.explanation}</RichText></div>
+      <ImageField label="Explanation image" value={form.explanationImage} onChange={(explanationImage) => setForm({ ...form, explanationImage })} />
       {form.explanation === "Explanation coming soon." && <p className="muted">This is still the placeholder explanation. Add real content before publishing.</p>}
       <label className="admin-field">Video host<select value={form.videoHost} onChange={(event) => setForm({ ...form, videoHost: event.target.value, videoId: event.target.value ? form.videoId : "" })}><option value="">None</option><option value="youtube">YouTube</option></select></label>
       {form.videoHost === "youtube" && <><label className="admin-field">Video link or ID<input value={form.videoId} onChange={(event) => setVideo(event.target.value)} /></label><p className="muted">Video id: {form.videoId || "none"}</p></>}
-      <div className="editor-actions"><span className="muted">{dirty ? "Unsaved changes" : ""}</span><button className="button button-secondary" type="button" disabled={!dirty} onClick={() => setForm({ title: lesson.title, explanation: lesson.explanation, videoHost: lesson.videoHost || "", videoId: lesson.videoId || "" })}>Discard changes</button><button className="button button-primary" type="submit" disabled={!dirty}>Save changes</button></div>
+      <div className="editor-actions"><span className="muted">{dirty ? "Unsaved changes" : ""}</span><button className="button button-secondary" type="button" disabled={!dirty} onClick={() => setForm({ title: lesson.title, explanation: lesson.explanation, explanationImage: lesson.explanationImage || null, videoHost: lesson.videoHost || "", videoId: lesson.videoId || "" })}>Discard changes</button><button className="button button-primary" type="submit" disabled={!dirty || (form.explanationImage && !form.explanationImage.alt)}>Save changes</button></div>
     </form> : <section className="admin-editor-section"><p className="muted">Editing arrives in the next update.</p>{list.length === 0 && <p>No {tab} yet.</p>}{list.map((item) => <div className="lesson-content-row" key={item._id || item.id}><span>{item.title || item.front || item.name || "Untitled"}</span>{item.isPublished !== undefined && <StatusBadge isPublished={item.isPublished} />}<span className="muted">{item.questionCount || item.questions?.length || ""}</span>{tab === "tests" && <Link to={`/admin/tests/${item._id || item.id}`}>Open test</Link>}</div>)}</section>}
     <ConfirmDialog open={blocker.state === "blocked"} title="Leave without saving?" description="Your unsaved changes will be lost." cancelLabel="Stay" confirmLabel="Leave" onConfirm={() => blocker.proceed()} onCancel={() => blocker.reset()} />
   </div></div>;

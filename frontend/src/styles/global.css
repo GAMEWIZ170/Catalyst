@@ -1110,6 +1110,85 @@ h3 {
   padding: 0.8rem 0;
 }
 
+.rich-text {
+  overflow-wrap: anywhere;
+}
+
+.rich-formula {
+  display: inline-block;
+  max-width: 100%;
+  overflow-x: auto;
+  vertical-align: middle;
+}
+
+.rich-formula--block {
+  display: block;
+  margin: 0.75rem auto;
+  text-align: center;
+}
+
+.formula-help {
+  position: relative;
+}
+
+.formula-help-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  box-shadow: var(--shadow);
+  left: 0;
+  max-width: min(360px, calc(100vw - 2rem));
+  padding: 1rem;
+  position: absolute;
+  top: 100%;
+  width: max-content;
+  z-index: 4;
+}
+
+.formula-help-panel ul {
+  display: grid;
+  gap: 0.75rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.formula-help-panel li {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.image-field {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.image-field legend {
+  font-weight: 600;
+  padding: 0 0.25rem;
+}
+
+.image-field-preview {
+  display: block;
+  max-width: min(100%, 400px);
+  object-fit: contain;
+}
+
+.field-heading {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.field-heading .preview-label {
+  margin: 0;
+}
+
 .breadcrumbs {
   margin-bottom: 1rem;
 }
