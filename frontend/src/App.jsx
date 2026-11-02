@@ -8,7 +8,7 @@ import Courses from "./pages/Courses";
 import CourseOutline from "./pages/CourseOutline";
 import Lesson from "./pages/Lesson";
 import Progress from "./pages/Progress";
-import Admin from "./pages/Admin";
+import AdminCourses from "./pages/AdminCourses";
 import Settings from "./pages/Settings";
 import AdminLayout from "./components/admin/AdminLayout";
 
@@ -34,7 +34,7 @@ export default function App() {
     <Route path="/lessons/:id" element={<ProtectedPage><Lesson /></ProtectedPage>} />
     <Route path="/progress" element={<ProtectedPage><Progress /></ProtectedPage>} />
     <Route path="/settings" element={<ProtectedPage><Settings /></ProtectedPage>} />
-    <Route path="/admin/*" element={<AdminPage><Admin /></AdminPage>} />
+    <Route path="/admin/*" element={<AdminPage><AdminCourses /></AdminPage>} />
     <Route path="*" element={<Navigate to={user ? "/courses" : "/login"} replace />} />
   </Routes>;
 }
