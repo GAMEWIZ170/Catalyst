@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import Breadcrumbs from "../components/admin/Breadcrumbs";
 import ConfirmDialog from "../components/admin/ConfirmDialog";
@@ -35,10 +35,11 @@ function videoIdFrom(value) {
 
 export default function AdminLessonEditor() {
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const [lesson, setLesson] = useState(null);
   const [form, setForm] = useState(null);
-  const [context, setContext] = useState({ courseCode: "", unitTitle: "" });
+  const [context, setContext] = useState(() => location.state?.context || { courseCode: "", unitTitle: "" });
   const [tab, setTab] = useState("details");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -56,17 +57,6 @@ export default function AdminLessonEditor() {
       setLesson(next);
       setForm({ title: next.title, explanation: next.explanation, explanationImage: next.explanationImage || null, videoHost: next.videoHost || "", videoId: next.videoId || "" });
       if (next.courseCode || next.unitTitle) setContext({ courseCode: next.courseCode || "", unitTitle: next.unitTitle || "" });
-      else {
-        const courses = dataOf(await api.getAdminCourses());
-        for (const course of courses) {
-          const tree = dataOf(await api.getAdminCourse(course._id || course.id));
-          const unit = (tree.units || []).find((item) => (item.lessons || []).some((itemLesson) => (itemLesson._id || itemLesson.id) === id));
-          if (unit) {
-            setContext({ courseCode: tree.code, unitTitle: unit.title });
-            break;
-          }
-        }
-      }
     } catch (err) {
       setError(err.status === 404 ? "This lesson no longer exists" : err.message);
     } finally {
