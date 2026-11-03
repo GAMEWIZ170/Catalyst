@@ -463,6 +463,60 @@ h3 {
   margin-top: 2rem;
 }
 
+.lesson-links,
+.flashcard-ratings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.flashcard-page {
+  max-width: 760px;
+}
+
+.flashcard-card,
+.flashcard-finished,
+.flashcard-empty {
+  display: grid;
+  gap: 1.25rem;
+  margin: 2rem auto;
+  max-width: 42rem;
+}
+
+.flashcard-side {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  padding: clamp(1.25rem, 4vw, 2rem);
+}
+
+.flashcard-side img {
+  display: block;
+  height: auto;
+  margin-top: 1rem;
+  max-width: 100%;
+}
+
+.flashcard-rating {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-control);
+  display: inline-flex;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.65rem 0.8rem;
+}
+
+.flashcard-rating svg {
+  height: 20px;
+  width: 20px;
+}
+
+.flashcard-rating--confident { color: var(--correct); }
+.flashcard-rating--unsure { color: var(--wrong); }
+.flashcard-rating--unknown { color: var(--accent-button); }
+
 .test-page {
   max-width: 760px;
 }
