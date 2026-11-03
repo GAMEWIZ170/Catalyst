@@ -7,6 +7,7 @@ import Register from "./pages/Register";
 import Courses from "./pages/Courses";
 import CourseOutline from "./pages/CourseOutline";
 import Lesson from "./pages/Lesson";
+import Test from "./pages/Test";
 import Progress from "./pages/Progress";
 import AdminCourses from "./pages/AdminCourses";
 import AdminCourseEditor from "./pages/AdminCourseEditor";
@@ -35,6 +36,7 @@ export default function App() {
     <Route path="/courses" element={<ProtectedPage><Courses /></ProtectedPage>} />
     <Route path="/courses/:id" element={<ProtectedPage><CourseOutline /></ProtectedPage>} />
     <Route path="/lessons/:id" element={<ProtectedPage><Lesson /></ProtectedPage>} />
+    <Route path="/tests/:id" element={<ProtectedPage><Test /></ProtectedPage>} />
     <Route path="/progress" element={<ProtectedPage><Progress /></ProtectedPage>} />
     <Route path="/settings" element={<ProtectedPage><Settings /></ProtectedPage>} />
     <Route path="/admin/courses/:id" element={<AdminPage><AdminCourseEditor /></AdminPage>} />
