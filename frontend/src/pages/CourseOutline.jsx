@@ -1,28 +1,48 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { api } from "../api/client";
 import ProgressBar from "../components/ProgressBar";
+import { api } from "../api/client";
 import { ErrorState, Loading } from "./Courses";
+
+function TestRow({ test, from }) {
+  return <Link className="student-test-row" to={`/tests/${test._id}`} state={{ from }}>
+    <span><strong>{test.title}</strong><span className="muted">{test.bestScore === null ? "Not taken yet" : `Best score: ${test.bestScore}%`}</span></span><span aria-hidden="true">Open</span>
+  </Link>;
+}
 
 export default function CourseOutline() {
   const { id } = useParams();
   const [course, setCourse] = useState(null);
   const [error, setError] = useState("");
-  useEffect(() => { api.getCourse(id).then((response) => setCourse(response.data)).catch((err) => setError(err.message)); }, [id]);
-  if (error) return <div className="content"><ErrorState message={error} /></div>;
+
+  function load() {
+    setError("");
+    api.getCourse(id).then(({ data }) => setCourse(data)).catch((err) => setError(err.message));
+  }
+
+  useEffect(load, [id]);
+  if (error) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
   if (!course) return <Loading />;
-  const percent = course.progress.totalLessons ? Math.round((course.progress.completedLessons / course.progress.totalLessons) * 100) : 0;
-  return <div className="content">
-    <Link className="back-link" to="/courses">← All courses</Link>
-    <section className="course-hero"><div className="course-icon large">{course.code?.slice(0, 2)}</div><div><div className="eyebrow">{course.code}</div><h1>{course.title}</h1><p>{course.description}</p></div></section>
-    <div className="outline-summary"><div><strong>{course.progress.completedLessons}</strong><span> lessons complete</span></div><ProgressBar value={percent} label="Course progress" /></div>
-    <div className="section-heading"><div><div className="eyebrow">COURSE CONTENT</div><h2>Your outline</h2></div></div>
-    <div className="unit-list">{course.units.map((unit, unitIndex) => <section className="unit-card" key={unit._id}>
-      <div className="unit-heading"><span className="unit-number">0{unitIndex + 1}</span><div><h3>{unit.title}</h3><p>{unit.lessons.length} lessons</p></div></div>
-      <div className="lesson-list">{unit.lessons.map((lesson) => <Link className="lesson-row" to={`/lessons/${lesson._id}`} key={lesson._id}>
-        <span className={`lesson-status ${lesson.completed ? "done" : ""}`}>{lesson.completed ? "✓" : "○"}</span><span className="lesson-title">{lesson.title}</span>
-        {lesson.hasVideo && <span className="video-tag">Video</span>}<span className="lesson-score">{lesson.completed ? `${lesson.score}%` : "Start"} <span>→</span></span>
-      </Link>)}</div>
-    </section>)}</div>
+
+  const total = course.progress?.totalLessons || 0;
+  const completed = course.progress?.completedLessons || 0;
+  const percent = total ? Math.round((completed / total) * 100) : 0;
+  const from = `/courses/${id}`;
+  return <div className="content student-outline">
+    <Link className="back-link" to="/courses">Back to courses</Link>
+    <div className="outline-columns">
+      <aside className="outline-summary sticky-summary"><p className="eyebrow">{course.code}</p><h1>{course.title}</h1><p className="muted">{completed} of {total} lessons complete</p><ProgressBar value={percent} label="Course progress" /></aside>
+      <main className="outline-main">
+        <p className="eyebrow">COURSE CONTENT</p><h2>{course.title}</h2>
+        {course.units.map((unit) => <section className="outline-unit" key={unit._id}><h3>{unit.title}</h3><div className="student-lesson-list">
+          {unit.lessons.map((lesson) => <Link className="student-lesson-row" to={`/lessons/${lesson._id}`} state={{ from }} key={lesson._id}>
+            <span className={`lesson-marker ${lesson.completed ? "is-complete" : ""}`}>{lesson.completed ? "Completed" : "Not started"}</span><span className="student-lesson-title">{lesson.title}</span>
+            <span className="student-chips">{lesson.testCount > 0 && <span className="count-chip">Tests {lesson.testCount}</span>}{lesson.flashcardCount > 0 && <span className="count-chip">Flashcards {lesson.flashcardCount}</span>}{lesson.materialCount > 0 && <span className="count-chip">Materials {lesson.materialCount}</span>}{lesson.hasVideo && <span className="count-chip">Video</span>}</span>
+            {lesson.completed && <strong>{lesson.score}%</strong>}
+          </Link>)}
+        </div>{unit.tests?.length > 0 && <div className="student-test-group"><h4>Unit tests</h4>{unit.tests.map((test) => <TestRow key={test._id} test={test} from={from} />)}</div>}</section>)}
+        {course.tests?.length > 0 && <section className="student-test-group course-tests"><h3>Course tests</h3>{course.tests.map((test) => <TestRow key={test._id} test={test} from={from} />)}</section>}
+      </main>
+    </div>
   </div>;
 }
