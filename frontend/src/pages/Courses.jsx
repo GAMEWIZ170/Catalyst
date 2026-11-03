@@ -17,7 +17,7 @@ export default function Courses() {
   useEffect(load, []);
 
   return <div className="content student-page">
-    <header className="student-page-header"><p className="eyebrow">YOUR LEARNING SPACE</p><h1>Courses</h1></header>
+    <header className="student-page-header"><h1>Courses</h1></header>
     {loading && <Loading />}
     {error && <ErrorState message={error} onRetry={load} />}
     {!loading && !error && !courses.length && <div className="empty-state"><h2>No courses yet. Check back soon.</h2></div>}

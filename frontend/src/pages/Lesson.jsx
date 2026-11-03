@@ -46,7 +46,7 @@ export default function Lesson() {
   return <div className="content lesson-hub">
     <Link className="back-link" to={from}>Back to course</Link>
     <article className="reading-column">
-      <p className="eyebrow">LESSON {lesson.order}</p><h1>{lesson.title}</h1>
+      <h1>{lesson.title}</h1>
       {completed && <span className="completion-badge">Completed</span>}
       <div className="lesson-explanation"><RichText>{lesson.explanation}</RichText></div>
       {lesson.explanationImage?.url && <img className="lesson-explanation-image" src={imageUrl(lesson.explanationImage.url, 800)} alt={lesson.explanationImage.alt} loading="lazy" />}

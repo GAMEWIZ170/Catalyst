@@ -24,7 +24,7 @@ export default function Progress() {
 
   return <div className="content">
     <section className="welcome-panel progress-welcome">
-      <div><div className="eyebrow">YOUR PROGRESS</div><h1>Keep your momentum.</h1><p>Every completed lesson is a step forward.</p></div>
+      <div><h1>Keep your momentum.</h1><p>Every completed lesson is a step forward.</p></div>
       <div className="streak-display"><strong>{streak.streak}</strong><span>day streak</span></div>
     </section>
     <div className="stats-grid">
@@ -32,7 +32,7 @@ export default function Progress() {
       <Stat label="Average score" value={`${average}%`} />
       <Stat label="Completed today" value={streak.completedToday ? "Yes" : "Not yet"} />
     </div>
-    <div className="section-heading"><div><div className="eyebrow">HISTORY</div><h2>Lesson progress</h2></div></div>
+    <div className="section-heading"><h2>Lesson progress</h2></div>
     {progress.length === 0 ? <div className="empty-state"><h3>Your progress will appear here</h3><p>Complete a lesson to start building your record.</p></div> :
       <div className="progress-list">{progress.map((item) => <div className="progress-row" key={item.lesson}>
         <div><strong>Lesson</strong><span className="muted">{item.completedAt ? new Date(item.completedAt).toLocaleDateString() : "Not completed"}</span></div>

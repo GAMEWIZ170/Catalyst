@@ -11,6 +11,7 @@ import StatusBadge from "../components/admin/StatusBadge";
 import StatusMessage from "../components/admin/StatusMessage";
 import Switch from "../components/admin/Switch";
 import useUnsavedChanges from "../hooks/useUnsavedChanges";
+import MoveButton from "../components/admin/MoveButton";
 
 const dataOf = (payload) => payload.data || payload;
 const idOf = (item) => item._id || item.id;
@@ -178,7 +179,7 @@ export default function AdminTestEditor() {
       <div className="question-list">
         {questions.map((item, index) => <div className="question-row" key={idOf(item)}>
           <button className="question-row-main" type="button" onClick={() => openQuestion(item)}><span>{index + 1}</span><span className="question-preview"><RichText>{item.text}</RichText></span><span className="status-badge status-badge--draft">{item.type === "mcq" ? "Multiple choice" : "True or false"}</span>{(item.image || item.options?.some((option) => option.image)) && <span aria-label="Has image">Image</span>}</button>
-          <div className="row-actions"><button className="icon-button" type="button" aria-label="Move up" disabled={index === 0} onClick={() => moveQuestion(item, -1)}>↑</button><button className="icon-button" type="button" aria-label="Move down" disabled={index === questions.length - 1} onClick={() => moveQuestion(item, 1)}>↓</button><button className="text-button" type="button" onClick={() => setDeleteTarget(item)}>Delete</button></div>
+          <div className="row-actions"><MoveButton direction="up" disabled={index === 0} onClick={() => moveQuestion(item, -1)} /><MoveButton direction="down" disabled={index === questions.length - 1} onClick={() => moveQuestion(item, 1)} /><button className="text-button" type="button" onClick={() => setDeleteTarget(item)}>Delete</button></div>
         </div>)}
       </div>
     </section>

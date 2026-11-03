@@ -47,7 +47,6 @@ export function AuthLayout({ title, subtitle, children }) {
     <ThemeToggle />
     <div className="auth-brand"><span className="brand-mark">C</span><span>Catalyst</span></div>
     <section className="auth-card">
-      <div className="eyebrow">LEARN WITH MOMENTUM</div>
       <h1>{title}</h1><p className="auth-subtitle">{subtitle}</p>{children}
     </section>
   </div>;

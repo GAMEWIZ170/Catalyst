@@ -31,9 +31,9 @@ export default function CourseOutline() {
   return <div className="content student-outline">
     <Link className="back-link" to="/courses">Back to courses</Link>
     <div className="outline-columns">
-      <aside className="outline-summary sticky-summary"><p className="eyebrow">{course.code}</p><h1>{course.title}</h1><p className="muted">{completed} of {total} lessons complete</p><ProgressBar value={percent} label="Course progress" /></aside>
+      <aside className="outline-summary sticky-summary"><p>{course.code}</p><h1>{course.title}</h1><p className="muted">{completed} of {total} lessons complete</p><ProgressBar value={percent} label="Course progress" /></aside>
       <main className="outline-main">
-        <p className="eyebrow">COURSE CONTENT</p><h2>{course.title}</h2>
+        <h2>{course.title}</h2>
         {course.units.map((unit) => <section className="outline-unit" key={unit._id}><h3>{unit.title}</h3><div className="student-lesson-list">
           {unit.lessons.map((lesson) => <Link className="student-lesson-row" to={`/lessons/${lesson._id}`} state={{ from }} key={lesson._id}>
             <span className={`lesson-marker ${lesson.completed ? "is-complete" : ""}`}>{lesson.completed ? "Completed" : "Not started"}</span><span className="student-lesson-title">{lesson.title}</span>

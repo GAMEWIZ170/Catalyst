@@ -9,6 +9,7 @@ import StatusBadge from "../components/admin/StatusBadge";
 import StatusMessage from "../components/admin/StatusMessage";
 import Switch from "../components/admin/Switch";
 import useUnsavedChanges from "../hooks/useUnsavedChanges";
+import MoveButton from "../components/admin/MoveButton";
 
 function dataOf(payload) {
   return payload.data || payload;
@@ -16,10 +17,6 @@ function dataOf(payload) {
 
 function idOf(item) {
   return item._id || item.id;
-}
-
-function MoveButton({ label, disabled, onClick, buttonRef }) {
-  return <button ref={buttonRef} className="icon-button" type="button" aria-label={label} disabled={disabled} onClick={onClick}>{label.endsWith("up") ? "Up" : "Down"}</button>;
 }
 
 export default function AdminCourseEditor() {
@@ -198,13 +195,13 @@ export default function AdminCourseEditor() {
           const unitId = idOf(unit);
           const lessons = unit.lessons || [];
           return <article className="unit-card" key={unitId}>
-            <header className="tree-item-header"><InlineRename name={unit.title} onSave={(title) => renameUnit(unit, title)} /><div className="tree-controls"><button data-focus-key={`${unitId}-up`} ref={(element) => { unitButtonRefs.current[`${unitId}-up`] = element; }} className="icon-button" type="button" aria-label="Move unit up" disabled={index === 0} onClick={() => reorder("unit", id, units, index, -1)}>Up</button><button data-focus-key={`${unitId}-down`} ref={(element) => { unitButtonRefs.current[`${unitId}-down`] = element; }} className="icon-button" type="button" aria-label="Move unit down" disabled={index === units.length - 1} onClick={() => reorder("unit", id, units, index, 1)}>Down</button><ActionMenu actions={[{ label: "Delete unit", onSelect: () => setConfirmTarget({ type: "unit", item: unit }) }]} /></div></header>
+            <header className="tree-item-header"><InlineRename name={unit.title} onSave={(title) => renameUnit(unit, title)} /><div className="tree-controls"><MoveButton buttonRef={(element) => { unitButtonRefs.current[`${unitId}-up`] = element; }} direction="up" disabled={index === 0} onClick={() => reorder("unit", id, units, index, -1)} /><MoveButton buttonRef={(element) => { unitButtonRefs.current[`${unitId}-down`] = element; }} direction="down" disabled={index === units.length - 1} onClick={() => reorder("unit", id, units, index, 1)} /><ActionMenu actions={[{ label: "Delete unit", onSelect: () => setConfirmTarget({ type: "unit", item: unit }) }]} /></div></header>
             {lessons.map((lesson, lessonIndex) => {
               const lessonId = idOf(lesson);
               return <div className="lesson-row" key={lessonId}>
                 <Link to={`/admin/lessons/${lessonId}`} state={{ context: { courseCode: course.code || "", unitTitle: unit.title } }}><strong>{lesson.title}</strong></Link>
                 <div className="lesson-meta"><StatusBadge isPublished={lesson.isPublished} /><span className="count-chip">{lesson.testCount || 0} tests</span><span className="count-chip">{lesson.flashcardCount || 0} flashcards</span><span className="count-chip">{lesson.materialCount || 0} materials</span>{lesson.hasVideo && <span className="count-chip">Video</span>}</div>
-                <div className="tree-controls"><button data-focus-key={`${lessonId}-up`} ref={(element) => { lessonButtonRefs.current[`${lessonId}-up`] = element; }} className="icon-button" type="button" aria-label="Move lesson up" disabled={lessonIndex === 0} onClick={() => reorder("lesson", unitId, lessons, lessonIndex, -1)}>Up</button><button data-focus-key={`${lessonId}-down`} ref={(element) => { lessonButtonRefs.current[`${lessonId}-down`] = element; }} className="icon-button" type="button" aria-label="Move lesson down" disabled={lessonIndex === lessons.length - 1} onClick={() => reorder("lesson", unitId, lessons, lessonIndex, 1)}>Down</button><Switch checked={lesson.isPublished} onChange={(value) => api.updateLesson(lessonId, { isPublished: value }).then(load).catch((err) => setError(err.message))} label={lesson.isPublished ? "Published" : "Publish"} /><ActionMenu actions={[{ label: "Delete lesson", onSelect: () => setConfirmTarget({ type: "lesson", item: lesson }) }]} /></div>
+                <div className="tree-controls"><MoveButton buttonRef={(element) => { lessonButtonRefs.current[`${lessonId}-up`] = element; }} direction="up" disabled={lessonIndex === 0} onClick={() => reorder("lesson", unitId, lessons, lessonIndex, -1)} /><MoveButton buttonRef={(element) => { lessonButtonRefs.current[`${lessonId}-down`] = element; }} direction="down" disabled={lessonIndex === lessons.length - 1} onClick={() => reorder("lesson", unitId, lessons, lessonIndex, 1)} /><Switch checked={lesson.isPublished} onChange={(value) => api.updateLesson(lessonId, { isPublished: value }).then(load).catch((err) => setError(err.message))} label={lesson.isPublished ? "Published" : "Publish"} /><ActionMenu actions={[{ label: "Delete lesson", onSelect: () => setConfirmTarget({ type: "lesson", item: lesson }) }]} /></div>
               </div>;
             })}
             {unit.tests?.map((test) => <Link className="test-row" key={idOf(test)} to={`/admin/tests/${idOf(test)}`} state={{ trail: [{ label: "Courses", to: "/admin" }, { label: course.code || course.title, to: `/admin/courses/${id}` }, { label: unit.title, to: `/admin/courses/${id}` }, { label: test.title }] }}><span>{test.title}</span><StatusBadge isPublished={test.isPublished} /><span>{test.questionCount || test.questions?.length || 0} questions</span></Link>)}

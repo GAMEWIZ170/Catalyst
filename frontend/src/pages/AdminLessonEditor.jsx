@@ -10,6 +10,7 @@ import useUnsavedChanges from "../hooks/useUnsavedChanges";
 import RichText from "../components/RichText";
 import FormulaHelp from "../components/admin/FormulaHelp";
 import ImageField from "../components/admin/ImageField";
+import MoveButton from "../components/admin/MoveButton";
 
 function dataOf(payload) {
   return payload.data || payload;
@@ -212,8 +213,8 @@ export default function AdminLessonEditor() {
         {tab === "materials" && <span className="muted">{item.kind === "file" ? "PDF" : "Link"}{item.file?.bytes ? ` · ${item.file.bytes} bytes` : ""}</span>}
         {item.isPublished !== undefined && <Switch checked={item.isPublished} onChange={(value) => toggleContent(item, tab === "tests" ? "test" : tab === "flashcards" ? "flashcard" : "material", value)} label={item.isPublished ? "Published" : "Publish"} />}
         {tab === "tests" && <Link to={`/admin/tests/${idOf(item)}`} state={{ trail: [{ label: "Courses", to: "/admin" }, { label: context.courseCode || "Course" }, { label: context.unitTitle || "Unit" }, { label: lesson.title, to: `/admin/lessons/${id}` }, { label: item.title }] }}>Open test</Link>}
-        <button className="icon-button" type="button" aria-label="Move up" disabled={index === 0} onClick={() => moveContent(item, tab === "tests" ? "test" : tab === "flashcards" ? "flashcard" : "material", -1)}>↑</button>
-        <button className="icon-button" type="button" aria-label="Move down" disabled={index === list.length - 1} onClick={() => moveContent(item, tab === "tests" ? "test" : tab === "flashcards" ? "flashcard" : "material", 1)}>↓</button>
+        <MoveButton direction="up" disabled={index === 0} onClick={() => moveContent(item, tab === "tests" ? "test" : tab === "flashcards" ? "flashcard" : "material", -1)} />
+        <MoveButton direction="down" disabled={index === list.length - 1} onClick={() => moveContent(item, tab === "tests" ? "test" : tab === "flashcards" ? "flashcard" : "material", 1)} />
         <button className="text-button" type="button" onClick={() => removeContent(item, tab === "tests" ? "test" : tab === "flashcards" ? "flashcard" : "material")}>Delete</button>
       </div>)}
     </section>}

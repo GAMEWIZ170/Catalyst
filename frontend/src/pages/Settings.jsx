@@ -59,9 +59,7 @@ export default function Settings() {
   }
 
   return <div className="content settings-page">
-    <div className="section-heading">
-      <div><div className="eyebrow">PERSONALISE YOUR SPACE</div><h1>Settings</h1></div>
-    </div>
+    <div className="section-heading"><h1>Settings</h1></div>
     <section className="settings-section" aria-labelledby="theme-heading">
       <h2 id="theme-heading">Colour theme</h2>
       <div className="settings-radio-grid" role="radiogroup" aria-label="Colour theme">
