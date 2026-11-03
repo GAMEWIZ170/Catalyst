@@ -34,6 +34,12 @@ export default function AppShell({ children }) {
   }, []);
 
   useEffect(() => {
+    const refresh = () => api.getStreak().then(({ data }) => setStreak(data.streak)).catch(() => setStreak(null));
+    window.addEventListener("catalyst:refresh-streak", refresh);
+    return () => window.removeEventListener("catalyst:refresh-streak", refresh);
+  }, []);
+
+  useEffect(() => {
     const handlePointerDown = (event) => {
       if (!event.target.closest(".notification-menu")) setNotificationsOpen(false);
       if (!event.target.closest(".profile-menu")) setProfileOpen(false);

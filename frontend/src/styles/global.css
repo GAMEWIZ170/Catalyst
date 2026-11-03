@@ -386,6 +386,83 @@ h3 {
   gap: 2rem;
 }
 
+.reading-column {
+  max-width: 68ch;
+}
+
+.lesson-explanation {
+  font-family: var(--serif, Georgia, serif);
+  font-size: 1.15rem;
+  line-height: 1.75;
+}
+
+.lesson-explanation-image {
+  display: block;
+  height: auto;
+  margin-top: 1.5rem;
+  max-width: 100%;
+}
+
+.video-frame {
+  aspect-ratio: 16 / 9;
+  margin-top: 1.5rem;
+  max-width: 68ch;
+}
+
+.video-frame iframe {
+  border: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.lesson-section {
+  border-top: 1px solid var(--line);
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+}
+
+.material-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.material-row {
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  display: flex;
+  gap: 1rem;
+  min-height: 64px;
+  padding: 1rem;
+}
+
+.material-row > span:nth-child(2) {
+  display: grid;
+  flex: 1;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.material-row a {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.completion-badge {
+  border: 1px solid var(--correct);
+  border-radius: 999px;
+  color: var(--correct);
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+}
+
+.lesson-complete {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
 .sticky-summary {
   align-self: start;
 }
