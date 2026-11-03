@@ -60,12 +60,13 @@ function Formula({ source, block }) {
     ]).then(([module]) => {
       if (!active) return;
       try {
-        setHtml(module.default.renderToString(source, {
+        const rendered = module.default.renderToString(source, {
           throwOnError: false,
           trust: false,
           strict: "ignore",
           output: "htmlAndMathml"
-        }));
+        });
+        setHtml(rendered.includes("katex-error") ? null : rendered);
       } catch {
         setHtml(null);
       }

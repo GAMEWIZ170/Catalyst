@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import Breadcrumbs from "../components/admin/Breadcrumbs";
 import ConfirmDialog from "../components/admin/ConfirmDialog";
@@ -13,6 +13,10 @@ import ImageField from "../components/admin/ImageField";
 
 function dataOf(payload) {
   return payload.data || payload;
+}
+
+function idOf(item) {
+  return item._id || item.id;
 }
 
 function videoIdFrom(value) {
@@ -31,6 +35,7 @@ function videoIdFrom(value) {
 
 export default function AdminLessonEditor() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [lesson, setLesson] = useState(null);
   const [form, setForm] = useState(null);
   const [context, setContext] = useState({ courseCode: "", unitTitle: "" });
@@ -87,8 +92,16 @@ export default function AdminLessonEditor() {
       setError("Add a real explanation before publishing this lesson.");
       return;
     }
+    try {
+      await api.updateLesson(id, { isPublished: value });
+      setMessage(value ? "Published" : "Unpublished");
+      await load();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
 
-    function openContent(kind, item = null) {
+  function openContent(kind, item = null) {
       if (kind === "test") setDialogForm({ title: item?.title || "Lesson test", order: item?.order || (lesson.tests?.length || 0) + 1 });
       if (kind === "flashcard") setDialogForm(item ? JSON.parse(JSON.stringify(item)) : { front: { text: "", image: null }, back: { text: "", image: null }, order: (lesson.flashcards?.length || 0) + 1 });
       if (kind === "material") setDialogForm(item ? JSON.parse(JSON.stringify(item)) : { title: "", description: "", kind: "link", linkUrl: "", order: (lesson.materials?.length || 0) + 1 });
@@ -96,7 +109,7 @@ export default function AdminLessonEditor() {
       setError("");
     }
 
-    async function saveContent(event) {
+  async function saveContent(event) {
       event.preventDefault();
       try {
         if (dialog.kind === "test") {
@@ -128,7 +141,7 @@ export default function AdminLessonEditor() {
       } catch (err) { setError(err.message); }
     }
 
-    async function removeContent(item, kind) {
+  async function removeContent(item, kind) {
       try {
         if (kind === "test") await api.deleteTest(idOf(item));
         if (kind === "flashcard") await api.deleteFlashcard(idOf(item));
@@ -138,7 +151,7 @@ export default function AdminLessonEditor() {
       } catch (err) { setError(err.message); }
     }
 
-    async function toggleContent(item, kind, value) {
+  async function toggleContent(item, kind, value) {
       try {
         if (kind === "test") await api.updateTest(idOf(item), { isPublished: value });
         if (kind === "flashcard") await api.updateFlashcard(idOf(item), { isPublished: value });
@@ -147,7 +160,7 @@ export default function AdminLessonEditor() {
       } catch (err) { setError(err.message); }
     }
 
-    async function moveContent(item, kind, direction) {
+  async function moveContent(item, kind, direction) {
       const items = lesson[`${kind}s`] || [];
       const index = items.findIndex((entry) => idOf(entry) === idOf(item));
       const nextIndex = index + direction;
@@ -161,14 +174,6 @@ export default function AdminLessonEditor() {
         await load();
         setMessage("Moved");
       } catch (err) { setError(err.message); }
-    }
-    try {
-      await api.updateLesson(id, { isPublished: value });
-      setMessage(value ? "Published" : "Unpublished");
-      await load();
-    } catch (err) {
-      setError(err.message);
-    }
   }
 
   function setVideo(value) {
@@ -212,7 +217,7 @@ export default function AdminLessonEditor() {
       <div className="section-heading"><h2>{tabs.find((item) => item.key === tab).label}</h2><button className="button button-primary" type="button" onClick={() => openContent(tab === "tests" ? "test" : tab === "flashcards" ? "flashcard" : "material")}>Add {tab === "tests" ? "test" : tab === "flashcards" ? "flashcard" : "material"}</button></div>
       {list.length === 0 && <p>No {tab} yet.</p>}
       {list.map((item, index) => <div className="lesson-content-row" key={idOf(item)}>
-        <button className="text-button content-title" type="button" onClick={() => tab !== "tests" && openContent(tab === "flashcards" ? "flashcard" : "material", item)}>{item.title || item.front?.text || "Untitled"}</button>
+        <button className="text-button content-title" type="button" onClick={() => tab !== "tests" && openContent(tab === "flashcards" ? "flashcard" : "material", item)}>{tab === "flashcards" ? <RichText>{item.front?.text || ""}</RichText> : item.title || "Untitled"}</button>
         {tab === "flashcards" && <span className="content-preview"><RichText>{item.back?.text || ""}</RichText></span>}
         {tab === "materials" && <span className="muted">{item.kind === "file" ? "PDF" : "Link"}{item.file?.bytes ? ` · ${item.file.bytes} bytes` : ""}</span>}
         {item.isPublished !== undefined && <Switch checked={item.isPublished} onChange={(value) => toggleContent(item, tab === "tests" ? "test" : tab === "flashcards" ? "flashcard" : "material", value)} label={item.isPublished ? "Published" : "Publish"} />}

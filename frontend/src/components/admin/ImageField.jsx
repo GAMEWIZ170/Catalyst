@@ -1,6 +1,7 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "../../api/client";
 import { imageUrl } from "../../utils/cloudinary";
+import StatusMessage from "./StatusMessage";
 
 export default function ImageField({ label, value, onChange, onValidityChange, maxBytes = 2 * 1024 * 1024, compact = false }) {
   const inputRef = useRef(null);
@@ -8,6 +9,10 @@ export default function ImageField({ label, value, onChange, onValidityChange, m
   const [error, setError] = useState("");
   const [description, setDescription] = useState(value?.alt || "");
   const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    setDescription(value?.alt || "");
+  }, [value?.alt]);
 
   function notify(next) {
     onChange(next);

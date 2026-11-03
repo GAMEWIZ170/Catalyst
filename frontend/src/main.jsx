@@ -12,16 +12,12 @@ import "./styles/global.css";
 const router = createBrowserRouter([
   {
     path: "*",
-    element: <AuthProvider><App /></AuthProvider>,
-    future: {
-      v7_startTransition: true,
-      v7_relativeSplatPath: true
-    }
+    element: <AuthProvider><App /></AuthProvider>
   }
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <RouterProvider router={router} future={{ v7_startTransition: true, v7_relativeSplatPath: true }} />
   </React.StrictMode>
 );

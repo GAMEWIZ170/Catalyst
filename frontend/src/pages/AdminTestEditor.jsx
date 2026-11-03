@@ -100,6 +100,7 @@ export default function AdminTestEditor() {
   async function saveQuestion(addAnother = false) {
     setError("");
     if (!question.text.trim()) return setError("Question text is required.");
+    if ([question.image, question.explanationImage].some((image) => image && !image.alt?.trim())) return setError("Add an image description before saving.");
     if (question.type === "mcq") {
       if (question.options.length < 2) return setError("A multiple choice question needs at least 2 options.");
       if (question.options.some((option) => !option.text?.trim() && !option.image?.url)) return setError("Each option needs text or an image.");
