@@ -30,7 +30,9 @@ const sendTokenResponse = (user, statusCode, res) => {
         name: user.name,
         email: user.email,
         role: user.role
-        , avatar: user.avatar
+        , avatar: user.avatar,
+        subscriptionEndsAt: user.subscriptionEndsAt || null,
+        hasAccess: hasAccess(user)
       }
     });
 };
