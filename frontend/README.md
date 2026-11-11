@@ -71,24 +71,30 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 | `/login` | Public | Sign in |
 | `/register` | Public | Create a student account |
 | `/courses` | Authenticated | Browse published courses |
-| `/courses/:id` | Authenticated | View a course outline and lesson progress |
-| `/lessons/:id` | Authenticated | View lessons, answer questions, and submit completion |
+| `/courses/:id` | Authenticated | Course outline with lesson progress |
+| `/lessons/:id` | Authenticated | Lesson hub: explanation, formulas, practice tests, flashcards, materials, Mark as done, next lesson |
+| `/tests/:id` | Authenticated | Take a test, one question at a time, with feedback after each answer |
+| `/lessons/:id/flashcards` | Authenticated | Study a flashcard deck and rate each card (`?filter=review` shows cards still to review) |
 | `/progress` | Authenticated | View scores, completed lessons, and streak |
-| `/admin` | Admin | Manage courses, units, lessons, questions, and users |
+| `/settings` | Authenticated | Colour palette, light or dark theme, and profile picture |
+| `/admin` | Admin | Course list |
+| `/admin/courses/:id` | Admin | Course editor: units, lessons, unit and course tests |
+| `/admin/lessons/:id` | Admin | Lesson editor: explanation, image, video, tests, flashcards, materials |
+| `/admin/tests/:id` | Admin | Test editor with the question editor |
 
 Unknown routes redirect to `/courses` for signed-in users or `/login` for signed-out users.
 
 ## Admin workflow
 
-Create content in this order:
+Content is written in the in-app builder. Create content in this order:
 
-1. Create a course.
-2. Select that course in the Units form and create a unit.
-3. Select that unit in the Lessons form and create a lesson.
-4. Select that lesson in the Questions form and create questions.
-5. Publish the course and lesson when they are ready for students.
+1. Create a course on `/admin` and open it.
+2. In the course editor, add units, then lessons inside each unit. Rename and reorder them in place.
+3. Open a lesson to write its explanation (with chemical formulas), add an image or video, and add its tests, flashcards and materials.
+4. Open a test to add its questions. Multiple-choice and true or false are supported.
+5. Publish the course, lesson, test and flashcards when they are ready for students. Unpublished or deleted parents hide their children.
 
-The admin forms use selectable existing records rather than requiring users to manually copy MongoDB IDs. Existing records can also be updated with the JSON update form and removed through the delete controls.
+Pages ask before you leave with unsaved changes. Images are JPEG, PNG or WEBP up to 2 MB, and PDF materials are up to 10 MB.
 
 ## Frontend structure
 
@@ -99,13 +105,21 @@ frontend/
 ├── vite.config.js
 └── src/
     ├── api/client.js          # API requests and credential handling
-    ├── components/            # Layout, guards, progress, and question UI
+    ├── components/            # Shared UI: app shell, rich text, avatar, deck summary
+    │   └── admin/             # Builder components: breadcrumbs, switch, dialogs, image field
     ├── context/AuthContext.jsx
-    ├── pages/                 # Authentication, learning, progress, and admin pages
-    ├── styles/global.css
+    ├── hooks/                 # useUnsavedChanges
+    ├── pages/                 # Student pages and admin editors
+    ├── styles/tokens.css      # Palettes, light and dark themes, colour and type tokens
+    ├── styles/global.css      # Component and layout styles
+    ├── utils/                 # Cloudinary image URLs, course cache
     ├── App.jsx                # Client-side routes
     └── main.jsx               # React entry point
 ```
+
+## Design system
+
+The look is described in `DESIGN.md` at the repository root. Five palettes (`data-palette`: lagoon, indigo, ember, orchid, graphite) and two themes (`data-theme`: light, dark) are chosen in Settings and saved in the browser (`catalyst-palette`, `catalyst-theme`). Colours come only from tokens in `tokens.css`; never write a colour value in a component. Text must reach WCAG 2.1 AA contrast in all ten palette and theme combinations. Chemical formulas use KaTeX with mhchem, loaded only when a lesson contains one.
 
 ## Authentication behavior
 
