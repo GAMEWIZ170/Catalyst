@@ -29,14 +29,18 @@ export default function Flashcards() {
   const [nothingToReview, setNothingToReview] = useState(false);
   const headingRef = useRef(null);
   const repeated = useRef(new Set());
+  const loadCount = useRef(0);
 
   async function load() {
+    // Only the latest request may fill the deck, so a slower older one cannot reset a card the student is on.
+    const mine = ++loadCount.current;
     setError("");
     setFinished(false);
     setNothingToReview(false);
     repeated.current = new Set();
     try {
       const response = (await api.getLessonFlashcards(id, filter)).data;
+      if (mine !== loadCount.current) return;
       setCards(response.cards || []);
       setSummary(response.summary);
       setQueue(response.cards || []);
@@ -44,6 +48,7 @@ export default function Flashcards() {
       setShown(false);
       if (!response.cards?.length && filter) setNothingToReview(true);
     } catch (err) {
+      if (mine !== loadCount.current) return;
       setError(err.status === 404 ? "This lesson is not available" : err.message);
     }
   }
@@ -88,8 +93,12 @@ export default function Flashcards() {
     <div className="flashcard-progress"><div className="test-progress-line" role="progressbar" aria-valuemin="0" aria-valuemax={queue.length} aria-valuenow={position + 1} style={{ "--progress": `${((position + 1) / queue.length) * 100}%` }} /><p aria-live="polite">Card {position + 1} of {queue.length}</p></div>
     <article className="flashcard-card">
       <h1 tabIndex="-1" ref={headingRef}>Flashcard {position + 1}</h1>
-      <div className="flashcard-side"><RichText>{card.front.text}</RichText>{card.front.image?.url && <img src={imageUrl(card.front.image.url, 600)} alt={card.front.image.alt} loading="lazy" />}</div>
-      {!shown ? <button className="button button-primary" type="button" onClick={() => setShown(true)}>Show answer</button> : <><div className="flashcard-side"><RichText>{card.back.text}</RichText>{card.back.image?.url && <img src={imageUrl(card.back.image.url, 600)} alt={card.back.image.alt} loading="lazy" />}</div><div className="flashcard-ratings">{[["confident", "Confident"], ["unsure", "Unsure"], ["unknown", "Don't know"]].map(([value, label]) => <button className={`flashcard-rating flashcard-rating--${value}`} type="button" key={value} disabled={saving} onClick={() => rate(value)}><RatingIcon type={value} />{label}</button>)}</div><p className="flashcard-hint" aria-live="polite">{saving ? "Saving your answer..." : "Cards you mark Unsure or Don't know go into your review list."}</p></>}
+      <button key={`${card._id}-${position}`} className={`flashcard-flip ${shown ? "is-flipped" : ""}`} type="button" onClick={() => setShown((value) => !value)}>
+        <span className="flashcard-face flashcard-face--front" aria-hidden={shown}><span className="flashcard-face-label">Question</span><RichText>{card.front.text}</RichText>{card.front.image?.url && <img src={imageUrl(card.front.image.url, 600)} alt={card.front.image.alt} loading="lazy" />}</span>
+        <span className="flashcard-face flashcard-face--back" aria-hidden={!shown}><span className="flashcard-face-label">Answer</span><RichText>{card.back.text}</RichText>{card.back.image?.url && <img src={imageUrl(card.back.image.url, 600)} alt={card.back.image.alt} loading="lazy" />}</span>
+      </button>
+      <span className="sr-only" role="status">{shown ? "Answer shown" : ""}</span>
+      {!shown ? <p className="flashcard-hint">Tap the card to see the answer.</p> : <><div className="flashcard-ratings">{[["confident", "Confident"], ["unsure", "Unsure"], ["unknown", "Don't know"]].map(([value, label]) => <button className={`flashcard-rating flashcard-rating--${value}`} type="button" key={value} disabled={saving} onClick={() => rate(value)}><RatingIcon type={value} />{label}</button>)}</div><p className="flashcard-hint" aria-live="polite">{saving ? "Saving your answer..." : "Cards you mark Unsure or Don't know go into your review list."}</p></>}
       {error && <p className="form-error" role="alert">{error}</p>}
     </article>
   </div>;

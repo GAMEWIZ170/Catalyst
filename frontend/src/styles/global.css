@@ -2475,3 +2475,106 @@ h3 {
   overflow-y: hidden;
   padding-block: 0.1em;
 }
+
+.pass-percent {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+  max-width: 28rem;
+}
+
+.pass-percent-row {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pass-percent-row input {
+  background: var(--surface);
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-control);
+  color: var(--ink);
+  font-size: 16px;
+  min-height: 44px;
+  padding: 0.65rem 0.75rem;
+  width: 7rem;
+}
+
+.pass-percent p {
+  margin: 0;
+}
+
+.result-verdict {
+  color: var(--wrong);
+  font-weight: 600;
+}
+
+.result-verdict--passed {
+  color: var(--correct);
+}
+
+/* Flashcard: one card that turns over. Both faces share a grid cell, so the card keeps one height. */
+.flashcard-flip {
+  background: none;
+  border: 0;
+  border-radius: var(--radius-panel);
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  font: inherit;
+  padding: 0;
+  perspective: 1200px;
+  text-align: left;
+  width: 100%;
+}
+
+.flashcard-face {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  background: var(--surface);
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-panel);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  grid-area: 1 / 1;
+  justify-content: center;
+  min-height: 12rem;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  transition: transform 500ms ease;
+}
+
+.flashcard-face img {
+  display: block;
+  height: auto;
+  max-width: 100%;
+}
+
+.flashcard-face--back {
+  transform: rotateY(180deg);
+}
+
+.flashcard-flip.is-flipped .flashcard-face--front {
+  transform: rotateY(-180deg);
+}
+
+.flashcard-flip.is-flipped .flashcard-face--back {
+  transform: rotateY(0deg);
+}
+
+.flashcard-flip:hover .flashcard-face {
+  border-color: var(--accent);
+}
+
+.flashcard-face-label {
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* The card still turns over, but without the spin, for people who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .flashcard-face {
+    transition: none;
+  }
+}

@@ -73,14 +73,14 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 | `/courses` | Authenticated | Browse published courses |
 | `/courses/:id` | Authenticated | Course outline with lesson progress |
 | `/lessons/:id` | Authenticated | Lesson hub: explanation, formulas, practice tests, flashcards, materials, Mark as done, next lesson |
-| `/tests/:id` | Authenticated | Take a test, one question at a time, with feedback after each answer |
-| `/lessons/:id/flashcards` | Authenticated | Study a flashcard deck and rate each card (`?filter=review` shows cards still to review) |
+| `/tests/:id` | Authenticated | Take a test, one question at a time, with feedback after each answer. Lesson tests show their pass percent and whether the student passed |
+| `/lessons/:id/flashcards` | Authenticated | Study a flashcard deck: tap the card to turn it over, then rate it (`?filter=review` shows cards still to review) |
 | `/progress` | Authenticated | View scores, completed lessons, and streak |
 | `/settings` | Authenticated | Colour palette, light or dark theme, and profile picture |
 | `/admin` | Admin | Course list |
 | `/admin/courses/:id` | Admin | Course editor: units, lessons, unit and course tests |
 | `/admin/lessons/:id` | Admin | Lesson editor: explanation, image, video, tests, flashcards, materials |
-| `/admin/tests/:id` | Admin | Test editor with the question editor |
+| `/admin/tests/:id` | Admin | Test editor: questions and, for lesson tests, the pass percent needed to complete the lesson |
 
 Unknown routes redirect to `/courses` for signed-in users or `/login` for signed-out users.
 

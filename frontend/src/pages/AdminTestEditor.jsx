@@ -42,6 +42,7 @@ export default function AdminTestEditor() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [passDraft, setPassDraft] = useState("");
   const dirty = Boolean(question && originalQuestion && JSON.stringify(question) !== JSON.stringify(originalQuestion));
   const blocker = useUnsavedChanges(dirty);
 
@@ -71,6 +72,25 @@ export default function AdminTestEditor() {
     try {
       const next = dataOf(await api.updateTest(id, { title }));
       setTest((current) => ({ ...current, ...next }));
+    } catch (err) { setError(err.message); }
+  }
+
+  useEffect(() => { setPassDraft(test?.passPercent ?? ""); }, [test?.passPercent]);
+
+  async function savePassPercent(event) {
+    event.preventDefault();
+    const value = String(passDraft).trim();
+    const passPercent = value === "" ? null : Number(value);
+    if (passPercent !== null && (!Number.isInteger(passPercent) || passPercent < 0 || passPercent > 100)) {
+      setMessage("");
+      setError("Pass percent must be a whole number from 0 to 100");
+      return;
+    }
+    try {
+      const next = dataOf(await api.updateTest(id, { passPercent }));
+      setTest((current) => ({ ...current, ...next }));
+      setError("");
+      setMessage(passPercent === null ? "Pass percent cleared" : "Pass percent saved");
     } catch (err) { setError(err.message); }
   }
 
@@ -172,6 +192,15 @@ export default function AdminTestEditor() {
       <div><InlineRename as="h1" name={test.title} onSave={rename} /><p className="muted">{test.scope === "true_false" ? "True or false" : `${test.scope[0].toUpperCase()}${test.scope.slice(1)} test`} · {questions.length} questions</p></div>
       <Switch checked={test.isPublished} onChange={publish} label={test.isPublished ? "Published" : "Publish"} />
     </div>
+    {test.scope === "lesson" && <form className="pass-percent" onSubmit={savePassPercent}>
+      <label className="admin-field" htmlFor="pass-percent">Pass percent</label>
+      <div className="pass-percent-row">
+        <input id="pass-percent" type="number" inputMode="numeric" min="0" max="100" step="1" placeholder="None" value={passDraft} onChange={(event) => setPassDraft(event.target.value)} aria-describedby="pass-percent-help" />
+        <span aria-hidden="true">%</span>
+        <button className="button button-secondary" type="submit" disabled={String(passDraft) === String(test.passPercent ?? "")}>Save</button>
+      </div>
+      <p className="muted" id="pass-percent-help">A student needs at least this score to complete the lesson. Leave it empty for no requirement.</p>
+    </form>}
     <StatusMessage message={error || message} error={Boolean(error)} />
     {!questions.length && <p className="notice">A test with no questions gives no credit and stays hidden from students until it has at least one.</p>}
     <section className="admin-editor-section">
