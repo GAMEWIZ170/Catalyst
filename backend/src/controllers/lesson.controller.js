@@ -20,6 +20,7 @@ const studentTestSummary = async (tests, userId) => {
     title: test.title,
     order: test.order,
     questionCount: test.questionCount,
+    passPercent: test.passPercent ?? null,
     bestScore: scoreByTest.get(test._id.toString()) ?? null
   }));
 };
@@ -28,7 +29,8 @@ const adminTestSummary = (tests) => tests.map((test) => ({
   _id: test._id,
   title: test.title,
   order: test.order,
-  questionCount: test.questionCount
+  questionCount: test.questionCount,
+  passPercent: test.passPercent ?? null
 }));
 
 

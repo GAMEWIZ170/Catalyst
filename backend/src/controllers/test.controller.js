@@ -19,7 +19,7 @@ const getTest = async (req, res, next) => {
       .sort({ order: 1 })
       .lean();
     return res.status(200).json({
-      data: { _id: test._id, title: test.title, scope: test.scope, order: test.order, questions: questions.map(studentQuestion) }
+      data: { _id: test._id, title: test.title, scope: test.scope, order: test.order, passPercent: test.passPercent ?? null, questions: questions.map(studentQuestion) }
     });
   } catch (error) {
     next(error);
@@ -60,7 +60,10 @@ const submitTest = async (req, res, next) => {
       },
       { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
     );
-    if (test.scope === "lesson") {
+    // No pass percent means any attempt counts (tests made before this setting existed).
+    const passPercent = test.passPercent ?? null;
+    const passed = passPercent === null || score >= passPercent;
+    if (test.scope === "lesson" && passed) {
       await Progress.findOneAndUpdate(
         { user: req.user.id, lesson: test.lesson._id },
         {
@@ -72,7 +75,7 @@ const submitTest = async (req, res, next) => {
         { upsert: true, setDefaultsOnInsert: true }
       );
     }
-    return res.status(200).json({ data: { score, correct, total, bestScore: result.bestScore, attempts: result.attempts } });
+    return res.status(200).json({ data: { score, correct, total, bestScore: result.bestScore, attempts: result.attempts, passPercent, passed } });
   } catch (error) {
     next(error);
   }

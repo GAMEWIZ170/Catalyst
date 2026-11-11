@@ -124,7 +124,8 @@ const testFields = {
   course: objectId,
   title: Joi.string().trim().max(80),
   order: Joi.number().integer().min(1),
-  isPublished: Joi.boolean()
+  isPublished: Joi.boolean(),
+  passPercent: Joi.number().integer().min(0).max(100).allow(null)
 };
 const validateTest = validateWith(Joi.object({
   scope: testFields.scope.required(),
@@ -133,7 +134,8 @@ const validateTest = validateWith(Joi.object({
   course: testFields.course,
   title: testFields.title,
   order: testFields.order,
-  isPublished: testFields.isPublished.default(false)
+  isPublished: testFields.isPublished.default(false),
+  passPercent: testFields.passPercent.default(50)
 }).custom((value, helpers) => {
   const parent = value[value.scope];
   if (!parent || Object.keys(value).filter((key) => ["lesson", "unit", "course"].includes(key) && value[key]).length !== 1) {
@@ -144,7 +146,8 @@ const validateTest = validateWith(Joi.object({
 const validateTestUpdate = validateWith(Joi.object({
   title: testFields.title,
   order: testFields.order,
-  isPublished: testFields.isPublished
+  isPublished: testFields.isPublished,
+  passPercent: testFields.passPercent
 }).min(1));
 
 const optionFields = Joi.object({

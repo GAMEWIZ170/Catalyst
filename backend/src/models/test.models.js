@@ -8,6 +8,8 @@ const testSchema = new mongoose.Schema({
   title: { type: String, trim: true, maxlength: 80 },
   order: { type: Number, min: 1 },
   isPublished: { type: Boolean, default: false },
+  // Score (0 to 100) a student needs for a lesson test to complete the lesson. null means no requirement.
+  passPercent: { type: Number, min: 0, max: 100, default: null },
   deletedAt: { type: Date, default: null }
 }, { timestamps: true });
 

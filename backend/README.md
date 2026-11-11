@@ -166,7 +166,7 @@ Example outline lesson:
 | POST | `/questions/:id/answer` | Student | Check one answer |
 | POST | `/admin/tests` | Admin | Create a lesson-, unit- or course-scope test |
 | GET | `/admin/tests/:id` | Admin | Full test and questions |
-| PUT | `/admin/tests/:id` | Admin | Update title, order or publication |
+| PUT | `/admin/tests/:id` | Admin | Update title, order, publication or pass percent |
 | DELETE | `/admin/tests/:id` | Admin | Soft-delete a test |
 | POST | `/admin/questions` | Admin | Create a question |
 | PUT | `/admin/questions/:id` | Admin | Update a question |
@@ -216,10 +216,12 @@ To create or update a multiple-choice question, send options (a list without ids
 `POST /tests/:id/submit` example:
 
 ```json
-{ "data": { "score": 80, "correct": 4, "total": 5, "bestScore": 80, "attempts": 2 } }
+{ "data": { "score": 80, "correct": 4, "total": 5, "bestScore": 80, "attempts": 2, "passPercent": 70, "passed": true } }
 ```
 
 Submitting a visible test with no non-deleted questions returns `409` with `This test has no questions yet` and creates no result or progress.
+
+**Pass percent.** Each test has an optional `passPercent` (integer 0 to 100) set by its author. A lesson test completes its lesson only when the score is at or above it, and `passed` in the submit response says whether it was. A failed attempt still records the result and counts as activity for streaks, but it does not complete the lesson. `passPercent: null` means no requirement: any attempt completes the lesson, which is how tests created before this setting behave. Tests created through `POST /admin/tests` default to `50` when the field is left out. Send `null` to clear it. Unit and course tests report `passed` but never complete a lesson. A lesson that is already complete stays complete if a later attempt fails or the author raises the percent. `GET /tests/:id` and the tests listed in `GET /lessons/:id` include `passPercent`.
 
 ### Flashcards
 
