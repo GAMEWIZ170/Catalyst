@@ -34,6 +34,11 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Course'
     }],
+    // Students have access until this date when REQUIRE_SUBSCRIPTION=true. Set by an admin.
+    subscriptionEndsAt: {
+        type: Date,
+        default: null
+    },
     isActive: {
         type: Boolean,
         default: true

@@ -5,6 +5,12 @@ const helmet = require("helmet");
 
 const app = express();
 
+// Behind a proxy (Render, Railway, nginx), set TRUST_PROXY to the number of proxies in front of the app
+// so req.ip is the student's real address. Leave it unset when the app is reached directly.
+if (process.env.TRUST_PROXY) {
+  app.set("trust proxy", /^\d+$/.test(process.env.TRUST_PROXY) ? Number(process.env.TRUST_PROXY) : process.env.TRUST_PROXY);
+}
+
 // imports
 const logger = require("./middlewares/logger");
 const errorHandler = require("./middlewares/error");

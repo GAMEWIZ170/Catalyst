@@ -53,6 +53,12 @@ Never commit `.env`: it holds database credentials, the token secret and the Clo
 | `NODE_ENV` | Production enables secure cookies | `development` |
 | `CLIENT_URL` | Exact frontend origin allowed by CORS | `http://localhost:5173` |
 | `CLOUDINARY_URL` | Cloudinary SDK configuration | `cloudinary://API_KEY:API_SECRET@CLOUD_NAME` |
+| `TRUST_PROXY` | Optional. Number of proxies in front of the app, so the app sees each student's real IP address. Leave unset when there is no proxy | `1` |
+| `REQUIRE_SUBSCRIPTION` | Optional. `true` makes students need an active subscription to open lessons, tests, flashcards and materials. Default off | `true` |
+| `RATE_LIMIT_USER` | Optional. Requests per signed-in user per 15 minutes. Default `600` | `600` |
+| `RATE_LIMIT_IP` | Optional. Requests per IP address per 15 minutes, a ceiling against floods. Default `5000` | `5000` |
+| `RATE_LIMIT_AUTH_FAILS` | Optional. Failed logins or registrations per IP and email per 15 minutes. Default `20` | `20` |
+| `RATE_LIMIT_AUTH_IP` | Optional. Failed logins or registrations per IP across all emails per 15 minutes. Default `200` | `200` |
 
 Find `CLOUDINARY_URL` in the Cloudinary Console under the product environment's API environment variable or API keys area. Never commit it or paste the API secret into source control. In Cloudinary, go to Settings, then Security, and tick "Allow delivery of PDF and ZIP files"; without it every PDF link returns 401.
 
@@ -308,7 +314,11 @@ Create routes require an available parent. Delete routes are soft deletes.
 | DELETE | `/admin/materials/:id` | Soft-delete a material |
 | PUT | `/admin/materials/reorder` | Reorder materials with `{ "lesson", "ids" }` |
 | POST | `/admin/uploads` | Upload an image |
-| GET | `/admin/users` | Paginated user list without password hashes |
+| GET | `/admin/users` | Paginated user list without password hashes. Query: `q` (name or email), `role`, `status` (`active`, `inactive`, `subscribed`, `expired`), `page`, `limit` |
+| PUT | `/admin/users/:id` | Change `role`, `isActive`, `subscriptionEndsAt` (date or `null`) or `extendMonths` (1 to 12, from today or the current end date). Admins cannot demote or deactivate themselves, and the last active admin cannot be removed (`409`) |
+| GET | `/admin/stats` | Counts for the admin home page: students, admins, subscriptions, courses, lessons, tests and the last 7 days of activity |
+| GET | `/admin/trash` | Soft-deleted courses, units, lessons, tests, questions, flashcards and materials, newest first, with `blocked: true` when the parent is still deleted |
+| POST | `/admin/trash/:type/:id/restore` | Restore one item. `type` is `course`, `unit`, `lesson`, `test`, `question`, `flashcard` or `material`. Returns `409` naming the parent to restore first |
 
 ## How it works
 
@@ -317,6 +327,12 @@ Create routes require an available parent. Delete routes are soft deletes.
 A visible lesson requires a published lesson and course, an available unit, and no `deletedAt` on any parent. Tests count toward completion and outline counts only when published and containing at least one non-deleted question. Flashcards and materials use their own published, non-deleted filters.
 
 `deletedAt` is set instead of removing records. Students receive 404 for hidden content. Cloudinary assets are not automatically deleted when content is soft-deleted.
+
+Deleted items are listed at `GET /admin/trash` and put back with `POST /admin/trash/:type/:id/restore`. An item can only be restored when every parent is in place (a lesson needs its unit and course). A restored item goes to the end of its list and is **unpublished** (where it can be published), so nothing reappears for students until an admin publishes it. Course codes are unique ignoring case, and a course in the Trash still holds its code; creating or renaming a course to a taken code returns `409`.
+
+### Subscriptions
+
+`User.subscriptionEndsAt` is set by an admin (`PUT /admin/users/:id`). It does nothing until `REQUIRE_SUBSCRIPTION=true`. Then a student without a future `subscriptionEndsAt` gets `403` with `code: "SUBSCRIPTION_REQUIRED"` from lessons, tests, questions, flashcards and materials. Browsing courses, progress and settings stay open, and admins always have access. `GET /auth/me` returns `subscriptionEndsAt` and `hasAccess`.
 
 ### Question types
 
@@ -341,8 +357,10 @@ Joi validators trim strings, strip unknown fields and reject malformed IDs. Imag
 
 | Limiter | Applies to | Limit |
 | --- | --- | --- |
-| General | Every route | 1,000 requests/IP/15 minutes |
-| Strict | Register and login failures | 20/IP/15 minutes |
+| General, per user | Every route, for signed-in users | 600/user/15 minutes (`RATE_LIMIT_USER`) |
+| General, per IP | Every route | 5,000/IP/15 minutes (`RATE_LIMIT_IP`), a ceiling against floods that many students on one network will not reach |
+| Strict, per account | Register and login failures | 20/IP and email/15 minutes (`RATE_LIMIT_AUTH_FAILS`) |
+| Strict, per IP | Register and login failures | 200/IP/15 minutes (`RATE_LIMIT_AUTH_IP`) |
 | Answer | `POST /questions/:id/answer` | 100/user/15 minutes |
 | Submit | `POST /tests/:id/submit` | 60/user/15 minutes |
 | Mark done | `POST /lessons/:id/mark-done` | 60/user/15 minutes |
@@ -358,7 +376,7 @@ All schemas have timestamps. Soft-deletable content has `deletedAt`.
 
 | Model | Main fields |
 | --- | --- |
-| **User** | `name`, `email`, hidden bcrypt `password`, `role`, `avatar`, `isActive` |
+| **User** | `name`, `email`, hidden bcrypt `password`, `role`, `avatar`, `isActive`, `subscriptionEndsAt` |
 | **Course** | `code`, `title`, `description`, `isPublished`, `deletedAt` |
 | **Unit** | `course`, `title`, `order`, `deletedAt` |
 | **Lesson** | `unit`, `title`, `order`, `explanation`, optional `explanationImage`, `videoHost`, `videoId`, `isPublished`, `deletedAt` |

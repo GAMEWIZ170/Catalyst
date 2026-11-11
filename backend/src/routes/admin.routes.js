@@ -12,7 +12,8 @@ const {
   validateFlashcard, validateFlashcardUpdate
   , validateMaterial, validateMaterialUpdate,
   validateReorderUnits, validateReorderLessons, validateReorderTests,
-  validateReorderQuestions, validateReorderFlashcards, validateReorderMaterials
+  validateReorderQuestions, validateReorderFlashcards, validateReorderMaterials,
+  validateUserUpdate
 } = require("../middlewares/validate");
 
 const course = require("../controllers/course.controller");
@@ -20,6 +21,7 @@ const unit = require("../controllers/unit.controller");
 const lesson = require("../controllers/lesson.controller");
 const question = require("../controllers/question.controller");
 const admin = require("../controllers/admin.controller");
+const trash = require("../controllers/trash.controller");
 const test = require("../controllers/test.controller");
 const upload = require("../controllers/upload.controller");
 const { uploadImage } = require("../middlewares/upload");
@@ -124,5 +126,9 @@ router.post("/uploads", uploadLimiter, uploadImage, upload.uploadImage);
 
 // Users
 router.get("/users", admin.getAllUsers);
+router.put("/users/:id", validateUserUpdate, admin.updateUser);
+router.get("/stats", admin.getStats);
+router.get("/trash", trash.listTrash);
+router.post("/trash/:type/:id/restore", trash.restore);
 
 module.exports = router;

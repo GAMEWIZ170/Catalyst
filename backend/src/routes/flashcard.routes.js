@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const authenticate = require("../middlewares/authenticate");
+const requireAccess = require("../middlewares/requireAccess");
 const validators = require("../middlewares/validate");
 const { getLessonFlashcards, rateFlashcard } = require("../controllers/flashcard.controller");
 const flashcardRateLimiter = require("../middlewares/flashcardRateLimiter");
@@ -11,7 +12,7 @@ const validateFlashcardId = (req, res, next) => {
   next();
 };
 
-router.get("/lessons/:id/flashcards", authenticate, getLessonFlashcards);
-router.post("/flashcards/:id/rate", authenticate, validateFlashcardId, flashcardRateLimiter, validators.validateRating, rateFlashcard);
+router.get("/lessons/:id/flashcards", authenticate, requireAccess, getLessonFlashcards);
+router.post("/flashcards/:id/rate", authenticate, requireAccess, validateFlashcardId, flashcardRateLimiter, validators.validateRating, rateFlashcard);
 
 module.exports = router;

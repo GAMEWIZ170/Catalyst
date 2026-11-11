@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const authenticate = require("../middlewares/authenticate");
+const requireAccess = require("../middlewares/requireAccess");
 const { validateTestSubmission } = require("../middlewares/validate");
 const submitLimiter = require("../middlewares/submitLimiter");
 const { getTest, submitTest } = require("../controllers/test.controller");
@@ -14,6 +15,7 @@ const validateTestId = (req, res, next) => {
 };
 
 router.use(authenticate);
+router.use(requireAccess);
 router.get("/:id", getTest);
 router.post("/:id/submit", validateTestId, submitLimiter, validateTestSubmission, submitTest);
 

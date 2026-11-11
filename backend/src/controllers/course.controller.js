@@ -9,8 +9,20 @@ const Question = require("../models/question.models");
 const Flashcard = require("../models/flashcard.models");
 const Material = require("../models/material.models");
 
+// Course codes are unique ignoring upper and lower case, and a code in the Trash is still taken.
+const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const findCodeClash = (code, excludeId) => Course.findOne({
+  code: new RegExp(`^${escapeRegex(String(code).trim())}$`, "i"),
+  ...(excludeId ? { _id: { $ne: excludeId } } : {})
+}).select("deletedAt").lean();
+const codeClashMessage = (clash) => clash.deletedAt
+  ? "A deleted course already uses this code. Restore it from the Trash or choose another code."
+  : "A course with this code already exists";
+
 const createCourse = async (req, res, next) => {
   try {
+    const clash = await findCodeClash(req.body.code);
+    if (clash) return res.status(409).json({ message: codeClashMessage(clash) });
     const course = new Course(req.body);
     await course.save();
 
@@ -185,6 +197,10 @@ const updateCourse = async (req, res, next) => {
     return res.status(400).json({ message: "Invalid course ID" });
   }
   try {
+    if (req.body.code !== undefined) {
+      const clash = await findCodeClash(req.body.code, req.params.id);
+      if (clash) return res.status(409).json({ message: codeClashMessage(clash) });
+    }
     const updatedCourse = await Course.findOneAndUpdate(
       { _id: req.params.id, deletedAt: null },
       req.body,

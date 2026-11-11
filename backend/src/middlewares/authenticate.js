@@ -10,12 +10,12 @@ const authenticate = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await User.findById(decoded.id).select("role isActive");
+    const user = await User.findById(decoded.id).select("role isActive subscriptionEndsAt");
     if (!user || user.isActive === false) {
       return res.status(401).json({ message: "Please log in to continue" });
     }
 
-    req.user = { id: user._id.toString(), role: user.role };
+    req.user = { id: user._id.toString(), role: user.role, subscriptionEndsAt: user.subscriptionEndsAt };
     next();
   } catch (error) {
     if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {

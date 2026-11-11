@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const hashPassword = require("../utils/bcrypt");
 const ms = require("ms");
+const { hasAccess } = require("../middlewares/requireAccess");
 
 
 const cookieOptions = {
@@ -122,13 +123,18 @@ const logout = async (req, res, next) => {
 
 const getMe = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id).select("name email role avatar");
+    const user = await User.findById(req.user.id).select("name email role avatar subscriptionEndsAt");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.status(200).json({ data: { id: user._id, name: user.name, email: user.email, role: user.role, avatar: user.avatar } });
+    res.status(200).json({
+      data: {
+        id: user._id, name: user.name, email: user.email, role: user.role, avatar: user.avatar,
+        subscriptionEndsAt: user.subscriptionEndsAt, hasAccess: hasAccess(user)
+      }
+    });
   } catch (error) {
     next(error);
   }

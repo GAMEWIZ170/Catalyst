@@ -294,8 +294,16 @@ const validateTestSubmission = validateWith(Joi.object({
     ids: reorderIds
   }));
 
+const validateUserUpdate = validateWith(Joi.object({
+  role: Joi.string().valid("student", "admin"),
+  isActive: Joi.boolean(),
+  subscriptionEndsAt: Joi.date().iso().allow(null),
+  extendMonths: Joi.number().integer().min(1).max(12)
+}).min(1).oxor("subscriptionEndsAt", "extendMonths"));
+
 module.exports = {
   objectId,
+  validateUserUpdate,
   imageSchema,
   optionalImage,
   validateRegister,
