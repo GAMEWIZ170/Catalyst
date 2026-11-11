@@ -24,6 +24,7 @@ export default function Courses() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showWelcome, setShowWelcome] = useState(() => !welcomeSeen());
 
   function load() {
     setLoading(true);
@@ -33,6 +34,11 @@ export default function Courses() {
   }
 
   useEffect(load, []);
+
+  function dismissWelcome() {
+    setShowWelcome(false);
+    try { window.localStorage.setItem(welcomeKey, "1"); } catch { /* it will show again next visit */ }
+  }
 
   return <div className="content student-page">
     <header className="student-page-header"><h1>Courses</h1></header>
