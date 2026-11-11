@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-11T16:00:00Z",
+  "title": "Design System: Catalyst",
+  "extensions": {
+    "colorMeta": {
+      "accent": { "role": "primary", "displayName": "Lagoon Teal", "canonical": "#0E7490" },
+      "on-accent": { "role": "neutral", "displayName": "White on accent", "canonical": "#FFFFFF" },
+      "ink": { "role": "neutral", "displayName": "Deep Navy Ink", "canonical": "#17324D" },
+      "muted": { "role": "neutral", "displayName": "Slate Muted", "canonical": "#5B7185" },
+      "paper": { "role": "neutral", "displayName": "Cool Paper", "canonical": "#F5F9FC" },
+      "line": { "role": "neutral", "displayName": "Mist Line", "canonical": "#E3EDF3" },
+      "control-line": { "role": "neutral", "displayName": "Control Line", "canonical": "color-mix(in srgb, #17324D 60%, #FFFFFF)" },
+      "correct": { "role": "feedback", "displayName": "Correct Green", "canonical": "#047857" },
+      "wrong": { "role": "feedback", "displayName": "Amber Wrong", "canonical": "#A16207" },
+      "error": { "role": "feedback", "displayName": "Error Rose", "canonical": "#BE123C" }
+    },
+    "darkFeedback": {
+      "correct": { "text": "#5EE0A8", "tint": "#12372C" },
+      "wrong": { "text": "#F5C04A", "tint": "#3B3014", "onFill": "#2A1D00" },
+      "error": { "text": "#FF8FA8", "tint": "#43202B" }
+    },
+    "typographyMeta": {
+      "reading": { "displayName": "Reading", "purpose": "Lesson explanations and the lesson header, through the --serif token. Only weight 400 is loaded." },
+      "display": { "displayName": "Display", "purpose": "Page titles." }
+    },
+    "shadows": [
+      { "name": "menu-lift", "value": "0 8px 24px rgb(27 36 48 / 6%)", "purpose": "Floating menus only." },
+      { "name": "selected-ring", "value": "0 0 0 3px rgb(14 116 144 / 22%)", "purpose": "Chosen palette or avatar card in Settings." },
+      { "name": "focus-outline", "value": "2px solid var(--accent), offset 2px", "purpose": "Keyboard focus on buttons, links, inputs, selects, textareas." }
+    ],
+    "motion": [
+      { "name": "ease-fast", "value": "160ms ease", "purpose": "Switch thumb." },
+      { "name": "ease-base", "value": "250ms ease", "purpose": "Progress bar, feedback panel colours." }
+    ],
+    "breakpoints": [
+      { "name": "xs", "value": "360px", "purpose": "Below this the topbar tightens." },
+      { "name": "sm", "value": "640px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button", "kind": "button", "refersTo": "button-primary",
+      "description": "The one main action on a screen.",
+      "html": "<button class=\"ds-btn-primary\">Continue</button>",
+      "css": ".ds-btn-primary{background:var(--accent-button,#0E7490);color:var(--on-accent,#fff);border:1px solid transparent;border-radius:8px;min-height:44px;padding:.65rem 1rem;font:inherit;font-weight:600;cursor:pointer}.ds-btn-primary:focus-visible{outline:2px solid var(--accent,#0E7490);outline-offset:2px}"
+    },
+    {
+      "name": "Secondary Button", "kind": "button", "refersTo": "button-secondary",
+      "description": "Any other action.",
+      "html": "<button class=\"ds-btn-secondary\">Review cards</button>",
+      "css": ".ds-btn-secondary{background:var(--surface,#fff);color:var(--ink,#17324D);border:1px solid var(--control-line,#6f7f8f);border-radius:8px;min-height:44px;padding:.65rem 1rem;font:inherit;font-weight:600;cursor:pointer}.ds-btn-secondary:focus-visible{outline:2px solid var(--accent,#0E7490);outline-offset:2px}"
+    },
+    {
+      "name": "Card", "kind": "card", "refersTo": "card",
+      "description": "Flat panel with a thin border.",
+      "html": "<div class=\"ds-card\"><h3>Lesson title</h3><p>Short description.</p></div>",
+      "css": ".ds-card{background:var(--surface,#fff);border:1px solid var(--line,#E3EDF3);border-radius:14px;padding:1.25rem;color:var(--ink,#17324D)}.ds-card h3{margin:0 0 .4rem;font-size:1.125rem}.ds-card p{margin:0;color:var(--muted,#5B7185)}"
+    },
+    {
+      "name": "Answer Option", "kind": "custom", "refersTo": "answer-option",
+      "description": "A choice on the test screen.",
+      "html": "<button class=\"ds-answer\">H2O</button>",
+      "css": ".ds-answer{background:var(--surface,#fff);border:2px solid var(--control-line,#6f7f8f);border-radius:8px;color:var(--ink,#17324D);min-height:64px;padding:1rem;text-align:left;font:inherit;cursor:pointer;width:100%}"
+    },
+    {
+      "name": "Feedback Panel (wrong)", "kind": "custom", "refersTo": "feedback-panel-wrong",
+      "description": "Shown after a wrong answer. Amber, never red.",
+      "html": "<section class=\"ds-feedback\"><h2>Not quite</h2><p><strong>Correct answer:</strong> H2O</p><p>Two hydrogens, one oxygen.</p></section>",
+      "css": ".ds-feedback{background:var(--wrong-tint,#FFFBEB);border:2px solid var(--wrong,#A16207);border-radius:8px;padding:1rem;color:var(--ink,#17324D)}.ds-feedback h2{color:var(--wrong,#A16207);font-size:1.125rem;margin:0 0 .5rem}.ds-feedback p{margin:0 0 .5rem}"
+    },
+    {
+      "name": "Test Row Action", "kind": "chip", "refersTo": "row-action-primary",
+      "description": "End of a test row: Start or Retake. Filled when it is the lesson's main next step.",
+      "html": "<span class=\"ds-row-action\">Start</span>",
+      "css": ".ds-row-action{align-items:center;background:var(--accent-button,#0E7490);border-radius:8px;color:var(--on-accent,#fff);display:inline-flex;font-weight:600;min-height:44px;padding:0 1rem}"
+    },
+    {
+      "name": "Deck Summary", "kind": "custom", "refersTo": "deck-bar",
+      "description": "Flashcard progress as a thin segmented bar and a legend.",
+      "html": "<div class=\"ds-deck\"><p class=\"ds-deck-total\">5 cards</p><div class=\"ds-deck-bar\"><span style=\"flex-grow:3;background:var(--correct,#047857)\"></span><span style=\"flex-grow:1;background:var(--wrong,#A16207)\"></span><span style=\"flex-grow:1\"></span></div><p class=\"ds-deck-legend\">Confident 3 · Unsure 1 · Not rated yet 1</p></div>",
+      "css": ".ds-deck{display:grid;gap:.5rem}.ds-deck-total{margin:0;font-weight:600;color:var(--ink,#17324D)}.ds-deck-bar{background:var(--line,#E3EDF3);border-radius:999px;display:flex;gap:2px;height:.5rem;overflow:hidden}.ds-deck-legend{margin:0;color:var(--muted,#5B7185);font-size:.875rem}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Study Desk and the Lab Notebook",
+    "overview": "A quiet desk where a student does ordered work. Paper-coloured pages hold white panels with thin borders, laid out like notebook entries: a heading, a short explanation, a formula, a test. Nothing competes with the lesson.",
+    "keyCharacteristics": [
+      "Flat panels on a tinted page, separated by 1px lines.",
+      "One sans family; a serif only for lesson reading.",
+      "44px minimum touch targets, 64px for test answers.",
+      "Colour never carries meaning alone.",
+      "One main action per screen."
+    ],
+    "rules": [
+      { "name": "The Token Only Rule", "body": "No colour literal outside tokens.css and Avatar.jsx.", "section": "colors" },
+      { "name": "The Soft Wrong Rule", "body": "Wrong answers use amber, never error red.", "section": "colors" },
+      { "name": "The Accent Is Action Rule", "body": "Accent marks what can be pressed, what is selected, and progress.", "section": "colors" },
+      { "name": "The Control Line Rule", "body": "Panels get the faint line. Anything interactive gets the control line.", "section": "colors" },
+      { "name": "The One Family Rule", "body": "Do not add a second sans family. The serif is for long lesson reading only.", "section": "typography" },
+      { "name": "The Flat Until Floating Rule", "body": "Panels never carry a shadow. Only things that float above the page do.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use the tokens in tokens.css for every colour.",
+      "Do make sure every var(--name) you write exists.",
+      "Do keep 44px minimum touch targets.",
+      "Do give each screen one primary action.",
+      "Do keep text at 4.5:1 and controls at 3:1."
+    ],
+    "donts": [
+      "Don't hard-code a colour.",
+      "Don't use --surface as text on a filled accent; use --on-accent.",
+      "Don't add shadows to panels.",
+      "Don't use error red for a wrong answer.",
+      "Don't add a second sans font family."
+    ]
+  }
+}
