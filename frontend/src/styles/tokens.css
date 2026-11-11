@@ -15,6 +15,10 @@
   --error-tint: #FFF1F2;
   --streak: #0E7490;
   --focus: 0 0 0 3px rgb(14 116 144 / 22%);
+  --control-line: color-mix(in srgb, var(--ink) 60%, var(--surface));
+  --on-accent: #FFFFFF;
+  --on-wrong: #FFFFFF;
+  --scrim: rgb(0 0 0 / 55%);
   --radius-control: 8px;
   --radius-panel: 14px;
   --shadow-subtle: 0 8px 24px rgb(27 36 48 / 6%);
@@ -71,6 +75,17 @@
   --streak: #334155;
   --focus: 0 0 0 3px rgb(51 65 85 / 22%);
   color-scheme: light;
+}
+
+/* Dark mode feedback colours: lighter so they read on dark surfaces (4.5:1 or better). */
+:root[data-theme="dark"] {
+  --correct: #5EE0A8;
+  --correct-tint: #12372C;
+  --wrong: #F5C04A;
+  --wrong-tint: #3B3014;
+  --error: #FF8FA8;
+  --error-tint: #43202B;
+  --on-wrong: #2A1D00;
 }
 
 :root[data-palette="lagoon"][data-theme="dark"] {
