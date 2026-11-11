@@ -2154,3 +2154,19 @@ h3 {
     transition-duration: 0.01ms;
   }
 }
+
+@media (max-width: 359px) {
+  .topbar {
+    padding-inline: 0.5rem;
+  }
+
+  .topbar-tools {
+    gap: 0.25rem;
+  }
+
+  .theme-toggle,
+  .icon-button,
+  .profile-button {
+    flex-shrink: 0;
+  }
+}
