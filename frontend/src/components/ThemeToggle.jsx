@@ -1,13 +1,7 @@
 import { useEffect, useState } from "react";
+import { syncThemeColor } from "../utils/themeColor";
 
 const themeKey = "catalyst-theme";
-const paletteSurfaces = {
-  lagoon: { light: "rgb(245 249 252)", dark: "rgb(16 42 67)" },
-  indigo: { light: "rgb(246 247 251)", dark: "rgb(17 26 51)" },
-  ember: { light: "rgb(250 247 245)", dark: "rgb(36 22 18)" },
-  orchid: { light: "rgb(248 245 252)", dark: "rgb(33 20 47)" },
-  graphite: { light: "rgb(246 247 248)", dark: "rgb(21 26 33)" }
-};
 
 function getTheme() {
   return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
@@ -15,9 +9,7 @@ function getTheme() {
 
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
-  const palette = document.documentElement.dataset.palette || "lagoon";
-  const themeColor = paletteSurfaces[palette][theme];
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColor);
+  syncThemeColor();
 }
 
 export default function ThemeToggle() {

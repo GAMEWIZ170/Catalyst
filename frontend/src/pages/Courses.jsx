@@ -3,6 +3,22 @@ import { Link } from "react-router-dom";
 import { api, ACCESS_ENDED } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
+const welcomeKey = "catalyst-welcome-seen";
+const welcomeSeen = () => { try { return window.localStorage.getItem(welcomeKey) === "1"; } catch { return false; } };
+
+// Shown once to a student, so the first visit explains the path through a course.
+function Welcome({ onDone }) {
+  return <section className="welcome" aria-labelledby="welcome-title">
+    <h2 id="welcome-title">How Catalyst works</h2>
+    <ol>
+      <li>Pick a course and work through its lessons in order.</li>
+      <li>Each lesson has an explanation, then a test or flashcards. Pass the test or finish the deck to complete it.</li>
+      <li>Study on any day to keep your streak going.</li>
+    </ol>
+    <button className="button button-secondary" type="button" onClick={onDone}>Got it</button>
+  </section>;
+}
+
 export default function Courses() {
   const { user } = useAuth();
   const [courses, setCourses] = useState([]);
@@ -21,6 +37,7 @@ export default function Courses() {
   return <div className="content student-page">
     <header className="student-page-header"><h1>Courses</h1></header>
     {user && user.role === "student" && user.hasAccess === false && <p className="notice" role="status">Your access has ended. You can still look around, but lessons, tests and flashcards are locked until your subscription is renewed.</p>}
+    {user && user.role === "student" && showWelcome && <Welcome onDone={dismissWelcome} />}
     {loading && <Loading />}
     {error && <ErrorState message={error} onRetry={load} />}
     {!loading && !error && !courses.length && <div className="empty-state"><h2>No courses yet. Check back soon.</h2></div>}

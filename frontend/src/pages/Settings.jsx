@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { syncThemeColor } from "../utils/themeColor";
 import Avatar, { AVATAR_KEYS, AVATAR_LABELS } from "../components/Avatar";
 
 const palettes = [
@@ -10,14 +11,6 @@ const palettes = [
   { key: "graphite", name: "Graphite" }
 ];
 
-const paletteSurfaces = {
-  lagoon: { light: "rgb(245 249 252)", dark: "rgb(16 42 67)" },
-  indigo: { light: "rgb(246 247 251)", dark: "rgb(17 26 51)" },
-  ember: { light: "rgb(250 247 245)", dark: "rgb(36 22 18)" },
-  orchid: { light: "rgb(248 245 252)", dark: "rgb(33 20 47)" },
-  graphite: { light: "rgb(246 247 248)", dark: "rgb(21 26 33)" }
-};
-
 function currentPalette() {
   return palettes.some(({ key }) => key === document.documentElement.dataset.palette)
     ? document.documentElement.dataset.palette
@@ -26,8 +19,7 @@ function currentPalette() {
 
 function applyPalette(palette) {
   document.documentElement.dataset.palette = palette;
-  const theme = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", paletteSurfaces[palette][theme]);
+  syncThemeColor();
   try {
     window.localStorage.setItem("catalyst-palette", palette);
   } catch {

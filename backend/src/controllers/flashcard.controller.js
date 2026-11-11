@@ -45,17 +45,19 @@ const rateFlashcard = async (req, res, next) => {
   try {
     const card = await Flashcard.findOne({ _id: req.params.id, isPublished: true, deletedAt: null }).lean();
     if (!card || !(await findVisibleLesson(card.lesson))) return res.status(404).json({ message: "Flashcard not found" });
-    const progress = await FlashcardProgress.findOneAndUpdate(
-      { user: req.user.id, flashcard: card._id },
-      {
-        $set: { confidence: req.body.confidence, lastReviewedAt: new Date() },
-        $inc: { reviewCount: 1 },
-        $addToSet: { reviewedDays: todayKey() }
-      },
-      { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
-    ).lean();
-    const cards = await Flashcard.find({ lesson: card.lesson, isPublished: true, deletedAt: null })
-      .select("_id front back order").sort({ order: 1 }).lean();
+    // The save and the card list do not depend on each other, so they run together.
+    const [progress, cards] = await Promise.all([
+      FlashcardProgress.findOneAndUpdate(
+        { user: req.user.id, flashcard: card._id },
+        {
+          $set: { confidence: req.body.confidence, lastReviewedAt: new Date() },
+          $inc: { reviewCount: 1 },
+          $addToSet: { reviewedDays: todayKey() }
+        },
+        { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
+      ).lean(),
+      Flashcard.find({ lesson: card.lesson, isPublished: true, deletedAt: null }).select("_id").lean()
+    ]);
     const progressRecords = await FlashcardProgress.find({
       user: req.user.id,
       flashcard: { $in: cards.map((item) => item._id) }
@@ -68,7 +70,7 @@ const rateFlashcard = async (req, res, next) => {
         { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
       );
     }
-    return res.status(200).json({ data: { summary: await getFlashcardSummary(card.lesson, req.user.id), reviewCount: progress.reviewCount } });
+    return res.status(200).json({ data: { summary: getFlashcardSummary.summarize(cards, progressByCard), reviewCount: progress.reviewCount } });
   } catch (error) {
     next(error);
   }
