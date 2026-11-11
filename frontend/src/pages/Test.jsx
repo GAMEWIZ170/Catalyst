@@ -23,6 +23,9 @@ export default function Test() {
   const [error, setError] = useState("");
   const [blocking, setBlocking] = useState(false);
   const feedbackHeading = useRef(null);
+  const backTo = location.state?.from || "/courses";
+  const backState = location.state?.courseFrom ? { from: location.state.courseFrom } : undefined;
+  const backLabel = `Back to ${backTo.startsWith("/lessons/") ? "lesson" : "course"}`;
   const dirty = phase === "question" && answers.length > 0;
   const blocker = useUnsavedChanges(dirty);
 
@@ -71,18 +74,18 @@ export default function Test() {
   function leave() {
     setBlocking(false);
     if (blocker.state === "blocked") blocker.proceed();
-    else navigate(location.state?.from || "/courses");
+    else navigate(backTo, { state: backState });
   }
   if (error && !test) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
   if (!test) return <Loading />;
-  if (phase === "intro") return <div className="content test-page"><Link className="back-link" to={location.state?.from || "/courses"}>Back</Link><section className="test-intro"><h1>{test.title}</h1><p>{test.questions.length} questions</p><button className="button button-primary" type="button" onClick={start}>Start test</button></section></div>;
-  if (phase === "results") return <div className="content test-page"><section className="test-results"><h1>{result.score}%</h1><p>{result.correct} of {result.total} correct</p><p>Best score: {result.bestScore}% · Attempts: {result.attempts}</p><div className="dialog-actions"><button className="button button-primary" type="button" onClick={async () => { await load(); start(); }}>Try again</button><Link className="button button-secondary" to={location.state?.from || "/courses"}>Back to {location.state?.from?.startsWith("/lessons/") ? "lesson" : "course"}</Link></div></section></div>;
+  if (phase === "intro") return <div className="content test-page"><Link className="back-link" to={backTo} state={backState}>{backLabel}</Link><section className="test-intro"><h1>{test.title}</h1><p>{test.questions.length} questions</p><button className="button button-primary" type="button" onClick={start}>Start test</button></section></div>;
+  if (phase === "results") return <div className="content test-page"><section className="test-results"><h1>{result.score}%</h1><p>{result.correct} of {result.total} correct</p><p>Best score: {result.bestScore}% · Attempts: {result.attempts}</p><div className="dialog-actions"><button className="button button-primary" type="button" onClick={async () => { await load(); start(); }}>Try again</button><Link className="button button-secondary" to={backTo} state={backState}>{backLabel}</Link></div></section></div>;
   const question = test.questions[index];
   const correct = feedback?.correctAnswer;
   return <div className="content test-page">
     <div className="test-progress"><Progress value={index + 1} max={test.questions.length} /><p>Question {index + 1} of {test.questions.length}</p></div>
     <section className="question-screen">
-      <RichText>{question.text}</RichText>
+      <div className="question-text"><RichText>{question.text}</RichText></div>
       {question.image?.url && <img className="question-image" src={imageUrl(question.image.url, 400)} alt={question.image.alt} />}
       {question.type === "mcq" ? <fieldset className="answer-options"><legend>Choose an answer</legend>{question.options.map((option) => <button className={`answer-option ${chosen === option._id ? "selected" : ""} ${feedback && correct?._id === option._id ? "correct" : ""} ${feedback && chosen === option._id && !feedback.isCorrect ? "wrong" : ""}`} type="button" disabled={Boolean(feedback)} key={option._id} onClick={() => selectAnswer(option._id)}><RichText>{option.text}</RichText>{option.image?.url && <img src={imageUrl(option.image.url, 400)} alt={option.image.alt} />}</button>)}</fieldset> : <div className="true-false-options"><button className={chosen === "true" ? "selected" : ""} type="button" disabled={Boolean(feedback)} onClick={() => selectAnswer("true")}>True</button><button className={chosen === "false" ? "selected" : ""} type="button" disabled={Boolean(feedback)} onClick={() => selectAnswer("false")}>False</button></div>}
       {feedback && <section className={`feedback-panel ${feedback.isCorrect ? "correct" : "wrong"}`} aria-live="polite"><h2 tabIndex="-1" ref={feedbackHeading}>{feedback.isCorrect ? "Correct" : "Not quite"}</h2><p><strong>Correct answer:</strong> {typeof correct === "object" ? <RichText>{correct.text}</RichText> : correct}</p><RichText>{feedback.explanation}</RichText>{feedback.explanationImage?.url && <img src={imageUrl(feedback.explanationImage.url, 800)} alt={feedback.explanationImage.alt} />}</section>}

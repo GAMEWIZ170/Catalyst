@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useSearchParams, useParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams, useParams } from "react-router-dom";
+import DeckSummary from "../components/DeckSummary";
 import RichText from "../components/RichText";
 import { api } from "../api/client";
 import { imageUrl } from "../utils/cloudinary";
@@ -13,6 +14,8 @@ function RatingIcon({ type }) {
 
 export default function Flashcards() {
   const { id } = useParams();
+  const location = useLocation();
+  const lessonState = location.state?.courseFrom ? { from: location.state.courseFrom } : undefined;
   const [params] = useSearchParams();
   const filter = params.get("filter") === "review" ? "review" : "";
   const [cards, setCards] = useState([]);
@@ -72,16 +75,16 @@ export default function Flashcards() {
 
   if (error && !cards.length) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
   if (!cards.length && !nothingToReview) return <Loading />;
-  if (nothingToReview) return <div className="content flashcard-page"><Link className="back-link" to={`/lessons/${id}`}>Back to lesson</Link><section className="flashcard-empty"><h1>No cards to review.</h1></section></div>;
-  if (finished) return <div className="content flashcard-page"><section className="flashcard-finished"><h1>Deck finished</h1><p>{summary.total} cards: {summary.confident} confident, {summary.unsure} unsure, {summary.unknown} don't know, {summary.unrated} not rated yet</p><div className="lesson-links">{summary.unsure + summary.unknown + summary.unrated > 0 ? <Link className="button button-primary" to={`/lessons/${id}/flashcards?filter=review`}>Review cards I'm not sure about</Link> : <p>Nothing left to review</p>}<Link className="button button-secondary" to={`/lessons/${id}`}>Back to lesson</Link></div></section></div>;
+  if (nothingToReview) return <div className="content flashcard-page"><Link className="back-link" to={`/lessons/${id}`} state={lessonState}>Back to lesson</Link><section className="flashcard-empty"><h1>No cards to review.</h1></section></div>;
+  if (finished) return <div className="content flashcard-page"><section className="flashcard-finished"><h1>Deck finished</h1><DeckSummary summary={summary} /><div className="lesson-links">{summary.unsure + summary.unknown + summary.unrated > 0 ? <Link className="button button-primary" to={`/lessons/${id}/flashcards?filter=review`} state={location.state}>Review cards I'm not sure about</Link> : <p>Nothing left to review</p>}<Link className="button button-secondary" to={`/lessons/${id}`} state={lessonState}>Back to lesson</Link></div></section></div>;
   const card = queue[position];
   return <div className="content flashcard-page">
-    <Link className="back-link" to={`/lessons/${id}`}>Back to lesson</Link>
+    <Link className="back-link" to={`/lessons/${id}`} state={lessonState}>Back to lesson</Link>
     <div className="flashcard-progress"><div className="test-progress-line" role="progressbar" aria-valuemin="0" aria-valuemax={queue.length} aria-valuenow={position + 1} style={{ "--progress": `${((position + 1) / queue.length) * 100}%` }} /><p aria-live="polite">Card {position + 1} of {queue.length}</p></div>
     <article className="flashcard-card">
       <h1 tabIndex="-1" ref={headingRef}>Flashcard {position + 1}</h1>
       <div className="flashcard-side"><RichText>{card.front.text}</RichText>{card.front.image?.url && <img src={imageUrl(card.front.image.url, 600)} alt={card.front.image.alt} loading="lazy" />}</div>
-      {!shown ? <button className="button button-primary" type="button" onClick={() => setShown(true)}>Show answer</button> : <><div className="flashcard-side"><RichText>{card.back.text}</RichText>{card.back.image?.url && <img src={imageUrl(card.back.image.url, 600)} alt={card.back.image.alt} loading="lazy" />}</div><div className="flashcard-ratings">{[["confident", "Confident"], ["unsure", "Unsure"], ["unknown", "Don't know"]].map(([value, label]) => <button className={`flashcard-rating flashcard-rating--${value}`} type="button" key={value} onClick={() => rate(value)}><RatingIcon type={value} />{label}</button>)}</div></>}
+      {!shown ? <button className="button button-primary" type="button" onClick={() => setShown(true)}>Show answer</button> : <><div className="flashcard-side"><RichText>{card.back.text}</RichText>{card.back.image?.url && <img src={imageUrl(card.back.image.url, 600)} alt={card.back.image.alt} loading="lazy" />}</div><div className="flashcard-ratings">{[["confident", "Confident"], ["unsure", "Unsure"], ["unknown", "Don't know"]].map(([value, label]) => <button className={`flashcard-rating flashcard-rating--${value}`} type="button" key={value} onClick={() => rate(value)}><RatingIcon type={value} />{label}</button>)}</div><p className="flashcard-hint">Cards you mark Unsure or Don't know go into your review list.</p></>}
       {error && <p className="form-error" role="alert">{error}</p>}
     </article>
   </div>;

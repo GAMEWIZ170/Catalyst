@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import ProgressBar from "../components/ProgressBar";
 import { api } from "../api/client";
+import { rememberCourse } from "../utils/courseCache";
 import { ErrorState, Loading } from "./Courses";
 
 function TestRow({ test, from }) {
@@ -17,7 +18,7 @@ export default function CourseOutline() {
 
   function load() {
     setError("");
-    api.getCourse(id).then(({ data }) => setCourse(data)).catch((err) => setError(err.message));
+    api.getCourse(id).then(({ data }) => { rememberCourse(data); setCourse(data); }).catch((err) => setError(err.message));
   }
 
   useEffect(load, [id]);

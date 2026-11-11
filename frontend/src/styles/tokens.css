@@ -15,6 +15,7 @@
   --error-tint: #FFF1F2;
   --streak: #0E7490;
   --focus: 0 0 0 3px rgb(14 116 144 / 22%);
+  --serif: "Source Serif 4", Georgia, serif;
   --control-line: color-mix(in srgb, var(--ink) 60%, var(--surface));
   --on-accent: #FFFFFF;
   --on-wrong: #FFFFFF;

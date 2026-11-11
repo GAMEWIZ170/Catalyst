@@ -392,8 +392,9 @@ h3 {
 }
 
 .lesson-explanation {
-  font-family: var(--serif, Georgia, serif);
+  font-family: var(--serif);
   font-size: 1.15rem;
+  text-wrap: pretty;
   line-height: 1.75;
 }
 
@@ -516,7 +517,7 @@ h3 {
 
 .flashcard-rating--confident { color: var(--correct); }
 .flashcard-rating--unsure { color: var(--wrong); }
-.flashcard-rating--unknown { color: var(--accent-button); }
+.flashcard-rating--unknown { color: var(--accent); }
 
 .test-page {
   max-width: 760px;
@@ -565,7 +566,7 @@ h3 {
   background: var(--surface);
   border: 2px solid var(--control-line);
   border-radius: var(--radius-control);
-  color: var(--text);
+  color: var(--ink);
   cursor: pointer;
   min-height: 64px;
   padding: 1rem;
@@ -584,7 +585,7 @@ h3 {
 
 .answer-option.wrong,
 .feedback-panel.wrong {
-  border-color: var(--incorrect);
+  border-color: var(--wrong);
 }
 
 .true-false-options {
@@ -656,7 +657,7 @@ h3 {
   margin-top: 1.5rem;
 }
 
-.student-test-row span:last-child,
+.student-test-row > span:last-child,
 .course-list-row > span:last-child {
   color: var(--accent);
   font-weight: 600;
@@ -865,7 +866,7 @@ h3 {
 }
 
 .lesson-header p {
-  font-family: "Source Serif 4", serif;
+  font-family: var(--serif);
   font-size: 1.125rem;
   line-height: 1.65;
   max-width: 68ch;
@@ -2170,4 +2171,207 @@ h3 {
   .profile-button {
     flex-shrink: 0;
   }
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+/* Programmatic focus on headings (moved there for screen readers) needs no ring. */
+[tabindex="-1"]:focus {
+  outline: none;
+}
+
+.sr-only {
+  clip: rect(0 0 0 0);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.skeleton {
+  background: var(--line);
+  border-radius: var(--radius-control);
+}
+
+.skeleton-title {
+  height: 2.25rem;
+  margin-bottom: 1.25rem;
+  width: 70%;
+}
+
+.skeleton-line {
+  height: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.skeleton-line--short {
+  width: 55%;
+}
+
+.lesson-meta {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.875rem;
+  gap: 0.5rem 1rem;
+  margin: 0 0 1.5rem;
+}
+
+.lesson-meta:empty {
+  display: none;
+}
+
+.student-test-row span.row-action {
+  align-items: center;
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-control);
+  color: var(--accent);
+  display: inline-flex;
+  font-weight: 600;
+  min-height: 44px;
+  padding: 0 1rem;
+}
+
+.student-test-row span.row-action--primary {
+  background: var(--accent-button);
+  border-color: transparent;
+  color: var(--on-accent);
+}
+
+.lesson-next {
+  border-top: 1px solid var(--line);
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+}
+
+.question-text {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.answer-options legend {
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.feedback-panel h2 {
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+}
+
+.feedback-panel.correct {
+  background: var(--correct-tint);
+}
+
+.feedback-panel.wrong {
+  background: var(--wrong-tint);
+}
+
+.feedback-panel.correct h2 {
+  color: var(--correct);
+}
+
+.feedback-panel.wrong h2 {
+  color: var(--wrong);
+}
+
+.flashcard-card h1 {
+  color: var(--muted);
+  font-size: 0.875rem;
+  letter-spacing: 0;
+  margin: 0;
+}
+
+.flashcard-ratings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.flashcard-rating {
+  flex-direction: column;
+  font-size: 0.875rem;
+  gap: 0.25rem;
+  justify-content: center;
+  min-height: 64px;
+  padding: 0.5rem 0.25rem;
+  text-align: center;
+}
+
+.flashcard-hint {
+  color: var(--muted);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.deck-summary {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.deck-total {
+  font-weight: 600;
+  margin: 0;
+}
+
+.deck-bar {
+  background: var(--line);
+  border-radius: 999px;
+  display: flex;
+  gap: 2px;
+  height: 0.5rem;
+  overflow: hidden;
+}
+
+.deck-seg--confident {
+  background: var(--correct);
+}
+
+.deck-seg--unsure {
+  background: var(--wrong);
+}
+
+.deck-seg--unknown {
+  background: var(--accent);
+}
+
+.deck-seg--unrated {
+  background: transparent;
+}
+
+.deck-legend {
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.875rem;
+  gap: 0.25rem 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.deck-dot {
+  border-radius: 50%;
+  display: inline-block;
+  height: 0.75rem;
+  margin-right: 0.4rem;
+  width: 0.75rem;
+}
+
+.deck-dot.deck-seg--unrated {
+  border: 1px solid var(--control-line);
+}
+
+/* Keeps the line's space while the course loads, so the text below does not jump. */
+.lesson-meta--pending:empty {
+  display: flex;
+  min-height: 1.3125rem;
 }
