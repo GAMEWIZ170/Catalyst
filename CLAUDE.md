@@ -37,7 +37,7 @@ Structure: course > unit > lesson. Tests can belong to a lesson, a unit or a cou
 ## Git rules
 
 - Run `git branch --show-current` before any change. Stop if it is not the branch you were told.
-- Branches: `main` is stable. `feature/tests-and-media` is the backend. `feature/frontend-v2` is the frontend. `backup/frontend-v2-before-merge` is a safety copy.
+- Branches: `main` is stable. The work branch is `feature/ui-overhaul`, made from `main`. Older branches (`feature/tests-and-media`, `feature/frontend-v2`, `backup/frontend-v2-before-merge`) are history.
 - Never `git add .` or `git add -A`. Add files by name.
 - Never commit `.env`, `todo.txt`, screenshots or verification scripts.
 - Never push or merge to `main` unless asked. Never `reset --hard` without a backup branch and approval.
@@ -93,7 +93,8 @@ Short report: commits (hash and message), files changed, CHECK lines, what is `N
 - Backend v2 done and pushed: tests, questions, flashcards, materials, uploads, avatars, admin course tree (`GET /admin/courses/:id`) and reorder routes.
 - Frontend done and pushed on `feature/frontend-v2`: palettes, top bar and profile menu, settings, admin course list, course editor, lesson editor, test editor, rich text and formulas, student course list, outline, lesson hub, test flow, flashcard study flow, progress page.
 - Not yet verified on a real backend: student screens, flashcard flow, progress page, the latest visual fixes, the lesson editor load time, image upload, and the full responsive matrix.
-- Next: run those verifications, fix what they find, then merge `feature/frontend-v2` into `main` when the owner says so.
+- Current work: UI overhaul on `feature/ui-overhaul` (made from `main`), following `UI_OVERHAUL.md`. One phase step per session.
+- Next: finish the overhaul phases in `UI_OVERHAUL.md`, then run the unverified checks above, then merge into `main` when the owner says so.
 
 ## Roadmap (owner may do some himself)
 
