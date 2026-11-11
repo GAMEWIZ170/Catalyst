@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-export default function InlineRename({ name, onSave, disabled = false }) {
+export default function InlineRename({ name, onSave, disabled = false, as: Title = "strong" }) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(name);
   const inputRef = useRef(null);
@@ -26,7 +26,7 @@ export default function InlineRename({ name, onSave, disabled = false }) {
   }
 
   if (!editing) return <span className="inline-rename">
-    <strong>{name}</strong>
+    <Title>{name}</Title>
     <button className="text-button" type="button" onClick={() => setEditing(true)} disabled={disabled}>Rename</button>
   </span>;
 

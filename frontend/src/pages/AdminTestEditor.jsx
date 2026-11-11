@@ -169,7 +169,7 @@ export default function AdminTestEditor() {
   return <div className="admin-layout"><div className="admin-layout-inner">
     <Breadcrumbs items={trail} />
     <div className="admin-heading">
-      <div><InlineRename name={test.title} onSave={rename} /><p className="muted">{test.scope === "true_false" ? "True or false" : `${test.scope[0].toUpperCase()}${test.scope.slice(1)} test`} · {questions.length} questions</p></div>
+      <div><InlineRename as="h1" name={test.title} onSave={rename} /><p className="muted">{test.scope === "true_false" ? "True or false" : `${test.scope[0].toUpperCase()}${test.scope.slice(1)} test`} · {questions.length} questions</p></div>
       <Switch checked={test.isPublished} onChange={publish} label={test.isPublished ? "Published" : "Publish"} />
     </div>
     <StatusMessage message={error || message} error={Boolean(error)} />

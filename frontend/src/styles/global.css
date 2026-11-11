@@ -1513,7 +1513,7 @@ h3 {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-control);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-subtle);
   left: 0;
   max-width: min(360px, calc(100vw - 2rem));
   padding: 1rem;
@@ -1749,7 +1749,7 @@ h3 {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-control);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-subtle);
   display: grid;
   min-width: 160px;
   padding: 0.35rem;
@@ -2374,4 +2374,29 @@ h3 {
 .lesson-meta--pending:empty {
   display: flex;
   min-height: 1.3125rem;
+}
+
+.inline-rename h1 {
+  font-size: 1.5rem;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.auth-switch a,
+.breadcrumbs a {
+  align-items: center;
+  display: inline-flex;
+  min-height: 44px;
+}
+
+.flashcard-rating:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.material-row a {
+  align-items: center;
+  display: inline-flex;
+  min-height: 44px;
+  padding: 0 0.5rem;
 }

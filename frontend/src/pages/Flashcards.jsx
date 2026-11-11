@@ -25,6 +25,7 @@ export default function Flashcards() {
   const [shown, setShown] = useState(false);
   const [error, setError] = useState("");
   const [finished, setFinished] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [nothingToReview, setNothingToReview] = useState(false);
   const headingRef = useRef(null);
   const repeated = useRef(new Set());
@@ -50,7 +51,9 @@ export default function Flashcards() {
   useEffect(() => { if (queue[position]) headingRef.current?.focus(); }, [position, queue]);
 
   async function rate(confidence) {
+    if (saving) return;
     const card = queue[position];
+    setSaving(true);
     try {
       const response = (await api.rateFlashcard(card._id, confidence)).data;
       setSummary(response.summary);
@@ -70,6 +73,8 @@ export default function Flashcards() {
       window.dispatchEvent(new Event("catalyst:refresh-streak"));
     } catch (err) {
       setError(err.message);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -84,7 +89,7 @@ export default function Flashcards() {
     <article className="flashcard-card">
       <h1 tabIndex="-1" ref={headingRef}>Flashcard {position + 1}</h1>
       <div className="flashcard-side"><RichText>{card.front.text}</RichText>{card.front.image?.url && <img src={imageUrl(card.front.image.url, 600)} alt={card.front.image.alt} loading="lazy" />}</div>
-      {!shown ? <button className="button button-primary" type="button" onClick={() => setShown(true)}>Show answer</button> : <><div className="flashcard-side"><RichText>{card.back.text}</RichText>{card.back.image?.url && <img src={imageUrl(card.back.image.url, 600)} alt={card.back.image.alt} loading="lazy" />}</div><div className="flashcard-ratings">{[["confident", "Confident"], ["unsure", "Unsure"], ["unknown", "Don't know"]].map(([value, label]) => <button className={`flashcard-rating flashcard-rating--${value}`} type="button" key={value} onClick={() => rate(value)}><RatingIcon type={value} />{label}</button>)}</div><p className="flashcard-hint">Cards you mark Unsure or Don't know go into your review list.</p></>}
+      {!shown ? <button className="button button-primary" type="button" onClick={() => setShown(true)}>Show answer</button> : <><div className="flashcard-side"><RichText>{card.back.text}</RichText>{card.back.image?.url && <img src={imageUrl(card.back.image.url, 600)} alt={card.back.image.alt} loading="lazy" />}</div><div className="flashcard-ratings">{[["confident", "Confident"], ["unsure", "Unsure"], ["unknown", "Don't know"]].map(([value, label]) => <button className={`flashcard-rating flashcard-rating--${value}`} type="button" key={value} disabled={saving} onClick={() => rate(value)}><RatingIcon type={value} />{label}</button>)}</div><p className="flashcard-hint" aria-live="polite">{saving ? "Saving your answer..." : "Cards you mark Unsure or Don't know go into your review list."}</p></>}
       {error && <p className="form-error" role="alert">{error}</p>}
     </article>
   </div>;
