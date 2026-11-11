@@ -2400,3 +2400,78 @@ h3 {
   min-height: 44px;
   padding: 0 0.5rem;
 }
+
+/* The outline sidebar is one column. The older two-column summary rule must not apply to it. */
+.outline-columns .outline-summary {
+  align-items: start;
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr);
+  margin-bottom: 0;
+}
+
+.outline-summary h1,
+.outline-summary p {
+  margin: 0;
+}
+
+.outline-continue {
+  text-align: center;
+}
+
+.unit-title-row {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  justify-content: space-between;
+}
+
+.unit-title-row h3 {
+  margin: 0;
+}
+
+.unit-progress {
+  font-size: 0.875rem;
+}
+
+.student-lesson-row--next {
+  border-color: var(--accent);
+}
+
+.lesson-marker.is-next {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.count-chip {
+  font-size: 0.875rem;
+}
+
+.course-list-code {
+  flex: 0 0 auto;
+  max-width: 8rem;
+}
+
+.course-list-copy {
+  min-width: 6rem;
+}
+
+.unit-title-row {
+  margin-bottom: 0.75rem;
+}
+
+/* A display formula in a lesson sits in a quiet panel, like a boxed line in a notebook. */
+.lesson-explanation .rich-formula--block {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+}
+
+/* Horizontal scrolling for wide formulas must not add a vertical scrollbar to short ones. */
+.rich-formula {
+  overflow-y: hidden;
+  padding-block: 0.1em;
+}
