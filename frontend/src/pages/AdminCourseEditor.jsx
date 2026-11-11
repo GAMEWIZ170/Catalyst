@@ -1,3 +1,4 @@
+import { plural } from "../utils/plural";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/client";
@@ -200,7 +201,7 @@ export default function AdminCourseEditor() {
               const lessonId = idOf(lesson);
               return <div className="lesson-row" key={lessonId}>
                 <Link to={`/admin/lessons/${lessonId}`} state={{ context: { courseCode: course.code || "", unitTitle: unit.title } }}><strong>{lesson.title}</strong></Link>
-                <div className="lesson-meta"><StatusBadge isPublished={lesson.isPublished} /><span className="count-chip">{lesson.testCount || 0} tests</span><span className="count-chip">{lesson.flashcardCount || 0} flashcards</span><span className="count-chip">{lesson.materialCount || 0} materials</span>{lesson.hasVideo && <span className="count-chip">Video</span>}</div>
+                <div className="lesson-meta"><StatusBadge isPublished={lesson.isPublished} /><span className="count-chip">{plural(lesson.testCount || 0, "test")}</span><span className="count-chip">{plural(lesson.flashcardCount || 0, "flashcard")}</span><span className="count-chip">{plural(lesson.materialCount || 0, "material")}</span>{lesson.hasVideo && <span className="count-chip">Video</span>}</div>
                 <div className="tree-controls"><MoveButton buttonRef={(element) => { lessonButtonRefs.current[`${lessonId}-up`] = element; }} direction="up" disabled={lessonIndex === 0} onClick={() => reorder("lesson", unitId, lessons, lessonIndex, -1)} /><MoveButton buttonRef={(element) => { lessonButtonRefs.current[`${lessonId}-down`] = element; }} direction="down" disabled={lessonIndex === lessons.length - 1} onClick={() => reorder("lesson", unitId, lessons, lessonIndex, 1)} /><Switch checked={lesson.isPublished} onChange={(value) => api.updateLesson(lessonId, { isPublished: value }).then(load).catch((err) => setError(err.message))} label={lesson.isPublished ? "Published" : "Publish"} /><ActionMenu actions={[{ label: "Delete lesson", onSelect: () => setConfirmTarget({ type: "lesson", item: lesson }) }]} /></div>
               </div>;
             })}
@@ -212,7 +213,7 @@ export default function AdminCourseEditor() {
       {addUnit ? <form className="inline-add-form" onSubmit={createUnit}><input autoFocus required value={newUnit} onChange={(event) => setNewUnit(event.target.value)} aria-label="Unit title" /><button className="button button-primary" type="submit">Add unit</button><button className="button button-secondary" type="button" onClick={() => setAddUnit(false)}>Cancel</button></form> : <button className="button button-secondary" type="button" onClick={() => setAddUnit(true)}>Add unit</button>}
     </section>
     <section className="admin-editor-section"><h2>Course tests</h2>{courseTests.map((test) => <Link className="test-row" key={idOf(test)} to={`/admin/tests/${idOf(test)}`} state={{ trail: [{ label: "Courses", to: "/admin" }, { label: course.code || course.title, to: `/admin/courses/${id}` }, { label: test.title }] }}><span>{test.title}</span><StatusBadge isPublished={test.isPublished} /><span>{test.questionCount || test.questions?.length || 0} questions</span></Link>)}<button className="button button-secondary" type="button" onClick={() => createTest("course", id)}>Add course test</button></section>
-    <ConfirmDialog open={Boolean(confirmTarget)} title={`Delete ${confirmTarget?.type || "item"}?`} description="This content will be removed from the course." confirmLabel="Delete" onConfirm={removeTarget} onCancel={() => setConfirmTarget(null)} />
+    <ConfirmDialog open={Boolean(confirmTarget)} title={`Delete ${confirmTarget?.type || "item"}?`} description="This content will be removed from the course. You can restore it later from the Trash." confirmLabel="Delete" onConfirm={removeTarget} onCancel={() => setConfirmTarget(null)} />
     <ConfirmDialog open={blocker.state === "blocked"} title="Leave without saving?" description="Your unsaved changes will be lost." cancelLabel="Stay" confirmLabel="Leave" onConfirm={() => blocker.proceed()} onCancel={() => blocker.reset()} />
   </div></div>;
 }

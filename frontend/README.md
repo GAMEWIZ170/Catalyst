@@ -77,7 +77,9 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 | `/lessons/:id/flashcards` | Authenticated | Study a flashcard deck: tap the card to turn it over, then rate it (`?filter=review` shows cards still to review) |
 | `/progress` | Authenticated | View scores, completed lessons, and streak |
 | `/settings` | Authenticated | Colour palette, light or dark theme, and profile picture |
-| `/admin` | Admin | Course list |
+| `/admin` | Admin | Overview numbers and the course list, with search |
+| `/admin/users` | Admin | Find users, change roles, deactivate accounts and manage subscriptions |
+| `/admin/trash` | Admin | Deleted content, with a Restore button for each item |
 | `/admin/courses/:id` | Admin | Course editor: units, lessons, unit and course tests |
 | `/admin/lessons/:id` | Admin | Lesson editor: explanation, image, video, tests, flashcards, materials |
 | `/admin/tests/:id` | Admin | Test editor: questions and, for lesson tests, the pass percent needed to complete the lesson |
@@ -95,6 +97,10 @@ Content is written in the in-app builder. Create content in this order:
 5. Publish the course, lesson, test and flashcards when they are ready for students. Unpublished or deleted parents hide their children.
 
 Pages ask before you leave with unsaved changes. Images are JPEG, PNG or WEBP up to 2 MB, and PDF materials are up to 10 MB.
+
+**Users and access.** On `/admin/users`, search by name or email and filter by role or status. For a student, "Add 1 month" extends their subscription from today (or from the current end date if it is still in the future), and the menu can add 3 months, set an end date or clear it. The menu also makes someone an admin or student and deactivates or reactivates the account. You cannot change your own role or deactivate yourself. Subscriptions only matter when the backend has `REQUIRE_SUBSCRIPTION=true`; then a student without one sees "Your access has ended" on lessons, tests and flashcards, while courses and progress stay open.
+
+**Trash.** Deleting content hides it from students but keeps it. On `/admin/trash` press Restore to bring an item back. It returns at the end of its list and unpublished, so publish it again when ready. An item whose parent is also deleted says "Restore the lesson first" (or unit, or course).
 
 ## Frontend structure
 

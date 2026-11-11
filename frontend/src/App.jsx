@@ -14,6 +14,8 @@ import AdminCourses from "./pages/AdminCourses";
 import AdminCourseEditor from "./pages/AdminCourseEditor";
 import AdminTestEditor from "./pages/AdminTestEditor";
 import AdminLessonEditor from "./pages/AdminLessonEditor";
+import AdminUsers from "./pages/AdminUsers";
+import AdminTrash from "./pages/AdminTrash";
 import Settings from "./pages/Settings";
 import AdminLayout from "./components/admin/AdminLayout";
 
@@ -25,7 +27,7 @@ function AdminPage({ children }) {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
-  if (user.role !== "admin") return <AppShell><AdminLayout><div className="access-denied"><h1>You do not have access to this page</h1><p>Only administrators can manage Catalyst content.</p><Link className="button button-primary" to="/courses">Back to courses</Link></div></AdminLayout></AppShell>;
+  if (user.role !== "admin") return <AppShell><AdminLayout nav={false}><div className="access-denied"><h1>You do not have access to this page</h1><p>Only administrators can manage Catalyst content.</p><Link className="button button-primary" to="/courses">Back to courses</Link></div></AdminLayout></AppShell>;
   return <AppShell>{children}</AppShell>;
 }
 
@@ -44,6 +46,8 @@ export default function App() {
     <Route path="/admin/courses/:id" element={<AdminPage><AdminCourseEditor /></AdminPage>} />
     <Route path="/admin/tests/:id" element={<AdminPage><AdminTestEditor /></AdminPage>} />
     <Route path="/admin/lessons/:id" element={<AdminPage><AdminLessonEditor /></AdminPage>} />
+    <Route path="/admin/users" element={<AdminPage><AdminUsers /></AdminPage>} />
+    <Route path="/admin/trash" element={<AdminPage><AdminTrash /></AdminPage>} />
     <Route path="/admin/*" element={<AdminPage><AdminCourses /></AdminPage>} />
     <Route path="*" element={<Navigate to={user ? "/courses" : "/login"} replace />} />
   </Routes>;

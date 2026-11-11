@@ -1,3 +1,4 @@
+import { plural } from "../utils/plural";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/client";
@@ -189,7 +190,7 @@ export default function AdminTestEditor() {
   return <div className="admin-layout"><div className="admin-layout-inner">
     <Breadcrumbs items={trail} />
     <div className="admin-heading">
-      <div><InlineRename as="h1" name={test.title} onSave={rename} /><p className="muted">{test.scope === "true_false" ? "True or false" : `${test.scope[0].toUpperCase()}${test.scope.slice(1)} test`} · {questions.length} questions</p></div>
+      <div><InlineRename as="h1" name={test.title} onSave={rename} /><p className="muted">{test.scope === "true_false" ? "True or false" : `${test.scope[0].toUpperCase()}${test.scope.slice(1)} test`} · {plural(questions.length, "question")}</p></div>
       <Switch checked={test.isPublished} onChange={publish} label={test.isPublished ? "Published" : "Publish"} />
     </div>
     {test.scope === "lesson" && <form className="pass-percent" onSubmit={savePassPercent}>
@@ -222,7 +223,7 @@ export default function AdminTestEditor() {
       <label className="admin-field">Explanation<textarea maxLength="4000" rows="5" value={question.explanation || ""} onChange={(event) => setQuestion({ ...question, explanation: event.target.value })} /></label><FormulaHelp /><div className="preview-box"><RichText>{question.explanation || ""}</RichText></div><ImageField label="Explanation image" value={question.explanationImage} onChange={(explanationImage) => setQuestion({ ...question, explanationImage })} />
       <div className="editor-actions"><button className="button button-secondary" type="button" disabled={!dirty} onClick={() => setQuestion(JSON.parse(JSON.stringify(originalQuestion)))}>Discard</button><button className="button button-secondary" type="button" onClick={() => saveQuestion(true)} disabled={Boolean(question._id)}>Save and add another</button><button className="button button-primary" type="button" onClick={() => saveQuestion(false)}>Save</button></div>
     </aside>}
-    <ConfirmDialog open={Boolean(deleteTarget)} title="Delete question?" description="This question will be removed from the test." confirmLabel="Delete question" onCancel={() => setDeleteTarget(null)} onConfirm={deleteQuestion} />
+    <ConfirmDialog open={Boolean(deleteTarget)} title="Delete question?" description="This question will be removed from the test. You can restore it later from the Trash." confirmLabel="Delete question" onCancel={() => setDeleteTarget(null)} onConfirm={deleteQuestion} />
     <ConfirmDialog open={blocker.state === "blocked"} title="Leave without saving?" description="Your question changes will be lost." confirmLabel="Leave" cancelLabel="Stay" onCancel={() => blocker.reset()} onConfirm={() => blocker.proceed()} />
   </div></div>;
 }

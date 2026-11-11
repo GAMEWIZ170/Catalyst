@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-export default function ConfirmDialog({ open, title, description, confirmLabel = "Delete", cancelLabel = "Cancel", onConfirm, onCancel }) {
+export default function ConfirmDialog({ open, title, description, confirmLabel = "Delete", cancelLabel = "Cancel", tone = "danger", onConfirm, onCancel }) {
   const dialogRef = useRef(null);
 
   useEffect(() => {
@@ -20,7 +20,7 @@ export default function ConfirmDialog({ open, title, description, confirmLabel =
       <p>{description}</p>
       <div className="dialog-actions">
         <button className="button button-secondary" type="button" onClick={close}>{cancelLabel}</button>
-        <button className="button button-danger" type="submit">{confirmLabel}</button>
+        <button className={`button ${tone === "danger" ? "button-danger" : "button-primary"}`} type="submit">{confirmLabel}</button>
       </div>
     </form>
   </dialog>;

@@ -15,6 +15,7 @@ async function request(path, options = {}) {
   if (!response.ok) {
     const error = new Error(payload.message || "Something went wrong.");
     error.status = response.status;
+    error.code = payload.code;
     throw error;
   }
   return payload;
@@ -80,5 +81,15 @@ export const api = {
   uploadImage: (formData) => request("/admin/uploads", { method: "POST", body: formData }),
   uploadMaterial: (formData) => request("/admin/uploads/material", { method: "POST", body: formData }),
   updateAvatar: (body) => request("/auth/me/avatar", { method: "PUT", body: JSON.stringify(body) }),
-  getUsers: (page = 1) => request(`/admin/users?page=${page}&limit=20`)
+  getUsers: (params = {}) => {
+    const query = new URLSearchParams({ limit: "20", ...Object.fromEntries(Object.entries(params).filter(([, value]) => value !== "" && value != null)) });
+    return request(`/admin/users?${query}`);
+  },
+  updateUser: (id, body) => request(`/admin/users/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+  getAdminStats: () => request("/admin/stats"),
+  getTrash: () => request("/admin/trash"),
+  restoreTrashItem: (type, id) => request(`/admin/trash/${type}/${id}/restore`, { method: "POST" })
 };
+
+// The message the server sends when a student's subscription has ended.
+export const ACCESS_ENDED = "Your access has ended";
