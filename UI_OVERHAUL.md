@@ -1,6 +1,6 @@
-# Catalyst UI overhaul plan
+# Catalyst UI overhaul plan/
 
-This file is the plan for overhauling the Catalyst frontend. Claude Code: read this file, CLAUDE.md, PRODUCT.md and DESIGN.md at the start of every overhaul session. Do one phase step per session. Stop at every point marked **OWNER DECIDES** and wait for the owner's answer.
+This file is the plan for overhauling the Catalyst frontend. Claude Code: read this file, CLAUDE.md, PRODUCT.md and DESIGN.md at the start of every overhaul session. Work one whole phase at a time (changed by the owner on 2026-11-12: no longer one step per session). Report after each phase. Stop at every point marked **OWNER DECIDES** and wait for the owner's answer, unless the owner has already answered it (for example through reference images or a message).
 
 ## Why the UI looks unprofessional
 
@@ -40,7 +40,7 @@ The frontend-design skill pushes towards bold, surprising designs. Where it conf
 
 ## Session recipe (use for every step)
 
-1. The owner starts a fresh session (`/clear`).
+1. Start of phase: read this file, CLAUDE.md, PRODUCT.md and DESIGN.md. A fresh session (`/clear`) between phases is optional.
 2. Check the branch with `git branch --show-current`. It must be `feature/ui-overhaul`.
 3. Run `/impeccable critique <screen>` or `/impeccable audit <area>` first. It changes nothing. Show the owner the top findings.
 4. Build the change with the **frontend-design skill**, for that one step only, using the brief above, DESIGN.md and the references in `design/references/`. Don't touch other screens.
@@ -51,7 +51,9 @@ The frontend-design skill pushes towards bold, surprising designs. Where it conf
 9. Report: commits, files, CHECK lines, `NOT RUN` items, and anything the owner must decide.
 10. Write any rule that had to be repeated into DESIGN.md.
 
-Screenshots go in `design/screens/` (outside git: add `design/screens/` to `.git/info/exclude`, not `.gitignore`, unless the owner says otherwise).
+Screenshots go in `design/screens/` (outside git: `design/screens/` is in `.git/info/exclude`). `design/references/` and `design/DIAGNOSIS.md` may be committed.
+
+The seed and screenshot harness lives outside the repo (scratchpad `h/`: `launch.js`, `seed.js up|down`, `shots.js`). It uses `catalyst_test` and throwaway users `uiseed.*@example.test`.
 
 ## Phase 0: setup and baseline
 
