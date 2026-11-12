@@ -69,14 +69,22 @@ Only these spacing values: `--space-1` to `--space-8` = 4, 8, 12, 16, 24, 32, 48
 
 Radius: `--radius-control` 6px (inputs, badges, buttons), `--radius-panel` 12px (cards, dialogs), `--radius-pill` 999px. An object gets a 1px border or a soft shadow (`--shadow-sm`, `--shadow-md`), never both. In dark mode shadows are `none`. Keyboard focus is a 2px accent outline with 2px offset; `--focus` is a 3px soft ring for selected items.
 
-## Components (current build, to be rebuilt in Phase 2)
+## Components (Phase 2)
 
-- **Buttons:** 44 px minimum height, 600 weight. Primary is filled `accent` with `on-accent` text, one per screen. Secondary is `surface` with a `control-line` border. Danger is filled `error`. Disabled is 55% opacity.
-- **Cards and panels:** `surface` with a 1px `line` border, 12px corners.
-- **Formula panel (lessons):** `sunken` background, no border, scrolls sideways when long.
-- **Test answers and feedback:** 64 px minimum rows, 2px borders, feedback panel tinted by state with a heading and the explanation.
-- **Dialogs:** native `dialog`, scrim backdrop.
-- **Status badge, switch, deck summary, skeleton:** as built; unchanged in Phase 1.
+React sources: `frontend/src/components/ui/` (import from `components/ui`). Styles: `frontend/src/styles/components.css`. Icons: `lucide-react` only, 16 px in buttons, badges and errors, 20 px for larger icons, default 2px stroke, always `aria-hidden` next to text. Every component is shown in every state at `/dev/components` (dev server only, not in the production build).
+
+- **Button** (`Button`): variants primary, secondary, tertiary, danger. One height (44 px), sizes to its content, never breaks inside a word. `icon`, `loading` (spinner, disabled, `aria-busy`), `block`, `as={Link}`. Several buttons go in `.button-row` and wrap as whole buttons; add `button-row--stack` to stack them full width on phones. Disabled is 55% opacity.
+- **Inputs** (`TextField`, `TextArea`, `SelectField`, `Checkbox`, `Radio`, `RadioGroup`): label above, hint or error below. An error is text plus an icon and `aria-invalid`, never colour alone. Checkbox and radio use the native control with `accent-color`.
+- **Card** (`Card`, `CardHeader`, `CardBody`, `CardFooter`): one style, 1px `line` border, 12px corners, no shadow, padding 16 to 24 px.
+- **Badge** (`Badge`): inline, hugs its text, 6px corners, sentence case. Tones: neutral, accent, success, warning, error, info. Always keep the words.
+- **Tabs** (`Tabs`): roving tabindex; Left, Right, Home and End move between tabs. Selected tab has an accent underline and accent text.
+- **Progress** (`Progress`; `ProgressBar` wraps it with a label): 6 px, fully rounded, `line` track, accent fill.
+- **Dialog** (`Dialog`): native `<dialog>`, focus trapped, Esc and backdrop click close, focus returns to the opener. 1px border, no shadow. The older `.confirm-dialog` shares the look.
+- **Empty state** (`EmptyState`): picture, title, one sentence, one button. Pictures are lucide icons for now; real illustrations arrive in Phase 5.
+- **Skeleton** (`Skeleton`, `SkeletonGroup`): static shapes (line, title, block, circle), no shimmer, announced as one status.
+- **Toast** (`ToastProvider`, `useToast().toast({ tone, message })`): bottom of the screen, tinted by tone with an icon, closes after 6 s or with its button, polite live region.
+
+Not yet migrated to these components: most existing pages still use the old class names (`.button` classes now render the new look). Pages move over in Phases 3 and 4. Old status badge, switch, deck summary and admin tabs are unchanged.
 
 ## Do and don't
 

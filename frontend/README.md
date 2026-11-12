@@ -117,6 +117,7 @@ frontend/
     ├── hooks/                 # useUnsavedChanges
     ├── pages/                 # Student pages and admin editors
     ├── styles/tokens.css      # Neutrals, per-palette accent, status colours, type, space and radius tokens
+    ├── components/ui/         # Shared components: Button, fields, Card, Badge, Tabs, Progress, Dialog, EmptyState, Skeleton, Toast
     ├── assets/fonts/          # Self-hosted Atkinson Hyperlegible Next (WOFF2) and its licence
     ├── styles/global.css      # Component and layout styles
     ├── utils/                 # Cloudinary image URLs, course cache
@@ -126,7 +127,7 @@ frontend/
 
 ## Design system
 
-The look is described in `DESIGN.md` at the repository root. Five palettes (`data-palette`: lagoon, indigo, ember, orchid, graphite) and two themes (`data-theme`: light, dark) are chosen in Settings and saved in the browser (`catalyst-palette`, `catalyst-theme`). Colours come only from tokens in `tokens.css`; never write a colour value in a component. Palettes change only the accent; neutrals and status colours are shared. Text must reach WCAG 2.1 AA contrast in all ten palette and theme combinations: run `node scripts/contrast.mjs` in `frontend/` after any change to `tokens.css`. Chemical formulas use KaTeX with mhchem, loaded only when a lesson contains one.
+The look is described in `DESIGN.md` at the repository root. Shared components live in `src/components/ui/` and use `lucide-react` for icons. While the dev server runs, `/dev/components` shows every component in every state (it is not in the production build). Five palettes (`data-palette`: lagoon, indigo, ember, orchid, graphite) and two themes (`data-theme`: light, dark) are chosen in Settings and saved in the browser (`catalyst-palette`, `catalyst-theme`). Colours come only from tokens in `tokens.css`; never write a colour value in a component. Palettes change only the accent; neutrals and status colours are shared. Text must reach WCAG 2.1 AA contrast in all ten palette and theme combinations: run `node scripts/contrast.mjs` in `frontend/` after any change to `tokens.css`. Chemical formulas use KaTeX with mhchem, loaded only when a lesson contains one.
 
 ## Authentication behavior
 

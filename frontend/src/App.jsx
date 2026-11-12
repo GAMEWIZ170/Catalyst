@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Link, Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import AppShell from "./components/AppShell";
@@ -18,6 +19,9 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminTrash from "./pages/AdminTrash";
 import Settings from "./pages/Settings";
 import AdminLayout from "./components/admin/AdminLayout";
+
+// Component gallery. Exists only in the dev server, never in the production build.
+const DevComponents = import.meta.env.DEV ? lazy(() => import("./pages/DevComponents")) : null;
 
 function ProtectedPage({ children }) {
   return <ProtectedRoute><AppShell>{children}</AppShell></ProtectedRoute>;
@@ -49,6 +53,7 @@ export default function App() {
     <Route path="/admin/users" element={<AdminPage><AdminUsers /></AdminPage>} />
     <Route path="/admin/trash" element={<AdminPage><AdminTrash /></AdminPage>} />
     <Route path="/admin/*" element={<AdminPage><AdminCourses /></AdminPage>} />
+    {DevComponents && <Route path="/dev/components" element={<Suspense fallback={null}><DevComponents /></Suspense>} />}
     <Route path="*" element={<Navigate to={user ? "/courses" : "/login"} replace />} />
   </Routes>;
 }

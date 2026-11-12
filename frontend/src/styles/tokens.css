@@ -78,6 +78,7 @@
   --warning-tint: #FBF1DA;
   --error: #BE123C;
   --error-tint: #FBE8EC;
+  --on-error: #FFFFFF;
   --info: #1D5FA8;
   --info-tint: #E4EDF8;
 
@@ -136,6 +137,7 @@
   --warning-tint: #3B3014;
   --error: #FF8FA8;
   --error-tint: #43202B;
+  --on-error: #2B0A12;
   --info: #8FC0F5;
   --info-tint: #17304B;
 

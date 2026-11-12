@@ -796,19 +796,6 @@ h3 {
   font-size: var(--text-sm);
 }
 
-.progress-track {
-  background: var(--line);
-  height: 6px;
-  overflow: hidden;
-}
-
-.progress-track span {
-  background: var(--accent);
-  display: block;
-  height: 100%;
-  transition: width 250ms ease;
-}
-
 .back-link {
   display: inline-block;
   margin-bottom: var(--space-4);
@@ -933,31 +920,6 @@ h3 {
 
 .choice input {
   accent-color: var(--accent);
-}
-
-.button {
-  border: 1px solid transparent;
-  overflow-wrap: normal;
-  border-radius: var(--radius-control);
-  font-weight: 600;
-  min-height: var(--control-height);
-  padding: var(--space-3) var(--space-4);
-}
-
-.button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-.button-primary {
-  background: var(--accent);
-  color: var(--on-accent);
-}
-
-.button-secondary {
-  background: var(--surface);
-  border-color: var(--control-line);
-  color: var(--ink);
 }
 
 .complete-panel,
@@ -1695,34 +1657,8 @@ h3 {
   color: var(--warning);
 }
 
-.confirm-dialog {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-panel);
-  color: var(--ink);
-  max-width: min( calc(100% - 2rem), 480px);
-  padding: var(--space-5);
-}
-
-.confirm-dialog::backdrop {
-  background: var(--scrim);
-}
-
 .confirm-dialog p {
   color: var(--muted);
-}
-
-.dialog-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  justify-content: flex-end;
-  margin-top: var(--space-5);
-}
-
-.button-danger {
-  background: var(--error);
-  color: var(--on-accent);
 }
 
 .action-menu {
