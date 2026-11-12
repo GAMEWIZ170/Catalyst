@@ -74,7 +74,7 @@ function Formula({ source, block }) {
     return () => { active = false; };
   }, [source]);
   if (!html) return <span>{block ? `$$${source}$$` : `$${source}$`}</span>;
-  return <span className={`rich-formula ${block ? "rich-formula--block" : ""}`} dangerouslySetInnerHTML={{ __html: html }} />;
+  return <span className={`rich-formula ${block ? "rich-formula--block" : ""}`} {...(block ? { tabIndex: 0, role: "group", "aria-label": "Formula (scrolls sideways)" } : {})} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
 export default function RichText({ children = "", className = "" }) {
