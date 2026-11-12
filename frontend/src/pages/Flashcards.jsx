@@ -1,16 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useSearchParams, useParams } from "react-router-dom";
+import { ArrowLeft, Check, CircleHelp, Layers, RotateCcw } from "lucide-react";
 import DeckSummary from "../components/DeckSummary";
 import RichText from "../components/RichText";
+import { Button, EmptyState } from "../components/ui";
 import { api } from "../api/client";
 import { imageUrl } from "../utils/cloudinary";
 import { ErrorState, Loading } from "./Courses";
 
-function RatingIcon({ type }) {
-  if (type === "confident") return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" /><path d="m8 12 2.5 2.5L16 9" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" /></svg>;
-  if (type === "unsure") return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" /><path d="M9.5 9.5a2.5 2.5 0 1 1 4.1 1.9c-.9.7-1.6 1-1.6 2.1M12 16.8v.1" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="2" /></svg>;
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 10a7 7 0 1 1 2 7" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="2" /><path d="M5 5v5h5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" /></svg>;
-}
+const RATINGS = [["unknown", "Don't know", RotateCcw], ["unsure", "Unsure", CircleHelp], ["confident", "Confident", Check]];
 
 export default function Flashcards() {
   const { id } = useParams();
@@ -55,6 +53,19 @@ export default function Flashcards() {
   useEffect(() => { load(); }, [id, filter]);
   useEffect(() => { if (queue[position]) headingRef.current?.focus(); }, [position, queue]);
 
+  // Space reveals the card. Keys 1, 2 and 3 rate it once the answer shows.
+  useEffect(() => {
+    if (finished || !queue[position]) return undefined;
+    function onKey(event) {
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      if (event.target.closest?.("input, textarea, select, button, a")) return;
+      if (event.key === " ") { event.preventDefault(); setShown((value) => !value); }
+      else if (shown && ["1", "2", "3"].includes(event.key)) rate(RATINGS[Number(event.key) - 1][0]);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
   async function rate(confidence) {
     if (saving) return;
     const card = queue[position];
@@ -85,20 +96,44 @@ export default function Flashcards() {
 
   if (error && !cards.length) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
   if (!cards.length && !nothingToReview) return <Loading />;
-  if (nothingToReview) return <div className="content flashcard-page"><Link className="back-link" to={`/lessons/${id}`} state={lessonState}>Back to lesson</Link><section className="flashcard-empty"><h1>No cards to review.</h1></section></div>;
-  if (finished) return <div className="content flashcard-page"><section className="flashcard-finished"><h1>Deck finished</h1><DeckSummary summary={summary} /><div className="lesson-links">{summary.unsure + summary.unknown + summary.unrated > 0 ? <Link className="button button-primary" to={`/lessons/${id}/flashcards?filter=review`} state={location.state}>Review cards I'm not sure about</Link> : <p>Nothing left to review</p>}<Link className="button button-secondary" to={`/lessons/${id}`} state={lessonState}>Back to lesson</Link></div></section></div>;
+  const back = <Link className="back-link" to={`/lessons/${id}`} state={lessonState}><ArrowLeft size={16} aria-hidden="true" />Back to lesson</Link>;
+  if (nothingToReview) return <div className="content fc-page">{back}<EmptyState icon={Layers} title="No cards to review" description="You have rated every card as confident." action={<Button as={Link} to={`/lessons/${id}`} state={lessonState}>Back to lesson</Button>} /></div>;
+  if (finished) {
+    const toRevisit = summary.total - summary.confident;
+    return <div className="content fc-page">
+      <section className="fc-finished">
+        <h1>Deck finished</h1>
+        <p className="fc-finished-line">Confident on {summary.confident} of {summary.total}{toRevisit > 0 ? `, ${toRevisit} to revisit` : ""}</p>
+        <DeckSummary summary={summary} />
+        <div className="button-row button-row--stack">
+          {toRevisit > 0 && <Button as={Link} to={`/lessons/${id}/flashcards?filter=review`} state={location.state}>Review cards I'm not sure about</Button>}
+          <Button as={Link} variant={toRevisit > 0 ? "secondary" : "primary"} to={`/lessons/${id}`} state={lessonState}>Back to lesson</Button>
+        </div>
+      </section>
+    </div>;
+  }
   const card = queue[position];
-  return <div className="content flashcard-page">
-    <Link className="back-link" to={`/lessons/${id}`} state={lessonState}>Back to lesson</Link>
-    <div className="flashcard-progress"><div className="test-progress-line" role="progressbar" aria-valuemin="0" aria-valuemax={queue.length} aria-valuenow={position + 1} style={{ "--progress": `${((position + 1) / queue.length) * 100}%` }} /><p aria-live="polite">Card {position + 1} of {queue.length}</p></div>
-    <article className="flashcard-card">
-      <h1 tabIndex="-1" ref={headingRef}>Flashcard {position + 1}</h1>
-      <button key={`${card._id}-${position}`} className={`flashcard-flip ${shown ? "is-flipped" : ""}`} type="button" onClick={() => setShown((value) => !value)}>
+  return <div className="content fc-page">
+    {back}
+    <div className="fc-top">
+      <div className="exam-progress" role="progressbar" aria-label="Deck progress" aria-valuemin="0" aria-valuemax={queue.length} aria-valuenow={position + 1} style={{ "--progress": `${((position + 1) / queue.length) * 100}%` }} />
+      <p className="exam-count" aria-live="polite">{position + 1} / {queue.length}</p>
+    </div>
+    <article className="fc-card">
+      <h1 className="sr-only" tabIndex="-1" ref={headingRef}>Flashcard {position + 1} of {queue.length}</h1>
+      <button key={`${card._id}-${position}`} className={`flashcard-flip ${shown ? "is-flipped" : ""}`} type="button" aria-pressed={shown} onClick={() => setShown((value) => !value)}>
         <span className="flashcard-face flashcard-face--front" aria-hidden={shown}><span className="flashcard-face-label">Question</span><RichText>{card.front.text}</RichText>{card.front.image?.url && <img src={imageUrl(card.front.image.url, 600)} alt={card.front.image.alt} loading="lazy" />}</span>
         <span className="flashcard-face flashcard-face--back" aria-hidden={!shown}><span className="flashcard-face-label">Answer</span><RichText>{card.back.text}</RichText>{card.back.image?.url && <img src={imageUrl(card.back.image.url, 600)} alt={card.back.image.alt} loading="lazy" />}</span>
       </button>
       <span className="sr-only" role="status">{shown ? "Answer shown" : ""}</span>
-      {!shown ? <p className="flashcard-hint">Tap the card to see the answer.</p> : <><div className="flashcard-ratings">{[["confident", "Confident"], ["unsure", "Unsure"], ["unknown", "Don't know"]].map(([value, label]) => <button className={`flashcard-rating flashcard-rating--${value}`} type="button" key={value} disabled={saving} onClick={() => rate(value)}><RatingIcon type={value} />{label}</button>)}</div><p className="flashcard-hint" aria-live="polite">{saving ? "Saving your answer..." : "Cards you mark Unsure or Don't know go into your review list."}</p></>}
+      {!shown
+        ? <p className="fc-hint">Tap the card or press Space to reveal</p>
+        : <>
+          <div className="fc-ratings" role="group" aria-label="How well did you know it?">
+            {RATINGS.map(([value, label, Icon], key) => <Button variant="secondary" key={value} disabled={saving} icon={Icon} onClick={() => rate(value)}><span className="exam-key" aria-hidden="true">{key + 1}</span> {label}</Button>)}
+          </div>
+          <p className="fc-hint" aria-live="polite">{saving ? "Saving your answer..." : "Keys 1, 2 and 3. Cards you mark Unsure or Don't know go into your review list."}</p>
+        </>}
       {error && <p className="form-error" role="alert">{error}</p>}
     </article>
   </div>;

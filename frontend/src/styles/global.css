@@ -444,64 +444,6 @@ h3 {
   font-weight: 600;
 }
 
-.flashcard-ratings {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
-.flashcard-page {
-  max-width: 760px;
-}
-
-.flashcard-card,
-.flashcard-finished,
-.flashcard-empty {
-  display: grid;
-  gap: var(--space-5);
-  margin: var(--space-6) auto;
-  max-width: 42rem;
-}
-
-.flashcard-side {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-panel);
-  padding: clamp(var(--space-4), 4vw, var(--space-6));
-}
-
-.flashcard-side img {
-  display: block;
-  height: auto;
-  margin-top: var(--space-4);
-  max-width: 100%;
-}
-
-.flashcard-rating {
-  align-items: center;
-  background: var(--surface);
-  border: 1px solid currentColor;
-  border-radius: var(--radius-control);
-  display: inline-flex;
-  gap: var(--space-2);
-  min-height: var(--control-height);
-  padding: var(--space-3) var(--space-3);
-}
-
-.flashcard-rating svg {
-  height: 20px;
-  width: 20px;
-}
-
-.flashcard-rating--confident { color: var(--success); }
-.flashcard-rating--unsure { color: var(--warning); }
-.flashcard-rating--unknown { color: var(--accent); }
-
-.test-progress-line {
-  background: linear-gradient(to right, var(--accent) var(--progress), var(--line) var(--progress));
-  height: 0.25rem;
-}
-
 .sticky-summary {
   align-self: start;
 }
@@ -2032,34 +1974,6 @@ h3 {
   padding: 0 var(--space-4);
 }
 
-.flashcard-card h1 {
-  color: var(--muted);
-  font-size: var(--text-sm);
-  letter-spacing: 0;
-  margin: 0;
-}
-
-.flashcard-ratings {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.flashcard-rating {
-  flex-direction: column;
-  font-size: var(--text-sm);
-  gap: var(--space-1);
-  justify-content: center;
-  min-height: 64px;
-  padding: var(--space-2) var(--space-1);
-  text-align: center;
-}
-
-.flashcard-hint {
-  color: var(--muted);
-  font-size: var(--text-sm);
-  margin: 0;
-}
-
 .deck-summary {
   display: grid;
   gap: var(--space-2);
@@ -2131,11 +2045,6 @@ h3 {
   align-items: center;
   display: inline-flex;
   min-height: var(--control-height);
-}
-
-.flashcard-rating:disabled {
-  cursor: wait;
-  opacity: 0.55;
 }
 
 .material-row a {
@@ -2273,9 +2182,14 @@ h3 {
   gap: var(--space-3);
   grid-area: 1 / 1;
   justify-content: center;
-  min-height: 12rem;
-  padding: clamp(var(--space-4), 4vw, var(--space-6));
-  transition: transform 500ms ease;
+  min-height: 16rem;
+  padding: clamp(var(--space-5), 5vw, var(--space-7));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .flashcard-face {
+    transition: transform 400ms ease;
+  }
 }
 
 .flashcard-face img {
@@ -2303,14 +2217,6 @@ h3 {
 .flashcard-face-label {
   color: var(--muted);
   font-size: var(--text-sm);
-  font-weight: 600;
-}
-
-/* The card still turns over, but without the spin, for people who ask for less motion. */
-@media (prefers-reduced-motion: reduce) {
-  .flashcard-face {
-    transition: none;
-  }
 }
 
 /* ---- Admin ---- */
@@ -3081,4 +2987,87 @@ textarea {
 
 .exam-missed-body > * {
   margin: 0;
+}
+
+/* Flashcards (Phase 3) */
+.fc-page {
+  margin-inline: auto;
+  max-width: 40rem;
+}
+
+.fc-top {
+  align-items: center;
+  display: flex;
+  gap: var(--space-3);
+}
+
+.fc-card,
+.fc-finished {
+  display: grid;
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+}
+
+.fc-card .flashcard-face {
+  font-size: var(--text-lg);
+  text-align: center;
+}
+
+.fc-card .flashcard-face-label {
+  align-self: center;
+}
+
+.fc-ratings {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.fc-ratings .button {
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2);
+}
+
+.fc-ratings .button > span {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--space-2);
+}
+
+@media (max-width: 599px) {
+  .fc-ratings .exam-key {
+    display: none;
+  }
+
+  .fc-ratings .button {
+    font-size: var(--text-sm);
+  }
+}
+
+.fc-hint {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  margin: 0;
+  text-align: center;
+}
+
+.fc-finished {
+  text-align: center;
+}
+
+.fc-finished > * {
+  margin: 0;
+}
+
+.fc-finished .deck-summary {
+  text-align: left;
+}
+
+.fc-finished .button-row {
+  justify-content: center;
+}
+
+.fc-finished-line {
+  font-size: var(--text-lg);
 }
