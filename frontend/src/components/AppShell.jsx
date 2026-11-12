@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useMatch, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "./Avatar";
@@ -22,6 +22,8 @@ function FlameIcon() {
 export default function AppShell({ children }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  // A test hides the site navigation so nothing pulls attention from the question.
+  const focusMode = Boolean(useMatch("/tests/:id"));
   const [streak, setStreak] = useState(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -82,6 +84,8 @@ export default function AppShell({ children }) {
       items[(current + direction + items.length) % items.length]?.focus();
     }
   }
+
+  if (focusMode) return <div className="app-shell app-shell--focus"><main className="page-wrap">{children}</main></div>;
 
   return (
     <div className="app-shell">
