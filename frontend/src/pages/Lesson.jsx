@@ -46,8 +46,6 @@ export default function Lesson() {
   const location = useLocation();
   const navigate = useNavigate();
   const [lesson, setLesson] = useState(null);
-  const [materials, setMaterials] = useState([]);
-  const [progress, setProgress] = useState([]);
   const [course, setCourse] = useState(null);
   const [error, setError] = useState("");
   const [doneMessage, setDoneMessage] = useState("");
@@ -57,12 +55,8 @@ export default function Lesson() {
 
   function load() {
     setError("");
-    Promise.all([api.getLesson(id), api.getProgress()]).then(([lessonResponse, progressResponse]) => {
-      setLesson(lessonResponse.data);
-      setProgress(progressResponse.data || []);
-      if (lessonResponse.data.materialCount > 0) return api.getLessonMaterials(id);
-      return { data: [] };
-    }).then((materialsResponse) => setMaterials(materialsResponse.data || []))
+    // One call returns the lesson, whether it is finished, and its materials.
+    api.getLessonHub(id).then(({ data }) => setLesson(data))
       .catch((err) => setError(err.status === 404 ? "This lesson is not available" : err.message));
   }
 
@@ -96,7 +90,7 @@ export default function Lesson() {
   if (error) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
   if (!lesson) return <LessonSkeleton />;
 
-  const completed = progress.some((item) => String(item.lesson) === String(id) && item.completed);
+  const completed = lesson.completed;
   const canMarkDone = lesson.tests.length === 0 && lesson.flashcards.total === 0;
   const allLessons = course ? course.units.flatMap((unit) => unit.lessons) : [];
   const position = allLessons.findIndex((item) => String(item._id) === String(id));
@@ -153,7 +147,7 @@ export default function Lesson() {
         </article>
         {lesson.tests.length > 0 && <section className="lesson-section"><h2>Practice</h2><div className="student-test-list">{lesson.tests.map((test) => <Link className="student-test-row" to={`/tests/${test._id}`} state={state} key={test._id}><span><strong>{test.title}</strong><span className="muted">{test.questionCount} questions · {test.passPercent != null ? `Pass at ${test.passPercent}% · ` : ""}{test.bestScore === null ? "Not taken yet" : `Best score: ${test.bestScore}%`}</span></span><span className="row-action">{test.bestScore === null ? "Start" : "Retake"}</span></Link>)}</div></section>}
         {lesson.flashcards.total > 0 && <section className="lesson-section"><h2>Flashcards</h2><DeckSummary summary={lesson.flashcards} /><div className="button-row button-row--stack"><Button as={Link} variant={nextStep === "deck" ? "primary" : "secondary"} to={`/lessons/${id}/flashcards`} state={{ courseFrom: from }}>Study all cards</Button>{lesson.flashcards.unsure + lesson.flashcards.unknown + lesson.flashcards.unrated > 0 && <Button as={Link} variant="secondary" to={`/lessons/${id}/flashcards?filter=review`} state={{ courseFrom: from }}>Review cards I'm not sure about</Button>}</div></section>}
-        {lesson.materialCount > 0 && <section className="lesson-section"><h2>Materials</h2><div className="material-list">{materials.map((material) => <div className="material-row" key={material._id}>{material.kind === "file" ? <FileText size={20} aria-hidden="true" /> : <Link2 size={20} aria-hidden="true" />}<span><strong>{material.title}</strong><span className="muted">{material.description}{material.bytes ? ` · ${formatBytes(material.bytes)}` : ""}</span></span><a href={material.url} target="_blank" rel="noopener noreferrer" aria-label={`Open ${material.title}${material.kind === "file" ? " (PDF)" : ""}`}>Open<ExternalLink size={16} aria-hidden="true" /></a></div>)}</div></section>}
+        {lesson.materialCount > 0 && <section className="lesson-section"><h2>Materials</h2><div className="material-list">{(lesson.materials || []).map((material) => <div className="material-row" key={material._id}>{material.kind === "file" ? <FileText size={20} aria-hidden="true" /> : <Link2 size={20} aria-hidden="true" />}<span><strong>{material.title}</strong><span className="muted">{material.description}{material.bytes ? ` · ${formatBytes(material.bytes)}` : ""}</span></span><a href={material.url} target="_blank" rel="noopener noreferrer" aria-label={`Open ${material.title}${material.kind === "file" ? " (PDF)" : ""}`}>Open<ExternalLink size={16} aria-hidden="true" /></a></div>)}</div></section>}
         <section className="lesson-end" aria-label="Next steps">
           {nextStep === "test" && <Button as={Link} to={`/tests/${mainTest._id}`} state={state}>{primaryLabel}</Button>}
           {nextStep === "deck" && <Button as={Link} to={`/lessons/${id}/flashcards`} state={{ courseFrom: from }}>{primaryLabel}</Button>}

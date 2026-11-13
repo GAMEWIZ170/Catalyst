@@ -3,6 +3,7 @@ const Unit = require("../models/unit.models");
 const Course = require("../models/course.models");
 const Test = require("../models/test.models");
 const Question = require("../models/question.models");
+const mongoose = require("mongoose");
 
 const courseIsVisible = (course) => Boolean(
   course && course.isPublished && !course.deletedAt
@@ -56,10 +57,17 @@ const parentIsAvailable = async (scope, id) => {
   return false;
 };
 
+// The lesson with its unit and course, in one round trip (three populates were three trips).
+// The shape is the same as before: lesson.unit = { _id, deletedAt, course: { _id, isPublished, deletedAt } }.
 const findVisibleLesson = async (id) => {
-  const lesson = await Lesson.findOne({ _id: id, isPublished: true, deletedAt: null })
-    .populate({ path: "unit", select: "deletedAt course", populate: { path: "course", select: "isPublished deletedAt" } })
-    .lean();
+  if (!mongoose.isObjectIdOrHexString(id)) return null;
+  const [lesson] = await Lesson.aggregate([
+    { $match: { _id: new mongoose.Types.ObjectId(String(id)), isPublished: true, deletedAt: null } },
+    { $lookup: { from: Unit.collection.name, localField: "unit", foreignField: "_id", pipeline: [{ $project: { deletedAt: 1, course: 1 } }], as: "unit" } },
+    { $unwind: "$unit" },
+    { $lookup: { from: Course.collection.name, localField: "unit.course", foreignField: "_id", pipeline: [{ $project: { isPublished: 1, deletedAt: 1 } }], as: "unit.course" } },
+    { $unwind: "$unit.course" }
+  ]);
   return lessonIsVisible(lesson) ? lesson : null;
 };
 

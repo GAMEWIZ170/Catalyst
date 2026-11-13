@@ -10,5 +10,6 @@ const courseSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 courseSchema.index({ title: "text" });
+courseSchema.index({ isPublished: 1, deletedAt: 1, code: 1 }); // the student course list
 
 module.exports = mongoose.model("Course", courseSchema);

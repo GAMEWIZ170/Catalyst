@@ -21,21 +21,10 @@ function Welcome({ onDone }) {
   </section>;
 }
 
-// First lesson not yet completed in a course tree, with its "unit.lesson" number.
-export function findNextLesson(course) {
-  for (let u = 0; u < (course.units || []).length; u++) {
-    const lessons = course.units[u].lessons || [];
-    for (let l = 0; l < lessons.length; l++) {
-      if (!lessons[l].completed) return { lesson: lessons[l], label: `${u + 1}.${l + 1}` };
-    }
-  }
-  return null;
-}
-
 export default function Courses() {
   const { user } = useAuth();
+  // Each course arrives with its progress and the next lesson to open ({ lessonId, label, title }).
   const [courses, setCourses] = useState([]);
-  const [trees, setTrees] = useState({});
   const [streak, setStreak] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -44,13 +33,8 @@ export default function Courses() {
   function load() {
     setLoading(true);
     setError("");
-    api.getCourses().then(({ data }) => {
-      const list = data || [];
-      setCourses(list);
-      // Progress and the next lesson come from each course tree. A failed tree only hides that course's progress.
-      return Promise.all(list.map((course) => api.getCourse(course._id).then((response) => [course._id, response.data]).catch(() => null)))
-        .then((pairs) => setTrees(Object.fromEntries(pairs.filter(Boolean))));
-    }).catch((err) => setError(err.message)).finally(() => setLoading(false));
+    api.getHome().then(({ data }) => setCourses(data || []))
+      .catch((err) => setError(err.message)).finally(() => setLoading(false));
     api.getStreak().then(({ data }) => setStreak(data.streak)).catch(() => setStreak(null));
   }
 
@@ -64,10 +48,10 @@ export default function Courses() {
   const isStudent = user && user.role === "student";
   const firstName = (user?.name || "").trim().split(/\s+/)[0];
   // Prefer a course that is started but not finished, then any course with lessons left.
-  const open = courses.map((course) => ({ course, tree: trees[course._id] })).filter(({ tree }) => tree && findNextLesson(tree));
-  const resume = open.find(({ tree }) => tree.progress?.completedLessons > 0) || open[0];
-  const next = resume ? findNextLesson(resume.tree) : null;
-  const percent = (tree) => (tree?.progress?.totalLessons ? Math.round((tree.progress.completedLessons / tree.progress.totalLessons) * 100) : 0);
+  const open = courses.filter((course) => course.next);
+  const resume = open.find((course) => course.progress?.completedLessons > 0) || open[0];
+  const next = resume ? resume.next : null;
+  const percent = (course) => (course?.progress?.totalLessons ? Math.round((course.progress.completedLessons / course.progress.totalLessons) * 100) : 0);
 
   return <div className="content student-page home-page">
     <header className="home-header">
@@ -79,10 +63,10 @@ export default function Courses() {
     {loading && <Loading />}
     {error && <ErrorState message={error} onRetry={load} />}
     {!loading && !error && resume && next && <Card className="home-continue" aria-labelledby="continue-title">
-      <h2 id="continue-title">{resume.tree.progress?.completedLessons > 0 ? "Continue where you left off" : "Start your first lesson"}</h2>
-      <p className="home-continue-copy"><strong>{resume.course.code}</strong> · Lesson {next.label}: {next.lesson.title}</p>
-      <Progress value={percent(resume.tree)} label={`${resume.course.code} progress`} showLabel />
-      <div className="button-row button-row--stack"><Button as={Link} variant="primary" to={`/lessons/${next.lesson._id}`} state={{ from: `/courses/${resume.course._id}` }}>Resume: Lesson {next.label}</Button></div>
+      <h2 id="continue-title">{resume.progress?.completedLessons > 0 ? "Continue where you left off" : "Start your first lesson"}</h2>
+      <p className="home-continue-copy"><strong>{resume.code}</strong> · Lesson {next.label}: {next.title}</p>
+      <Progress value={percent(resume)} label={`${resume.code} progress`} showLabel />
+      <div className="button-row button-row--stack"><Button as={Link} variant="primary" to={`/lessons/${next.lessonId}`} state={{ from: `/courses/${resume._id}` }}>Resume: Lesson {next.label}</Button></div>
     </Card>}
     {!loading && !error && !courses.length && <EmptyState illustration={<Illustration name="empty" />} title="No courses yet" description="Check back soon." />}
     {!loading && !error && courses.length > 0 && <section aria-labelledby="courses-title">
@@ -92,7 +76,7 @@ export default function Courses() {
           <span className="home-course-code">{course.code}</span>
           <strong className="home-course-title">{course.title}</strong>
           {course.description && <span className="muted home-course-desc">{course.description}</span>}
-          {trees[course._id] && <Progress value={percent(trees[course._id])} label={`${course.code} progress`} />}
+          {course.progress && <Progress value={percent(course)} label={`${course.code} progress`} />}
         </Card>)}
       </div>
       {courses.length <= 1 && <p className="muted home-soon">More subjects coming soon.</p>}

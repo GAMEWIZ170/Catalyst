@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const authCache = require("../utils/authCache");
 const User = require("../models/user.models");
 const Course = require("../models/course.models");
 const Lesson = require("../models/lesson.models");
@@ -97,6 +98,7 @@ const updateUser = async (req, res, next) => {
       user.subscriptionEndsAt = start;
     }
     await user.save();
+    authCache.forget(user._id);
     return res.status(200).json({ message: "User updated successfully", data: publicUser(user) });
   } catch (error) {
     next(error);

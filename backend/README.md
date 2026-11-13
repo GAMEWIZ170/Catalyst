@@ -159,11 +159,15 @@ Example avatar response:
 | Method | Path | Access | Purpose |
 | --- | --- | --- | --- |
 | GET | `/courses` | Student | Published courses |
+| GET | `/home` | Student | Every published course with this student's progress and the next lesson to open |
 | GET | `/courses/:id` | Student | Course outline, tests and lesson progress |
 | GET | `/lessons/:id` | Student | Visible lesson summary |
+| GET | `/lessons/:id/hub` | Student | The lesson screen in one call: the lesson summary plus `completed` and the `materials` list |
 | GET | `/lessons/:id/flashcards` | Student | Published flashcards and confidence summary |
 | GET | `/lessons/:id/materials` | Student | Published lesson materials |
 | POST | `/lessons/:id/mark-done` | Student | Mark a lesson done only when it has neither qualifying tests nor flashcards |
+
+`GET /home` returns `{ count, data }`. Each course has `code`, `title`, `description`, `progress` (`completedLessons`, `totalLessons`) and `next` (`lessonId`, `label` such as `"1.1"`, `title`), or `next: null` when every lesson is done. It uses a fixed number of queries however many courses exist. `GET /lessons/:id/hub` returns the same fields as `GET /lessons/:id` and adds `completed` (has this student finished it) and `materials` (the same items as `GET /lessons/:id/materials`). Both are read-only and send no answers.
 
 `GET /lessons/:id` returns lesson fields, published test summaries, flashcard counts by confidence (`total`, `confident`, `unsure`, `unknown`, `unrated`) and `materialCount`. The course outline adds `testCount`, `flashcardCount` and `materialCount` to each lesson.
 
@@ -284,6 +288,7 @@ Images are limited to 2 MB. The declared MIME type is a cheap first rejection; t
 | --- | --- | --- | --- |
 | GET | `/progress` | Student | Student lesson progress |
 | GET | `/progress/streak` | Student | Streak from progress, test results and flashcard reviews |
+| GET | `/progress/overview` | Student | The progress screen in one call: `progress` rows, `streak` and every published course outline in `courses` |
 
 ### Admin content
 
@@ -357,6 +362,12 @@ Student serializers omit correct answers. Scores are calculated on the server. A
 
 The streak is calculated from distinct UTC `YYYY-MM-DD` dates in lesson progress, test results and `FlashcardProgress.reviewedDays`. Consecutive activity ending today or yesterday is counted.
 
+### Speed
+
+The database is far from the server in development (a round trip is about 120 ms), so the number of sequential queries decides how fast an endpoint is. The course outline reads in 4 round trips (it was 9), and a lesson in 3 (it was 9): queries that do not depend on each other run together with `Promise.all`, and `findVisibleLesson` reads the lesson, unit and course with one `$lookup` instead of three populates. Responses are gzip-compressed by the `compression` package. `authenticate` keeps the logged-in user's role and status in memory for 15 seconds (`utils/authCache.js`), and an admin change to a user clears that entry at once. With several server processes a change can take up to 15 seconds to reach the others.
+
+Indexes added for the queries that filter or sort: `Unit {course, deletedAt, order}`, `Lesson {unit, order}` and `Course {isPublished, deletedAt, code}`. Mongoose builds them when the server starts.
+
 ### Security
 
 Login sets an HTTP-only `token` cookie. Authentication verifies the token and reloads the user on every request. Password hashes are excluded from auth responses. CORS requires the exact `CLIENT_URL` and credentials.
@@ -414,7 +425,7 @@ Saved Cloudinary image and file URLs must use HTTPS, exactly `res.cloudinary.com
 <details>
 <summary><strong>Middleware</strong></summary>
 
-`helmet`, `cors`, `express.json`, `cookie-parser` and `logger` are global middleware. Route middleware includes `generalLimiter`, `strictLimiter`, `answerLimiter`, `submitLimiter`, `markDoneLimiter`, `uploadLimiter`, `flashcardRateLimiter`, `authenticate`, `authorizeRole`, `validate`, `upload`, `materialUpload`, `notFound` and `error`.
+`helmet`, `compression`, `cors`, `express.json`, `cookie-parser` and `logger` are global middleware. Route middleware includes `generalLimiter`, `strictLimiter`, `answerLimiter`, `submitLimiter`, `markDoneLimiter`, `uploadLimiter`, `flashcardRateLimiter`, `authenticate`, `authorizeRole`, `validate`, `upload`, `materialUpload`, `notFound` and `error`.
 
 `notFound` and `error` are the final middleware and return safe errors without exposing internal messages.
 

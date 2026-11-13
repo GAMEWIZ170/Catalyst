@@ -18,5 +18,6 @@ const lessonSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 lessonSchema.index({ title: "text" });
+lessonSchema.index({ unit: 1, order: 1 }); // the lessons of some units, in order
 
 module.exports = mongoose.model("Lesson", lessonSchema);

@@ -1,3 +1,5 @@
+import { cached, clearCache } from "./cache";
+
 const API_URL = import.meta.env.VITE_API_URL || "/api/v1";
 
 async function request(path, options = {}) {
@@ -21,32 +23,41 @@ async function request(path, options = {}) {
   return payload;
 }
 
+// Progress changed, so what was cached is out of date.
+function changed(promise) {
+  return promise.then((payload) => { clearCache(); return payload; });
+}
+
 export const api = {
   getMe: () => request("/auth/me"),
   login: (body) => request("/auth/login", { method: "POST", body: JSON.stringify(body) }),
   register: (body) => request("/auth/register", { method: "POST", body: JSON.stringify(body) }),
   logout: () => request("/auth/logout", { method: "POST" }),
   getCourses: () => request("/courses"),
-  getCourse: (id) => request(`/courses/${id}`),
+  // Student reads below are cached for a minute (see cache.js).
+  getHome: () => cached("home", () => request("/home")),
+  getCourse: (id) => cached(`course:${id}`, () => request(`/courses/${id}`)),
   getLesson: (id) => request(`/lessons/${id}`),
+  getLessonHub: (id) => cached(`lesson:${id}`, () => request(`/lessons/${id}/hub`)),
   getLessonFlashcards: (id, filter) => request(`/lessons/${id}/flashcards${filter ? `?filter=${encodeURIComponent(filter)}` : ""}`),
-  rateFlashcard: (id, confidence) => request(`/flashcards/${id}/rate`, { method: "POST", body: JSON.stringify({ confidence }) }),
+  rateFlashcard: (id, confidence) => changed(request(`/flashcards/${id}/rate`, { method: "POST", body: JSON.stringify({ confidence }) })),
   getLessonMaterials: (id) => request(`/lessons/${id}/materials`),
-  markLessonDone: (id) => request(`/lessons/${id}/mark-done`, { method: "POST" }),
+  markLessonDone: (id) => changed(request(`/lessons/${id}/mark-done`, { method: "POST" })),
   getTest: (id) => request(`/tests/${id}`),
-  submitTest: (id, answers) => request(`/tests/${id}/submit`, { method: "POST", body: JSON.stringify({ answers }) }),
+  submitTest: (id, answers) => changed(request(`/tests/${id}/submit`, { method: "POST", body: JSON.stringify({ answers }) })),
   answerQuestion: (id, answer) =>
     request(`/questions/${id}/answer`, {
       method: "POST",
       body: JSON.stringify(answer === undefined ? {} : { answer })
     }),
   completeLesson: (id, answers) =>
-    request(`/lessons/${id}/complete`, {
+    changed(request(`/lessons/${id}/complete`, {
       method: "POST",
       body: JSON.stringify({ answers })
-    }),
+    })),
   getProgress: () => request("/progress"),
-  getStreak: () => request("/progress/streak"),
+  getStreak: () => cached("streak", () => request("/progress/streak")),
+  getProgressOverview: () => cached("progress-overview", () => request("/progress/overview")),
   getAdminCourses: () => request("/admin/courses"),
   getAdminCourse: (id) => request(`/admin/courses/${id}`),
   createCourse: (body) => request("/admin/courses", { method: "POST", body: JSON.stringify(body) }),

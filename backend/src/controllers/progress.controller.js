@@ -6,6 +6,8 @@ const Test = require("../models/test.models");
 const Question = require("../models/question.models");
 const { findVisibleLesson } = require("../utils/visibility");
 const calculateStreak = require("../utils/streak");
+const Course = require("../models/course.models");
+const { buildCourseOutline } = require("../utils/courseOutline");
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
 
@@ -58,20 +60,39 @@ const getMyProgress = async (req, res, next) => {
   }
 };
 
+const loadStreak = async (userId) => {
+  const [progress, results, flashcardProgress] = await Promise.all([
+    Progress.find({ user: userId }).select("completedDays").lean(),
+    TestResult.find({ user: userId }).select("completedDays").lean(),
+    FlashcardProgress.find({ user: userId }).select("reviewedDays").lean()
+  ]);
+  const days = [...progress, ...results].flatMap((record) => record.completedDays || []);
+  const reviewedDays = flashcardProgress.flatMap((record) => record.reviewedDays || []);
+  const activeDays = [...days, ...reviewedDays];
+  return { streak: calculateStreak(activeDays), completedToday: activeDays.includes(todayKey()) };
+};
+
 const getStreak = async (req, res, next) => {
   try {
-    const [progress, results, flashcardProgress] = await Promise.all([
-      Progress.find({ user: req.user.id }).select("completedDays").lean(),
-      TestResult.find({ user: req.user.id }).select("completedDays").lean(),
-      FlashcardProgress.find({ user: req.user.id }).select("reviewedDays").lean()
-    ]);
-    const days = [...progress, ...results].flatMap((record) => record.completedDays || []);
-    const reviewedDays = flashcardProgress.flatMap((record) => record.reviewedDays || []);
-    const activeDays = [...days, ...reviewedDays];
-    return res.status(200).json({ data: { streak: calculateStreak(activeDays), completedToday: activeDays.includes(todayKey()) } });
+    return res.status(200).json({ data: await loadStreak(req.user.id) });
   } catch (error) {
     next(error);
   }
 };
 
-module.exports = { markLessonDone, getMyProgress, getStreak };
+// The progress screen in one call: finished lessons, the streak and every course outline.
+const getOverview = async (req, res, next) => {
+  try {
+    const [progress, streak, courses] = await Promise.all([
+      Progress.find({ user: req.user.id }).select("lesson completed score completedAt -_id").lean(),
+      loadStreak(req.user.id),
+      Course.find({ isPublished: true, deletedAt: null }).select("_id").sort({ code: 1 }).lean()
+    ]);
+    const outlines = await Promise.all(courses.map((course) => buildCourseOutline(course._id, req.user.id)));
+    return res.status(200).json({ data: { progress, streak, courses: outlines.filter(Boolean) } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { markLessonDone, getMyProgress, getStreak, getOverview };

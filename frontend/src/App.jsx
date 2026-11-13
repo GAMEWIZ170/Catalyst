@@ -1,13 +1,14 @@
 import { lazy, Suspense } from "react";
-import { Link, Navigate, Route, Routes } from "react-router-dom";
+import { Link, Navigate, Route, Routes, useParams } from "react-router-dom";
+import { api } from "./api/client";
 import { useAuth } from "./context/AuthContext";
 import AppShell from "./components/AppShell";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Courses from "./pages/Courses";
-import CourseOutline from "./pages/CourseOutline";
-import Lesson from "./pages/Lesson";
+const CourseOutline = lazy(() => import("./pages/CourseOutline"));
+const Lesson = lazy(() => import("./pages/Lesson"));
 const Test = lazy(() => import("./pages/Test"));
 const Flashcards = lazy(() => import("./pages/Flashcards"));
 const Progress = lazy(() => import("./pages/Progress"));
@@ -29,7 +30,19 @@ function PageFallback() {
   return <SkeletonGroup label="Loading page"><Skeleton variant="title" /><Skeleton variant="block" /></SkeletonGroup>;
 }
 
-function ProtectedPage({ children }) {
+// Start a page's data requests while its code is still downloading, instead of after it.
+// The api cache hands the same request to the page when it mounts, so nothing is fetched twice.
+const warmers = {
+  courses: () => { api.getHome().catch(() => {}); },
+  course: ({ id }) => { api.getCourse(id).catch(() => {}); },
+  lesson: ({ id }) => { api.getLessonHub(id).catch(() => {}); },
+  progress: () => { api.getProgressOverview().catch(() => {}); }
+};
+
+function ProtectedPage({ children, warm }) {
+  const { user } = useAuth();
+  const params = useParams();
+  if (user && warm) warmers[warm](params);
   return <ProtectedRoute><AppShell><Suspense fallback={<PageFallback />}>{children}</Suspense></AppShell></ProtectedRoute>;
 }
 
@@ -46,12 +59,12 @@ export default function App() {
   return <Routes>
     <Route path="/login" element={user ? <Navigate to="/courses" replace /> : <Login />} />
     <Route path="/register" element={user ? <Navigate to="/courses" replace /> : <Register />} />
-    <Route path="/courses" element={<ProtectedPage><Courses /></ProtectedPage>} />
-    <Route path="/courses/:id" element={<ProtectedPage><CourseOutline /></ProtectedPage>} />
-    <Route path="/lessons/:id" element={<ProtectedPage><Lesson /></ProtectedPage>} />
+    <Route path="/courses" element={<ProtectedPage warm="courses"><Courses /></ProtectedPage>} />
+    <Route path="/courses/:id" element={<ProtectedPage warm="course"><CourseOutline /></ProtectedPage>} />
+    <Route path="/lessons/:id" element={<ProtectedPage warm="lesson"><Lesson /></ProtectedPage>} />
     <Route path="/tests/:id" element={<ProtectedPage><Test /></ProtectedPage>} />
     <Route path="/lessons/:id/flashcards" element={<ProtectedPage><Flashcards /></ProtectedPage>} />
-    <Route path="/progress" element={<ProtectedPage><Progress /></ProtectedPage>} />
+    <Route path="/progress" element={<ProtectedPage warm="progress"><Progress /></ProtectedPage>} />
     <Route path="/settings" element={<ProtectedPage><Settings /></ProtectedPage>} />
     <Route path="/admin/courses/:id" element={<AdminPage><AdminCourseEditor /></AdminPage>} />
     <Route path="/admin/tests/:id" element={<AdminPage><AdminTestEditor /></AdminPage>} />

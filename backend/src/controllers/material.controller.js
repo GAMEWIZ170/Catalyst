@@ -4,6 +4,7 @@ const Material = require("../models/material.models");
 const cloudinary = require("../config/cloudinary");
 const { findVisibleLesson, parentIsAvailable } = require("../utils/visibility");
 const materialUrl = require("../utils/materialUrl");
+const studentMaterial = require("../utils/studentMaterial");
 
 const badId = (id) => !mongoose.isObjectIdOrHexString(id);
 const createMaterial = async (req, res, next) => {
@@ -46,7 +47,7 @@ const getLessonMaterials = async (req, res, next) => {
   try {
     if (!(await findVisibleLesson(req.params.id))) return res.status(404).json({ message: "Lesson not found" });
     const materials = await Material.find({ lesson: req.params.id, isPublished: true, deletedAt: null }).sort({ order: 1 }).lean();
-    return res.status(200).json({ data: materials.map((item) => ({ _id: item._id, title: item.title, description: item.description, kind: item.kind, url: materialUrl(item), format: item.file?.format, bytes: item.file?.bytes })) });
+    return res.status(200).json({ data: materials.map(studentMaterial) });
   } catch (error) { next(error); }
 };
 const uploadMaterialFile = (req, res, next) => {

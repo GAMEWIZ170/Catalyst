@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/user.models");
+const authCache = require("../utils/authCache");
 
 const authenticate = async (req, res, next) => {
   try {
@@ -10,7 +11,11 @@ const authenticate = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await User.findById(decoded.id).select("role isActive subscriptionEndsAt");
+    let user = authCache.get(decoded.id);
+    if (!user) {
+      user = await User.findById(decoded.id).select("role isActive subscriptionEndsAt").lean();
+      if (user) authCache.set(decoded.id, user);
+    }
     if (!user || user.isActive === false) {
       return res.status(401).json({ message: "Please log in to continue" });
     }

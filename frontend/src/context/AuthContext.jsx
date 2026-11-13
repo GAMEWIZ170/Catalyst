@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { api } from "../api/client";
+import { clearCache } from "../api/cache";
 
 const AuthContext = createContext(null);
 
@@ -19,16 +20,19 @@ export function AuthProvider({ children }) {
     loading,
     async login(credentials) {
       const response = await api.login(credentials);
+      clearCache();
       setUser(response.data);
       return response;
     },
     async register(details) {
       const response = await api.register(details);
+      clearCache();
       setUser(response.data);
       return response;
     },
     async logout() {
       await api.logout();
+      clearCache();
       setUser(null);
     },
     async updateAvatar(avatar) {

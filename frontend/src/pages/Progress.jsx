@@ -10,11 +10,9 @@ export default function Progress() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    Promise.all([api.getProgress(), api.getStreak(), api.getCourses()])
-      .then(async ([progressResponse, streakResponse, coursesResponse]) => {
-        const trees = (await Promise.all((coursesResponse.data || []).map((course) => api.getCourse(course._id).then((r) => r.data).catch(() => null)))).filter(Boolean);
-        setData({ progress: progressResponse.data || [], streak: streakResponse.data, trees });
-      })
+    // One call returns the finished lessons, the streak and every course outline.
+    api.getProgressOverview()
+      .then(({ data }) => setData({ progress: data.progress || [], streak: data.streak, trees: data.courses || [] }))
       .catch((err) => setError(err.message));
   }, []);
 

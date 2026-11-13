@@ -2,6 +2,7 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const helmet = require("helmet");
+const compression = require("compression");
 
 const app = express();
 
@@ -19,6 +20,7 @@ const generalLimiter = require("./middlewares/generalLimiter");
 
 const authRoutes = require("./routes/auth.routes");
 const courseRoutes = require("./routes/course.routes");
+const homeRoutes = require("./routes/home.routes");
 const lessonRoutes = require("./routes/lesson.routes");
 const questionRoutes = require("./routes/question.routes");
 const progressRoutes = require("./routes/progress.routes");
@@ -29,6 +31,7 @@ const materialRoutes = require("./routes/material.routes");
 
 // middlewares that run on every request, in this order
 app.use(helmet());                       // safe response headers
+app.use(compression());                  // gzip the JSON, which is mostly repeated text
 app.use(cors({
   origin: process.env.CLIENT_URL,        // only your frontend may call the API
   credentials: true                      // lets the browser send the login cookie
@@ -41,6 +44,7 @@ app.use(generalLimiter);
 // routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/courses", courseRoutes);
+app.use("/api/v1/home", homeRoutes);
 app.use("/api/v1/lessons", lessonRoutes);
 app.use("/api/v1/questions", questionRoutes);
 app.use("/api/v1/progress", progressRoutes);
