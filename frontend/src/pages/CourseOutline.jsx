@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, CheckCircle2, ChevronDown, ChevronRight, Circle, PlayCircle } from "lucide-react";
 import { api } from "../api/client";
+import { nearToPrefetch, prefetchLesson } from "../api/prefetch";
 import { Button, Card, Progress } from "../components/ui";
 import { rememberCourse } from "../utils/courseCache";
 import { ErrorState, Loading } from "./Courses";
@@ -50,7 +51,7 @@ function Unit({ unit, number, nextId, from }) {
           const meta = lessonMeta(lesson);
           const isNext = lesson._id === nextId;
           return <li key={lesson._id}>
-            <Link className={`ol-row ${isNext ? "ol-row--next" : ""}`} to={`/lessons/${lesson._id}`} state={{ from }}>
+            <Link className={`ol-row ${isNext ? "ol-row--next" : ""}`} to={`/lessons/${lesson._id}`} state={{ from }} {...nearToPrefetch(() => prefetchLesson(lesson._id))}>
               <StatusIcon done={lesson.completed} next={isNext} />
               <span className="ol-row-text"><span className="ol-row-title"><span className="ol-num">{number}.{index + 1}</span> {lesson.title}</span>{meta && <span className="ol-row-meta">{meta}</span>}</span>
               {lesson.completed && lesson.testCount > 0 && lesson.score != null && <span className="ol-score">{lesson.score}%</span>}
@@ -96,7 +97,7 @@ export default function CourseOutline() {
       <p className="muted">{completed} of {total} lessons complete</p>
       <Progress value={percent} label="Course progress" />
       {nextLesson && <div className="button-row button-row--stack">
-        <Button as={Link} variant="primary" to={`/lessons/${nextLesson._id}`} state={{ from }}>{completed === 0 ? "Start" : "Resume"}: Lesson {nextLabel}</Button>
+        <Button as={Link} variant="primary" to={`/lessons/${nextLesson._id}`} state={{ from }} {...nearToPrefetch(() => prefetchLesson(nextLesson._id))}>{completed === 0 ? "Start" : "Resume"}: Lesson {nextLabel}</Button>
       </div>}
     </header>
     <div className="ol-units">

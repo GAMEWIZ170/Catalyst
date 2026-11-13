@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, ACCESS_ENDED } from "../api/client";
+import { nearToPrefetch, prefetchCourse, prefetchLesson } from "../api/prefetch";
 import { useAuth } from "../context/AuthContext";
 import { Zap } from "lucide-react";
 import { Badge, Button, Card, EmptyState, Illustration, Progress, Skeleton, SkeletonGroup } from "../components/ui";
@@ -66,13 +67,13 @@ export default function Courses() {
       <h2 id="continue-title">{resume.progress?.completedLessons > 0 ? "Continue where you left off" : "Start your first lesson"}</h2>
       <p className="home-continue-copy"><strong>{resume.code}</strong> · Lesson {next.label}: {next.title}</p>
       <Progress value={percent(resume)} label={`${resume.code} progress`} showLabel />
-      <div className="button-row button-row--stack"><Button as={Link} variant="primary" to={`/lessons/${next.lessonId}`} state={{ from: `/courses/${resume._id}` }}>Resume: Lesson {next.label}</Button></div>
+      <div className="button-row button-row--stack"><Button as={Link} variant="primary" to={`/lessons/${next.lessonId}`} state={{ from: `/courses/${resume._id}` }} {...nearToPrefetch(() => prefetchLesson(next.lessonId))}>Resume: Lesson {next.label}</Button></div>
     </Card>}
     {!loading && !error && !courses.length && <EmptyState illustration={<Illustration name="empty" />} title="No courses yet" description="Check back soon." />}
     {!loading && !error && courses.length > 0 && <section aria-labelledby="courses-title">
       <h2 id="courses-title">Your courses</h2>
       <div className="home-courses">
-        {courses.map((course) => <Card as={Link} className="home-course" to={`/courses/${course._id}`} key={course._id}>
+        {courses.map((course) => <Card as={Link} className="home-course" to={`/courses/${course._id}`} key={course._id} {...nearToPrefetch(() => prefetchCourse(course._id))}>
           <span className="home-course-code">{course.code}</span>
           <strong className="home-course-title">{course.title}</strong>
           {course.description && <span className="muted home-course-desc">{course.description}</span>}

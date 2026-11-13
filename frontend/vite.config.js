@@ -14,8 +14,23 @@ const katexWoff2Only = {
   }
 };
 
+// Caching rules for the built site. Files in /assets have a hash in their name, so a changed file gets a new
+// name and the old one can be kept for a year. index.html names those files, so it must be checked every time.
+// This applies to `vite preview`. Whatever serves dist/ in production needs the same two rules.
+const cacheHeaders = {
+  name: "cache-headers",
+  configurePreviewServer(server) {
+    server.middlewares.use((request, response, next) => {
+      const path = (request.url || "").split("?")[0];
+      if (path.startsWith("/assets/")) response.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      else if (path === "/" || path.endsWith(".html") || !path.includes(".")) response.setHeader("Cache-Control", "no-cache");
+      next();
+    });
+  }
+};
+
 export default defineConfig({
-  plugins: [katexWoff2Only, react()],
+  plugins: [katexWoff2Only, cacheHeaders, react()],
   server: {
     proxy: {
       "/api": {

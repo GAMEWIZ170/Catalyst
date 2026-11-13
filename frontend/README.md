@@ -64,6 +64,17 @@ npm run preview
 
 The generated files are written to `frontend/dist/`, which is ignored by Git.
 
+`npm run preview` sends two caching rules (`cacheHeaders` in `vite.config.js`): files in `/assets/` have a hash in their name and are cached for a year (`immutable`), and `index.html` and the page routes are `no-cache` so a new build is picked up at once. Whatever serves `dist/` in production needs the same two rules.
+
+## Speed
+
+- **Lazy routes.** Every page except login, register and the course list loads its code when opened. KaTeX and mhchem load only when a page has a formula, and the KaTeX stylesheet loads with them.
+- **One call per screen.** Home uses `GET /home`, the lesson screen `GET /lessons/:id/hub`, the progress screen `GET /progress/overview`.
+- **Data starts early.** `ProtectedPage` in `App.jsx` starts the screen's requests the moment the route matches, while its code is still downloading.
+- **Read cache.** `src/api/cache.js` keeps student reads for 60 seconds and shares one request between callers. Finishing a lesson, submitting a test and rating a card clear it (`changed()` in `api/client.js`), and login, register and logout clear it too. Tests and flashcards are not cached.
+- **Prefetch.** `src/api/prefetch.js`: hovering, touching or focusing a link to a lesson or course starts loading it. Spread `nearToPrefetch(...)` onto a link to add it.
+- **Images.** `ResponsiveImage` serves 400, 800 and 1200 px versions through `srcset` and uses the stored `width` and `height` to reserve space. The lesson video is a small still and a play button; the player loads only after a tap.
+
 ## Application routes
 
 | Route | Access | Purpose |
@@ -111,7 +122,9 @@ frontend/
 ├── vite.config.js
 └── src/
     ├── api/client.js          # API requests and credential handling
-    ├── components/            # Shared UI: app shell, rich text, avatar, deck summary
+    ├── api/cache.js           # Short read cache for student screens
+    ├── api/prefetch.js        # Start loading a lesson or course on hover or touch
+    ├── components/            # Shared UI: app shell, rich text, responsive image, avatar, deck summary
     │   └── admin/             # Builder components: breadcrumbs, switch, dialogs, image field
     ├── context/AuthContext.jsx
     ├── hooks/                 # useUnsavedChanges

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, CheckCircle2, Circle, ExternalLink, FileText, Link2, Play } from "lucide-react";
 import { api } from "../api/client";
+import { nearToPrefetch, prefetchLesson } from "../api/prefetch";
 import DeckSummary from "../components/DeckSummary";
 import RichText from "../components/RichText";
 import { Badge, Button, SelectField, Skeleton, SkeletonGroup } from "../components/ui";
@@ -124,7 +125,7 @@ export default function Lesson() {
               const current = String(entry._id) === String(id);
               const done = entry.completed || (current && completed);
               return <li key={entry._id}>
-                <Link to={`/lessons/${entry._id}`} state={{ from }} aria-current={current ? "page" : undefined} className={current ? "is-current" : ""}>
+                <Link to={`/lessons/${entry._id}`} state={{ from }} aria-current={current ? "page" : undefined} className={current ? "is-current" : ""} {...nearToPrefetch(() => prefetchLesson(entry._id))}>
                   {done ? <CheckCircle2 size={16} aria-hidden="true" /> : <Circle size={16} aria-hidden="true" />}
                   <span>{entry.title}</span>
                   {done && <span className="sr-only">(done)</span>}
@@ -157,8 +158,8 @@ export default function Lesson() {
           {nextStep === "done" && <Button onClick={markDone} disabled={completed}>{primaryLabel}</Button>}
           <div className="sr-only" aria-live="polite">{doneMessage}</div>
           {(prevLesson || nextLesson) && <div className="lesson-pager">
-            {prevLesson ? <Button as={Link} variant="secondary" icon={ArrowLeft} to={`/lessons/${prevLesson._id}`} state={{ from }}>Previous lesson</Button> : <span />}
-            {nextLesson && <Button as={Link} variant={nextStep ? "secondary" : "primary"} to={`/lessons/${nextLesson._id}`} state={{ from }}>Next lesson</Button>}
+            {prevLesson ? <Button as={Link} variant="secondary" icon={ArrowLeft} to={`/lessons/${prevLesson._id}`} state={{ from }} {...nearToPrefetch(() => prefetchLesson(prevLesson._id))}>Previous lesson</Button> : <span />}
+            {nextLesson && <Button as={Link} variant={nextStep ? "secondary" : "primary"} to={`/lessons/${nextLesson._id}`} state={{ from }} {...nearToPrefetch(() => prefetchLesson(nextLesson._id))}>Next lesson</Button>}
           </div>}
         </section>
       </div>
