@@ -25,6 +25,7 @@ export default function Flashcards() {
   const [finished, setFinished] = useState(false);
   const [saving, setSaving] = useState(false);
   const [nothingToReview, setNothingToReview] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const headingRef = useRef(null);
   const repeated = useRef(new Set());
   const loadCount = useRef(0);
@@ -44,6 +45,7 @@ export default function Flashcards() {
       setQueue(response.cards || []);
       setPosition(0);
       setShown(false);
+      setLoaded(true);
       if (!response.cards?.length && filter) setNothingToReview(true);
     } catch (err) {
       if (mine !== loadCount.current) return;
@@ -95,7 +97,8 @@ export default function Flashcards() {
   }
 
   if (error && !cards.length) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
-  if (!cards.length && !nothingToReview) return <Loading />;
+  if (!cards.length && !nothingToReview && !loaded) return <Loading />;
+  if (!cards.length && !nothingToReview) return <div className="content fc-page"><EmptyState icon={Layers} title="No flashcards yet" description="This lesson has no flashcards." action={<Button as={Link} to={`/lessons/${id}`} state={lessonState}>Back to lesson</Button>} /></div>;
   const back = <Link className="back-link" to={`/lessons/${id}`} state={lessonState}><ArrowLeft size={16} aria-hidden="true" />Back to lesson</Link>;
   if (nothingToReview) return <div className="content fc-page">{back}<EmptyState icon={Layers} title="No cards to review" description="You have rated every card as confident." action={<Button as={Link} to={`/lessons/${id}`} state={lessonState}>Back to lesson</Button>} /></div>;
   if (finished) {
