@@ -57,11 +57,7 @@ export default function Settings() {
       <div className="settings-radio-grid" role="radiogroup" aria-label="Colour theme">
         {palettes.map((item) => <label className="palette-card" data-palette-preview={item.key} key={item.key}>
           <input type="radio" name="palette" value={item.key} checked={palette === item.key} onChange={() => selectPalette(item.key)} />
-          <span className="palette-preview" aria-hidden="true">
-            <span className="palette-preview-accent" />
-            <span className="palette-preview-paper" />
-            <span className="palette-preview-ink">Aa</span>
-          </span>
+          <span className="palette-swatch" aria-hidden="true" />
           <span>{item.name}</span>
         </label>)}
       </div>

@@ -1,38 +1,62 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Zap } from "lucide-react";
 import { api } from "../api/client";
+import { Button, Card, Progress as Bar } from "../components/ui";
 import { ErrorState, Loading } from "./Courses";
 
-function FlameIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21a7 7 0 0 0 7-7c0-4.1-3.1-6.7-5.3-9.5-.6 2.2-1.6 3.4-2.8 4.3.1-2.8-.9-4.5-2-5.8C8.5 7.7 5 10 5 14a7 7 0 0 0 7 7Z" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.7" /></svg>;
-}
-
 export default function Progress() {
-  const [progress, setProgress] = useState(null);
-  const [streak, setStreak] = useState(null);
+  const [data, setData] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    Promise.all([api.getProgress(), api.getStreak()])
-      .then(([progressResponse, streakResponse]) => {
-        setProgress(progressResponse.data || []);
-        setStreak(streakResponse.data);
+    Promise.all([api.getProgress(), api.getStreak(), api.getCourses()])
+      .then(async ([progressResponse, streakResponse, coursesResponse]) => {
+        const trees = (await Promise.all((coursesResponse.data || []).map((course) => api.getCourse(course._id).then((r) => r.data).catch(() => null)))).filter(Boolean);
+        setData({ progress: progressResponse.data || [], streak: streakResponse.data, trees });
       })
       .catch((err) => setError(err.message));
   }, []);
 
   if (error) return <div className="content"><ErrorState message={error} /></div>;
-  if (!progress || !streak) return <Loading />;
+  if (!data) return <Loading />;
+  const { progress, streak, trees } = data;
   const completed = progress.filter((item) => item.completed);
   const average = completed.length ? Math.round(completed.reduce((sum, item) => sum + (item.score || 0), 0) / completed.length) : null;
+  // Test scores: lessons passed with a score, plus unit and course tests that have a best score.
+  const scores = trees.flatMap((tree) => [
+    ...tree.units.flatMap((unit) => [
+      ...unit.lessons.filter((lesson) => lesson.completed && lesson.testCount > 0 && lesson.score != null).map((lesson) => ({ id: lesson._id, title: lesson.title, score: lesson.score })),
+      ...(unit.tests || []).filter((test) => test.bestScore != null).map((test) => ({ id: test._id, title: test.title, score: test.bestScore }))
+    ]),
+    ...(tree.tests || []).filter((test) => test.bestScore != null).map((test) => ({ id: test._id, title: test.title, score: test.bestScore }))
+  ]);
   return <div className="content progress-page">
-    <h1>Keep your momentum.</h1>
+    <h1>Your progress</h1>
     <div className="stats-grid">
-      <Stat label="Current streak" value={`${streak.streak} days`} detail={streak.completedToday ? "Studied today" : "Not yet today"} icon={<FlameIcon />} />
+      <Stat label="Current streak" value={`${streak.streak} ${streak.streak === 1 ? "day" : "days"}`} detail={streak.completedToday ? "Studied today" : "Not yet today"} icon={<Zap size={20} aria-hidden="true" />} />
       <Stat label="Lessons completed" value={completed.length} />
       <Stat label="Average score" value={average === null ? "No scores yet" : `${average}%`} />
     </div>
-    <Link className="button button-secondary" to="/courses">Go to your courses</Link>
+    {trees.map((tree) => <Card key={tree._id} aria-labelledby={`progress-${tree._id}`}>
+      <h2 id={`progress-${tree._id}`}>{tree.code} · {tree.title}</h2>
+      <div className="progress-units">
+        {tree.units.map((unit, index) => {
+          const done = unit.lessons.filter((lesson) => lesson.completed).length;
+          const percent = unit.lessons.length ? Math.round((done / unit.lessons.length) * 100) : 0;
+          return <div key={unit._id} className="progress-unit">
+            <div className="progress-unit-head"><span>Unit {index + 1} · {unit.title}</span><span className="muted progress-num">{done} of {unit.lessons.length}</span></div>
+            <Bar value={percent} label={`Unit ${index + 1} progress`} />
+          </div>;
+        })}
+      </div>
+    </Card>)}
+    <Card aria-labelledby="scores-title">
+      <h2 id="scores-title">Test scores</h2>
+      {scores.length ? <ul className="score-list">{scores.map((item) => <li key={item.id}><span>{item.title}</span><strong className="progress-num">{item.score}%</strong></li>)}</ul>
+        : <p className="muted">No scores yet. Pass a lesson test and it shows up here.</p>}
+    </Card>
+    <div className="button-row"><Button as={Link} variant="secondary" to="/courses">Go to your courses</Button></div>
   </div>;
 }
 

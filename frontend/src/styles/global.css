@@ -3228,3 +3228,171 @@ textarea {
 .ol-tests .ol-row {
   padding-left: var(--card-pad);
 }
+
+/* Home and course list (Phase 3.5) */
+.home-header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.home-header h1 {
+  margin: 0;
+}
+
+.home-page h2 {
+  font-size: var(--text-xl);
+}
+
+.home-continue {
+  margin-bottom: var(--space-6);
+  max-width: 40rem;
+}
+
+.home-continue h2,
+.home-continue p {
+  margin: 0;
+}
+
+.home-courses {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+  margin-top: var(--space-3);
+}
+
+.ui-card.home-course {
+  color: inherit;
+  text-decoration: none;
+}
+
+.ui-card.home-course:hover {
+  border-color: var(--accent);
+}
+
+.home-course-code {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.home-course-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: break-word;
+}
+
+.home-soon {
+  margin: var(--space-4) 0 0;
+}
+
+/* Progress (Phase 3.6) */
+.progress-page h2 {
+  font-size: var(--text-xl);
+  margin: 0;
+}
+
+.progress-page {
+  max-width: 48rem;
+}
+
+.progress-units {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.progress-unit-head {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.progress-num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.score-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.score-list li {
+  align-items: baseline;
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: var(--space-3);
+  justify-content: space-between;
+  padding: var(--space-3) 0;
+}
+
+.score-list li:first-child {
+  border-top: 0;
+}
+
+.stats-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  margin-bottom: 0;
+}
+
+/* Login and register (Phase 3.7) */
+.auth-value {
+  color: var(--muted);
+  margin: calc(-1 * var(--space-3)) 0 var(--space-5);
+  text-align: center;
+}
+
+.auth-card h1 {
+  font-size: var(--text-2xl);
+  margin: 0 0 var(--space-1);
+}
+
+.auth-form .ui-field {
+  gap: var(--space-1);
+}
+
+/* Settings and top bar (Phase 3.8) */
+.settings-radio-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr));
+}
+
+.palette-card {
+  flex-direction: row;
+  justify-content: flex-start;
+}
+
+.palette-swatch {
+  background: var(--preview-accent);
+  border-radius: 50%;
+  flex: none;
+  height: 24px;
+  width: 24px;
+}
+
+.settings-avatar-grid {
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+}
+
+.streak-indicator {
+  background: var(--accent-soft);
+  border-radius: var(--radius-pill);
+  min-height: 40px;
+  padding: 0 var(--space-3);
+}
+
+.streak-indicator svg {
+  height: 16px;
+  width: 16px;
+}
+
+.progress-units {
+  margin-top: var(--space-3);
+}
+
+.settings-radio-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+}

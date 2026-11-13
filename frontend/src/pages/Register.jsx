@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { AuthLayout } from "./Login";
+import { Button, TextField } from "../components/ui";
 
 export default function Register() {
   const { register } = useAuth();
@@ -28,16 +29,16 @@ export default function Register() {
     }
   }
 
-  return <AuthLayout title="Start your journey" subtitle="Build knowledge, one lesson at a time.">
+  return <AuthLayout title="Create your account" subtitle="It takes a minute. Then start your first lesson.">
     <form className="auth-form" onSubmit={submit}>
-      <label>Full name<input type="text" required minLength="2" maxLength="60" autoComplete="name" value={form.name}
-        onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
-      <label>Email<input type="email" required autoComplete="email" value={form.email}
-        onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
-      <label>Password<input type="password" required minLength="8" maxLength="72" autoComplete="new-password" value={form.password}
-        onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
+      <TextField label="Full name" type="text" required minLength="2" maxLength="60" autoComplete="name" value={form.name}
+        onChange={(e) => setForm({ ...form, name: e.target.value })} />
+      <TextField label="Email" type="email" required autoComplete="email" value={form.email}
+        onChange={(e) => setForm({ ...form, email: e.target.value })} />
+      <TextField label="Password" type="password" required minLength="8" maxLength="72" autoComplete="new-password" hint="At least 8 characters." value={form.password}
+        onChange={(e) => setForm({ ...form, password: e.target.value })} />
       {error && <p className="form-error" role="alert">{error}</p>}
-      <button className="button button-primary button-wide" disabled={busy}>Create account</button>
+      <Button type="submit" block loading={busy}>Create account</Button>
     </form>
     <p className="auth-switch">Already have an account? <Link to="/login">Sign in</Link></p>
   </AuthLayout>;

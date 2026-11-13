@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import ThemeToggle from "../components/ThemeToggle";
+import { Button, TextField } from "../components/ui";
 
 export default function Login() {
   const { login } = useAuth();
@@ -29,14 +30,14 @@ export default function Login() {
     }
   }
 
-  return <AuthLayout title="Welcome back" subtitle="Pick up where you left off.">
+  return <AuthLayout title="Welcome back" subtitle="Log in to pick up where you left off.">
     <form className="auth-form" onSubmit={submit}>
-      <label>Email<input type="email" required autoComplete="email" value={form.email}
-        onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
-      <label>Password<input type="password" required autoComplete="current-password" value={form.password}
-        onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
+      <TextField label="Email" type="email" required autoComplete="email" value={form.email}
+        onChange={(e) => setForm({ ...form, email: e.target.value })} />
+      <TextField label="Password" type="password" required autoComplete="current-password" value={form.password}
+        onChange={(e) => setForm({ ...form, password: e.target.value })} />
       {error && <p className="form-error" role="alert">{error}</p>}
-      <button className="button button-primary button-wide" disabled={busy}>Log in</button>
+      <Button type="submit" block loading={busy}>Log in</Button>
     </form>
     <p className="auth-switch">New to Catalyst? <Link to="/register">Create an account</Link></p>
   </AuthLayout>;
@@ -46,6 +47,7 @@ export function AuthLayout({ title, subtitle, children }) {
   return <div className="auth-page">
     <ThemeToggle />
     <div className="auth-brand"><span className="brand-mark">C</span><span>Catalyst</span></div>
+    <p className="auth-value">Structured revision for UG students</p>
     <section className="auth-card">
       <h1>{title}</h1><p className="auth-subtitle">{subtitle}</p>{children}
     </section>

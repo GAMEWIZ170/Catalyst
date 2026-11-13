@@ -3,21 +3,8 @@ import { Link, useMatch, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "./Avatar";
+import { Mail, Zap } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
-
-function MailIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true">
-    <rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" strokeWidth="1.8" />
-    <path d="m4 7 8 6 8-6" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
-  </svg>;
-}
-
-function FlameIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M12 21a7 7 0 0 0 7-7c0-4.1-3.1-6.7-5.3-9.5-.6 2.2-1.6 3.4-2.8 4.3.1-2.8-.9-4.5-2-5.8C8.5 7.7 5 10 5 14a7 7 0 0 0 7 7Z" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.7" />
-    <path d="M12 21a3.3 3.3 0 0 0 3.3-3.3c0-1.7-1.1-2.8-2.3-4-.4 1.1-.9 1.7-1.5 2.1-.1-1-.4-1.6-.8-2.2-.8 1.1-1.9 2.1-1.9 4.1A3.3 3.3 0 0 0 12 21Z" fill="currentColor" />
-  </svg>;
-}
 
 export default function AppShell({ children }) {
   const { user, logout } = useAuth();
@@ -108,7 +95,7 @@ export default function AppShell({ children }) {
                 setProfileOpen(false);
               }}
             >
-              <MailIcon />
+              <Mail size={20} aria-hidden="true" />
             </button>
             {notificationsOpen && <div className="notification-panel" id="notification-panel" role="status">
               <strong>No notifications yet</strong>
@@ -117,7 +104,7 @@ export default function AppShell({ children }) {
           </div>
           <ThemeToggle />
           {streak !== null && <span className="streak-indicator" aria-label={`Current streak: ${streak} ${streak === 1 ? "day" : "days"}`}>
-            <FlameIcon /><span>{streak}</span>
+            <Zap size={16} aria-hidden="true" /><span>{streak}</span>
           </span>}
           <div className="profile-menu">
             <button
