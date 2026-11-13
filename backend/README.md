@@ -59,6 +59,7 @@ Never commit `.env`: it holds database credentials, the token secret and the Clo
 | `RATE_LIMIT_IP` | Optional. Requests per IP address per 15 minutes, a ceiling against floods. Default `5000` | `5000` |
 | `RATE_LIMIT_AUTH_FAILS` | Optional. Failed logins or registrations per IP and email per 15 minutes. Default `20` | `20` |
 | `RATE_LIMIT_AUTH_IP` | Optional. Failed logins or registrations per IP across all emails per 15 minutes. Default `200` | `200` |
+| `DEMO_STUDENT_EMAIL`, `DEMO_STUDENT_PASSWORD`, `DEMO_ADMIN_EMAIL`, `DEMO_ADMIN_PASSWORD` | Optional. Used only by `npm run seed:demo`. Choose any emails and passwords (8 or more characters) | `demo.student@example.test` |
 
 Find `CLOUDINARY_URL` in the Cloudinary Console under the product environment's API environment variable or API keys area. Never commit it or paste the API secret into source control. In Cloudinary, go to Settings, then Security, and tick "Allow delivery of PDF and ZIP files"; without it every PDF link returns 401.
 
@@ -96,6 +97,15 @@ The API is at `http://localhost:5000/api/v1`, or on the port in `PORT`.
 ### 5. Create the first admin
 
 Register with `POST /api/v1/auth/register`, change that user's `role` from `student` to `admin` in the `users` collection, and log in again.
+
+### Demo data
+
+`npm run seed:demo` fills the database with a demo student, a demo admin and one published course, `DEMO113`. The course has 2 units and 6 lessons with sample CHEM113 text, formulas, one YouTube video, a test with 4 questions, 6 flashcards and a link material per lesson, plus a test for each unit and for the course. The demo student gets one finished lesson, one test result and a 3-day streak.
+
+Set the four `DEMO_` variables in `.env` first. Passwords are read from `.env` and never printed. It writes to the database in `MONGODB_URI`.
+
+- Safe to run twice: anything that already exists is left unchanged.
+- `npm run seed:demo -- --reset` permanently deletes every course whose code starts with `DEMO`, everything inside them, and the two demo users with their progress. Nothing else is touched.
 
 ### 6. Try it
 
