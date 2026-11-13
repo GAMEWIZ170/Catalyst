@@ -2339,7 +2339,9 @@ textarea {
 }
 
 .user-main strong,
+.user-main span,
 .trash-main strong {
+  max-width: 100%;
   overflow-wrap: anywhere;
 }
 
