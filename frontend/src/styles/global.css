@@ -3071,3 +3071,160 @@ textarea {
 .fc-finished-line {
   font-size: var(--text-lg);
 }
+
+/* Course outline (Phase 3.4): one card per unit, flat lesson rows with dividers. */
+.student-outline {
+  max-width: 48rem;
+}
+
+.ol-header {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.ol-header > * {
+  margin: 0;
+}
+
+.ol-code {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.ol-units {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.ui-card.ol-unit {
+  gap: 0;
+  padding: 0;
+}
+
+.ol-unit-heading {
+  font-size: var(--text-md);
+  margin: 0;
+}
+
+.ol-unit-toggle {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-panel);
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  gap: var(--space-3);
+  justify-content: space-between;
+  min-height: var(--control-height);
+  padding: var(--space-4) var(--card-pad);
+  text-align: left;
+  width: 100%;
+}
+
+.ol-unit-text,
+.ol-row-text {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.ol-unit-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: break-word;
+}
+
+.ol-row-meta {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.ol-unit-chevron {
+  color: var(--muted);
+  flex: none;
+}
+
+.ol-unit-toggle[aria-expanded="true"] .ol-unit-chevron {
+  transform: rotate(180deg);
+}
+
+.ol-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ol-row {
+  align-items: center;
+  border-top: 1px solid var(--line);
+  color: inherit;
+  display: flex;
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: var(--space-3) var(--card-pad);
+  text-decoration: none;
+}
+
+.ol-row:hover {
+  background: var(--sunken);
+}
+
+.ol-row--next {
+  background: var(--accent-soft);
+}
+
+.ol-row-title {
+  overflow-wrap: break-word;
+}
+
+.ol-num {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ol-status {
+  color: var(--muted);
+  flex: none;
+}
+
+.ol-status--done {
+  color: var(--success);
+}
+
+.ol-status--next {
+  color: var(--accent);
+}
+
+.ol-row-text {
+  flex: 1;
+}
+
+.ol-score {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.ol-chevron {
+  color: var(--muted);
+  flex: none;
+}
+
+.ol-tests h3,
+.ol-tests h2 {
+  font-size: var(--text-md);
+  margin: 0;
+  padding: var(--space-4) var(--card-pad) var(--space-2);
+}
+
+.ol-tests--course {
+  padding-top: var(--space-1);
+}
+
+.ol-tests .ol-row {
+  padding-left: var(--card-pad);
+}

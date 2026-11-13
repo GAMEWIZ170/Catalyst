@@ -1,16 +1,67 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import ProgressBar from "../components/ProgressBar";
+import { ArrowLeft, CheckCircle2, ChevronDown, ChevronRight, Circle, PlayCircle } from "lucide-react";
 import { api } from "../api/client";
+import { Button, Card, Progress } from "../components/ui";
 import { rememberCourse } from "../utils/courseCache";
 import { ErrorState, Loading } from "./Courses";
 
 const plural = (count, word) => `${count} ${word}${count === 1 ? "" : "s"}`;
 
+// Quiet meta line: "1 test · 20 cards · Video". Empty when the lesson has nothing extra.
+function lessonMeta(lesson) {
+  const parts = [];
+  if (lesson.testCount > 0) parts.push(plural(lesson.testCount, "test"));
+  if (lesson.flashcardCount > 0) parts.push(plural(lesson.flashcardCount, "card"));
+  if (lesson.materialCount > 0) parts.push(plural(lesson.materialCount, "material"));
+  if (lesson.hasVideo) parts.push("Video");
+  return parts.join(" · ");
+}
+
+function StatusIcon({ done, next }) {
+  if (done) return <><CheckCircle2 className="ol-status ol-status--done" size={20} aria-hidden="true" /><span className="sr-only">Completed. </span></>;
+  if (next) return <><PlayCircle className="ol-status ol-status--next" size={20} aria-hidden="true" /><span className="sr-only">Up next. </span></>;
+  return <><Circle className="ol-status" size={20} aria-hidden="true" /><span className="sr-only">Not started. </span></>;
+}
+
 function TestRow({ test, from }) {
-  return <Link className="student-test-row" to={`/tests/${test._id}`} state={{ from }}>
-    <span><strong>{test.title}</strong><span className="muted">{test.bestScore === null ? "Not taken yet" : `Best score: ${test.bestScore}%`}</span></span><span aria-hidden="true">Open</span>
+  return <Link className="ol-row" to={`/tests/${test._id}`} state={{ from }}>
+    <span className="ol-row-text"><span className="ol-row-title">{test.title}</span><span className="ol-row-meta">{test.bestScore === null ? "Not taken yet" : `Best score: ${test.bestScore}%`}</span></span>
+    <ChevronRight className="ol-chevron" size={20} aria-hidden="true" />
   </Link>;
+}
+
+function Unit({ unit, number, nextId, from }) {
+  const hasNext = unit.lessons.some((lesson) => lesson._id === nextId);
+  // Phones start with only the unit being worked on open. Wider screens start open.
+  const [open, setOpen] = useState(() => hasNext || window.matchMedia("(min-width: 768px)").matches);
+  const done = unit.lessons.filter((lesson) => lesson.completed).length;
+  const panelId = `unit-${unit._id}`;
+  return <Card className="ol-unit">
+    <h2 className="ol-unit-heading">
+      <button type="button" className="ol-unit-toggle" aria-expanded={open} aria-controls={panelId} onClick={() => setOpen(!open)}>
+        <span className="ol-unit-text"><span className="ol-unit-title">Unit {number} · {unit.title}</span><span className="ol-row-meta">{done} of {unit.lessons.length} done</span></span>
+        <ChevronDown className="ol-unit-chevron" size={20} aria-hidden="true" />
+      </button>
+    </h2>
+    <div id={panelId} className="ol-unit-body" hidden={!open}>
+      <ol className="ol-list">
+        {unit.lessons.map((lesson, index) => {
+          const meta = lessonMeta(lesson);
+          const isNext = lesson._id === nextId;
+          return <li key={lesson._id}>
+            <Link className={`ol-row ${isNext ? "ol-row--next" : ""}`} to={`/lessons/${lesson._id}`} state={{ from }}>
+              <StatusIcon done={lesson.completed} next={isNext} />
+              <span className="ol-row-text"><span className="ol-row-title"><span className="ol-num">{number}.{index + 1}</span> {lesson.title}</span>{meta && <span className="ol-row-meta">{meta}</span>}</span>
+              {lesson.completed && lesson.testCount > 0 && lesson.score != null && <span className="ol-score">{lesson.score}%</span>}
+              <ChevronRight className="ol-chevron" size={20} aria-hidden="true" />
+            </Link>
+          </li>;
+        })}
+      </ol>
+      {unit.tests?.length > 0 && <div className="ol-tests"><h3>Unit tests</h3>{unit.tests.map((test) => <TestRow key={test._id} test={test} from={from} />)}</div>}
+    </div>
+  </Card>;
 }
 
 export default function CourseOutline() {
@@ -31,32 +82,26 @@ export default function CourseOutline() {
   const completed = course.progress?.completedLessons || 0;
   const percent = total ? Math.round((completed / total) * 100) : 0;
   const from = `/courses/${id}`;
-  // The first lesson not yet completed is the one to continue with.
-  const nextLesson = course.units.flatMap((unit) => unit.lessons).find((lesson) => !lesson.completed);
+  // The first lesson not yet completed is the one to continue with. Its number is "unit.lesson".
+  let nextLesson = null;
+  let nextLabel = "";
+  course.units.forEach((unit, u) => unit.lessons.forEach((lesson, l) => {
+    if (!nextLesson && !lesson.completed) { nextLesson = lesson; nextLabel = `${u + 1}.${l + 1}`; }
+  }));
   return <div className="content student-outline">
-    <Link className="back-link" to="/courses">Back to courses</Link>
-    <div className="outline-columns">
-      <aside className="outline-summary sticky-summary">
-        <p>{course.code}</p><h1>{course.title}</h1><p className="muted">{completed} of {total} lessons complete</p><ProgressBar value={percent} label="Course progress" />
-        {nextLesson && <Link className="button button-primary outline-continue" to={`/lessons/${nextLesson._id}`} state={{ from }}>{completed === 0 ? "Start" : "Continue"}: {nextLesson.title}</Link>}
-      </aside>
-      <main className="outline-main">
-        <h2 className="sr-only">Lessons</h2>
-        {course.units.map((unit) => <section className="outline-unit" key={unit._id}>
-          <div className="unit-title-row"><h3>{unit.title}</h3><span className="muted unit-progress">{unit.lessons.filter((lesson) => lesson.completed).length} of {unit.lessons.length} done</span></div>
-          <div className="student-lesson-list">
-            {unit.lessons.map((lesson) => {
-              const isNext = nextLesson && lesson._id === nextLesson._id;
-              return <Link className={`student-lesson-row ${isNext ? "student-lesson-row--next" : ""}`} to={`/lessons/${lesson._id}`} state={{ from }} key={lesson._id}>
-                <span className={`lesson-marker ${lesson.completed ? "is-complete" : ""} ${isNext ? "is-next" : ""}`}>{lesson.completed ? "Completed" : isNext ? "Up next" : "Not started"}</span><span className="student-lesson-title">{lesson.title}</span>
-                <span className="student-chips">{lesson.testCount > 0 && <span className="count-chip">{plural(lesson.testCount, "test")}</span>}{lesson.flashcardCount > 0 && <span className="count-chip">{plural(lesson.flashcardCount, "flashcard")}</span>}{lesson.materialCount > 0 && <span className="count-chip">{plural(lesson.materialCount, "material")}</span>}{lesson.hasVideo && <span className="count-chip">Video</span>}</span>
-                {lesson.completed && lesson.testCount > 0 && lesson.score != null && <strong>{lesson.score}%</strong>}
-              </Link>;
-            })}
-          </div>{unit.tests?.length > 0 && <div className="student-test-group"><h4>Unit tests</h4>{unit.tests.map((test) => <TestRow key={test._id} test={test} from={from} />)}</div>}
-        </section>)}
-        {course.tests?.length > 0 && <section className="student-test-group course-tests"><h3>Course tests</h3>{course.tests.map((test) => <TestRow key={test._id} test={test} from={from} />)}</section>}
-      </main>
+    <Link className="back-link" to="/courses"><ArrowLeft size={16} aria-hidden="true" />Back to courses</Link>
+    <header className="ol-header">
+      <p className="ol-code">{course.code}</p>
+      <h1>{course.title}</h1>
+      <p className="muted">{completed} of {total} lessons complete</p>
+      <Progress value={percent} label="Course progress" />
+      {nextLesson && <div className="button-row button-row--stack">
+        <Button as={Link} variant="primary" to={`/lessons/${nextLesson._id}`} state={{ from }}>{completed === 0 ? "Start" : "Resume"}: Lesson {nextLabel}</Button>
+      </div>}
+    </header>
+    <div className="ol-units">
+      {course.units.map((unit, index) => <Unit key={unit._id} unit={unit} number={index + 1} nextId={nextLesson?._id} from={from} />)}
+      {course.tests?.length > 0 && <Card className="ol-unit"><div className="ol-tests ol-tests--course"><h2>Course tests</h2>{course.tests.map((test) => <TestRow key={test._id} test={test} from={from} />)}</div></Card>}
     </div>
   </div>;
 }
