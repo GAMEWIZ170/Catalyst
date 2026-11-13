@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
+import { Trash2 } from "lucide-react";
 import { api } from "../api/client";
 import AdminLayout from "../components/admin/AdminLayout";
 import StatusMessage from "../components/admin/StatusMessage";
+import { Badge, Button, EmptyState } from "../components/ui";
 import { formatDate } from "../utils/dates";
+import { Loading } from "./Courses";
 
 const TYPE_LABELS = { course: "Course", unit: "Unit", lesson: "Lesson", test: "Test", question: "Question", flashcard: "Flashcard", material: "Material" };
 
@@ -52,17 +55,17 @@ export default function AdminTrash() {
       </div>
     </div>
     <StatusMessage message={error || message} error={Boolean(error)} />
-    {loading && <p>Loading the Trash...</p>}
-    {!loading && !items.length && !error && <div className="empty-state"><h2>The Trash is empty</h2><p className="muted">Anything you delete will appear here.</p></div>}
+    {loading && <Loading />}
+    {!loading && !items.length && !error && <EmptyState icon={Trash2} title="The Trash is empty" description="Anything you delete will appear here." />}
     {!loading && items.length > 0 && <ul className="trash-list">
       {items.map((item) => <li className="trash-row" key={`${item.type}-${item.id}`}>
         <div className="trash-main">
-          <span className="status-badge status-badge--draft">{TYPE_LABELS[item.type]}</span>
+          <Badge>{TYPE_LABELS[item.type]}</Badge>
           <strong>{item.title}</strong>
           <span className="muted">{item.parentTitle ? `In ${TYPE_LABELS[item.parentType].toLowerCase()} "${item.parentTitle}" · ` : ""}Deleted {formatDate(item.deletedAt)}</span>
           {item.blocked && <span className="trash-note">Restore the {TYPE_LABELS[item.parentType].toLowerCase()} first.</span>}
         </div>
-        <button className="button button-secondary" type="button" disabled={item.blocked || busy === String(item.id)} onClick={() => restore(item)}>{busy === String(item.id) ? "Restoring..." : "Restore"}</button>
+        <Button variant="secondary" disabled={item.blocked} loading={busy === String(item.id)} onClick={() => restore(item)}>{busy === String(item.id) ? "Restoring..." : "Restore"}</Button>
       </li>)}
     </ul>}
   </AdminLayout>;

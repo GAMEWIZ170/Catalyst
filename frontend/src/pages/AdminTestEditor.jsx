@@ -2,6 +2,9 @@ import { plural } from "../utils/plural";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/client";
+import AdminLayout from "../components/admin/AdminLayout";
+import { Badge, Button, Radio, RadioGroup, TextArea, TextField } from "../components/ui";
+import { Loading } from "./Courses";
 import RichText from "../components/RichText";
 import FormulaHelp from "../components/admin/FormulaHelp";
 import ImageField from "../components/admin/ImageField";
@@ -184,7 +187,7 @@ export default function AdminTestEditor() {
     } catch (err) { setError(err.message); }
   }
 
-  if (loading) return <div className="admin-layout"><div className="admin-layout-inner"><p>Loading test...</p></div></div>;
+  if (loading) return <AdminLayout nav={false}><Loading /></AdminLayout>;
   if (!test) return <div className="admin-layout"><div className="admin-layout-inner"><StatusMessage message={error || "Test not found"} error /></div></div>;
 
   return <div className="admin-layout"><div className="admin-layout-inner">
@@ -194,34 +197,31 @@ export default function AdminTestEditor() {
       <Switch checked={test.isPublished} onChange={publish} label={test.isPublished ? "Published" : "Publish"} />
     </div>
     {test.scope === "lesson" && <form className="pass-percent" onSubmit={savePassPercent}>
-      <label className="admin-field" htmlFor="pass-percent">Pass percent</label>
       <div className="pass-percent-row">
-        <input id="pass-percent" type="number" inputMode="numeric" min="0" max="100" step="1" placeholder="None" value={passDraft} onChange={(event) => setPassDraft(event.target.value)} aria-describedby="pass-percent-help" />
-        <span aria-hidden="true">%</span>
-        <button className="button button-secondary" type="submit" disabled={String(passDraft) === String(test.passPercent ?? "")}>Save</button>
+        <TextField label="Pass percent" id="pass-percent" type="number" inputMode="numeric" min="0" max="100" step="1" placeholder="None" value={passDraft} onChange={(event) => setPassDraft(event.target.value)} hint="A student needs at least this score to complete the lesson. Leave it empty for no requirement." />
+        <Button variant="secondary" type="submit" disabled={String(passDraft) === String(test.passPercent ?? "")}>Save</Button>
       </div>
-      <p className="muted" id="pass-percent-help">A student needs at least this score to complete the lesson. Leave it empty for no requirement.</p>
     </form>}
     <StatusMessage message={error || message} error={Boolean(error)} />
     {!questions.length && <p className="notice">A test with no questions gives no credit and stays hidden from students until it has at least one.</p>}
     <section className="admin-editor-section">
-      <div className="section-heading"><h2>Questions</h2><button className="button button-primary" type="button" onClick={addQuestion}>Add question</button></div>
+      <div className="section-heading"><h2>Questions</h2><Button variant="primary" type="button" onClick={addQuestion}>Add question</Button></div>
       <div className="question-list">
         {questions.map((item, index) => <div className="question-row" key={idOf(item)}>
-          <button className="question-row-main" type="button" onClick={() => openQuestion(item)}><span>{index + 1}</span><span className="question-preview"><RichText>{item.text}</RichText></span><span className="status-badge status-badge--draft">{item.type === "mcq" ? "Multiple choice" : "True or false"}</span>{(item.image || item.options?.some((option) => option.image)) && <span aria-label="Has image">Image</span>}</button>
-          <div className="row-actions"><MoveButton direction="up" disabled={index === 0} onClick={() => moveQuestion(item, -1)} /><MoveButton direction="down" disabled={index === questions.length - 1} onClick={() => moveQuestion(item, 1)} /><button className="text-button" type="button" onClick={() => setDeleteTarget(item)}>Delete</button></div>
+          <button className="question-row-main" type="button" onClick={() => openQuestion(item)}><span>{index + 1}</span><span className="question-preview"><RichText>{item.text}</RichText></span><Badge>{item.type === "mcq" ? "Multiple choice" : "True or false"}</Badge>{(item.image || item.options?.some((option) => option.image)) && <span aria-label="Has image">Image</span>}</button>
+          <div className="row-actions"><MoveButton direction="up" disabled={index === 0} onClick={() => moveQuestion(item, -1)} /><MoveButton direction="down" disabled={index === questions.length - 1} onClick={() => moveQuestion(item, 1)} /><Button variant="tertiary" type="button" onClick={() => setDeleteTarget(item)}>Delete</Button></div>
         </div>)}
       </div>
     </section>
     {question && <aside className="question-editor admin-editor-section">
-      <div className="section-heading"><h2>{question._id ? "Edit question" : "Add question"}</h2><button className="text-button" type="button" onClick={() => { setQuestion(null); setOriginalQuestion(null); }}>Close</button></div>
-      <fieldset disabled={Boolean(question._id)}><legend>Type</legend><label><input type="radio" checked={question.type === "mcq"} onChange={() => setQuestion({ ...question, type: "mcq", options: blankQuestion().options, correctIndex: 0 })} /> Multiple choice</label><label><input type="radio" checked={question.type === "true_false"} onChange={() => setQuestion({ ...question, type: "true_false", options: [] })} /> True or false</label>{question._id && <p className="muted">A question's type cannot be changed.</p>}</fieldset>
-      <label className="admin-field">Question text<textarea maxLength="1500" rows="5" value={question.text} onChange={(event) => setQuestion({ ...question, text: event.target.value })} /><span className="muted">{question.text.length}/1500</span></label>
+      <div className="section-heading"><h2>{question._id ? "Edit question" : "Add question"}</h2><Button variant="tertiary" type="button" onClick={() => { setQuestion(null); setOriginalQuestion(null); }}>Close</Button></div>
+      <fieldset className="ui-fieldset" disabled={Boolean(question._id)}><RadioGroup legend="Type"><Radio name="question-type" label="Multiple choice" checked={question.type === "mcq"} onChange={() => setQuestion({ ...question, type: "mcq", options: blankQuestion().options, correctIndex: 0 })} /><Radio name="question-type" label="True or false" checked={question.type === "true_false"} onChange={() => setQuestion({ ...question, type: "true_false", options: [] })} /></RadioGroup>{question._id && <p className="muted">A question's type cannot be changed.</p>}</fieldset>
+      <TextArea label="Question text" maxLength="1500" rows="5" value={question.text} onChange={(event) => setQuestion({ ...question, text: event.target.value })} hint={`${question.text.length}/1500`} />
       <FormulaHelp /><div className="preview-box"><RichText>{question.text}</RichText></div>
       <ImageField label="Question image" value={question.image} onChange={(image) => setQuestion({ ...question, image })} />
-      {question.type === "mcq" ? <div className="option-editor"><h3>Options</h3>{question.options.map((option, index) => <div className="option-row" key={index}><label className="admin-field">Option {index + 1}<input maxLength="300" value={option.text || ""} onChange={(event) => updateOption(index, { text: event.target.value })} /></label><label><input type="radio" name="correct-option" checked={question.correctIndex === index} onChange={() => setQuestion({ ...question, correctIndex: index })} /> Correct answer</label><ImageField compact label={`Option ${index + 1} image`} value={option.image} onChange={(image) => updateOption(index, { image })} /><button className="text-button" type="button" disabled={question.options.length <= 2} onClick={() => setQuestion({ ...question, options: question.options.filter((_, optionIndex) => optionIndex !== index), correctIndex: question.correctIndex === index ? 0 : question.correctIndex > index ? question.correctIndex - 1 : question.correctIndex })}>Remove</button></div>)}<button className="button button-secondary" type="button" disabled={question.options.length >= 6} onClick={() => setQuestion({ ...question, options: [...question.options, { text: "", image: null }] })}>Add option</button></div> : <fieldset><legend>Correct answer</legend><label><input type="radio" checked={question.correctAnswer === "true"} onChange={() => setQuestion({ ...question, correctAnswer: "true" })} /> True</label><label><input type="radio" checked={question.correctAnswer === "false"} onChange={() => setQuestion({ ...question, correctAnswer: "false" })} /> False</label></fieldset>}
-      <label className="admin-field">Explanation<textarea maxLength="4000" rows="5" value={question.explanation || ""} onChange={(event) => setQuestion({ ...question, explanation: event.target.value })} /></label><FormulaHelp /><div className="preview-box"><RichText>{question.explanation || ""}</RichText></div><ImageField label="Explanation image" value={question.explanationImage} onChange={(explanationImage) => setQuestion({ ...question, explanationImage })} />
-      <div className="editor-actions"><button className="button button-secondary" type="button" disabled={!dirty} onClick={() => setQuestion(JSON.parse(JSON.stringify(originalQuestion)))}>Discard</button><button className="button button-secondary" type="button" onClick={() => saveQuestion(true)} disabled={Boolean(question._id)}>Save and add another</button><button className="button button-primary" type="button" onClick={() => saveQuestion(false)}>Save</button></div>
+      {question.type === "mcq" ? <div className="option-editor"><h3>Options</h3>{question.options.map((option, index) => <div className="option-row" key={index}><TextField label={`Option ${index + 1}`} maxLength="300" value={option.text || ""} onChange={(event) => updateOption(index, { text: event.target.value })} /><Radio name="correct-option" label="Correct answer" checked={question.correctIndex === index} onChange={() => setQuestion({ ...question, correctIndex: index })} /><ImageField compact label={`Option ${index + 1} image`} value={option.image} onChange={(image) => updateOption(index, { image })} /><Button variant="tertiary" type="button" disabled={question.options.length <= 2} onClick={() => setQuestion({ ...question, options: question.options.filter((_, optionIndex) => optionIndex !== index), correctIndex: question.correctIndex === index ? 0 : question.correctIndex > index ? question.correctIndex - 1 : question.correctIndex })}>Remove</Button></div>)}<Button variant="secondary" type="button" disabled={question.options.length >= 6} onClick={() => setQuestion({ ...question, options: [...question.options, { text: "", image: null }] })}>Add option</Button></div> : <RadioGroup legend="Correct answer"><Radio name="correct-answer" label="True" checked={question.correctAnswer === "true"} onChange={() => setQuestion({ ...question, correctAnswer: "true" })} /><Radio name="correct-answer" label="False" checked={question.correctAnswer === "false"} onChange={() => setQuestion({ ...question, correctAnswer: "false" })} /></RadioGroup>}
+      <TextArea label="Explanation" maxLength="4000" rows="5" value={question.explanation || ""} onChange={(event) => setQuestion({ ...question, explanation: event.target.value })} /><FormulaHelp /><div className="preview-box"><RichText>{question.explanation || ""}</RichText></div><ImageField label="Explanation image" value={question.explanationImage} onChange={(explanationImage) => setQuestion({ ...question, explanationImage })} />
+      <div className="editor-actions"><Button variant="secondary" type="button" disabled={!dirty} onClick={() => setQuestion(JSON.parse(JSON.stringify(originalQuestion)))}>Discard</Button><Button variant="secondary" type="button" onClick={() => saveQuestion(true)} disabled={Boolean(question._id)}>Save and add another</Button><Button variant="primary" type="button" onClick={() => saveQuestion(false)}>Save</Button></div>
     </aside>}
     <ConfirmDialog open={Boolean(deleteTarget)} title="Delete question?" description="This question will be removed from the test. You can restore it later from the Trash." confirmLabel="Delete question" onCancel={() => setDeleteTarget(null)} onConfirm={deleteQuestion} />
     <ConfirmDialog open={blocker.state === "blocked"} title="Leave without saving?" description="Your question changes will be lost." confirmLabel="Leave" cancelLabel="Stay" onCancel={() => blocker.reset()} onConfirm={() => blocker.proceed()} />

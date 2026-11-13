@@ -2,6 +2,9 @@ import { plural } from "../utils/plural";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/client";
+import AdminLayout from "../components/admin/AdminLayout";
+import { Button, Card, TextArea, TextField } from "../components/ui";
+import { ErrorState, Loading } from "./Courses";
 import Breadcrumbs from "../components/admin/Breadcrumbs";
 import ConfirmDialog from "../components/admin/ConfirmDialog";
 import ActionMenu from "../components/admin/ActionMenu";
@@ -171,8 +174,8 @@ export default function AdminCourseEditor() {
     }
   }
 
-  if (loading) return <div className="admin-layout"><div className="admin-layout-inner"><p>Loading course...</p></div></div>;
-  if (error && !course) return <div className="admin-layout"><div className="admin-layout-inner"><div className="error-state"><p>{error}</p><button className="button button-secondary" type="button" onClick={load}>Retry</button></div></div></div>;
+  if (loading) return <AdminLayout nav={false}><Loading /></AdminLayout>;
+  if (error && !course) return <AdminLayout nav={false}><ErrorState message={error} onRetry={load} /></AdminLayout>;
 
   const units = course.units || [];
   const courseTests = course.tests || course.courseTests || [];
@@ -183,10 +186,10 @@ export default function AdminCourseEditor() {
     <section className="admin-editor-section">
       <h2>Course details</h2>
       <form className="admin-details-form" onSubmit={saveDetails}>
-        <label className="admin-field">Code<input required value={details.code} onChange={(event) => setDetails({ ...details, code: event.target.value })} /></label>
-        <label className="admin-field">Title<input required value={details.title} onChange={(event) => setDetails({ ...details, title: event.target.value })} /></label>
-        <label className="admin-field">Description<textarea required maxLength="200" value={details.description} onChange={(event) => setDetails({ ...details, description: event.target.value })} /></label>
-        <div className="editor-actions"><span className="muted">{dirty ? "Unsaved changes" : ""}</span><button className="button button-secondary" type="button" disabled={!dirty} onClick={() => setDetails({ code: course.code, title: course.title, description: course.description })}>Discard changes</button><button className="button button-primary" type="submit" disabled={!dirty || saving}>Save changes</button></div>
+        <TextField label="Code" required value={details.code} onChange={(event) => setDetails({ ...details, code: event.target.value })} />
+        <TextField label="Title" required value={details.title} onChange={(event) => setDetails({ ...details, title: event.target.value })} />
+        <TextArea label="Description" required maxLength="200" value={details.description} onChange={(event) => setDetails({ ...details, description: event.target.value })} />
+        <div className="editor-actions"><span className="muted">{dirty ? "Unsaved changes" : ""}</span><Button variant="secondary" type="button" disabled={!dirty} onClick={() => setDetails({ code: course.code, title: course.title, description: course.description })}>Discard changes</Button><Button variant="primary" type="submit" disabled={!dirty || saving}>Save changes</Button></div>
       </form>
     </section>
     <section className="admin-editor-section">
@@ -206,13 +209,13 @@ export default function AdminCourseEditor() {
               </div>;
             })}
             {unit.tests?.map((test) => <Link className="test-row" key={idOf(test)} to={`/admin/tests/${idOf(test)}`} state={{ trail: [{ label: "Courses", to: "/admin" }, { label: course.code || course.title, to: `/admin/courses/${id}` }, { label: unit.title, to: `/admin/courses/${id}` }, { label: test.title }] }}><span>{test.title}</span><StatusBadge isPublished={test.isPublished} /><span>{test.questionCount || test.questions?.length || 0} questions</span></Link>)}
-            {addLesson === unitId ? <form className="inline-add-form" onSubmit={(event) => createLesson(event, unit)}><input autoFocus required value={newLesson} onChange={(event) => setNewLesson(event.target.value)} aria-label="Lesson title" /><button className="button button-primary" type="submit">Add lesson</button><button className="button button-secondary" type="button" onClick={() => setAddLesson(null)}>Cancel</button></form> : <div className="tree-add-actions"><button className="button button-secondary" type="button" onClick={() => setAddLesson(unitId)}>Add lesson</button><button className="button button-secondary" type="button" onClick={() => createTest("unit", unitId)}>Add unit test</button></div>}
+            {addLesson === unitId ? <form className="inline-add-form" onSubmit={(event) => createLesson(event, unit)}><input autoFocus required value={newLesson} onChange={(event) => setNewLesson(event.target.value)} aria-label="Lesson title" /><Button variant="primary" type="submit">Add lesson</Button><Button variant="secondary" type="button" onClick={() => setAddLesson(null)}>Cancel</Button></form> : <div className="tree-add-actions"><Button variant="secondary" type="button" onClick={() => setAddLesson(unitId)}>Add lesson</Button><Button variant="secondary" type="button" onClick={() => createTest("unit", unitId)}>Add unit test</Button></div>}
           </article>;
         })}
       </div>
-      {addUnit ? <form className="inline-add-form" onSubmit={createUnit}><input autoFocus required value={newUnit} onChange={(event) => setNewUnit(event.target.value)} aria-label="Unit title" /><button className="button button-primary" type="submit">Add unit</button><button className="button button-secondary" type="button" onClick={() => setAddUnit(false)}>Cancel</button></form> : <button className="button button-secondary" type="button" onClick={() => setAddUnit(true)}>Add unit</button>}
+      {addUnit ? <form className="inline-add-form" onSubmit={createUnit}><input autoFocus required value={newUnit} onChange={(event) => setNewUnit(event.target.value)} aria-label="Unit title" /><Button variant="primary" type="submit">Add unit</Button><Button variant="secondary" type="button" onClick={() => setAddUnit(false)}>Cancel</Button></form> : <Button variant="secondary" type="button" onClick={() => setAddUnit(true)}>Add unit</Button>}
     </section>
-    <section className="admin-editor-section"><h2>Course tests</h2>{courseTests.map((test) => <Link className="test-row" key={idOf(test)} to={`/admin/tests/${idOf(test)}`} state={{ trail: [{ label: "Courses", to: "/admin" }, { label: course.code || course.title, to: `/admin/courses/${id}` }, { label: test.title }] }}><span>{test.title}</span><StatusBadge isPublished={test.isPublished} /><span>{test.questionCount || test.questions?.length || 0} questions</span></Link>)}<button className="button button-secondary" type="button" onClick={() => createTest("course", id)}>Add course test</button></section>
+    <section className="admin-editor-section"><h2>Course tests</h2>{courseTests.map((test) => <Link className="test-row" key={idOf(test)} to={`/admin/tests/${idOf(test)}`} state={{ trail: [{ label: "Courses", to: "/admin" }, { label: course.code || course.title, to: `/admin/courses/${id}` }, { label: test.title }] }}><span>{test.title}</span><StatusBadge isPublished={test.isPublished} /><span>{test.questionCount || test.questions?.length || 0} questions</span></Link>)}<Button variant="secondary" type="button" onClick={() => createTest("course", id)}>Add course test</Button></section>
     <ConfirmDialog open={Boolean(confirmTarget)} title={`Delete ${confirmTarget?.type || "item"}?`} description="This content will be removed from the course. You can restore it later from the Trash." confirmLabel="Delete" onConfirm={removeTarget} onCancel={() => setConfirmTarget(null)} />
     <ConfirmDialog open={blocker.state === "blocked"} title="Leave without saving?" description="Your unsaved changes will be lost." cancelLabel="Stay" confirmLabel="Leave" onConfirm={() => blocker.proceed()} onCancel={() => blocker.reset()} />
   </div></div>;

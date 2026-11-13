@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/client";
+import AdminLayout from "../components/admin/AdminLayout";
+import { Button, Dialog, EmptyState, SelectField, Tabs, TextArea, TextField } from "../components/ui";
+import { ErrorState, Loading } from "./Courses";
 import Breadcrumbs from "../components/admin/Breadcrumbs";
 import ConfirmDialog from "../components/admin/ConfirmDialog";
 import StatusBadge from "../components/admin/StatusBadge";
@@ -171,8 +174,8 @@ export default function AdminLessonEditor() {
     setForm({ ...form, videoId: videoIdFrom(value) });
   }
 
-  if (loading) return <div className="admin-layout"><div className="admin-layout-inner"><p>Loading lesson...</p></div></div>;
-  if (error && !lesson) return <div className="admin-layout"><div className="admin-layout-inner"><div className="error-state"><p>{error}</p><button className="button button-secondary" type="button" onClick={load}>Retry</button></div></div></div>;
+  if (loading) return <AdminLayout nav={false}><Loading /></AdminLayout>;
+  if (error && !lesson) return <AdminLayout nav={false}><ErrorState message={error} onRetry={load} /></AdminLayout>;
 
   const tabs = [
     { key: "details", label: "Details" },
@@ -181,32 +184,18 @@ export default function AdminLessonEditor() {
     { key: "materials", label: "Materials" }
   ];
   const list = lesson[tab] || [];
-  return <div className="admin-layout"><div className="admin-layout-inner">
-    <Breadcrumbs items={[{ label: "Courses", to: "/admin" }, { label: context.courseCode || "Course" }, { label: context.unitTitle || "Unit" }, { label: lesson.title }]} />
-    <div className="admin-heading"><h1>{lesson.title}</h1><Switch checked={lesson.isPublished} onChange={publish} disabled={form.explanation === "Explanation coming soon."} label={lesson.isPublished ? "Published" : "Publish"} /></div>
-    <StatusMessage message={error || message} error={Boolean(error)} />
-    <div className="admin-tabs" role="tablist" aria-label="Lesson sections" onKeyDown={(event) => {
-      if (!["ArrowRight", "ArrowLeft", "Home", "End"].includes(event.key)) return;
-      event.preventDefault();
-      const index = tabs.findIndex((item) => item.key === tab);
-      const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : (index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
-      setTab(tabs[nextIndex].key);
-      document.getElementById(`tab-${tabs[nextIndex].key}`)?.focus();
-    }}>
-      {tabs.map((item) => <button key={item.key} id={`tab-${item.key}`} className={tab === item.key ? "active" : ""} type="button" role="tab" aria-selected={tab === item.key} tabIndex={tab === item.key ? 0 : -1} onClick={() => setTab(item.key)}>{item.label}</button>)}
-    </div>
-    {tab === "details" ? <form className="admin-editor-section lesson-details-form" onSubmit={save}>
-      <label className="admin-field">Title<input required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></label>
-      <label className="admin-field">Explanation<textarea required rows="12" value={form.explanation} onChange={(event) => setForm({ ...form, explanation: event.target.value })} /></label>
+  const content = tab === "details" ? <form className="admin-editor-section lesson-details-form" onSubmit={save}>
+      <TextField label="Title" required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
+      <TextArea label="Explanation" required rows="12" value={form.explanation} onChange={(event) => setForm({ ...form, explanation: event.target.value })} />
       <div className="field-heading"><p className="preview-label">Preview</p><FormulaHelp /></div><div className="explanation-preview"><RichText>{form.explanation}</RichText></div>
       <ImageField label="Explanation image" value={form.explanationImage} onChange={(explanationImage) => setForm({ ...form, explanationImage })} />
       {form.explanation === "Explanation coming soon." && <p className="muted">This is still the placeholder explanation. Add real content before publishing.</p>}
-      <label className="admin-field">Video host<select value={form.videoHost} onChange={(event) => setForm({ ...form, videoHost: event.target.value, videoId: event.target.value ? form.videoId : "" })}><option value="">None</option><option value="youtube">YouTube</option></select></label>
-      {form.videoHost === "youtube" && <><label className="admin-field">Video link or ID<input value={form.videoId} onChange={(event) => setVideo(event.target.value)} /></label><p className="muted">Video id: {form.videoId || "none"}</p></>}
-      <div className="editor-actions"><span className="muted">{dirty ? "Unsaved changes" : ""}</span><button className="button button-secondary" type="button" disabled={!dirty} onClick={() => setForm({ title: lesson.title, explanation: lesson.explanation, explanationImage: lesson.explanationImage || null, videoHost: lesson.videoHost || "", videoId: lesson.videoId || "" })}>Discard changes</button><button className="button button-primary" type="submit" disabled={!dirty || (form.explanationImage && !form.explanationImage.alt)}>Save changes</button></div>
+      <SelectField label="Video host" value={form.videoHost} onChange={(event) => setForm({ ...form, videoHost: event.target.value, videoId: event.target.value ? form.videoId : "" })}><option value="">None</option><option value="youtube">YouTube</option></SelectField>
+      {form.videoHost === "youtube" && <><TextField label="Video link or ID" value={form.videoId} onChange={(event) => setVideo(event.target.value)} /><p className="muted">Video id: {form.videoId || "none"}</p></>}
+      <div className="editor-actions"><span className="muted">{dirty ? "Unsaved changes" : ""}</span><Button variant="secondary" type="button" disabled={!dirty} onClick={() => setForm({ title: lesson.title, explanation: lesson.explanation, explanationImage: lesson.explanationImage || null, videoHost: lesson.videoHost || "", videoId: lesson.videoId || "" })}>Discard changes</Button><Button variant="primary" type="submit" disabled={!dirty || (form.explanationImage && !form.explanationImage.alt)}>Save changes</Button></div>
     </form> : <section className="admin-editor-section">
-      <div className="section-heading"><h2>{tabs.find((item) => item.key === tab).label}</h2><button className="button button-primary" type="button" onClick={() => openContent(tab === "tests" ? "test" : tab === "flashcards" ? "flashcard" : "material")}>Add {tab === "tests" ? "test" : tab === "flashcards" ? "flashcard" : "material"}</button></div>
-      {list.length === 0 && <p>No {tab} yet.</p>}
+      <div className="section-heading"><h2>{tabs.find((item) => item.key === tab).label}</h2><Button variant="primary" type="button" onClick={() => openContent(tab === "tests" ? "test" : tab === "flashcards" ? "flashcard" : "material")}>Add {tab === "tests" ? "test" : tab === "flashcards" ? "flashcard" : "material"}</Button></div>
+      {list.length === 0 && <EmptyState title={`No ${tab} yet`} description={`Use the button above to add one.`} />}
       {list.map((item, index) => <div className="lesson-content-row" key={idOf(item)}>
         <button className="text-button content-title" type="button" onClick={() => tab !== "tests" && openContent(tab === "flashcards" ? "flashcard" : "material", item)}>{tab === "flashcards" ? <RichText>{item.front?.text || ""}</RichText> : item.title || "Untitled"}</button>
         {tab === "flashcards" && <span className="content-preview"><RichText>{item.back?.text || ""}</RichText></span>}
@@ -215,16 +204,19 @@ export default function AdminLessonEditor() {
         {tab === "tests" && <Link to={`/admin/tests/${idOf(item)}`} state={{ trail: [{ label: "Courses", to: "/admin" }, { label: context.courseCode || "Course" }, { label: context.unitTitle || "Unit" }, { label: lesson.title, to: `/admin/lessons/${id}` }, { label: item.title }] }}>Open test</Link>}
         <MoveButton direction="up" disabled={index === 0} onClick={() => moveContent(item, tab === "tests" ? "test" : tab === "flashcards" ? "flashcard" : "material", -1)} />
         <MoveButton direction="down" disabled={index === list.length - 1} onClick={() => moveContent(item, tab === "tests" ? "test" : tab === "flashcards" ? "flashcard" : "material", 1)} />
-        <button className="text-button" type="button" onClick={() => removeContent(item, tab === "tests" ? "test" : tab === "flashcards" ? "flashcard" : "material")}>Delete</button>
+        <Button variant="tertiary" type="button" onClick={() => removeContent(item, tab === "tests" ? "test" : tab === "flashcards" ? "flashcard" : "material")}>Delete</Button>
       </div>)}
-    </section>}
-    {dialog && <div className="modal-backdrop" role="presentation"><form className="content-dialog" role="dialog" aria-modal="true" onSubmit={saveContent}>
-      <h2>{dialog.item ? "Edit" : "Add"} {dialog.kind}</h2>
-      {dialog.kind === "test" && <label className="admin-field">Title<input required value={dialogForm.title} onChange={(event) => setDialogForm({ ...dialogForm, title: event.target.value })} /></label>}
-      {dialog.kind === "flashcard" && <><label className="admin-field">Front<textarea maxLength="500" required={!dialogForm.front.image?.url} value={dialogForm.front.text} onChange={(event) => setDialogForm({ ...dialogForm, front: { ...dialogForm.front, text: event.target.value } })} /></label><FormulaHelp /><RichText>{dialogForm.front.text}</RichText><ImageField compact label="Front image" value={dialogForm.front.image} onChange={(image) => setDialogForm({ ...dialogForm, front: { ...dialogForm.front, image } })} /><label className="admin-field">Back<textarea maxLength="500" required={!dialogForm.back.image?.url} value={dialogForm.back.text} onChange={(event) => setDialogForm({ ...dialogForm, back: { ...dialogForm.back, text: event.target.value } })} /></label><RichText>{dialogForm.back.text}</RichText><ImageField compact label="Back image" value={dialogForm.back.image} onChange={(image) => setDialogForm({ ...dialogForm, back: { ...dialogForm.back, image } })} /></>}
-      {dialog.kind === "material" && <><label className="admin-field">Kind<select value={dialogForm.kind} disabled={Boolean(dialog.item)} onChange={(event) => setDialogForm({ ...dialogForm, kind: event.target.value })}><option value="link">Link</option><option value="file">PDF</option></select></label><label className="admin-field">Title<input required value={dialogForm.title} onChange={(event) => setDialogForm({ ...dialogForm, title: event.target.value })} /></label><label className="admin-field">Description<textarea maxLength="300" value={dialogForm.description} onChange={(event) => setDialogForm({ ...dialogForm, description: event.target.value })} /></label>{dialogForm.kind === "link" ? <label className="admin-field">HTTPS address<input required type="url" pattern="https://.*" value={dialogForm.linkUrl} onChange={(event) => setDialogForm({ ...dialogForm, linkUrl: event.target.value })} /><span className="muted">Links must start with https://</span></label> : <label className="admin-field">PDF file<input required={!dialog.item} type="file" accept="application/pdf,.pdf" onChange={(event) => setDialogForm({ ...dialogForm, fileUpload: event.target.files[0] })} /><span className="muted">Choose a PDF of 10 MB or less.</span></label>}<p className="muted">{dialog.item ? "The kind and file cannot be changed." : ""}</p></>}
-      <div className="dialog-actions"><button className="button button-secondary" type="button" onClick={() => setDialog(null)}>Cancel</button><button className="button button-primary" type="submit">Save</button></div>
-    </form></div>}
+    </section>;
+  return <div className="admin-layout"><div className="admin-layout-inner">
+    <Breadcrumbs items={[{ label: "Courses", to: "/admin" }, { label: context.courseCode || "Course" }, { label: context.unitTitle || "Unit" }, { label: lesson.title }]} />
+    <div className="admin-heading"><h1>{lesson.title}</h1><Switch checked={lesson.isPublished} onChange={publish} disabled={form.explanation === "Explanation coming soon."} label={lesson.isPublished ? "Published" : "Publish"} /></div>
+    <StatusMessage message={error || message} error={Boolean(error)} />
+    <Tabs label="Lesson sections" value={tab} onChange={setTab} tabs={tabs.map((item) => ({ id: item.key, label: item.label, panel: content }))} />
+    {dialog && <Dialog open onClose={() => setDialog(null)} title={<>{dialog.item ? "Edit" : "Add"} {dialog.kind}</>} actions={<><Button variant="secondary" onClick={() => setDialog(null)}>Cancel</Button><Button type="submit" form="content-form">Save</Button></>}><form id="content-form" className="form-stack" onSubmit={saveContent}>
+      {dialog.kind === "test" && <TextField label="Title" required value={dialogForm.title} onChange={(event) => setDialogForm({ ...dialogForm, title: event.target.value })} />}
+      {dialog.kind === "flashcard" && <><TextArea label="Front" maxLength="500" required={!dialogForm.front.image?.url} value={dialogForm.front.text} onChange={(event) => setDialogForm({ ...dialogForm, front: { ...dialogForm.front, text: event.target.value } })} /><FormulaHelp /><RichText>{dialogForm.front.text}</RichText><ImageField compact label="Front image" value={dialogForm.front.image} onChange={(image) => setDialogForm({ ...dialogForm, front: { ...dialogForm.front, image } })} /><TextArea label="Back" maxLength="500" required={!dialogForm.back.image?.url} value={dialogForm.back.text} onChange={(event) => setDialogForm({ ...dialogForm, back: { ...dialogForm.back, text: event.target.value } })} /><RichText>{dialogForm.back.text}</RichText><ImageField compact label="Back image" value={dialogForm.back.image} onChange={(image) => setDialogForm({ ...dialogForm, back: { ...dialogForm.back, image } })} /></>}
+      {dialog.kind === "material" && <><SelectField label="Kind" value={dialogForm.kind} disabled={Boolean(dialog.item)} onChange={(event) => setDialogForm({ ...dialogForm, kind: event.target.value })}><option value="link">Link</option><option value="file">PDF</option></SelectField><TextField label="Title" required value={dialogForm.title} onChange={(event) => setDialogForm({ ...dialogForm, title: event.target.value })} /><TextArea label="Description" maxLength="300" value={dialogForm.description} onChange={(event) => setDialogForm({ ...dialogForm, description: event.target.value })} />{dialogForm.kind === "link" ? <TextField label="HTTPS address" required type="url" pattern="https://.*" value={dialogForm.linkUrl} onChange={(event) => setDialogForm({ ...dialogForm, linkUrl: event.target.value })} hint="Links must start with https://" /> : <TextField label="PDF file" required={!dialog.item} type="file" accept="application/pdf,.pdf" onChange={(event) => setDialogForm({ ...dialogForm, fileUpload: event.target.files[0] })} hint="Choose a PDF of 10 MB or less." />}<p className="muted">{dialog.item ? "The kind and file cannot be changed." : ""}</p></>}
+    </form></Dialog>}
     <ConfirmDialog open={blocker.state === "blocked"} title="Leave without saving?" description="Your unsaved changes will be lost." cancelLabel="Stay" confirmLabel="Leave" onConfirm={() => blocker.proceed()} onCancel={() => blocker.reset()} />
   </div></div>;
 }

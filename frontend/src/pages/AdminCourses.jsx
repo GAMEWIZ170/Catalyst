@@ -1,11 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { BookOpen } from "lucide-react";
 import { api } from "../api/client";
 import AdminLayout from "../components/admin/AdminLayout";
 import ActionMenu from "../components/admin/ActionMenu";
 import ConfirmDialog from "../components/admin/ConfirmDialog";
 import StatusMessage from "../components/admin/StatusMessage";
 import Switch from "../components/admin/Switch";
+import { Button, Dialog, EmptyState, TextArea, TextField } from "../components/ui";
+import { ErrorState, Loading } from "./Courses";
 
 const emptyCourse = { code: "", title: "", description: "", isPublished: false };
 
@@ -15,7 +18,7 @@ function getCourses(payload) {
 
 export default function AdminCourses() {
   const navigate = useNavigate();
-  const dialogRef = useRef(null);
+  const [createOpen, setCreateOpen] = useState(false);
   const [courses, setCourses] = useState([]);
   const [form, setForm] = useState(emptyCourse);
   const [loading, setLoading] = useState(true);
@@ -51,11 +54,11 @@ export default function AdminCourses() {
   function openCreate() {
     setForm(emptyCourse);
     setCreateError("");
-    dialogRef.current?.showModal();
+    setCreateOpen(true);
   }
 
   function closeCreate() {
-    dialogRef.current?.close();
+    setCreateOpen(false);
   }
 
   async function createCourse(event) {
@@ -104,7 +107,7 @@ export default function AdminCourses() {
         <h1>Courses</h1>
         <p className="muted">Manage courses and their learning content.</p>
       </div>
-      <button className="button button-primary" type="button" onClick={openCreate}>New course</button>
+      <Button onClick={openCreate}>New course</Button>
     </div>
     {stats && <dl className="admin-stats" aria-label="Overview">
       <div><dt>Students</dt><dd>{stats.students.total}</dd><dd className="muted">{stats.students.joinedLast7Days} joined this week</dd></div>
@@ -113,10 +116,10 @@ export default function AdminCourses() {
       <div><dt>Courses</dt><dd>{stats.courses.published}</dd><dd className="muted">published, {stats.courses.draft} {stats.courses.draft === 1 ? "draft" : "drafts"}</dd></div>
     </dl>}
     <StatusMessage message={message} error={Boolean(error)} />
-    {!loading && !error && courses.length > 4 && <label className="admin-field course-search">Search courses<input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Code or title" /></label>}
-    {error && <div className="error-state"><p>{error}</p><button className="button button-secondary" type="button" onClick={load}>Retry</button></div>}
-    {loading && <p>Loading courses...</p>}
-    {!loading && !error && courses.length === 0 && <div className="empty-state"><h2>No courses yet</h2><button className="button button-primary" type="button" onClick={openCreate}>New course</button></div>}
+    {!loading && !error && courses.length > 4 && <TextField className="course-search" label="Search courses" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Code or title" />}
+    {error && <ErrorState message={error} onRetry={load} />}
+    {loading && <Loading />}
+    {!loading && !error && courses.length === 0 && <EmptyState icon={BookOpen} title="No courses yet" description="Create the first course to start adding units and lessons." action={<Button onClick={openCreate}>New course</Button>} />}
     {!loading && !error && courses.length > 0 && visible.length === 0 && <p className="muted">No course matches "{query}".</p>}
     {!loading && !error && visible.length > 0 && <div className="admin-course-list">
       {visible.map((course) => {
@@ -132,19 +135,17 @@ export default function AdminCourses() {
         </article>;
       })}
     </div>}
-    <dialog ref={dialogRef} className="confirm-dialog create-course-dialog" onCancel={closeCreate}>
-      <form onSubmit={createCourse}>
-        <h2>New course</h2>
+    <Dialog open={createOpen} onClose={closeCreate} title="New course" actions={<>
+      <Button variant="secondary" onClick={closeCreate}>Cancel</Button>
+      <Button type="submit" form="create-course-form" loading={saving}>{saving ? "Creating..." : "Create course"}</Button>
+    </>}>
+      <form id="create-course-form" className="form-stack" onSubmit={createCourse}>
         {createError && <p className="form-error" role="alert">{createError}</p>}
-        <label className="admin-field">Code<input required value={form.code} onChange={(event) => setForm({ ...form, code: event.target.value })} /></label>
-        <label className="admin-field">Title<input required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></label>
-        <label className="admin-field">Short description<textarea required maxLength="200" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /><span className="muted">{form.description.length}/200</span></label>
-        <div className="dialog-actions">
-          <button className="button button-secondary" type="button" onClick={closeCreate}>Cancel</button>
-          <button className="button button-primary" type="submit" disabled={saving}>{saving ? "Creating..." : "Create course"}</button>
-        </div>
+        <TextField label="Code" required value={form.code} onChange={(event) => setForm({ ...form, code: event.target.value })} />
+        <TextField label="Title" required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
+        <TextArea label="Short description" required maxLength="200" hint={`${form.description.length}/200`} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
       </form>
-    </dialog>
+    </Dialog>
     <ConfirmDialog
       open={Boolean(deleteTarget)}
       title="Delete course?"

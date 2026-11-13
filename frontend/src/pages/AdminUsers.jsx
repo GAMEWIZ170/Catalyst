@@ -1,11 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { Users } from "lucide-react";
 import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import ActionMenu from "../components/admin/ActionMenu";
 import AdminLayout from "../components/admin/AdminLayout";
 import ConfirmDialog from "../components/admin/ConfirmDialog";
 import StatusMessage from "../components/admin/StatusMessage";
+import { Badge, Button, Dialog, EmptyState, SelectField, TextField } from "../components/ui";
 import { formatDate } from "../utils/dates";
+import { Loading } from "./Courses";
 
 const ROLE_OPTIONS = [["", "All roles"], ["student", "Students"], ["admin", "Admins"]];
 const STATUS_OPTIONS = [["", "Any status"], ["active", "Active"], ["inactive", "Deactivated"], ["subscribed", "Subscribed"], ["expired", "No access"]];
@@ -18,7 +21,7 @@ function subscriptionText(user) {
 
 export default function AdminUsers() {
   const { user: me } = useAuth();
-  const dateDialog = useRef(null);
+  const [dateOpen, setDateOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState({ q: "", role: "", status: "" });
   const [page, setPage] = useState(1);
@@ -80,11 +83,11 @@ export default function AdminUsers() {
   function openDate(target) {
     setDateTarget(target);
     setEndDate(target.subscriptionEndsAt ? new Date(target.subscriptionEndsAt).toISOString().slice(0, 10) : "");
-    dateDialog.current?.showModal();
+    setDateOpen(true);
   }
 
   function closeDate() {
-    dateDialog.current?.close();
+    setDateOpen(false);
     setDateTarget(null);
   }
 
@@ -120,13 +123,13 @@ export default function AdminUsers() {
     </div>
     {required === false && <p className="notice">Subscriptions are not enforced yet, so every student has access whether or not they have a subscription. Turn on <code>REQUIRE_SUBSCRIPTION</code> in the backend when you are ready.</p>}
     <div className="filter-bar">
-      <label className="admin-field">Search users<input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Name or email" /></label>
-      <label className="admin-field">Role<select value={filters.role} onChange={(event) => changeFilter("role", event.target.value)}>{ROLE_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-      <label className="admin-field">Status<select value={filters.status} onChange={(event) => changeFilter("status", event.target.value)}>{STATUS_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+      <TextField label="Search users" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Name or email" />
+      <SelectField label="Role" value={filters.role} onChange={(event) => changeFilter("role", event.target.value)}>{ROLE_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</SelectField>
+      <SelectField label="Status" value={filters.status} onChange={(event) => changeFilter("status", event.target.value)}>{STATUS_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</SelectField>
     </div>
     <StatusMessage message={error || message} error={Boolean(error)} />
-    {loading && <p>Loading users...</p>}
-    {!loading && !users.length && !error && <div className="empty-state"><h2>{filtered ? "No user matches these filters" : "No users yet"}</h2>{filtered && <button className="button button-secondary" type="button" onClick={() => { setSearch(""); setFilters({ q: "", role: "", status: "" }); setPage(1); }}>Clear filters</button>}</div>}
+    {loading && <Loading />}
+    {!loading && !users.length && !error && <EmptyState icon={Users} title={filtered ? "No user matches these filters" : "No users yet"} action={filtered ? <Button variant="secondary" onClick={() => { setSearch(""); setFilters({ q: "", role: "", status: "" }); setPage(1); }}>Clear filters</Button> : undefined} />}
     {!loading && users.length > 0 && <div className="user-list">
       {users.map((user) => {
         const isMe = me && String(me.id) === String(user._id);
@@ -137,20 +140,20 @@ export default function AdminUsers() {
             {user.role === "student" && <span className="user-subscription">{subscriptionText(user)}</span>}
           </div>
           <div className="user-tags">
-            <span className={`status-badge ${user.role === "admin" ? "status-badge--published" : "status-badge--draft"}`}>{user.role === "admin" ? "Admin" : "Student"}</span>
-            {!user.isActive && <span className="status-badge status-badge--wrong">Deactivated</span>}
+            <Badge tone={user.role === "admin" ? "accent" : "neutral"}>{user.role === "admin" ? "Admin" : "Student"}</Badge>
+            {!user.isActive && <Badge tone="warning">Deactivated</Badge>}
           </div>
           <div className="user-actions">
-            {user.role === "student" && <button className="button button-secondary" type="button" onClick={() => update(user, { extendMonths: 1 }, `Added 1 month for ${user.name}`)}>Add 1 month</button>}
+            {user.role === "student" && <Button variant="secondary" onClick={() => update(user, { extendMonths: 1 }, `Added 1 month for ${user.name}`)}>Add 1 month</Button>}
             {!isMe && <ActionMenu actions={actionsFor(user)} />}
           </div>
         </article>;
       })}
     </div>}
     {pagination && pagination.totalPages > 1 && <nav className="pager" aria-label="Pages">
-      <button className="button button-secondary" type="button" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button>
+      <Button variant="secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</Button>
       <span className="muted">Page {pagination.currentPage} of {pagination.totalPages} ({pagination.totalUsers} users)</span>
-      <button className="button button-secondary" type="button" disabled={page >= pagination.totalPages} onClick={() => setPage(page + 1)}>Next</button>
+      <Button variant="secondary" disabled={page >= pagination.totalPages} onClick={() => setPage(page + 1)}>Next</Button>
     </nav>}
     <ConfirmDialog
       open={Boolean(confirm)}
@@ -161,16 +164,14 @@ export default function AdminUsers() {
       onCancel={() => setConfirm(null)}
       onConfirm={() => { const { target, body, success } = confirm; setConfirm(null); update(target, body, success); }}
     />
-    <dialog ref={dateDialog} className="confirm-dialog" onCancel={closeDate}>
-      <form onSubmit={saveDate}>
-        <h2>Set end date</h2>
-        <p>{dateTarget ? `Choose the last day ${dateTarget.name} has access.` : ""}</p>
-        <label className="admin-field">Access ends on<input type="date" required value={endDate} onChange={(event) => setEndDate(event.target.value)} /></label>
-        <div className="dialog-actions">
-          <button className="button button-secondary" type="button" onClick={closeDate}>Cancel</button>
-          <button className="button button-primary" type="submit">Save date</button>
-        </div>
+    <Dialog open={dateOpen} onClose={closeDate} title="Set end date" actions={<>
+      <Button variant="secondary" onClick={closeDate}>Cancel</Button>
+      <Button type="submit" form="end-date-form">Save date</Button>
+    </>}>
+      <form id="end-date-form" className="form-stack" onSubmit={saveDate}>
+        <p className="muted">{dateTarget ? `Choose the last day ${dateTarget.name} has access.` : ""}</p>
+        <TextField label="Access ends on" type="date" required value={endDate} onChange={(event) => setEndDate(event.target.value)} />
       </form>
-    </dialog>
+    </Dialog>
   </AdminLayout>;
 }

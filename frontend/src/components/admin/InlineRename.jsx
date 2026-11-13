@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Button } from "../ui";
 
 export default function InlineRename({ name, onSave, disabled = false, as: Title = "strong" }) {
   const [editing, setEditing] = useState(false);
@@ -27,12 +28,12 @@ export default function InlineRename({ name, onSave, disabled = false, as: Title
 
   if (!editing) return <span className="inline-rename">
     <Title>{name}</Title>
-    <button className="text-button" type="button" onClick={() => setEditing(true)} disabled={disabled}>Rename</button>
+    <Button variant="tertiary" type="button" onClick={() => setEditing(true)} disabled={disabled}>Rename</Button>
   </span>;
 
   return <span className="inline-rename inline-rename--editing">
     <input ref={inputRef} value={value} onChange={(event) => setValue(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") save(); if (event.key === "Escape") cancel(); }} aria-label={`Rename ${name}`} />
-    <button className="text-button" type="button" onClick={save}>Save</button>
-    <button className="text-button" type="button" onClick={cancel}>Cancel</button>
+    <Button variant="tertiary" type="button" onClick={save}>Save</Button>
+    <Button variant="tertiary" type="button" onClick={cancel}>Cancel</Button>
   </span>;
 }

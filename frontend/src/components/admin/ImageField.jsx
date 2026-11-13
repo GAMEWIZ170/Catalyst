@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Button, TextField } from "../ui";
 import { api } from "../../api/client";
 import { imageUrl } from "../../utils/cloudinary";
 import StatusMessage from "./StatusMessage";
@@ -54,9 +55,9 @@ export default function ImageField({ label, value, onChange, onValidityChange, m
     <legend>{label}</legend>
     {value?.url && <img className="image-field-preview" src={imageUrl(value.url, 400)} alt={value.alt || ""} />}
     <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(event) => event.target.files[0] && upload(event.target.files[0])} />
-    <button className="button button-secondary" type="button" disabled={uploading} onClick={() => inputRef.current?.click()}>{value ? "Replace" : "Choose image"}</button>
-    {value && <button className="button button-secondary" type="button" disabled={uploading} onClick={() => notify(null)}>Remove</button>}
-    {value && <label className="admin-field">Image description<input required maxLength="200" value={description} onChange={(event) => updateDescription(event.target.value)} /><span className="muted">Describe the image for people who cannot see it</span></label>}
+    <Button variant="secondary" type="button" disabled={uploading} onClick={() => inputRef.current?.click()}>{value ? "Replace" : "Choose image"}</Button>
+    {value && <Button variant="secondary" type="button" disabled={uploading} onClick={() => notify(null)}>Remove</Button>}
+    {value && <TextField label="Image description" required maxLength="200" value={description} onChange={(event) => updateDescription(event.target.value)} hint="Describe the image for people who cannot see it" />}
     <StatusMessage message={status || error} error={Boolean(error)} />
   </fieldset>;
 }

@@ -3396,3 +3396,63 @@ textarea {
 .settings-radio-grid {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
 }
+
+/* Phase 4: admin screens share the student components. */
+.form-stack {
+  display: grid;
+  gap: var(--space-4);
+  margin-top: var(--space-3);
+}
+
+.status-message {
+  align-items: center;
+  display: flex;
+  gap: var(--space-2);
+}
+
+.status-message--error {
+  color: var(--error);
+}
+
+.ui-dialog {
+  max-height: calc(100dvh - var(--space-5));
+  overflow-y: auto;
+}
+
+.pass-percent-row {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.pass-percent-row .ui-field {
+  flex: 0 1 28rem;
+}
+
+.pass-percent-row .button {
+  margin-top: var(--space-6);
+}
+
+.filter-bar .ui-field,
+.course-search {
+  max-width: 28rem;
+}
+
+.admin-tabs-wrap .ui-tabpanel {
+  padding-top: var(--space-4);
+}
+
+.image-field .ui-field {
+  margin-top: var(--space-3);
+}
+
+.pass-percent {
+  max-width: 32rem;
+}
+
+.pass-percent-row {
+  flex-wrap: nowrap;
+}
+
+.pass-percent-row .ui-field {
+  flex: 1 1 auto;
+}

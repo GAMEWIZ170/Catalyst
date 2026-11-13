@@ -1,5 +1,5 @@
+import { Badge } from "../ui";
+
 export default function StatusBadge({ isPublished }) {
-  return <span className={`status-badge ${isPublished ? "status-badge--published" : "status-badge--draft"}`}>
-    {isPublished ? "Published" : "Draft"}
-  </span>;
+  return <Badge tone={isPublished ? "success" : "neutral"}>{isPublished ? "Published" : "Draft"}</Badge>;
 }

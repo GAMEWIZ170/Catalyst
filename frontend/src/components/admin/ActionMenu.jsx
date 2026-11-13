@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { MoreHorizontal } from "lucide-react";
 
 export default function ActionMenu({ actions }) {
   const [open, setOpen] = useState(false);
@@ -39,7 +40,7 @@ export default function ActionMenu({ actions }) {
 
   return <div className="action-menu">
     <button ref={buttonRef} className="action-menu-button" type="button" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
-      More actions
+      <MoreHorizontal size={20} aria-hidden="true" /><span className="sr-only">More actions</span>
     </button>
     {open && <div ref={menuRef} className="action-menu-panel" role="menu" onKeyDown={moveFocus}>
       {actions.map((action) => <button key={action.label} role="menuitem" tabIndex="-1" type="button" onClick={() => { setOpen(false); action.onSelect(); }}>{action.label}</button>)}
