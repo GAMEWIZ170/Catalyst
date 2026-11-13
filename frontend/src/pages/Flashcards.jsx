@@ -5,7 +5,7 @@ import DeckSummary from "../components/DeckSummary";
 import RichText from "../components/RichText";
 import { Button, EmptyState } from "../components/ui";
 import { api } from "../api/client";
-import { imageUrl } from "../utils/cloudinary";
+import ResponsiveImage from "../components/ResponsiveImage";
 import { ErrorState, Loading } from "./Courses";
 
 const RATINGS = [["unknown", "Don't know", RotateCcw], ["unsure", "Unsure", CircleHelp], ["confident", "Confident", Check]];
@@ -125,8 +125,8 @@ export default function Flashcards() {
     <article className="fc-card">
       <h1 className="sr-only" tabIndex="-1" ref={headingRef}>Flashcard {position + 1} of {queue.length}</h1>
       <button key={`${card._id}-${position}`} className={`flashcard-flip ${shown ? "is-flipped" : ""}`} type="button" aria-pressed={shown} onClick={() => setShown((value) => !value)}>
-        <span className="flashcard-face flashcard-face--front" aria-hidden={shown}><span className="flashcard-face-label">Question</span><RichText>{card.front.text}</RichText>{card.front.image?.url && <img src={imageUrl(card.front.image.url, 600)} alt={card.front.image.alt} loading="lazy" />}</span>
-        <span className="flashcard-face flashcard-face--back" aria-hidden={!shown}><span className="flashcard-face-label">Answer</span><RichText>{card.back.text}</RichText>{card.back.image?.url && <img src={imageUrl(card.back.image.url, 600)} alt={card.back.image.alt} loading="lazy" />}</span>
+        <span className="flashcard-face flashcard-face--front" aria-hidden={shown}><span className="flashcard-face-label">Question</span><RichText>{card.front.text}</RichText>{card.front.image?.url && <ResponsiveImage image={card.front.image} sizes="(max-width: 600px) 100vw, 600px" loading="lazy" />}</span>
+        <span className="flashcard-face flashcard-face--back" aria-hidden={!shown}><span className="flashcard-face-label">Answer</span><RichText>{card.back.text}</RichText>{card.back.image?.url && <ResponsiveImage image={card.back.image} sizes="(max-width: 600px) 100vw, 600px" loading="lazy" />}</span>
       </button>
       <span className="sr-only" role="status">{shown ? "Answer shown" : ""}</span>
       {!shown

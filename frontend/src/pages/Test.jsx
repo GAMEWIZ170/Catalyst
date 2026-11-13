@@ -6,7 +6,7 @@ import RichText from "../components/RichText";
 import { Button, Card, Illustration } from "../components/ui";
 import useUnsavedChanges from "../hooks/useUnsavedChanges";
 import { api } from "../api/client";
-import { imageUrl } from "../utils/cloudinary";
+import ResponsiveImage from "../components/ResponsiveImage";
 import { ErrorState, Loading } from "./Courses";
 
 const dataOf = (payload) => payload.data || payload;
@@ -189,14 +189,14 @@ export default function Test() {
     <div className="exam-body">
       <h1 className="sr-only">{test.title}</h1>
       <div className="exam-question"><RichText>{question.text}</RichText></div>
-      {question.image?.url && <img className="exam-image" decoding="async" src={imageUrl(question.image.url, 400)} alt={question.image.alt} />}
+      {question.image?.url && <ResponsiveImage className="exam-image" image={question.image} sizes="(max-width: 600px) 100vw, 600px" />}
       {question.type === "mcq"
         ? <fieldset className="exam-options"><legend>Choose an answer. Keys 1 to {question.options.length}.</legend>
           {question.options.map((option, position) => {
             const state = stateOf(option._id, correct?._id === option._id);
             return <button className={optionClass(state)} type="button" aria-pressed={chosen === option._id} disabled={Boolean(feedback)} key={option._id} onClick={() => selectAnswer(option._id)}>
               <span className="exam-key" aria-hidden="true">{position + 1}</span>
-              <span className="exam-option-text"><RichText>{option.text}</RichText>{option.image?.url && <img decoding="async" src={imageUrl(option.image.url, 400)} alt={option.image.alt} />}{srState(state)}</span>
+              <span className="exam-option-text"><RichText>{option.text}</RichText>{option.image?.url && <ResponsiveImage image={option.image} sizes="(max-width: 600px) 80vw, 300px" />}{srState(state)}</span>
               {mark(state)}
             </button>;
           })}
@@ -215,7 +215,7 @@ export default function Test() {
         <h2 tabIndex="-1" ref={feedbackHeading}>{feedback.isCorrect ? <CheckCircle2 size={20} aria-hidden="true" /> : <TriangleAlert size={20} aria-hidden="true" />}{feedback.isCorrect ? "Correct" : "Not quite"}</h2>
         {!feedback.isCorrect && <p><strong>Correct answer:</strong> {typeof correct === "object" ? <RichText>{correct.text}</RichText> : correct === "true" ? "True" : correct === "false" ? "False" : correct}</p>}
         <RichText>{feedback.explanation}</RichText>
-        {feedback.explanationImage?.url && <img decoding="async" src={imageUrl(feedback.explanationImage.url, 800)} alt={feedback.explanationImage.alt} />}
+        {feedback.explanationImage?.url && <ResponsiveImage image={feedback.explanationImage} sizes="(max-width: 600px) 100vw, 600px" />}
       </section>}
       {error && <p className="form-error" role="alert">{error}</p>}
     </div>

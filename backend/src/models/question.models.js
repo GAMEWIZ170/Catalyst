@@ -3,7 +3,9 @@ const mongoose = require("mongoose");
 const imageSchema = new mongoose.Schema({
   url: { type: String, trim: true },
   publicId: { type: String, trim: true },
-  alt: { type: String, trim: true, maxlength: 200 }
+  alt: { type: String, trim: true, maxlength: 200 },
+  width: Number,
+  height: Number
 }, { _id: false });
 
 const optionSchema = new mongoose.Schema({

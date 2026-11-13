@@ -9,7 +9,9 @@ const lessonSchema = new mongoose.Schema({
     explanationImage: {
         url: { type: String, trim: true },
         publicId: { type: String, trim: true },
-        alt: { type: String, trim: true, maxlength: 200 }
+        alt: { type: String, trim: true, maxlength: 200 },
+        width: Number,
+        height: Number
     },
     videoHost: { type: String, default: "", trim: true },
     videoId: { type: String, default: "", trim: true },

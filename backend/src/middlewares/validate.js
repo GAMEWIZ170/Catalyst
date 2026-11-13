@@ -20,7 +20,10 @@ const imageSchema = Joi.object({
     return value;
   }).messages({ "any.invalid": "{{#message}}" }),
   publicId: Joi.string(),
-  alt: Joi.string().trim().min(1).max(200)
+  alt: Joi.string().trim().min(1).max(200),
+  // Size in pixels, kept so the browser can reserve the space before the image arrives. Optional: older images have none.
+  width: Joi.number().integer().min(1).max(20000),
+  height: Joi.number().integer().min(1).max(20000)
 }).with("url", ["publicId", "alt"]).custom((value, helpers) => {
   if (value.url && (!value.publicId || !value.publicId.startsWith("catalyst/"))) {
     return helpers.error("any.invalid", { message: "publicId must start with catalyst/ when a URL is provided" });

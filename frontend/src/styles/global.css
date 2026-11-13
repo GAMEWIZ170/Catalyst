@@ -2590,6 +2590,7 @@ textarea {
 
 .video-play {
   align-items: center;
+  position: relative;
   background: transparent;
   border: 0;
   color: var(--ink);
@@ -2604,7 +2605,24 @@ textarea {
   width: 100%;
 }
 
-.video-play:hover .video-play-mark {
+.video-play:hover .video-still {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  position: absolute;
+  width: 100%;
+}
+
+/* The label sits on a solid chip so it stays readable on any picture. */
+.video-play-label {
+  background: var(--surface);
+  border-radius: var(--radius-control);
+  padding: var(--space-1) var(--space-3);
+  position: relative;
+}
+
+.video-play-mark {
+  position: relative;
   background: var(--accent-hover);
 }
 

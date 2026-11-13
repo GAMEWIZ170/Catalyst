@@ -5,7 +5,9 @@ const sideSchema = new mongoose.Schema({
   image: {
     url: { type: String, trim: true },
     publicId: { type: String, trim: true },
-    alt: { type: String, trim: true, maxlength: 200 }
+    alt: { type: String, trim: true, maxlength: 200 },
+    width: Number,
+    height: Number
   }
 }, { _id: false });
 

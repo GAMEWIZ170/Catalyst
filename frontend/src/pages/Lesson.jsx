@@ -5,7 +5,7 @@ import { api } from "../api/client";
 import DeckSummary from "../components/DeckSummary";
 import RichText from "../components/RichText";
 import { Badge, Button, SelectField, Skeleton, SkeletonGroup } from "../components/ui";
-import { imageUrl } from "../utils/cloudinary";
+import ResponsiveImage from "../components/ResponsiveImage";
 import { recallCourse } from "../utils/courseCache";
 import { ErrorState } from "./Courses";
 
@@ -28,15 +28,18 @@ function LessonSkeleton() {
   </div>;
 }
 
-// The video loads only after a tap, so the page opens fast and sends nothing to YouTube until asked.
+// A still picture and a play button. The player (about 500 KB of YouTube code) loads only after a tap.
+// The still is a small 320 by 180 image from YouTube; if it cannot load, the button still works.
 function LessonVideo({ title, videoId }) {
   const [playing, setPlaying] = useState(false);
+  const [stillFailed, setStillFailed] = useState(false);
   return <div className="video-frame">
     {playing
       ? <iframe title={`${title} video`} src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?autoplay=1`} allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
       : <button type="button" className="video-play" onClick={() => setPlaying(true)}>
+        {!stillFailed && <img className="video-still" src={`https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/mqdefault.jpg`} alt="" width="320" height="180" loading="lazy" decoding="async" onError={() => setStillFailed(true)} />}
         <span className="video-play-mark"><Play size={20} aria-hidden="true" /></span>
-        <span>Play video</span>
+        <span className="video-play-label">Play video</span>
       </button>}
   </div>;
 }
@@ -140,7 +143,7 @@ export default function Lesson() {
           </p>}
           <div className="lesson-explanation"><RichText>{lesson.explanation}</RichText></div>
           {lesson.explanationImage?.url && <figure className="lesson-figure">
-            <img src={imageUrl(lesson.explanationImage.url, 800)} alt={lesson.explanationImage.alt} loading="lazy" />
+            <ResponsiveImage image={lesson.explanationImage} loading="lazy" />
             {lesson.explanationImage.alt && <figcaption>{lesson.explanationImage.alt}</figcaption>}
           </figure>}
           {lesson.videoHost === "youtube" && lesson.videoId && <LessonVideo title={lesson.title} videoId={lesson.videoId} />}
