@@ -8,23 +8,29 @@ import Register from "./pages/Register";
 import Courses from "./pages/Courses";
 import CourseOutline from "./pages/CourseOutline";
 import Lesson from "./pages/Lesson";
-import Test from "./pages/Test";
-import Flashcards from "./pages/Flashcards";
-import Progress from "./pages/Progress";
-import AdminCourses from "./pages/AdminCourses";
-import AdminCourseEditor from "./pages/AdminCourseEditor";
-import AdminTestEditor from "./pages/AdminTestEditor";
-import AdminLessonEditor from "./pages/AdminLessonEditor";
-import AdminUsers from "./pages/AdminUsers";
-import AdminTrash from "./pages/AdminTrash";
-import Settings from "./pages/Settings";
+const Test = lazy(() => import("./pages/Test"));
+const Flashcards = lazy(() => import("./pages/Flashcards"));
+const Progress = lazy(() => import("./pages/Progress"));
+const AdminCourses = lazy(() => import("./pages/AdminCourses"));
+const AdminCourseEditor = lazy(() => import("./pages/AdminCourseEditor"));
+const AdminTestEditor = lazy(() => import("./pages/AdminTestEditor"));
+const AdminLessonEditor = lazy(() => import("./pages/AdminLessonEditor"));
+const AdminUsers = lazy(() => import("./pages/AdminUsers"));
+const AdminTrash = lazy(() => import("./pages/AdminTrash"));
+const Settings = lazy(() => import("./pages/Settings"));
 import AdminLayout from "./components/admin/AdminLayout";
+import { Skeleton, SkeletonGroup } from "./components/ui";
 
 // Component gallery. Exists only in the dev server, never in the production build.
 const DevComponents = import.meta.env.DEV ? lazy(() => import("./pages/DevComponents")) : null;
 
+// Shell stays on screen while a page chunk downloads.
+function PageFallback() {
+  return <SkeletonGroup label="Loading page"><Skeleton variant="title" /><Skeleton variant="block" /></SkeletonGroup>;
+}
+
 function ProtectedPage({ children }) {
-  return <ProtectedRoute><AppShell>{children}</AppShell></ProtectedRoute>;
+  return <ProtectedRoute><AppShell><Suspense fallback={<PageFallback />}>{children}</Suspense></AppShell></ProtectedRoute>;
 }
 
 function AdminPage({ children }) {
@@ -32,7 +38,7 @@ function AdminPage({ children }) {
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
   if (user.role !== "admin") return <AppShell><AdminLayout nav={false}><div className="access-denied"><h1>You do not have access to this page</h1><p>Only administrators can manage Catalyst content.</p><Link className="button button-primary" to="/courses">Back to courses</Link></div></AdminLayout></AppShell>;
-  return <AppShell>{children}</AppShell>;
+  return <AppShell><Suspense fallback={<PageFallback />}>{children}</Suspense></AppShell>;
 }
 
 export default function App() {
