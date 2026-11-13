@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import ThemeToggle from "../components/ThemeToggle";
-import { Button, TextField } from "../components/ui";
+import { Button, Illustration, TextField } from "../components/ui";
 
 export default function Login() {
   const { login } = useAuth();
@@ -48,8 +48,11 @@ export function AuthLayout({ title, subtitle, children }) {
     <ThemeToggle />
     <div className="auth-brand"><span className="brand-mark">C</span><span>Catalyst</span></div>
     <p className="auth-value">Structured revision for UG students</p>
-    <section className="auth-card">
-      <h1>{title}</h1><p className="auth-subtitle">{subtitle}</p>{children}
-    </section>
+    <div className="auth-stage">
+      <section className="auth-card">
+        <h1>{title}</h1><p className="auth-subtitle">{subtitle}</p>{children}
+      </section>
+      <Illustration name="study" className="auth-illustration" />
+    </div>
   </div>;
 }

@@ -8,3 +8,4 @@ export { default as Dialog } from "./Dialog";
 export { default as EmptyState } from "./EmptyState";
 export { Skeleton, SkeletonGroup } from "./Skeleton";
 export { ToastProvider, useToast } from "./Toast";
+export { default as Illustration } from "./Illustration";

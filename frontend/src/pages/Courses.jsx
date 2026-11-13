@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, ACCESS_ENDED } from "../api/client";
 import { useAuth } from "../context/AuthContext";
-import { BookOpen, Zap } from "lucide-react";
-import { Badge, Button, Card, EmptyState, Progress } from "../components/ui";
+import { Zap } from "lucide-react";
+import { Badge, Button, Card, EmptyState, Illustration, Progress, Skeleton, SkeletonGroup } from "../components/ui";
 
 const welcomeKey = "catalyst-welcome-seen";
 const welcomeSeen = () => { try { return window.localStorage.getItem(welcomeKey) === "1"; } catch { return false; } };
@@ -84,7 +84,7 @@ export default function Courses() {
       <Progress value={percent(resume.tree)} label={`${resume.course.code} progress`} showLabel />
       <div className="button-row button-row--stack"><Button as={Link} variant="primary" to={`/lessons/${next.lesson._id}`} state={{ from: `/courses/${resume.course._id}` }}>Resume: Lesson {next.label}</Button></div>
     </Card>}
-    {!loading && !error && !courses.length && <EmptyState icon={BookOpen} title="No courses yet" description="Check back soon." />}
+    {!loading && !error && !courses.length && <EmptyState illustration={<Illustration name="empty" />} title="No courses yet" description="Check back soon." />}
     {!loading && !error && courses.length > 0 && <section aria-labelledby="courses-title">
       <h2 id="courses-title">Your courses</h2>
       <div className="home-courses">
@@ -100,7 +100,18 @@ export default function Courses() {
   </div>;
 }
 
-export function Loading() { return <div className="screen-center inline"><span className="spinner" /><span>Loading...</span></div>; }
+// Placeholder shapes in the page's own column, so the layout does not jump when content arrives.
+export function Loading() {
+  return <div className="content">
+    <SkeletonGroup label="Loading">
+      <Skeleton variant="title" />
+      <Skeleton />
+      <Skeleton width="70%" />
+      <Skeleton variant="block" />
+      <Skeleton variant="block" />
+    </SkeletonGroup>
+  </div>;
+}
 export function ErrorState({ message, onRetry }) {
   // A student whose subscription has ended gets a clear explanation instead of a retry button.
   if (String(message).startsWith(ACCESS_ENDED)) {

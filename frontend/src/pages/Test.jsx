@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Check, CheckCircle2, TriangleAlert, X } from "lucide-react";
 import ConfirmDialog from "../components/admin/ConfirmDialog";
 import RichText from "../components/RichText";
-import { Button, Card } from "../components/ui";
+import { Button, Card, Illustration } from "../components/ui";
 import useUnsavedChanges from "../hooks/useUnsavedChanges";
 import { api } from "../api/client";
 import { imageUrl } from "../utils/cloudinary";
@@ -139,6 +139,7 @@ export default function Test() {
     return <div className="exam exam--page">
       <section className="exam-results" aria-labelledby="score-heading">
         <h1 className="sr-only">{test.title}: results</h1>
+        <Illustration name="done" className="results-illustration" />
         <p className="exam-score" id="score-heading"><span className="sr-only">Your score: </span>{result.score}%</p>
         <p className="exam-correct">{result.correct} of {result.total} correct. {scoreMessage(result.score)}</p>
         <p className="muted">Best score {result.bestScore}% · Attempts {result.attempts}</p>

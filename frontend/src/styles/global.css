@@ -3456,3 +3456,50 @@ textarea {
 .pass-percent-row .ui-field {
   flex: 1 1 auto;
 }
+
+/* Phase 5: illustrations and small motion. */
+.illustration {
+  color: var(--ink);
+  display: block;
+  height: auto;
+}
+
+.auth-stage {
+  align-items: center;
+  display: flex;
+  gap: var(--space-7);
+  justify-content: center;
+  width: 100%;
+}
+
+.auth-illustration {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .auth-illustration {
+    display: block;
+    flex: 0 0 18rem;
+    width: 18rem;
+  }
+}
+
+.results-illustration {
+  margin: 0 auto var(--space-4);
+  width: 8rem;
+}
+
+.ui-empty .illustration {
+  margin: 0 auto var(--space-3);
+  width: 8rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .button:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  .button {
+    transition: background-color 120ms ease, transform 80ms ease;
+  }
+}
