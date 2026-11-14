@@ -74,7 +74,6 @@ export default function Courses() {
       <p className="muted home-goal-text">{goal.kind === "minutes" ? `Today: ${goal.done} of ${goal.target} minutes` : `Today: ${goal.done} of 1 lesson`}{goal.met ? ". Goal met." : ""}</p>
     </div>}
     {isStudent && user.hasAccess === false && <p className="notice" role="status">Your access has ended. You can still look around, but lessons, tests and flashcards are locked until your subscription is renewed.</p>}
-    {isStudent && showWelcome && <Welcome onDone={dismissWelcome} />}
     {loading && <Loading />}
     {error && <ErrorState message={error} onRetry={load} />}
     {!loading && !error && resume && next && <Card className="home-continue" aria-labelledby="continue-title">
@@ -83,6 +82,7 @@ export default function Courses() {
       <Progress value={percent(resume)} label={`${resume.code} progress`} showLabel />
       <div className="button-row button-row--stack"><Button as={Link} variant="primary" to={nextHref} state={nextState} {...nearToPrefetch(() => prefetchLesson(next.lessonId))}>{midDeck ? "Resume flashcards" : `Resume: Lesson ${next.label}`}</Button></div>
     </Card>}
+    {isStudent && showWelcome && <Welcome onDone={dismissWelcome} />}
     {!loading && !error && !courses.length && <EmptyState illustration={<Illustration name="empty" />} title="No courses yet" description="Check back soon." />}
     {!loading && !error && courses.length > 0 && <section aria-labelledby="courses-title">
       <h2 id="courses-title">Your courses</h2>
