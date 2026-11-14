@@ -36,16 +36,20 @@ const sendVerifyEmail = async (user) => {
   });
 };
 
-const sendTokenResponse =(user, statusCode, res) => {
+const setAuthCookie = (user, res) => {
   const token = jwt.sign(
     { id: user._id, role: user.role },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN }
   );
+  res.cookie("token", token, { ...cookieOptions, maxAge: ms(process.env.JWT_EXPIRES_IN) });
+};
+
+const sendTokenResponse = (user, statusCode, res) => {
+  setAuthCookie(user, res);
 
   res
     .status(statusCode)
-    .cookie("token", token, { ...cookieOptions, maxAge: ms(process.env.JWT_EXPIRES_IN) })
     .json({
       message: statusCode === 201 ? "Account created successfully" : "Logged in successfully",
       data: {
@@ -224,9 +228,35 @@ const resetPassword = async (req, res, next) => {
     if (!userId) return res.status(400).json({ message: "This reset link is invalid or has expired. Ask for a new one." });
     const hashed = await hashPassword(req.body.password);
     if (!hashed) return res.status(500).json({ message: "Error hashing password" });
-    await User.updateOne({ _id: userId }, { $set: { password: hashed } });
+    await User.updateOne({ _id: userId }, { $set: { password: hashed, passwordChangedAt: new Date() } });
     authCache.forget(userId);
     return res.status(200).json({ message: "Password changed. You can log in now." });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// The student must give the current password again, so a borrowed phone cannot change it.
+const changePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const user = await User.findById(req.user.id).select("+password");
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!(await bcrypt.compare(currentPassword, user.password))) {
+      return res.status(401).json({ message: "Your current password is not correct" });
+    }
+    if (currentPassword === newPassword) {
+      return res.status(400).json({ message: "Choose a password different from the current one" });
+    }
+    const hashed = await hashPassword(newPassword);
+    if (!hashed) return res.status(500).json({ message: "Error hashing password" });
+    user.password = hashed;
+    user.passwordChangedAt = new Date();
+    await user.save();
+    authCache.forget(user._id);
+    // Other devices are logged out. This one gets a fresh cookie so the student stays in.
+    setAuthCookie(user, res);
+    return res.status(200).json({ message: "Password changed. Other devices were logged out." });
   } catch (error) {
     next(error);
   }
@@ -256,6 +286,9 @@ const resendVerification = async (req, res, next) => {
 };
 
 module.exports = {
+  cookieOptions,
+  setAuthCookie,
+  changePassword,
   forgotPassword,
   resetPassword,
   verifyEmail,

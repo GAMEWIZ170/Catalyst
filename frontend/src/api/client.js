@@ -36,6 +36,9 @@ export const api = {
   resetPassword: (body) => request("/auth/reset-password", { method: "POST", body: JSON.stringify(body) }),
   verifyEmail: (body) => request("/auth/verify-email", { method: "POST", body: JSON.stringify(body) }),
   resendVerification: () => request("/auth/resend-verification", { method: "POST" }),
+  changePassword: (body) => request("/auth/me/password", { method: "PUT", body: JSON.stringify(body) }),
+  exportMyData: () => request("/auth/me/export"),
+  deleteAccount: (body) => request("/auth/me", { method: "DELETE", body: JSON.stringify(body) }),
   logout: () => request("/auth/logout", { method: "POST" }),
   getCourses: () => request("/courses"),
   // Student reads below are cached for a minute (see cache.js).

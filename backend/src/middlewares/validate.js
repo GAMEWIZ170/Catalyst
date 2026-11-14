@@ -99,6 +99,14 @@ const tokenField = Joi.string().hex().length(64).required();
 const validateForgotPassword = validateWith(Joi.object({ email: Joi.string().trim().lowercase().email().required() }));
 const validateResetPassword = validateWith(Joi.object({ token: tokenField, password: Joi.string().min(8).max(72).required() }));
 const validateVerifyEmail = validateWith(Joi.object({ token: tokenField }));
+const validateChangePassword = validateWith(Joi.object({
+  currentPassword: Joi.string().max(72).required(),
+  newPassword: Joi.string().min(8).max(72).required()
+}));
+const validateDeleteAccount = validateWith(Joi.object({
+  password: Joi.string().max(72).required(),
+  confirm: Joi.string().valid("DELETE").required().messages({ "any.only": "Type DELETE to confirm" })
+}));
 const validateAvatar = validateWith(Joi.object({ avatar: Joi.alternatives().try(Joi.string().valid(...avatarKeys), Joi.valid(null)).required() }));
 
 const courseFields = {
@@ -375,6 +383,8 @@ module.exports = {
   validateForgotPassword,
   validateResetPassword,
   validateVerifyEmail,
+  validateChangePassword,
+  validateDeleteAccount,
   validateAvatar,
   validatePosition,
   validatePreferences,

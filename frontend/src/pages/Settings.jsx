@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { syncThemeColor } from "../utils/themeColor";
 import { GOALS, goalKeyOf } from "../utils/goals";
 import { Button, TextField } from "../components/ui";
+import AccountSection from "../components/AccountSection";
 import Avatar, { AVATAR_KEYS, AVATAR_LABELS } from "../components/Avatar";
 
 const palettes = [
@@ -163,5 +164,6 @@ export default function Settings() {
       </div>
       <p className="settings-status" aria-live="polite">{status}</p>
     </section>
+    <AccountSection />
   </div>;
 }

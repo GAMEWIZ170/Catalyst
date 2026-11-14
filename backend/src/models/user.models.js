@@ -55,6 +55,16 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    // Set when the password changes. Sessions that started before it stop working.
+    passwordChangedAt: {
+        type: Date,
+        default: null
+    },
+    // Set when the student deletes the account. The row stays, with the personal data removed.
+    deletedAt: {
+        type: Date,
+        default: null
+    },
     examDate: {
         type: Date,
         default: null
