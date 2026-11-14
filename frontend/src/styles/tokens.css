@@ -52,6 +52,15 @@
   --radius-panel: 12px;
   --radius-pill: 999px;
 
+  /* Motion: strong custom curves (built-in ease is too weak). Entering things use ease-out, on-screen movement ease-in-out. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --dur-press: 120ms;
+  --dur-hover: 150ms;
+  --dur-pop: 180ms;
+  --dur-modal: 220ms;
+  --dur-page: 200ms;
+
   /* Elevation: an object gets a border or a shadow, never both. */
   --shadow-sm: 0 1px 2px rgb(31 27 22 / 8%);
   --shadow-md: 0 8px 24px rgb(31 27 22 / 8%);
