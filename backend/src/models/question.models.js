@@ -57,6 +57,10 @@ const questionSchema = new mongoose.Schema({
   equation: { type: equationSchema, default: null },
   explanation: { type: String, default: "", trim: true, maxlength: 4000 },
   explanationImage: { type: imageSchema, default: null },
+  // Optional tags for practising by topic.
+  topic: { type: String, default: "", trim: true, maxlength: 60 },
+  source: { type: String, default: "", trim: true, maxlength: 60 },
+  year: { type: Number, min: 1900, max: 2100, default: null },
   // Shown on request before answering.
   hint: { type: String, default: "", trim: true, maxlength: 500 },
   // Numbered steps, shown only after the student answers.
@@ -66,6 +70,7 @@ const questionSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 questionSchema.index({ test: 1, order: 1 });
+questionSchema.index({ topic: 1 });
 
 const validateImage = (image, path, invalidate) => {
   if (!image) return;

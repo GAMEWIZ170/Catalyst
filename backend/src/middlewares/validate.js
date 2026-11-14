@@ -203,6 +203,9 @@ const questionFields = {
   }),
   explanation: Joi.string().trim().allow("").max(4000),
   explanationImage: optionalImage,
+  topic: Joi.string().trim().allow("").max(60),
+  source: Joi.string().trim().allow("").max(60),
+  year: Joi.number().integer().min(1900).max(2100).allow(null),
   hint: Joi.string().trim().allow("").max(500),
   workedSolution: Joi.array().items(Joi.string().trim().min(1).max(1000)).max(12),
   order: Joi.number().integer().min(1)
@@ -242,6 +245,9 @@ const validateQuestionUpdate = validateWith(Joi.object({
   equation: questionFields.equation,
   explanation: questionFields.explanation,
   explanationImage: questionFields.explanationImage,
+  topic: questionFields.topic,
+  source: questionFields.source,
+  year: questionFields.year,
   hint: questionFields.hint,
   workedSolution: questionFields.workedSolution,
   order: questionFields.order

@@ -188,6 +188,8 @@ Example outline lesson:
 | GET | `/mistakes` | Student | Open mistakes as counts by course and unit (`{ total, data }`), no questions or answers |
 | GET | `/review/due` | Student | `{ data: { cards, mistakes } }`: flashcards and mistakes due now |
 | GET | `/review/session` | Student | Up to 20 due flashcards (`_id`, `front`, `back`, `lessonId`), soonest due first. Rate each with `POST /flashcards/:id/rate` |
+| GET | `/topics` | Student | `{ data: { topics, sources, years } }`, each a list of `{ value, count }` for tagged questions the student may see |
+| GET | `/topics/practice` | Student | Up to 20 answer-free questions across lessons, random order. Query `topic`, `source`, `year` (at least one; a bad year or no filter returns 400) |
 | GET | `/mistakes/practice` | Student | Up to 20 answer-free questions to practise, most-missed first. Optional `course` and `unit` query ids (invalid id returns 400) |
 | POST | `/admin/tests` | Admin | Create a lesson-, unit- or course-scope test |
 | GET | `/admin/tests/:id` | Admin | Full test and questions |
@@ -379,6 +381,10 @@ Deleted items are listed at `GET /admin/trash` and put back with `POST /admin/tr
 The shuffle for matching and ordering is seeded by the question id, so the server rebuilds the order the student saw. Every type is graded by `utils/grading.js`, for both `POST /questions/:id/answer` and `POST /tests/:id/submit`. After answering, `correctAnswer` has the right answer in a shape that fits the type.
 
 Student serializers omit correct answers. Scores are calculated on the server. An empty test cannot be submitted for credit. Unit tests and course tests record a result but never complete a lesson. Mark as done returns `409` for any lesson with a test that has questions or a published flashcard.
+
+### Question tags
+
+Questions can carry optional `topic` and `source` (up to 60 characters each) and `year` (1900 to 2100, or `null`). They only matter for `GET /topics` and `GET /topics/practice`, which leave out questions whose test is unpublished or deleted.
 
 ### Mastery per lesson
 

@@ -31,6 +31,9 @@ function blankQuestion(type = "mcq", order = 1) {
     explanationImage: null,
     hint: "",
     workedSolution: [],
+    topic: "",
+    source: "",
+    year: "",
     options: type === "mcq" ? [{ text: "", image: null }, { text: "", image: null }] : [],
     correctIndex: 0,
     correctAnswer: "true",
@@ -146,6 +149,9 @@ export default function AdminTestEditor() {
         image: question.image,
         explanation: question.explanation,
         explanationImage: question.explanationImage,
+        topic: question.topic || "",
+        source: question.source || "",
+        year: question.year === "" || question.year == null ? null : Number(question.year),
         hint: question.hint || "",
         workedSolution: (question.workedSolution || []).map((step) => step.trim()).filter(Boolean),
         order: question.order
@@ -230,6 +236,7 @@ export default function AdminTestEditor() {
       <ImageField label="Question image" value={question.image} onChange={(image) => setQuestion({ ...question, image })} />
       {!["mcq", "true_false"].includes(question.type) ? <QuestionTypeFields question={question} setQuestion={setQuestion} /> : question.type === "mcq" ? <div className="option-editor"><h3>Options</h3>{question.options.map((option, index) => <div className="option-row" key={index}><TextField label={`Option ${index + 1}`} maxLength="300" value={option.text || ""} onChange={(event) => updateOption(index, { text: event.target.value })} /><Radio name="correct-option" label="Correct answer" checked={question.correctIndex === index} onChange={() => setQuestion({ ...question, correctIndex: index })} /><ImageField compact label={`Option ${index + 1} image`} value={option.image} onChange={(image) => updateOption(index, { image })} /><Button variant="tertiary" type="button" disabled={question.options.length <= 2} onClick={() => setQuestion({ ...question, options: question.options.filter((_, optionIndex) => optionIndex !== index), correctIndex: question.correctIndex === index ? 0 : question.correctIndex > index ? question.correctIndex - 1 : question.correctIndex })}>Remove</Button></div>)}<Button variant="secondary" type="button" disabled={question.options.length >= 6} onClick={() => setQuestion({ ...question, options: [...question.options, { text: "", image: null }] })}>Add option</Button></div> : <RadioGroup legend="Correct answer"><Radio name="correct-answer" label="True" checked={question.correctAnswer === "true"} onChange={() => setQuestion({ ...question, correctAnswer: "true" })} /><Radio name="correct-answer" label="False" checked={question.correctAnswer === "false"} onChange={() => setQuestion({ ...question, correctAnswer: "false" })} /></RadioGroup>}
       <TextArea label="Explanation" maxLength="4000" rows="5" value={question.explanation || ""} onChange={(event) => setQuestion({ ...question, explanation: event.target.value })} /><FormulaHelp /><div className="preview-box"><RichText>{question.explanation || ""}</RichText></div><ImageField label="Explanation image" value={question.explanationImage} onChange={(explanationImage) => setQuestion({ ...question, explanationImage })} />
+      <div className="option-row"><TextField label="Topic (optional)" maxLength="60" value={question.topic || ""} onChange={(event) => setQuestion({ ...question, topic: event.target.value })} hint="Students can practise a topic across lessons." /><TextField label="Source (optional)" maxLength="60" value={question.source || ""} onChange={(event) => setQuestion({ ...question, source: event.target.value })} hint="For example a past paper." /><TextField label="Year (optional)" inputMode="numeric" maxLength="4" value={question.year ?? ""} onChange={(event) => setQuestion({ ...question, year: event.target.value })} /></div>
       <TextArea label="Hint (optional)" maxLength="500" rows="2" value={question.hint || ""} onChange={(event) => setQuestion({ ...question, hint: event.target.value })} hint="Students can open it before they answer. Do not give the answer away." /><div className="preview-box"><RichText>{question.hint || ""}</RichText></div>
       <TextArea label="Worked solution (optional)" rows="6" value={(question.workedSolution || []).join("\n")} onChange={(event) => setQuestion({ ...question, workedSolution: event.target.value.split("\n") })} hint="One step per line, up to 12. Students see it as numbered steps after they answer." /><div className="preview-box"><WorkedSolution steps={question.workedSolution} /></div>
       <div className="editor-actions"><Button variant="secondary" type="button" disabled={!dirty} onClick={() => setQuestion(JSON.parse(JSON.stringify(originalQuestion)))}>Discard</Button><Button variant="secondary" type="button" onClick={() => saveQuestion(true)} disabled={Boolean(question._id)}>Save and add another</Button><Button variant="primary" type="button" onClick={() => saveQuestion(false)}>Save</Button></div>

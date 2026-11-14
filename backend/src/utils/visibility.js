@@ -104,6 +104,7 @@ module.exports = {
   unitIsVisible,
   lessonIsVisible,
   testIsVisible,
+  testPopulate,
   findVisibleLesson,
   findVisibleTest,
   findTestQuestionCounts,

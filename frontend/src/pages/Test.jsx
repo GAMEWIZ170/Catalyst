@@ -35,7 +35,9 @@ export default function Test() {
   // /practice/mistakes has no test behind it: the questions come from the student's mistakes queue.
   const isMistakes = location.pathname === "/practice/mistakes";
   const [subset, setSubset] = useState(false); // "Practise the ones I missed" inside a normal test
-  const practice = isMistakes || subset; // practice runs are graded per question but never submitted
+  // /practice/topic is the same: questions pulled from many lessons by topic, source or year.
+  const isTopic = location.pathname === "/practice/topic";
+  const practice = isMistakes || isTopic || subset; // practice runs are graded per question but never submitted
   const [test, setTest] = useState(null);
   const [phase, setPhase] = useState("intro");
   const [index, setIndex] = useState(0);
@@ -53,7 +55,7 @@ export default function Test() {
   const missedRef = useRef(null);
   const backTo = location.state?.from || "/courses";
   const backState = location.state?.courseFrom ? { from: location.state.courseFrom } : undefined;
-  const backLabel = isMistakes ? "Back" : `Back to ${backTo.startsWith("/lessons/") ? "lesson" : "course"}`;
+  const backLabel = isMistakes || isTopic ? "Back" : `Back to ${backTo.startsWith("/lessons/") ? "lesson" : "course"}`;
   const dirty = phase === "question" && answers.length > 0;
   const blocker = useUnsavedChanges(dirty);
 
@@ -66,10 +68,12 @@ export default function Test() {
         if (searchParams.get("unit")) query.unit = searchParams.get("unit");
         if (searchParams.get("due") === "1") query.due = "1";
         setTest(dataOf(await api.getMistakePractice(query)));
+      } else if (isTopic) {
+        setTest(dataOf(await api.getTopicPractice(Object.fromEntries(searchParams))));
       } else setTest(dataOf(await api.getTest(id)));
     } catch (err) { setError(err.status === 404 ? "This test is not available" : err.message); }
   }
-  useEffect(() => { load(); }, [id, isMistakes]);
+  useEffect(() => { load(); }, [id, isMistakes, isTopic]);
   useEffect(() => {
     if (blocker.state === "blocked") setBlocking(true);
   }, [blocker.state]);
@@ -190,6 +194,10 @@ export default function Test() {
   // Only lesson tests can complete a lesson, so only they show a pass percent.
   const needsPass = !practice && test.scope === "lesson" && test.passPercent != null;
 
+  if (isTopic && test.questions.length === 0) return <div className="exam exam--page">
+    <Link className="back-link" to={backTo} state={backState}><ArrowLeft size={16} aria-hidden="true" />{backLabel}</Link>
+    <EmptyState illustration={<Illustration name="done" />} title="No questions for this choice" description="Try another topic, source or year." action={<Button as={Link} variant="secondary" to={backTo} state={backState}>{backLabel}</Button>} />
+  </div>;
   if (isMistakes && test.questions.length === 0) return <div className="exam exam--page">
     <Link className="back-link" to={backTo} state={backState}><ArrowLeft size={16} aria-hidden="true" />{backLabel}</Link>
     <EmptyState illustration={<Illustration name="done" />} title="No mistakes to practise" description="Questions you get wrong will appear here until you answer them right on two different days." action={<Button as={Link} variant="secondary" to={backTo} state={backState}>{backLabel}</Button>} />

@@ -5,6 +5,7 @@ import { nearToPrefetch, prefetchCourse, prefetchLesson } from "../api/prefetch"
 import { useAuth } from "../context/AuthContext";
 import { Zap } from "lucide-react";
 import DueChip from "../components/DueChip";
+import TopicsLink from "../components/TopicsLink";
 import MistakesPanel from "../components/MistakesPanel";
 import { Badge, Button, Card, EmptyState, Illustration, Progress, Skeleton, SkeletonGroup } from "../components/ui";
 
@@ -86,6 +87,7 @@ export default function Courses() {
     </Card>}
     {isStudent && !loading && !error && <DueChip />}
     {isStudent && !loading && !error && <MistakesPanel from="/courses" />}
+    {isStudent && !loading && !error && <TopicsLink />}
     {isStudent && showWelcome && <Welcome onDone={dismissWelcome} />}
     {!loading && !error && !courses.length && <EmptyState illustration={<Illustration name="empty" />} title="No courses yet" description="Check back soon." />}
     {!loading && !error && courses.length > 0 && <section aria-labelledby="courses-title">

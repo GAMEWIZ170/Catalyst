@@ -63,6 +63,8 @@ export const api = {
   search: (q) => request(`/search?q=${encodeURIComponent(q)}`),
   getReviewDue: () => request("/review/due"),
   getReviewSession: () => request("/review/session"),
+  getTopics: () => request("/topics"),
+  getTopicPractice: (query) => request(`/topics/practice?${new URLSearchParams(query)}`),
   getMistakes: () => request("/mistakes"),
   getMistakePractice: (query = {}) => request(`/mistakes/practice${Object.keys(query).length ? `?${new URLSearchParams(query)}` : ""}`),
   getBookmarks: () => request("/bookmarks"),
