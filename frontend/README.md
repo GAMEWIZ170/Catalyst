@@ -131,6 +131,7 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 | `/lessons/:id/flashcards` | Authenticated | Study a flashcard deck: tap the card to turn it over, then rate it (`?filter=review` shows cards still to review) |
 | `/progress` | Authenticated | View scores, completed lessons, and streak |
 | `/settings` | Authenticated | Four tabs, kept in the address (`?tab=account|appearance|notifications|study`). Account: profile picture, time zone, change email and password, download my data, delete account. Appearance: colour theme, text size, low-data mode, install. Notifications: review reminders and new-lesson messages. Study: daily goal and exam date |
+| `/admin/dashboard` | Admin | DAU, WAU, MAU, stickiness, new sign-ups, activation, open reports, a 30 day trend chart (with a table of the same numbers), retention by sign-up week, top and drop-off lessons, and activity totals. Shows "Not worked out yet" until `npm run stats` has run in the backend |
 | `/admin/catalog` | Admin | Categories (add, rename, delete) and authors (name, short bio, picture). The course editor picks a category and authors from these |
 | Notification bell | Authenticated | Top bar bell with an unread count. The panel lists new-lesson and review-due messages, each linking to its page, plus Mark all as read. On phones the panel spans the screen under the top bar |
 | `/admin` | Admin | Overview numbers and the course list, with search |

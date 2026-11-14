@@ -353,6 +353,7 @@ Create routes require an available parent. Delete routes are soft deletes.
 | GET | `/admin/courses/:id` | Full editor tree with drafts, tests and lesson counts |
 | POST | `/admin/courses` | Create a course. Optional `category` (id or null) and `authors` (up to 10 ids); 400 when one does not exist |
 | PUT | `/admin/courses/:id` | Update a course (same optional `category` and `authors`) |
+| GET | `/admin/dashboard` | The dashboard numbers: `computedAt`, 30 days of `trend` (dau, wau, mau, signups), `stickiness` (DAU divided by MAU, latest finished day), `latest`, `signupsThisWeek`, `openReports` (live) and `summary` (activation, retention, top lessons, drop-off, 7 and 30 day totals). `summary` is null until the stats script has run |
 | GET | `/admin/categories` | Every category, by order then name |
 | POST | `/admin/categories` | Body `{ name, order? }`. The slug is made from the name. "General" is reserved. 409 on a clash |
 | PUT | `/admin/categories/:id` | Rename or reorder |
@@ -473,6 +474,16 @@ Every graded answer through `POST /questions/:id/answer` updates the student's q
 ### Event log
 
 Every key action writes one row to `events` (`{ user, type, ts, props }`, indexed on `ts`, on `user` and `ts`, and on `type` and `ts`), for XP, achievements, leaderboards and the admin dashboard to be built from later. Types: signup, login, lesson_opened, lesson_completed, question_answered, test_submitted, review_done, flashcard_rated, focus_session_completed, video_started, set_created, set_studied, challenge_sent, challenge_played (the last four, and focus sessions, are not logged yet because those features are not built). Logging is fire and forget (utils/events.js): nothing waits for it and a failure only prints to the log. `props` keeps ids, numbers, booleans and short words only (never a name, email or free text). `lesson_completed` is written each time a test pass, a finished deck or Mark as done completes a lesson, so a dashboard counts distinct users and lessons. `review_done` is a due card rated or a mistake answered.
+
+### Admin dashboard numbers
+
+`scripts/compute-stats.js` (run `npm run stats` in `backend/`) reads the last 120 days of the `events` collection and fills two collections: `daily_stats` (one row per UTC day for the last 60 days: dau, wau, mau, signups, event counts) and `stat_summaries` (one row, key `latest`: activation, retention, top lessons, drop-off, totals). It is safe to run again at any time; each run replaces the rows it covers. Run it once a night. On Windows use Task Scheduler (action `npm run stats`, start in the backend folder). On a Linux host use cron, for example `5 0 * * * cd /path/to/backend && npm run stats`. It needs the same `.env` as the server.
+
+- Days are UTC days (one clock for the whole platform). Admin accounts are left out of every number. "Active" means any logged event that day, so a login counts.
+- **Retention:** students are grouped by the Monday of their sign-up week. Day 1, 7 and 30 are the share of the week's new students who were active exactly that many days after their own sign-up day. A student only counts for Day *n* once day *n* is over; a week with nobody eligible shows n/a.
+- **Activation:** of students who signed up in the last 8 weeks and at least 48 hours ago, the share who completed a lesson and submitted a test within 48 hours of signing up. Only sign-ups in the event log count, so students from before the event log (X1) are not in it.
+- **Lessons (last 30 days, each student counted once per lesson):** "most completed" ranks by students who completed; "drop off" lists lessons opened by 3 or more students, ordered by the share who did not complete.
+- Study set, challenge and achievement counts are 0 until those features exist (achievements are not tracked at all yet).
 
 ### Focus timer, exam countdown and Study Hall
 
