@@ -406,7 +406,7 @@ Each student has a level per lesson (`Mastery`): none (Not started), 1 Attempted
 - Lesson test score of 70% or more: Familiar. 100%: Proficient.
 - Mastered: from Proficient, 100% on the lesson test again, a right answer on a lesson question that was in the mistakes queue, or a flashcard marked Confident, each on a later UTC day than the day Proficient was reached.
 - A wrong answer on a lesson question drops one level, at most once a day, never below Attempted. A low test score by itself never lowers a level.
-- Unit and course tests do not change mastery. Their questions are not linked to a lesson, so they cannot say which lesson a student knows. Linking them needs the topic tags in step 3.6.
+- Unit and course tests do not change lesson mastery, by design: they stay tied to their unit or course, and their questions are not linked to lessons. Unit-level and course-level mastery, built from those tests, is the planned next step.
 
 ### Spaced repetition
 
