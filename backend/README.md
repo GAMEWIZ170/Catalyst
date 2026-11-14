@@ -55,6 +55,8 @@ Never commit `.env`: it holds database credentials, the token secret and the Clo
 | `CLOUDINARY_URL` | Cloudinary SDK configuration | `cloudinary://API_KEY:API_SECRET@CLOUD_NAME` |
 | `TRUST_PROXY` | Optional. Number of proxies in front of the app, so the app sees each student's real IP address. Leave unset when there is no proxy | `1` |
 | `REQUIRE_SUBSCRIPTION` | Optional. `true` makes students need an active subscription to open lessons, tests, flashcards and materials. Default off | `true` |
+| `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` | Optional. Cloudflare Workers AI (free tier) for the AI features. Without them AI answers "AI is not set up yet" and the rest of the app is unaffected | an account ID, and a token with Workers AI access |
+| `AI_MODEL`, `AI_PROVIDER` | Optional. `AI_MODEL` picks another model id from `src/config/ai.js`. `AI_PROVIDER=fake` uses the offline test model (no network) | `llama-3.1-8b` |
 | `RATE_LIMIT_USER` | Optional. Requests per signed-in user per 15 minutes. Default `600` | `600` |
 | `RATE_LIMIT_IP` | Optional. Requests per IP address per 15 minutes, a ceiling against floods. Default `5000` | `5000` |
 | `RATE_LIMIT_AUTH_FAILS` | Optional. Failed logins or registrations per IP and email per 15 minutes. Default `20` | `20` |
@@ -576,6 +578,19 @@ The owner invites one of their accepted friends (by the friendship id from `GET 
 | POST | `/circles/:id/invite` | Owner | `{ friendship }`. 404 for a non-friend, 409 when already in, full (6) or the friend is in 10 circles |
 | POST | `/circles/:id/accept` | Invited student | Joins the circle |
 | DELETE | `/circles/:id` | Member | Leaves a circle or declines an invite (204) |
+
+### AI provider layer (Phase X6.1)
+
+`src/config/ai.js` is a **list** of models (`id`, `provider`, `model`, `label`, `maxInputChars`, `maxOutputTokens`, `timeoutMs`, one marked `default`), so a model picker or a paid model is a new row, not a rewrite. For now there is one free model, Cloudflare Workers AI `@cf/meta/llama-3.1-8b-instruct`, plus an offline `fake` model for tests.
+
+`src/utils/ai.js` is the only door to AI. Features call `complete({ messages, model?, maxTokens?, names? })` and get `{ text, usage, model }`. Nothing else names a provider.
+
+- **Privacy.** Nothing about the student is sent unless a feature puts it in a message. `scrub()` runs on every message and removes email addresses and any `names` the caller lists. It is a safety net, not a promise about free text.
+- **Limits.** Input over `maxInputChars` is refused (`too_long`). The output cap is the model's `maxOutputTokens`; a caller can only lower it. A request that takes longer than `timeoutMs` is aborted (`timeout`).
+- **Errors.** All failures are `AiError` with a `code`: `not_configured` (key missing or refused), `capacity` (HTTP 429 or Cloudflare error 4006, the free daily allowance is used up), `timeout`, `too_long`, `bad_request`, `provider`. Features turn these into calm messages. `usage` (`inputTokens`, `outputTokens`) is returned so the admin dashboard can count use (X6.4).
+- **Keys** live in `backend/.env` only (`CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`). Nothing reads or prints them except the request header.
+- **Training on prompts.** Cloudflare says Workers AI does not train on customer content, but terms change, so confirm at signup. Some other free tiers (for example Google's Gemini API free tier) say they may use prompts to improve their products, which is why they were not chosen for students' study notes.
+- Free beta: low daily limits apply. Per-student quotas and the global cap come in X6.4.
 
 ### Study sets (the Study Lab)
 
