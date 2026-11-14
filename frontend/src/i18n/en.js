@@ -46,6 +46,8 @@ const en = {
   "friends.intro": "Add friends with their code. Friends see your display name and avatar. Nobody else can find you.",
   "friends.yourCode": "Your friend code",
   "friends.copy": "Copy code",
+  "friends.inviteTitle": "Study with me on Catalyst",
+  "friends.inviteText": "Add me as a friend on Catalyst.",
   "friends.copied": "Code copied",
   "friends.copyFailed": "Could not copy. Select the code and copy it by hand.",
   "friends.add": "Add a friend",

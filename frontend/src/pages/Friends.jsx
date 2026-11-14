@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import Avatar from "../components/Avatar";
+import ShareButton from "../components/ShareButton";
 import { Button, Checkbox, TextField, useToast } from "../components/ui";
 import { ErrorState, Loading } from "./Courses";
 import { t } from "../i18n";
@@ -11,7 +12,8 @@ import { t } from "../i18n";
 export default function Friends() {
   const { toast } = useToast();
   const [state, setState] = useState({ loading: true, error: "", data: null });
-  const [code, setCode] = useState("");
+  const [params] = useSearchParams();
+  const [code, setCode] = useState(() => (params.get("code") || "").replace(/[^A-Za-z0-9]/g, "").slice(0, 12).toUpperCase()); // from an invite link
   const [name, setName] = useState("");
   const [problem, setProblem] = useState("");
   const [busy, setBusy] = useState(false);
@@ -66,7 +68,10 @@ export default function Friends() {
     <section className="settings-section" aria-labelledby="code-heading">
       <h2 id="code-heading">{t("friends.yourCode")}</h2>
       <p className="friend-code" aria-label={t("friends.yourCode")}>{me.code}</p>
-      <Button variant="secondary" onClick={copyCode}>{t("friends.copy")}</Button>
+      <div className="share-row">
+        <Button variant="secondary" onClick={copyCode}>{t("friends.copy")}</Button>
+        <ShareButton url={`${window.location.origin}/s/i/${me.code}`} title={t("friends.inviteTitle")} text={t("friends.inviteText")} />
+      </div>
     </section>
 
     <section className="settings-section" aria-labelledby="add-heading">

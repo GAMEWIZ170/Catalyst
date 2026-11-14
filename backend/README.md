@@ -550,6 +550,19 @@ Who may open one: the creator, and an accepted friend of the creator. The first 
 
 `comparison` is `{ you, them: { name, correct, total }, outcome: "won" | "lost" | "tie" }` and is null until both have played.
 
+### Share links with previews (Phase X5.7)
+
+The app is a single-page app, so WhatsApp and other chat apps cannot read its page titles. `GET /s/...` (public, no sign-in, mounted outside `/api/v1`) answers with a tiny HTML page that has the preview tags (`og:title`, `og:description`, `og:image`, `og:url`) and a `meta refresh` into the app at `CLIENT_URL`. Everything inserted into the page is HTML-escaped, ids and codes are checked before use, and the redirect target is built only from fixed paths, so it cannot be turned into an open redirect.
+
+| Path | Goes to | Preview shows |
+|---|---|---|
+| `/s/c/:challengeId` | `/challenge/:id` | A generic "A friend challenged you" line. No name, test or score |
+| `/s/i/:friendCode` | `/friends?code=CODE` | "Study with me on Catalyst". The Friends page fills the code in |
+| `/s/l/:lessonId` | `/lessons/:id` | The lesson title, only when the lesson is published and its unit and course are visible. Anything else shows "Sign in to view this." |
+| `/s/s/:setId` | `/lab` | Always "Sign in to view this." (study sets are private) |
+
+A bad id or code is a 404. The page is cacheable for 5 minutes. The image is `/icons/icon-512.png` on the app's address. In development Vite proxies `/s` to the backend (`frontend/vite.config.js`). **In production, `/s/*` on the app's address must be routed to the backend** (the same rule as `/api`), or the links will land on the single-page app without previews.
+
 ### Study sets (the Study Lab)
 
 A `StudySet` belongs to one student and is private (`visibility` also allows `link` and `community`, which Phase X7 will use; nothing sets them yet). It holds:

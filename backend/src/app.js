@@ -41,6 +41,7 @@ const examDateRoutes = require("./routes/examdate.routes");
 const hallRoutes = require("./routes/hall.routes");
 const studySetRoutes = require("./routes/studyset.routes");
 const xpRoutes = require("./routes/xp.routes");
+const shareRoutes = require("./routes/share.routes");
 const challengeRoutes = require("./routes/challenge.routes");
 const friendRoutes = require("./routes/friend.routes");
 const achievementRoutes = require("./routes/achievement.routes");
@@ -58,6 +59,7 @@ app.use(logger);
 app.use(generalLimiter);
 
 // routes
+app.use("/s", shareRoutes); // public share links with preview tags (see share.controller.js)
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/courses", courseRoutes);
 app.use("/api/v1/home", homeRoutes);

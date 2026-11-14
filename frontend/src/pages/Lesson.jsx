@@ -7,6 +7,7 @@ import DeckSummary from "../components/DeckSummary";
 import RichText from "../components/RichText";
 import ReadAloud from "../components/ReadAloud";
 import ReportButton from "../components/ReportButton";
+import ShareButton from "../components/ShareButton";
 import { PreviewBanner, PreviewCards } from "../components/PreviewBits";
 import { Badge, Button, SelectField, Skeleton, SkeletonGroup, TextArea } from "../components/ui";
 import ResponsiveImage from "../components/ResponsiveImage";
@@ -198,6 +199,7 @@ export default function Lesson() {
       <div className="lesson-main">
         <article className="reading-column">
           <h1>{lesson.title}</h1>
+          {!preview && <ShareButton url={`${window.location.origin}/s/l/${id}`} title={lesson.title} text={`${lesson.title} on Catalyst.`} />}
           {!preview && <Button variant="tertiary" icon={Bookmark} aria-pressed={savedLesson} onClick={toggleSaved}>{savedLesson ? "Saved" : "Save"}</Button>}
           {(unit || completed) && <p className="lesson-meta">
             {unit && <span>{unit.title}</span>}
