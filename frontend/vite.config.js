@@ -39,7 +39,7 @@ export default defineConfig({
         changeOrigin: true
       },
       // Share links (/s/...) are answered by the backend, which adds the preview tags chat apps read.
-      "/s": {
+      "^/s/": {
         target: "http://127.0.0.1:3000",
         changeOrigin: true
       }

@@ -3390,7 +3390,14 @@ textarea {
 }
 
 .progress-page {
+  grid-template-columns: minmax(0, 1fr); /* without this a long unit or test title stretches the page past a 320 px screen */
   max-width: 48rem;
+}
+
+.progress-unit-head span:first-child,
+.score-list li span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .progress-units {

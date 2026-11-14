@@ -394,9 +394,16 @@
   text-align: center;
 }
 
+.ui-empty h1,
 .ui-empty h3,
 .ui-empty p {
   margin: 0;
+}
+
+/* A page-level empty state uses h1 for the outline but looks like the h3 version. */
+.ui-empty h1 {
+  font-size: var(--text-lg);
+  line-height: var(--leading-heading);
 }
 
 .ui-empty p {

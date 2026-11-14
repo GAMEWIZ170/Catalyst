@@ -92,9 +92,19 @@ The seed and screenshot harness lives outside the repo (scratchpad `h/`: `launch
   2. Accent per palette: `--accent`, `--accent-hover`, `--accent-soft`, `--on-accent`. **This is the only thing a palette changes.**
   3. Status colours, fixed across palettes: success, error, warning, info.
 
-**OWNER DECIDES:** today each palette also changes its paper and ink colours. The plan changes that so palettes change only the accent. Show the owner before and after screenshots of two palettes and get approval first.
+**Decided and built:** palettes change only the accent. Paper, surface, sunken, line, ink and muted are the same in all five palettes, and status colours are fixed. The real values live in `frontend/src/styles/tokens.css` (the single source) and are described in `DESIGN.md`. Accents as shipped:
 
-**Step 1.3: contrast script.** Write a small script, kept outside the repo or under a dev-only folder, that reads `tokens.css` and prints the contrast for every text and UI pair in all 10 palette and mode combinations. Fix any failures, for example by making `--on-accent` dark ink for bright palettes.
+| Palette | Light accent | Light hover | Light soft | Dark accent | Dark on-accent |
+|---|---|---|---|---|---|
+| lagoon (default) | `#0E7490` | `#0A5C73` | `#E0F0F4` | `#5DD3EE` | `#0B1A1F` |
+| indigo | `#2B5CE6` | `#1F46BF` | `#E7EDFD` | `#8FA8FF` | `#0E1530` |
+| ember | `#B63A08` | `#932F0D` | `#FBEADF` | `#FF9B78` | `#2A1208` |
+| orchid | `#7E3FC4` | `#6430A0` | `#F0E8FA` | `#C19BEA` | `#1F1030` |
+| graphite | `#334155` | `#1E293B` | `#E7EAEE` | `#A9B9D2` | `#10151C` |
+
+Light mode uses `--on-accent: #FFFFFF` for every palette. Dark mode uses a dark ink so text on the lighter dark-mode accent passes. Shared neutrals: light paper `#FAF8F4`, surface `#FFFFFF`, sunken `#F2EEE6`, line `#E4DED2`, control-line `#857C6D`, ink `#1F1B16`, muted `#5E574B`. Dark paper `#1B1916`, surface `#262320`, sunken `#141210`, line `#3B362F`, control-line `#8C8475`, ink `#F4F0E8`, muted `#B8B0A2`. Status (light): success `#047857`, warning `#8F5A00`, error `#BE123C`, info `#1D5FA8`; each has a `-tint` background. A wrong test answer uses warning, never error.
+
+**Step 1.3: contrast script.** Write a small script, kept outside the repo or under a dev-only folder, that reads `tokens.css` and prints the contrast for every text and UI pair in all 10 palette and mode combinations. Fix any failures, for example by making `--on-accent` dark ink for bright palettes. *Status:* done. A re-run on 2026-11-14 checked 23 pairs in each of the 10 combinations (ink, muted and accent on paper, surface and sunken; on-accent on accent and hover; control-line and focus accent at 3:1; each status colour on its tint and on surface) and all 230 pass.
 
 **Step 1.4: base styles and sweep.**
 - Global base: body text, headings, links, a visible focus ring, `overflow-wrap: anywhere` only where needed and never `word-break: break-all`, and a page shell where the main area grows so the footer sits at the bottom.
