@@ -8,6 +8,7 @@ const Question = require("../models/question.models");
 const Flashcard = require("../models/flashcard.models");
 const Material = require("../models/material.models");
 const Mastery = require("../models/mastery.models");
+const { attachMeta } = require("./courseMeta");
 
 const countBy = (rows, field) => new Map(rows.map((row) => [row._id.toString(), row[field]]));
 
@@ -18,10 +19,11 @@ const countBy = (rows, field) => new Map(rows.map((row) => [row._id.toString(), 
 const buildCourseOutline = async (courseId, userId) => {
   // Round trip 1: the course and its units. The units query does not need the course first.
   const [course, units] = await Promise.all([
-    Course.findOne({ _id: courseId, isPublished: true, deletedAt: null }).select("code title description").lean(),
+    Course.findOne({ _id: courseId, isPublished: true, deletedAt: null }).select("code title description category authors").lean(),
     Unit.find({ course: courseId, deletedAt: null }).select("title order").sort({ order: 1 }).lean()
   ]);
   if (!course) return null;
+  const metaPromise = attachMeta(course); // runs alongside the queries below
 
   // Round trip 2: every lesson in those units, in one query.
   const unitIds = units.map((unit) => unit._id);
@@ -111,7 +113,7 @@ const buildCourseOutline = async (courseId, userId) => {
     .filter((unit) => unit.lessons.length > 0); // hide units with nothing published yet
 
   return {
-    ...course,
+    ...(await metaPromise),
     units: outline,
     progress: { completedLessons: done.length, totalLessons: lessons.length },
     tests: courseTests

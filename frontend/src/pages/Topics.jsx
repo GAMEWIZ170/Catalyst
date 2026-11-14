@@ -22,9 +22,9 @@ export default function Topics() {
 
   if (error) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
   if (!data) return <Loading />;
-  const back = <Link className="back-link" to="/courses"><ArrowLeft size={16} aria-hidden="true" />Back to home</Link>;
+  const back = <Link className="back-link" to="/home"><ArrowLeft size={16} aria-hidden="true" />Back to home</Link>;
   if (!data.topics.length && !data.sources.length && !data.years.length) {
-    return <div className="content student-page">{back}<EmptyState title="No topics yet" description="Practice by topic appears here once questions are tagged." action={<Button as={Link} variant="secondary" to="/courses">Back to home</Button>} /></div>;
+    return <div className="content student-page">{back}<EmptyState title="No topics yet" description="Practice by topic appears here once questions are tagged." action={<Button as={Link} variant="secondary" to="/home">Back to home</Button>} /></div>;
   }
 
   function start(event) {

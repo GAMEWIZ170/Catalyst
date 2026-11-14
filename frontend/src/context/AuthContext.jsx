@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { api } from "../api/client";
 import { clearCache } from "../api/cache";
 import { clearOfflineData, recallUser, rememberUser } from "../utils/offline";
+import { detectTimeZone } from "../utils/timeZone";
 
 const AuthContext = createContext(null);
 
@@ -22,6 +23,15 @@ export function AuthProvider({ children }) {
   const refreshStreak = () => api.getStreak()
     .then(({ data }) => setUser((current) => (current ? { ...current, streak: data.streak } : current)))
     .catch(() => {});
+
+  // Accounts made before time zones existed have none. Report the browser's once, so streaks follow the student's own day.
+  useEffect(() => {
+    if (!user || user.role !== "student" || user.timeZone) return;
+    const timeZone = detectTimeZone();
+    api.updatePreferences({ timeZone })
+      .then(() => { setUser((current) => (current ? { ...current, timeZone } : current)); refreshStreak(); })
+      .catch(() => {});
+  }, [user?.id, user?.timeZone]);
 
   useEffect(() => {
     window.addEventListener("catalyst:refresh-streak", refreshStreak);

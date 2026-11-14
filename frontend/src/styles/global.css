@@ -3717,3 +3717,148 @@ textarea {
 
 /* Offline banner and Settings extras (phase 6) */
 .offline-banner { background: var(--sunken); border-bottom: 1px solid var(--line); font-size: var(--text-sm); padding: var(--space-2) var(--space-4); text-align: center; }
+
+/* App shell (Expansion X1.1): sidebar on laptops, bottom bar on phones, never both. */
+.popover-host { position: relative; }
+.shell-body { display: flex; flex: 1; min-width: 0; }
+.shell-main { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.sidebar { display: none; }
+
+.place-link {
+  align-items: center;
+  border-radius: var(--radius-control);
+  color: var(--muted);
+  display: flex;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  text-decoration: none;
+}
+.place-link:hover { background: var(--sunken); color: var(--ink); }
+.place-link.is-current,
+.place-link[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: var(--weight-strong); }
+
+@media (min-width: 768px) {
+  .has-nav .topbar { padding-inline: var(--space-4); }
+  .has-nav .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex: 0 0 13.75rem;
+    flex-direction: column;
+    gap: var(--space-4);
+    height: calc(100dvh - 64px);
+    justify-content: space-between;
+    overflow-y: auto;
+    padding: var(--space-4) var(--space-3);
+    position: sticky;
+    top: 64px;
+    width: 13.75rem;
+  }
+  .has-nav .sidebar nav { display: grid; gap: var(--space-1); }
+  .has-nav.nav-collapsed .sidebar { flex-basis: 4.5rem; padding-inline: var(--space-2); width: 4.5rem; }
+  .has-nav.nav-collapsed .sidebar .place-label {
+    clip: rect(0 0 0 0);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+  }
+  .has-nav.nav-collapsed .sidebar .place-link,
+  .has-nav.nav-collapsed .sidebar .sidebar-toggle { justify-content: center; padding-inline: 0; }
+  .sidebar-toggle {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-control);
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    font: inherit;
+    gap: var(--space-3);
+    min-height: 44px;
+    padding: 0 var(--space-3);
+  }
+  .sidebar-toggle:hover { background: var(--sunken); color: var(--ink); }
+}
+
+/* The bottom bar keeps the same five places. */
+.tabbar .place-link {
+  border-radius: 0;
+  flex: 1;
+  flex-direction: column;
+  font-size: var(--text-xs);
+  gap: 2px;
+  justify-content: center;
+  min-height: 56px;
+  min-width: 44px;
+  padding: 0;
+}
+.tabbar .place-link:hover { background: transparent; }
+.tabbar .place-link.is-current,
+.tabbar .place-link[aria-current="page"] { background: transparent; }
+
+/* Top bar tools */
+.topbar-tools .icon-button { text-decoration: none; }
+.quick-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  box-shadow: var(--shadow-md);
+  display: grid;
+  gap: var(--space-3);
+  max-height: min(80dvh, 34rem);
+  overflow-y: auto;
+  padding: var(--space-4);
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  width: min(320px, calc(100vw - 2rem));
+  z-index: 4;
+}
+.quick-title { font-size: var(--text-md); margin: 0; }
+.quick-all { color: var(--accent); display: inline-flex; font-weight: var(--weight-strong); min-height: 44px; align-items: center; }
+
+@media (max-width: 640px) {
+  /* Popovers open under the bar across the screen, so the left edge is never cut off. */
+  .topbar-tools .popover-host { position: static; }
+  .topbar-tools .quick-panel,
+  .topbar-tools .notification-panel { left: var(--space-4); position: fixed; right: var(--space-4); top: 68px; width: auto; }
+  .topbar-tools .profile-menu { position: relative; }
+  .brand-name { display: none; }
+}
+@media (max-width: 379px) {
+  .streak-indicator { display: none; }
+}
+
+/* Pages added in X1 */
+.chip-row { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-block: var(--space-4); }
+.chip {
+  background: var(--surface);
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--text-sm);
+  min-height: 44px;
+  padding: 0 var(--space-4);
+}
+.chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: var(--weight-strong); }
+.course-byline { display: block; font-size: var(--text-sm); }
+.ol-authors { display: grid; font-size: var(--text-sm); gap: var(--space-1); list-style: none; margin: 0; padding: 0; }
+.me-header { align-items: center; display: flex; gap: var(--space-4); margin-bottom: var(--space-5); }
+.me-header h1, .me-header p { margin: 0; }
+.me-links { display: grid; gap: var(--space-3); max-width: 32rem; }
+.ui-card.me-link { align-items: center; color: inherit; display: flex; gap: var(--space-3); min-height: 56px; text-decoration: none; }
+.ui-card.me-link span { flex: 1; font-weight: var(--weight-strong); }
+.catalog-list { display: grid; gap: var(--space-2); list-style: none; margin: var(--space-3) 0; padding: 0; }
+.catalog-list li { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-3); justify-content: space-between; }
+.catalog-actions { display: inline-flex; gap: var(--space-2); }
+.author-picker { border: 1px solid var(--line); border-radius: var(--radius-control); display: grid; gap: var(--space-2); margin: 0; padding: var(--space-3) var(--space-4); }
+.author-picker legend { font-weight: var(--weight-strong); padding: 0 var(--space-2); }
+.read-aloud { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-4); }
+.read-aloud .button { gap: var(--space-2); }
+.read-aloud-speed { align-items: center; color: var(--muted); display: inline-flex; font-size: var(--text-sm); gap: var(--space-2); }
+.read-aloud-speed select { background: var(--surface); border: 1px solid var(--control-line); border-radius: var(--radius-control); color: var(--ink); font: inherit; min-height: 44px; padding: 0 var(--space-2); }

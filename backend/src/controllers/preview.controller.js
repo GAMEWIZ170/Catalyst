@@ -19,7 +19,7 @@ const badId = (id) => !mongoose.isObjectIdOrHexString(id);
 const previewLesson = async (req, res, next) => {
   if (badId(req.params.id)) return res.status(400).json({ message: "Invalid lesson ID" });
   try {
-    const lesson = await Lesson.findOne({ _id: req.params.id, deletedAt: null }).lean();
+    const lesson = await Lesson.findOne({ _id: req.params.id, deletedAt: null }).select("+explanationMath").lean();
     if (!lesson) return res.status(404).json({ message: "Lesson not found" });
     const [tests, cards, materials, visible] = await Promise.all([
       findTestQuestionCounts({ scope: "lesson", lesson: lesson._id, deletedAt: null }),
@@ -31,7 +31,7 @@ const previewLesson = async (req, res, next) => {
       data: {
         preview: true,
         _id: lesson._id, unit: lesson.unit, title: lesson.title, order: lesson.order,
-        explanation: lesson.explanation, explanationImage: lesson.explanationImage,
+        explanation: lesson.explanation, explanationMath: lesson.explanationMath || [], explanationImage: lesson.explanationImage,
         videoHost: lesson.videoHost, videoId: lesson.videoId,
         isPublished: lesson.isPublished, visibleToStudents: Boolean(visible),
         // A student sees tests with questions only.

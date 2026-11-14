@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { logEvent } = require("../utils/events");
 const Test = require("../models/test.models");
 const Question = require("../models/question.models");
 const TestResult = require("../models/testresult.models");
@@ -9,7 +10,7 @@ const { grade } = require("../utils/grading");
 const mastery = require("../utils/mastery");
 
 const badId = (id) => !mongoose.isObjectIdOrHexString(id);
-const todayKey = () => new Date().toISOString().slice(0, 10);
+const { dayKey } = require("../utils/day");
 
 const getTest = async (req, res, next) => {
   if (badId(req.params.id)) return res.status(400).json({ message: "Invalid test ID" });
@@ -36,7 +37,7 @@ const getTest = async (req, res, next) => {
 };
 
 // Records one finished attempt: the test result, lesson completion and mastery. Shared by normal tests and timed mock exams.
-const recordResult = async (userId, test, score) => {
+const recordResult = async (userId, test, score, timeZone) => {
   const result = await TestResult.findOneAndUpdate(
     { user: userId, test: test._id },
     {
@@ -44,7 +45,7 @@ const recordResult = async (userId, test, score) => {
       $set: { lastScore: score },
       $inc: { attempts: 1 },
       $setOnInsert: { completedAt: new Date() },
-      $addToSet: { completedDays: todayKey() }
+      $addToSet: { completedDays: dayKey(timeZone) }
     },
     { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
   );
@@ -58,14 +59,16 @@ const recordResult = async (userId, test, score) => {
         $max: { score },
         $set: { completed: true },
         $setOnInsert: { completedAt: new Date() },
-        $addToSet: { completedDays: todayKey() }
+        $addToSet: { completedDays: dayKey(timeZone) }
       },
       { upsert: true, setDefaultsOnInsert: true }
     );
   }
+  logEvent(userId, "test_submitted", { test: test._id, scope: test.scope, score, passed });
+  if (test.scope === "lesson" && passed) logEvent(userId, "lesson_completed", { lesson: test.lesson._id, how: "test" });
   if (test.scope === "lesson") {
-    await mastery.record(userId, test.lesson._id, { type: "attempt" });
-    await mastery.record(userId, test.lesson._id, { type: "score", score });
+    await mastery.record(userId, test.lesson._id, { type: "attempt" }, timeZone);
+    await mastery.record(userId, test.lesson._id, { type: "score", score }, timeZone);
   }
   return { result, passPercent, passed };
 };
@@ -89,7 +92,7 @@ const submitTest = async (req, res, next) => {
     }
     const total = questions.length;
     const score = total === 0 ? 100 : Math.round((correct / total) * 100);
-    const { result, passPercent, passed } = await recordResult(req.user.id, test, score);
+    const { result, passPercent, passed } = await recordResult(req.user.id, test, score, req.user.timeZone);
     return res.status(200).json({ data: { score, correct, total, bestScore: result.bestScore, attempts: result.attempts, passPercent, passed } });
   } catch (error) {
     next(error);

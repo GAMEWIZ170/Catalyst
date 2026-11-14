@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { logEvent } = require("../utils/events");
 const Lesson = require("../models/lesson.models");
 const Unit = require("../models/unit.models");
 const Test = require("../models/test.models");
@@ -11,6 +12,7 @@ const Bookmark = require("../models/bookmark.models");
 const Note = require("../models/note.models");
 const studentMaterial = require("../utils/studentMaterial");
 const LessonVersion = require("../models/lessonversion.models");
+const { prerenderMath } = require("../utils/math");
 const { notifyLessonPublished } = require("./notification.controller");
 const getFlashcardSummary = require("../utils/flashcardSummary");
 const { findVisibleLesson, findTestsWithQuestions, findTestQuestionCounts } = require("../utils/visibility");
@@ -61,6 +63,7 @@ const loadLesson = async (id, userId, withHub) => {
     order: lesson.order,
     explanation: lesson.explanation,
     explanationImage: lesson.explanationImage,
+    explanationMath: lesson.explanationMath || [],
     videoHost: lesson.videoHost,
     videoId: lesson.videoId,
     tests,
@@ -81,6 +84,7 @@ const getLessonByID = async (req, res, next) => {
   try {
     const data = await loadLesson(req.params.id, req.user.id, false);
     if (!data) return res.status(404).json({ message: `Lesson with ID ${req.params.id} not found` });
+    if (req.user.role === "student") logEvent(req.user.id, "lesson_opened", { lesson: req.params.id });
     return res.status(200).json({ data });
   } catch (error) {
     next(error);
@@ -93,6 +97,7 @@ const getLessonHub = async (req, res, next) => {
   try {
     const data = await loadLesson(req.params.id, req.user.id, true);
     if (!data) return res.status(404).json({ message: `Lesson with ID ${req.params.id} not found` });
+    if (req.user.role === "student") logEvent(req.user.id, "lesson_opened", { lesson: req.params.id });
     return res.status(200).json({ data });
   } catch (error) {
     next(error);
@@ -113,11 +118,22 @@ const getLessonForAdmin = async (req, res, next) => {
   }
 };
 
+// Draws the explanation's formulas and keeps them with the lesson. A failure here must not fail the save:
+// the browser still draws any formula that has no stored entry.
+const storeMath = async (lessonId, explanation) => {
+  try {
+    await Lesson.updateOne({ _id: lessonId }, { $set: { explanationMath: prerenderMath(explanation) } });
+  } catch (error) {
+    console.error("Formula pre-rendering failed:", error.message);
+  }
+};
+
 const createLesson = async (req, res, next) => {
   try {
     const unit = await Unit.findOne({ _id: req.body.unit, deletedAt: null }).populate("course", "deletedAt");
     if (!unit || !unit.course || unit.course.deletedAt) return res.status(404).json({ message: "Unit not found" });
     const lesson = await Lesson.create(req.body);
+    await storeMath(lesson._id, lesson.explanation);
     return res.status(201).json({ message: "Lesson created successfully", data: lesson });
   } catch (error) {
     next(error);
@@ -153,6 +169,7 @@ const updateLesson = async (req, res, next) => {
     if (contentChanged(before, req.body)) await saveVersion(before, req.user.id, "edit");
     const lesson = await Lesson.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, req.body, { returnDocument: "after", runValidators: true });
     if (!lesson) return res.status(404).json({ message: "Lesson not found" });
+    if ("explanation" in req.body) await storeMath(lesson._id, lesson.explanation);
     // Only the move from hidden to published tells students. Saving an already published lesson stays quiet.
     if (req.body.isPublished === true && !before.isPublished) notifyLessonPublished(lesson._id);
     return res.status(200).json({ message: "Lesson updated successfully", data: lesson });
@@ -194,6 +211,7 @@ const restoreLessonVersion = async (req, res, next) => {
       ? { $set: { ...set, explanationImage: version.explanationImage } }
       : { $set: set, $unset: { explanationImage: "" } };
     const lesson = await Lesson.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, update, { returnDocument: "after", runValidators: true });
+    await storeMath(lesson._id, lesson.explanation);
     return res.status(200).json({ message: "Version restored", data: lesson });
   } catch (error) {
     next(error);

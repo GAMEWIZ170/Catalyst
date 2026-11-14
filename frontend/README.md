@@ -68,13 +68,22 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 
 ## Speed
 
-- **Lazy routes.** Tests, flashcards, progress, settings and the admin pages load their code when opened. Login, register, the course list, the course outline and the lesson are in the first bundle (a separate file for them cost one more round trip on a slow connection). KaTeX and mhchem load only when a page has a formula, and the KaTeX stylesheet loads with them.
+- **Lazy routes.** Tests, flashcards, progress, settings and the admin pages load their code when opened. Login, register, the course list, the course outline and the lesson are in the first bundle (a separate file for them cost one more round trip on a slow connection). KaTeX and mhchem load only when a page has a formula the server has not already drawn, and the KaTeX stylesheet loads with them. Lesson explanations come with their formulas already drawn by the server (`explanationMath`, see the backend README), so on a lesson saved after that feature only the stylesheet loads and the 80 KB KaTeX script does not.
 - **The streak** comes with `GET /auth/me` and lives on the user in `AuthContext`; it is refreshed after login and after the `catalyst:refresh-streak` event.
 - **One call per screen.** Home uses `GET /home`, the lesson screen `GET /lessons/:id/hub`, the progress screen `GET /progress/overview`.
 - **Data starts early.** `ProtectedPage` in `App.jsx` starts the screen's requests the moment the route matches, while its code is still downloading.
 - **Read cache.** `src/api/cache.js` keeps student reads for 60 seconds and shares one request between callers. Finishing a lesson, submitting a test and rating a card clear it (`changed()` in `api/client.js`), and login, register and logout clear it too. Tests and flashcards are kept for 5 seconds only, enough for the page to reuse the request started when the route matched.
 - **Prefetch.** `src/api/prefetch.js`: hovering, touching or focusing a link to a lesson or course starts loading its data. Spread `nearToPrefetch(...)` onto a link to add it.
 - **Images.** `ResponsiveImage` serves 400, 800 and 1200 px versions through `srcset` and uses the stored `width` and `height` to reserve space. The lesson video is a small still and a play button; the player loads only after a tap.
+
+## App shell
+
+- **Places.** Home, Courses, Review, Study Lab and Me are in a sidebar on laptops (768 px and up) and in a bar along the bottom on phones. Never both. Admins see neither: they use the admin navigation. The sidebar collapses to icons; the choice is saved on the device (`catalyst-sidebar`). Both are `<nav aria-label="Main">`, the open page has `aria-current="page"`, and the collapse button has `aria-expanded`.
+- **Tools.** The top bar holds search, the notification bell, a gear, the streak and the avatar menu. Only one popover is open at a time; Escape closes it and returns focus to its button. On phones the bell and gear panels open across the screen under the bar. The streak number is hidden under 380 px wide, and the brand name under 640 px, to make room.
+- **Gear panel.** Dark mode, colour theme, text size, low-data mode, the two notification switches, and a link to the full Settings page.
+- **Text.** The text for the shell and Settings is in `src/i18n/en.js`, read through `t("key")`. Another language is a sibling file added to `src/i18n/index.js`. Screens outside the shell still carry their own English text.
+- **Time zone.** Register sends the browser's time zone. An account with none (made before time zones existed) reports it once on the first visit. Students can change it under Settings, Account.
+- **Read aloud.** Lessons have a Read aloud button (play, pause, stop and speed 0.75x to 1.5x) that uses the browser's own voice. Formulas are read as "formula". Nothing is sent anywhere, and the button is hidden in browsers with no speech voice.
 
 ## Offline use, install and low-data mode
 
@@ -90,7 +99,7 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 - **Hosting needs:** HTTPS (localhost is exempt), `sw.js` and `manifest.webmanifest` served with `Cache-Control: no-cache` (the preview server in `vite.config.js` does this), `/assets/*` cached for a year, and an API path of the form `/api/<version>/...` on the page's own address or behind the same rules. Change `VERSION` in `sw.js` when its rules change.
 - Settings has an Install section. The button shows when the browser offers installing; otherwise it explains the browser menu.
 
-**Low-data mode.** Settings, "Use less data". Saved on the device (`catalyst-lowdata` in `localStorage`, applied as `data-lowdata` before the page paints), not on the account. It serves pictures at 320 and 640 px wide with Cloudinary's low-quality setting (instead of 400, 800 and 1200), skips the video preview picture (the Play button stays), and stops loading lessons ahead when a link is hovered or touched.
+**Low-data mode.** The gear panel or Settings, Appearance, "Use less data". It turns on by itself when the browser's Save-Data setting is on and the student has not chosen yet; a saved choice always wins. Saved on the device (`catalyst-lowdata` in `localStorage`, applied as `data-lowdata` before the page paints), not on the account. It serves pictures at 320 and 640 px wide with Cloudinary's low-quality setting (instead of 400, 800 and 1200), skips the video preview picture (the Play button stays), and stops loading lessons ahead when a link is hovered or touched.
 
 ## Application routes
 
@@ -100,7 +109,10 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 | `/register` | Public | Create a student account |
 | `/confirm-email` | Public | Opened from the link sent to a new address. Confirms an email change (`?token=`) |
 | `/privacy`, `/terms` | Public | Plain-English privacy and terms pages. Linked in the footer and on Register |
-| `/courses` | Authenticated | Browse published courses |
+| `/home` | Authenticated | Home: continue where you left off, today's plan, daily goal, due review, your courses with their authors |
+| `/courses` | Authenticated | The course list with a category filter (`?category=<slug>`), author names and a category label on each card |
+| `/me` | Authenticated | Me: links to Progress, Saved items and Settings. Progress, Saved and Settings keep Me highlighted in the navigation |
+| `/lab` | Authenticated | Study Lab. A "coming soon" page until Phase X4 |
 | `/courses/:id` | Authenticated | Course outline with lesson progress |
 | `/lessons/:id` | Authenticated | Lesson hub: explanation, formulas, practice tests, flashcards, materials, Mark as done, next lesson |
 | `/tests/:id` | Authenticated | Take a test, one question at a time, with feedback after each answer. Lesson tests show their pass percent and whether the student passed |
@@ -109,12 +121,13 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 | `/courses/:id` mastery | Authenticated | Each lesson row ends its meta line with the mastery level as plain text (Attempted, Familiar, Proficient or Mastered). Not started shows nothing |
 | `/topics` | Authenticated | Practise by topic: choose a topic, source and year, then `/practice/topic` runs up to 20 questions from every lesson in the test player without submitting. Home links here once questions are tagged. The admin question form has Topic, Source and Year |
 | `/tests/:id/exam` | Authenticated | Timed mock exam for a test with a time limit (`/tests/:id` shows the intro). Countdown from the server's deadline, a question-number grid, flag for review, answers saved as you go, auto-submit at zero, then a review of every question with its worked solution. The site navigation is hidden during the exam. The admin test page has a Time limit field |
-| `/courses` Today's plan | Student | When an exam date is set, Home shows Today's plan: days left, the lessons to do today (links) and a link to review. Set or clear the date under Settings, Exam date |
-| `/review` | Authenticated | Today's review: due flashcards (Space flips, 1 to 3 rate), then a link to practise due mistakes. Home shows a Due today chip that links here. The phone tab bar has a Review tab |
+| `/home` Today's plan | Student | When an exam date is set, Home shows Today's plan: days left, the lessons to do today (links) and a link to review. Set or clear the date under Settings, Exam date |
+| `/review` | Authenticated | Today's review: due flashcards (Space flips, 1 to 3 rate), then a link to practise due mistakes. Home shows a Due today chip that links here. Review is one of the five places in the navigation |
 | `/practice/mistakes` | Authenticated | Practise questions from the mistakes queue (`?course=` and `?unit=` narrow it), using the test player without submitting. Home and each course page show a Mistakes panel; test results offer Practise the ones I missed |
 | `/lessons/:id/flashcards` | Authenticated | Study a flashcard deck: tap the card to turn it over, then rate it (`?filter=review` shows cards still to review) |
 | `/progress` | Authenticated | View scores, completed lessons, and streak |
-| `/settings` | Authenticated | Colour palette, light or dark theme, text size, low-data mode, install, profile picture, change email, change password, download my data and delete account |
+| `/settings` | Authenticated | Four tabs, kept in the address (`?tab=account|appearance|notifications|study`). Account: profile picture, time zone, change email and password, download my data, delete account. Appearance: colour theme, text size, low-data mode, install. Notifications: review reminders and new-lesson messages. Study: daily goal and exam date |
+| `/admin/catalog` | Admin | Categories (add, rename, delete) and authors (name, short bio, picture). The course editor picks a category and authors from these |
 | Notification bell | Authenticated | Top bar bell with an unread count. The panel lists new-lesson and review-due messages, each linking to its page, plus Mark all as read. On phones the panel spans the screen under the top bar |
 | `/admin` | Admin | Overview numbers and the course list, with search |
 | `/admin/users` | Admin | Find users, change roles, deactivate accounts and manage subscriptions |
@@ -127,7 +140,7 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 | `/admin/lessons/:id` | Admin | Lesson editor: explanation, image, video, tests, flashcards, materials |
 | `/admin/tests/:id` | Admin | Test editor: questions and, for lesson tests, the pass percent needed to complete the lesson |
 
-Unknown routes redirect to `/courses` for signed-in users or `/login` for signed-out users.
+Unknown routes redirect to `/home` for signed-in users or `/login` for signed-out users.
 
 ## Admin workflow
 

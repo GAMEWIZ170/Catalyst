@@ -8,7 +8,7 @@ web
 
 ## Users
 
-University of Ghana students who want a platform to enhance their study outside the classroom. A Duolingo-style learning experience: structured, and at your own pace. They study on a mix of phones and laptops. One admin (the owner) writes all content through an in-app builder (for now).
+University students who want a platform to enhance their study outside the classroom. A Duolingo-style learning experience: structured, and at your own pace. They study on a mix of phones and laptops. One admin (the owner) writes all content through an in-app builder (for now).
 
 ## Product Purpose
 

@@ -1,57 +1,68 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, NavLink, useMatch, useNavigate } from "react-router-dom";
+import { Link, NavLink, useLocation, useMatch, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "./Avatar";
-import { Bell, Bookmark, BarChart3, House, Layers, Search, UserRound, Zap } from "lucide-react";
-import ThemeToggle from "./ThemeToggle";
+import { Bell, BookOpen, FlaskConical, House, Layers, PanelLeftClose, PanelLeftOpen, Search, Settings, UserRound, Zap } from "lucide-react";
 import ShortcutHelp from "./ShortcutHelp";
-import VerifyBanner from "./VerifyBanner";
 import NotificationPanel, { useNotifications } from "./NotificationPanel";
+import QuickSettings from "./QuickSettings";
 import useStudyTimer from "../utils/useStudyTimer";
 import { useOnline } from "../utils/offline";
+import { t } from "../i18n";
 
-// Phones get a bottom tab bar for the places a student goes most. Laptops keep the top bar only.
-const TABS = [
-  { to: "/courses", label: "Home", icon: House },
-  { to: "/review", label: "Review", icon: Layers },
-  { to: "/search", label: "Search", icon: Search },
-  { to: "/saved", label: "Saved", icon: Bookmark },
-  { to: "/progress", label: "Progress", icon: BarChart3 },
-  { to: "/settings", label: "Profile", icon: UserRound }
+// The places a student goes. Laptops show them in a sidebar, phones in a bar along the bottom (never both).
+// "Me" also covers the pages inside it, so it stays highlighted on Progress, Saved and Settings.
+const PLACES = [
+  { to: "/home", label: "nav.home", icon: House, end: true },
+  { to: "/courses", label: "nav.courses", icon: BookOpen },
+  { to: "/review", label: "nav.review", icon: Layers },
+  { to: "/lab", label: "nav.lab", icon: FlaskConical },
+  { to: "/me", label: "nav.me", icon: UserRound, also: ["/progress", "/settings", "/saved", "/achievements"] }
 ];
+
+const sidebarKey = "catalyst-sidebar";
+const readCollapsed = () => { try { return window.localStorage.getItem(sidebarKey) === "collapsed"; } catch { return false; } };
+
+function PlaceLink({ place, pathname, collapsed }) {
+  const Icon = place.icon;
+  const inside = place.also?.some((prefix) => pathname.startsWith(prefix));
+  const body = <><Icon size={22} aria-hidden="true" /><span className="place-label">{t(place.label)}</span></>;
+  const title = collapsed ? t(place.label) : undefined;
+  // NavLink would overwrite aria-current on a page inside this place, so those use a plain Link.
+  if (inside) return <Link to={place.to} className="place-link is-current" aria-current="page" title={title}>{body}</Link>;
+  return <NavLink to={place.to} end={place.end} className={({ isActive }) => `place-link${isActive ? " is-current" : ""}`} title={title}>{body}</NavLink>;
+}
 
 export default function AppShell({ children }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   // A test hides the site navigation so nothing pulls attention from the question.
   // Every useMatch runs on every render (no ||), because React needs the same hooks in the same order each time.
   const focusMatches = [useMatch("/tests/:id"), useMatch("/tests/:id/exam"), useMatch("/practice/*"), useMatch("/welcome")];
   const focusMode = focusMatches.some(Boolean);
   const streak = user?.streak ?? null;
   useStudyTimer(user?.role === "student" && user?.dailyGoal?.kind === "minutes");
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notifications = useNotifications(Boolean(user));
   const online = useOnline();
-  const [profileOpen, setProfileOpen] = useState(false);
-  const notificationButtonRef = useRef(null);
-  const profileButtonRef = useRef(null);
+  // Only one top bar popover is open at a time: "notifications", "quick", "profile" or none.
+  const [open, setOpen] = useState(null);
+  const [collapsed, setCollapsed] = useState(readCollapsed);
+  const buttons = useRef({});
+  const quickRef = useRef(null);
   const profileMenuRef = useRef(null);
+  const isStudent = user?.role === "student";
+
+  const toggle = (name) => setOpen((current) => (current === name ? null : name));
 
   useEffect(() => {
     const handlePointerDown = (event) => {
-      if (!event.target.closest(".notification-menu")) setNotificationsOpen(false);
-      if (!event.target.closest(".profile-menu")) setProfileOpen(false);
+      if (!event.target.closest(".popover-host")) setOpen(null);
     };
     const handleKeyDown = (event) => {
-      if (event.key === "Escape") {
-        if (notificationsOpen) {
-          setNotificationsOpen(false);
-          notificationButtonRef.current?.focus();
-        }
-        if (profileOpen) {
-          setProfileOpen(false);
-          profileButtonRef.current?.focus();
-        }
+      if (event.key === "Escape" && open) {
+        buttons.current[open]?.focus();
+        setOpen(null);
       }
     };
     document.addEventListener("pointerdown", handlePointerDown);
@@ -60,11 +71,21 @@ export default function AppShell({ children }) {
       document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [notificationsOpen, profileOpen]);
+  }, [open]);
 
   useEffect(() => {
-    if (profileOpen) profileMenuRef.current?.querySelector("[role='menuitem']")?.focus();
-  }, [profileOpen]);
+    if (open === "profile") profileMenuRef.current?.querySelector("[role='menuitem']")?.focus();
+    if (open === "quick") quickRef.current?.querySelector("input, select")?.focus();
+  }, [open]);
+
+  // A page change closes whatever was open.
+  useEffect(() => setOpen(null), [pathname]);
+
+  function toggleSidebar() {
+    const next = !collapsed;
+    setCollapsed(next);
+    try { window.localStorage.setItem(sidebarKey, next ? "collapsed" : "open"); } catch { /* it still collapses until the page closes */ }
+  }
 
   async function handleLogout() {
     await logout();
@@ -84,73 +105,97 @@ export default function AppShell({ children }) {
   if (focusMode) return <div className="app-shell app-shell--focus"><a className="skip-link" href="#main">Skip to content</a><main className="page-wrap" id="main" tabIndex="-1">{children}</main><ShortcutHelp /></div>;
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${isStudent ? " has-nav" : ""}${isStudent && collapsed ? " nav-collapsed" : ""}`}>
       <a className="skip-link" href="#main">Skip to content</a>
       <header className="topbar">
-        <Link className="brand" to="/courses" aria-label="Catalyst home">
+        <Link className="brand" to={isStudent ? "/home" : "/admin"} aria-label="Catalyst home">
           <span className="brand-mark">C</span>
-          <span>Catalyst</span>
+          <span className="brand-name">Catalyst</span>
         </Link>
         <div className="topbar-tools">
-          <div className="notification-menu">
+          <Link className="icon-button" to="/search" aria-label={t("tools.search")} title={t("tools.search")}>
+            <Search size={20} aria-hidden="true" />
+          </Link>
+          <div className="notification-menu popover-host">
             <button
-              ref={notificationButtonRef}
+              ref={(node) => { buttons.current.notifications = node; }}
               className="icon-button"
               type="button"
-              aria-label={notifications.unread > 0 ? `Notifications, ${notifications.unread} unread` : "Notifications"}
-              aria-expanded={notificationsOpen}
+              aria-label={notifications.unread > 0 ? `${t("tools.notifications")}, ${notifications.unread} unread` : t("tools.notifications")}
+              aria-expanded={open === "notifications"}
               aria-controls="notification-panel"
               onClick={() => {
-                if (!notificationsOpen) notifications.refresh();
-                setNotificationsOpen((current) => !current);
-                setProfileOpen(false);
+                if (open !== "notifications") notifications.refresh();
+                toggle("notifications");
               }}
             >
               <Bell size={20} aria-hidden="true" />
               {notifications.unread > 0 && <span className="notification-badge" aria-hidden="true">{notifications.unread > 9 ? "9+" : notifications.unread}</span>}
             </button>
-            {notificationsOpen && <NotificationPanel notifications={notifications} onNavigate={() => setNotificationsOpen(false)} />}
+            {open === "notifications" && <NotificationPanel notifications={notifications} onNavigate={() => setOpen(null)} />}
           </div>
-          <ThemeToggle />
+          <div className="quick-menu popover-host">
+            <button
+              ref={(node) => { buttons.current.quick = node; }}
+              className="icon-button"
+              type="button"
+              aria-label={t("tools.settings")}
+              title={t("tools.settings")}
+              aria-expanded={open === "quick"}
+              aria-controls="quick-settings-panel"
+              onClick={() => toggle("quick")}
+            >
+              <Settings size={20} aria-hidden="true" />
+            </button>
+            {open === "quick" && <QuickSettings panelRef={quickRef} onNavigate={() => setOpen(null)} />}
+          </div>
           {streak !== null && <span className="streak-indicator" aria-label={`Current streak: ${streak} ${streak === 1 ? "day" : "days"}`}>
             <Zap size={16} aria-hidden="true" /><span>{streak}</span>
           </span>}
-          <div className="profile-menu">
+          <div className="profile-menu popover-host">
             <button
-              ref={profileButtonRef}
+              ref={(node) => { buttons.current.profile = node; }}
               className="profile-button"
               type="button"
-              aria-label="Open profile menu"
+              aria-label={t("tools.profile")}
               aria-haspopup="menu"
-              aria-expanded={profileOpen}
-              onClick={() => {
-                setProfileOpen((current) => !current);
-                setNotificationsOpen(false);
-              }}
+              aria-expanded={open === "profile"}
+              onClick={() => toggle("profile")}
             >
               <Avatar avatar={user?.avatar} name={user?.name} size={40} />
             </button>
-            {profileOpen && <div className="profile-panel" ref={profileMenuRef} role="menu" onKeyDown={moveProfileFocus}>
+            {open === "profile" && <div className="profile-panel" ref={profileMenuRef} role="menu" onKeyDown={moveProfileFocus}>
               <div className="profile-header">
                 <strong>{user?.name}</strong>
                 <span>{user?.email}</span>
               </div>
-              <Link role="menuitem" tabIndex="-1" to="/settings" onClick={() => setProfileOpen(false)}>Settings</Link>
-              <Link role="menuitem" tabIndex="-1" to="/progress" onClick={() => setProfileOpen(false)}>My progress</Link>
-              {user?.role === "admin" && <Link role="menuitem" tabIndex="-1" to="/admin" onClick={() => setProfileOpen(false)}>Admin</Link>}
+              <Link role="menuitem" tabIndex="-1" to="/settings" onClick={() => setOpen(null)}>{t("me.settings")}</Link>
+              <Link role="menuitem" tabIndex="-1" to="/progress" onClick={() => setOpen(null)}>{t("me.progress")}</Link>
+              {user?.role === "admin" && <Link role="menuitem" tabIndex="-1" to="/admin" onClick={() => setOpen(null)}>Admin</Link>}
               <button role="menuitem" tabIndex="-1" type="button" onClick={handleLogout}>Log out</button>
             </div>}
           </div>
         </div>
       </header>
       {!online && <div className="offline-banner" role="status">You are offline. Lessons you opened before are still here. Answers need a connection.</div>}
-      <main className="page-wrap" id="main" tabIndex="-1">{children}</main>
-      <ShortcutHelp />
-      <footer className="footer">Keep learning with momentum. <span className="footer-links"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link></span></footer>
-      {user?.role === "student" && <nav className="tabbar" aria-label="Main">
-        {TABS.map(({ to, label, icon: Icon }) => <NavLink key={to} to={to} className="tabbar-link">
-          <Icon size={22} aria-hidden="true" /><span>{label}</span>
-        </NavLink>)}
+      <div className="shell-body">
+        {isStudent && <aside className="sidebar">
+          <nav aria-label={t("nav.main")}>
+            {PLACES.map((place) => <PlaceLink key={place.to} place={place} pathname={pathname} collapsed={collapsed} />)}
+          </nav>
+          <button className="sidebar-toggle" type="button" aria-expanded={!collapsed} onClick={toggleSidebar} title={collapsed ? t("nav.expand") : t("nav.collapse")}>
+            {collapsed ? <PanelLeftOpen size={20} aria-hidden="true" /> : <PanelLeftClose size={20} aria-hidden="true" />}
+            <span className="place-label">{collapsed ? t("nav.expand") : t("nav.collapse")}</span>
+          </button>
+        </aside>}
+        <div className="shell-main">
+          <main className="page-wrap" id="main" tabIndex="-1">{children}</main>
+          <ShortcutHelp />
+          <footer className="footer">Keep learning with momentum. <span className="footer-links"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link></span></footer>
+        </div>
+      </div>
+      {isStudent && <nav className="tabbar" aria-label={t("nav.main")}>
+        {PLACES.map((place) => <PlaceLink key={place.to} place={place} pathname={pathname} collapsed={false} />)}
       </nav>}
     </div>
   );

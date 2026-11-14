@@ -5,6 +5,8 @@ const Progress = require("../models/progress.models");
 const Position = require("../models/position.models");
 const StudyTime = require("../models/studytime.models");
 const User = require("../models/user.models");
+const { dayKey } = require("../utils/day");
+const { attachMeta } = require("../utils/courseMeta");
 
 // STUDENT: the home screen in one call. Every published course with this student's progress and the
 // next lesson to open, so the screen does not fetch each course tree one after another.
@@ -12,11 +14,11 @@ const User = require("../models/user.models");
 // not the tests and materials that a full outline carries).
 const getHome = async (req, res, next) => {
   try {
-    const courses = await Course.find({ isPublished: true, deletedAt: null })
-      .select("code title description")
+    const courses = await attachMeta(await Course.find({ isPublished: true, deletedAt: null })
+      .select("code title description category authors")
       .sort({ code: 1 })
-      .lean();
-    const today = new Date().toISOString().slice(0, 10);
+      .lean());
+    const today = dayKey(req.user.timeZone);
     const [units, doneRows, positions, goalUser, studied, lessonsToday] = await Promise.all([
       Unit.find({ course: { $in: courses.map((course) => course._id) }, deletedAt: null }).select("course order").sort({ order: 1 }).lean(),
       Progress.find({ user: req.user.id, completed: true }).select("lesson").lean(),

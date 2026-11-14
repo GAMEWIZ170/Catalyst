@@ -1,4 +1,5 @@
 const User = require("../models/user.models");
+const { logEvent } = require("../utils/events");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const hashPassword = require("../utils/bcrypt");
@@ -22,6 +23,8 @@ const preferencesOf = (user) => ({
   onboarded: user.onboarded !== false,
   emailVerified: user.emailVerified !== false,
   examDate: user.examDate || null,
+  timeZone: user.timeZone || null,
+  notify: { review: user.notify?.review !== false, lesson: user.notify?.lesson !== false },
   dailyGoal: { kind: user.dailyGoal?.kind || "none", minutes: user.dailyGoal?.minutes || 10 }
 });
 
@@ -68,7 +71,7 @@ const sendTokenResponse = (user, statusCode, res) => {
 
 const register = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, timeZone } = req.body;
 
     const normalizedEmail = email.toLowerCase();
 
@@ -90,12 +93,14 @@ const register = async (req, res, next) => {
       password: hashedPassword,
       role: "student",
       onboarded: false,
-      emailVerified: false
+      emailVerified: false,
+      timeZone: timeZone || null
     });
 
     // A failed email must not fail the sign-up. The student can ask for another link.
     sendVerifyEmail(user).catch((err) => console.error("Verification email failed:", err.message));
 
+    logEvent(user._id, "signup", {});
     sendTokenResponse(user, 201, res);
   } catch (error) {
     if (error.code === 11000) {
@@ -138,6 +143,7 @@ const login = async (req, res, next) => {
       return res.status(403).json({ message: "This account has been deactivated" });
     }
 
+    logEvent(user._id, "login", {});
     sendTokenResponse(user, 200, res);
   } catch (error) {
     next(error);
@@ -159,8 +165,8 @@ const getMe = async (req, res, next) => {
   try {
     // The streak rides along, so the top bar has it without a second request on every page load.
     const [user, streak] = await Promise.all([
-      User.findById(req.user.id).select("name email role avatar subscriptionEndsAt onboarded emailVerified examDate dailyGoal"),
-      loadStreak(req.user.id)
+      User.findById(req.user.id).select("name email role avatar subscriptionEndsAt onboarded emailVerified examDate dailyGoal timeZone notify"),
+      loadStreak(req.user.id, req.user.timeZone)
     ]);
 
     if (!user) {
@@ -190,13 +196,17 @@ const updateAvatar = async (req, res, next) => {
 
 const updatePreferences = async (req, res, next) => {
   try {
-    const { onboarded, examDate, goalKind, goalMinutes } = req.body;
+    const { onboarded, examDate, goalKind, goalMinutes, timeZone, notify } = req.body;
     const set = {};
     if (onboarded !== undefined) set.onboarded = onboarded;
     if (examDate !== undefined) set.examDate = examDate;
+    if (timeZone !== undefined) set.timeZone = timeZone;
+    if (notify?.review !== undefined) set["notify.review"] = notify.review;
+    if (notify?.lesson !== undefined) set["notify.lesson"] = notify.lesson;
     if (goalKind !== undefined) set["dailyGoal.kind"] = goalKind;
     if (goalMinutes !== undefined) set["dailyGoal.minutes"] = goalMinutes;
-    const user = await User.findByIdAndUpdate(req.user.id, { $set: set }, { returnDocument: "after", runValidators: true }).select("onboarded examDate dailyGoal");
+    const user = await User.findByIdAndUpdate(req.user.id, { $set: set }, { returnDocument: "after", runValidators: true }).select("onboarded examDate dailyGoal timeZone notify");
+    authCache.forget(req.user.id);
     if (!user) return res.status(404).json({ message: "User not found" });
     return res.status(200).json({ data: preferencesOf(user) });
   } catch (error) {

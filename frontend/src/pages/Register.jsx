@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { AuthLayout } from "./Login";
 import { Button, TextField } from "../components/ui";
+import { detectTimeZone } from "../utils/timeZone";
 
 export default function Register() {
   const { register } = useAuth();
@@ -20,8 +21,8 @@ export default function Register() {
     }
     setBusy(true);
     try {
-      await register(form);
-      navigate("/courses", { replace: true });
+      await register({ ...form, timeZone: detectTimeZone() });
+      navigate("/home", { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {

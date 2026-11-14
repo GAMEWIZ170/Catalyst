@@ -5,6 +5,9 @@ const courseSchema = new mongoose.Schema({
     code: { type: String, required: true, unique: true, trim: true },
     title: { type: String, required: true, trim: true },
     description: { type: String, required: true, trim: true, maxlength: 200 },
+    // Null means "General". Authors show on the course card and page.
+    category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", default: null },
+    authors: [{ type: mongoose.Schema.Types.ObjectId, ref: "Author" }],
     isPublished: { type: Boolean, default: false },
     deletedAt: { type: Date, default: null }
 }, { timestamps: true });

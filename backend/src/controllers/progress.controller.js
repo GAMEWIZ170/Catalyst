@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { logEvent } = require("../utils/events");
 const Progress = require("../models/progress.models");
 const TestResult = require("../models/testresult.models");
 const FlashcardProgress = require("../models/flashcardprogress.models");
@@ -12,7 +13,7 @@ const StudyTime = require("../models/studytime.models");
 const { buildCourseOutline } = require("../utils/courseOutline");
 const mastery = require("../utils/mastery");
 
-const todayKey = () => new Date().toISOString().slice(0, 10);
+const { dayKey } = require("../utils/day");
 
 const markLessonDone = async (req, res, next) => {
   if (!mongoose.isObjectIdOrHexString(req.params.id)) return res.status(400).json({ message: "Invalid lesson ID" });
@@ -38,10 +39,11 @@ const markLessonDone = async (req, res, next) => {
     }
     const progress = await Progress.findOneAndUpdate(
       { user: req.user.id, lesson: lesson._id },
-      { $set: { completed: true }, $setOnInsert: { completedAt: new Date() }, $addToSet: { completedDays: todayKey() } },
+      { $set: { completed: true }, $setOnInsert: { completedAt: new Date() }, $addToSet: { completedDays: dayKey(req.user.timeZone) } },
       { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
     );
-    await mastery.record(req.user.id, lesson._id, { type: "attempt" });
+    await mastery.record(req.user.id, lesson._id, { type: "attempt" }, req.user.timeZone);
+    logEvent(req.user.id, "lesson_completed", { lesson: lesson._id, how: "marked" });
     return res.status(200).json({
       message: "Lesson completed",
       data: {
@@ -64,7 +66,7 @@ const getMyProgress = async (req, res, next) => {
   }
 };
 
-const loadStreak = async (userId) => {
+const loadStreak = async (userId, timeZone) => {
   const [progress, results, flashcardProgress] = await Promise.all([
     Progress.find({ user: userId }).select("completedDays").lean(),
     TestResult.find({ user: userId }).select("completedDays").lean(),
@@ -73,12 +75,12 @@ const loadStreak = async (userId) => {
   const days = [...progress, ...results].flatMap((record) => record.completedDays || []);
   const reviewedDays = flashcardProgress.flatMap((record) => record.reviewedDays || []);
   const activeDays = [...days, ...reviewedDays];
-  return { streak: calculateStreak(activeDays), completedToday: activeDays.includes(todayKey()) };
+  return { streak: calculateStreak(activeDays, timeZone), completedToday: activeDays.includes(dayKey(timeZone)) };
 };
 
 const getStreak = async (req, res, next) => {
   try {
-    return res.status(200).json({ data: await loadStreak(req.user.id) });
+    return res.status(200).json({ data: await loadStreak(req.user.id, req.user.timeZone) });
   } catch (error) {
     next(error);
   }
@@ -89,7 +91,7 @@ const getOverview = async (req, res, next) => {
   try {
     const [progress, streak, courses] = await Promise.all([
       Progress.find({ user: req.user.id }).select("lesson completed score completedAt -_id").lean(),
-      loadStreak(req.user.id),
+      loadStreak(req.user.id, req.user.timeZone),
       Course.find({ isPublished: true, deletedAt: null }).select("_id").sort({ code: 1 }).lean()
     ]);
     const outlines = await Promise.all(courses.map((course) => buildCourseOutline(course._id, req.user.id)));
@@ -120,7 +122,7 @@ const savePosition = async (req, res, next) => {
 const addStudyTime = async (req, res, next) => {
   try {
     await StudyTime.updateOne(
-      { user: req.user.id, day: todayKey() },
+      { user: req.user.id, day: dayKey(req.user.timeZone) },
       { $inc: { seconds: req.body.seconds } },
       { upsert: true }
     );

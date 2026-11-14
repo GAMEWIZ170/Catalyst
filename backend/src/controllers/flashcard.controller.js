@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { logEvent } = require("../utils/events");
 const Flashcard = require("../models/flashcard.models");
 const FlashcardProgress = require("../models/flashcardprogress.models");
 const Progress = require("../models/progress.models");
@@ -9,7 +10,7 @@ const { schedule, RATING } = require("../utils/scheduler");
 const mastery = require("../utils/mastery");
 
 const badId = (id) => !mongoose.isObjectIdOrHexString(id);
-const todayKey = () => new Date().toISOString().slice(0, 10);
+const { dayKey } = require("../utils/day");
 
 const cardsForStudent = (cards, progressByCard) => cards.map((card) => ({
   _id: card._id,
@@ -47,8 +48,9 @@ const rateFlashcard = async (req, res, next) => {
   try {
     const card = await Flashcard.findOne({ _id: req.params.id, isPublished: true, deletedAt: null }).lean();
     if (!card || !(await findVisibleLesson(card.lesson))) return res.status(404).json({ message: "Flashcard not found" });
-    const existing = await FlashcardProgress.findOne({ user: req.user.id, flashcard: card._id }).select("fsrs").lean();
+    const existing = await FlashcardProgress.findOne({ user: req.user.id, flashcard: card._id }).select("fsrs due").lean();
     const next = schedule(existing?.fsrs, RATING[req.body.confidence]);
+    const wasDue = Boolean(existing?.due && existing.due <= new Date());
     // The save and the card list do not depend on each other, so they run together.
     const [progress, cards] = await Promise.all([
       FlashcardProgress.findOneAndUpdate(
@@ -56,7 +58,7 @@ const rateFlashcard = async (req, res, next) => {
         {
           $set: { confidence: req.body.confidence, lastReviewedAt: new Date(), fsrs: next.fsrs, due: next.due },
           $inc: { reviewCount: 1 },
-          $addToSet: { reviewedDays: todayKey() }
+          $addToSet: { reviewedDays: dayKey(req.user.timeZone) }
         },
         { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
       ).lean(),
@@ -68,14 +70,17 @@ const rateFlashcard = async (req, res, next) => {
     }).select("flashcard confidence").lean();
     const progressByCard = new Map(progressRecords.map((item) => [item.flashcard.toString(), item.confidence]));
     if (cards.length && cards.every((item) => progressByCard.has(item._id.toString()))) {
+      logEvent(req.user.id, "lesson_completed", { lesson: card.lesson, how: "flashcards" });
       await Progress.findOneAndUpdate(
         { user: req.user.id, lesson: card.lesson },
-        { $set: { completed: true }, $setOnInsert: { completedAt: new Date() }, $addToSet: { completedDays: todayKey() } },
+        { $set: { completed: true }, $setOnInsert: { completedAt: new Date() }, $addToSet: { completedDays: dayKey(req.user.timeZone) } },
         { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
       );
     }
-    await mastery.record(req.user.id, card.lesson, { type: "attempt" });
-    if (req.body.confidence === "confident") await mastery.record(req.user.id, card.lesson, { type: "review" });
+    logEvent(req.user.id, "flashcard_rated", { card: card._id, rating: req.body.confidence });
+    if (wasDue) logEvent(req.user.id, "review_done", { kind: "card" });
+    await mastery.record(req.user.id, card.lesson, { type: "attempt" }, req.user.timeZone);
+    if (req.body.confidence === "confident") await mastery.record(req.user.id, card.lesson, { type: "review" }, req.user.timeZone);
     return res.status(200).json({ data: { summary: getFlashcardSummary.summarize(cards, progressByCard), reviewCount: progress.reviewCount } });
   } catch (error) {
     next(error);

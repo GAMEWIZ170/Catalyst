@@ -5,6 +5,7 @@ import { api } from "../api/client";
 import { nearToPrefetch, prefetchLesson } from "../api/prefetch";
 import DeckSummary from "../components/DeckSummary";
 import RichText from "../components/RichText";
+import ReadAloud from "../components/ReadAloud";
 import ReportButton from "../components/ReportButton";
 import { PreviewBanner, PreviewCards } from "../components/PreviewBits";
 import { Badge, Button, SelectField, Skeleton, SkeletonGroup, TextArea } from "../components/ui";
@@ -35,7 +36,7 @@ function LessonSkeleton() {
 // A still picture and a play button. The player (about 500 KB of YouTube code) loads only after a tap.
 // The still is a small 320 by 180 image from another site (YouTube), so it waits two seconds and the lesson text
 // gets the connection first. The frame keeps its 16:9 shape meanwhile. If the still cannot load, the button still works.
-function LessonVideo({ title, videoId }) {
+function LessonVideo({ title, videoId, lessonId }) {
   const [playing, setPlaying] = useState(false);
   const [stillFailed, setStillFailed] = useState(false);
   const [stillWanted, setStillWanted] = useState(false);
@@ -48,7 +49,7 @@ function LessonVideo({ title, videoId }) {
   return <div className="video-frame">
     {playing
       ? <iframe title={`${title} video`} src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?autoplay=1`} allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
-      : <button type="button" className="video-play" onClick={() => setPlaying(true)}>
+      : <button type="button" className="video-play" onClick={() => { setPlaying(true); api.sendEvent({ type: "video_started", props: { lesson: lessonId } }); }}>
         {stillWanted && !stillFailed && <img className="video-still" src={`https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/mqdefault.jpg`} alt="" width="320" height="180" loading="lazy" decoding="async" onError={() => setStillFailed(true)} />}
         <span className="video-play-mark"><Play size={20} aria-hidden="true" /></span>
         <span className="video-play-label">Play video</span>
@@ -98,7 +99,7 @@ export default function Lesson() {
   const [doneMessage, setDoneMessage] = useState("");
   const [savedOverride, setSavedOverride] = useState(null);
 
-  const from = location.state?.from || (preview ? `/admin/lessons/${id}` : "/courses");
+  const from = location.state?.from || (preview ? `/admin/lessons/${id}` : "/home");
   const courseId = /^\/courses\/([^/]+)$/.exec(from)?.[1];
 
   function load() {
@@ -202,12 +203,13 @@ export default function Lesson() {
             {unit && <span>{unit.title}</span>}
             {completed && <Badge tone="success" icon={CheckCircle2}>Completed</Badge>}
           </p>}
-          <div className="lesson-explanation"><RichText>{lesson.explanation}</RichText></div>
+          <ReadAloud text={lesson.explanation} />
+          <div className="lesson-explanation"><RichText math={lesson.explanationMath}>{lesson.explanation}</RichText></div>
           {lesson.explanationImage?.url && <figure className="lesson-figure">
             <ResponsiveImage image={lesson.explanationImage} loading="lazy" />
             {lesson.explanationImage.alt && <figcaption>{lesson.explanationImage.alt}</figcaption>}
           </figure>}
-          {lesson.videoHost === "youtube" && lesson.videoId && <LessonVideo title={lesson.title} videoId={lesson.videoId} />}
+          {lesson.videoHost === "youtube" && lesson.videoId && <LessonVideo title={lesson.title} videoId={lesson.videoId} lessonId={lesson._id} />}
         </article>
         {lesson.tests.length > 0 && <section className="lesson-section"><h2>Practice</h2><div className="student-test-list">{lesson.tests.map((test) => <Link className="student-test-row" to={preview ? `/admin/preview/tests/${test._id}` : `/tests/${test._id}`} state={preview ? { from: `/admin/preview/lessons/${id}` } : state} key={test._id}><span><strong>{test.title}</strong>{test.draft && <Badge>Draft</Badge>}<span className="muted">{test.questionCount} questions · {test.passPercent != null ? `Pass at ${test.passPercent}% · ` : ""}{test.bestScore === null ? "Not taken yet" : `Best score: ${test.bestScore}%`}</span></span><span className="row-action">{test.bestScore === null ? "Start" : "Retake"}</span></Link>)}</div></section>}
         {lesson.flashcards.total > 0 && <section className="lesson-section"><h2>Flashcards</h2>{preview ? <PreviewCards cards={lesson.cards} /> : <DeckSummary summary={lesson.flashcards} />}{!preview && <div className="button-row button-row--stack"><Button as={Link} variant={nextStep === "deck" ? "primary" : "secondary"} to={`/lessons/${id}/flashcards`} state={{ courseFrom: from }}>Study all cards</Button>{lesson.flashcards.unsure + lesson.flashcards.unknown + lesson.flashcards.unrated > 0 && <Button as={Link} variant="secondary" to={`/lessons/${id}/flashcards?filter=review`} state={{ courseFrom: from }}>Review cards I'm not sure about</Button>}</div>}</section>}

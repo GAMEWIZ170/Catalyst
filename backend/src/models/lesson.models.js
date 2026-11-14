@@ -6,6 +6,9 @@ const lessonSchema = new mongoose.Schema({
     title: { type: String, required: true, trim: true },
     order: { type: Number, required: true },
     explanation: { type: String, required: true },
+    // The explanation's formulas, already drawn as HTML by the server when the lesson was saved (see utils/math.js).
+    // Left out of reads unless asked for with +explanationMath, so the admin editor does not download it.
+    explanationMath: { type: [mongoose.Schema.Types.Mixed], default: undefined, select: false },
     explanationImage: {
         url: { type: String, trim: true },
         publicId: { type: String, trim: true },

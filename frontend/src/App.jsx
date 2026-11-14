@@ -10,7 +10,8 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import VerifyEmail from "./pages/VerifyEmail";
 import { Privacy, Terms } from "./pages/Legal";
-import Courses from "./pages/Courses";
+import Courses from "./pages/Courses"; // the Home screen (continue, plan, goal). The course list is CourseCatalog.
+import CourseCatalog from "./pages/CourseCatalog";
 // The course outline and the lesson are the main student path, so they ship in the first bundle: a separate
 // file would cost one more round trip on a slow connection, more than the few KB it saves.
 import CourseOutline from "./pages/CourseOutline";
@@ -34,6 +35,9 @@ const AdminReports = lazy(() => import("./pages/AdminReports"));
 const AdminAnalytics = lazy(() => import("./pages/AdminAnalytics"));
 const AdminQuestionImport = lazy(() => import("./pages/AdminQuestionImport"));
 const Settings = lazy(() => import("./pages/Settings"));
+const Me = lazy(() => import("./pages/Me"));
+const Lab = lazy(() => import("./pages/Lab"));
+const AdminCatalog = lazy(() => import("./pages/AdminCatalog"));
 import AdminLayout from "./components/admin/AdminLayout";
 import { Skeleton, SkeletonGroup } from "./components/ui";
 
@@ -67,22 +71,23 @@ function AdminPage({ children }) {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
-  if (user.role !== "admin") return <AppShell><AdminLayout nav={false}><div className="access-denied"><h1>You do not have access to this page</h1><p>Only administrators can manage Catalyst content.</p><Link className="button button-primary" to="/courses">Back to courses</Link></div></AdminLayout></AppShell>;
+  if (user.role !== "admin") return <AppShell><AdminLayout nav={false}><div className="access-denied"><h1>You do not have access to this page</h1><p>Only administrators can manage Catalyst content.</p><Link className="button button-primary" to="/home">Back to home</Link></div></AdminLayout></AppShell>;
   return <AppShell><Suspense fallback={<PageFallback />}>{children}</Suspense></AppShell>;
 }
 
 export default function App() {
   const { user } = useAuth();
   return <Routes>
-    <Route path="/login" element={user ? <Navigate to="/courses" replace /> : <Login />} />
-    <Route path="/register" element={user ? <Navigate to="/courses" replace /> : <Register />} />
-    <Route path="/forgot-password" element={user ? <Navigate to="/courses" replace /> : <ForgotPassword />} />
+    <Route path="/login" element={user ? <Navigate to="/home" replace /> : <Login />} />
+    <Route path="/register" element={user ? <Navigate to="/home" replace /> : <Register />} />
+    <Route path="/forgot-password" element={user ? <Navigate to="/home" replace /> : <ForgotPassword />} />
     <Route path="/reset-password" element={<ResetPassword />} />
     <Route path="/verify-email" element={<VerifyEmail />} />
     <Route path="/confirm-email" element={<VerifyEmail change />} />
     <Route path="/privacy" element={<Privacy />} />
     <Route path="/terms" element={<Terms />} />
-    <Route path="/courses" element={<ProtectedPage warm="courses"><Courses /></ProtectedPage>} />
+    <Route path="/home" element={<ProtectedPage warm="courses"><Courses /></ProtectedPage>} />
+    <Route path="/courses" element={<ProtectedPage><CourseCatalog /></ProtectedPage>} />
     <Route path="/courses/:id" element={<ProtectedPage warm="course"><CourseOutline /></ProtectedPage>} />
     <Route path="/lessons/:id" element={<ProtectedPage warm="lesson"><Lesson /></ProtectedPage>} />
     <Route path="/tests/:id" element={<ProtectedPage warm="test"><Test /></ProtectedPage>} />
@@ -96,10 +101,13 @@ export default function App() {
     <Route path="/search" element={<ProtectedPage><Search /></ProtectedPage>} />
     <Route path="/saved" element={<ProtectedPage><Saved /></ProtectedPage>} />
     <Route path="/progress" element={<ProtectedPage warm="progress"><Progress /></ProtectedPage>} />
+    <Route path="/me" element={<ProtectedPage><Me /></ProtectedPage>} />
+    <Route path="/lab" element={<ProtectedPage><Lab /></ProtectedPage>} />
     <Route path="/settings" element={<ProtectedPage><Settings /></ProtectedPage>} />
     <Route path="/admin/courses/:id" element={<AdminPage><AdminCourseEditor /></AdminPage>} />
     <Route path="/admin/tests/:id" element={<AdminPage><AdminTestEditor /></AdminPage>} />
     <Route path="/admin/lessons/:id" element={<AdminPage><AdminLessonEditor /></AdminPage>} />
+    <Route path="/admin/catalog" element={<AdminPage><AdminCatalog /></AdminPage>} />
     <Route path="/admin/users" element={<AdminPage><AdminUsers /></AdminPage>} />
     <Route path="/admin/trash" element={<AdminPage><AdminTrash /></AdminPage>} />
     <Route path="/admin/reports" element={<AdminPage><AdminReports /></AdminPage>} />
@@ -109,6 +117,6 @@ export default function App() {
     <Route path="/admin/preview/tests/:id" element={<AdminPage><Test /></AdminPage>} />
     <Route path="/admin/*" element={<AdminPage><AdminCourses /></AdminPage>} />
     {DevComponents && <Route path="/dev/components" element={<Suspense fallback={null}><DevComponents /></Suspense>} />}
-    <Route path="*" element={<Navigate to={user ? "/courses" : "/login"} replace />} />
+    <Route path="*" element={<Navigate to={user ? "/home" : "/login"} replace />} />
   </Routes>;
 }

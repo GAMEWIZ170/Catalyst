@@ -62,19 +62,19 @@ export default function Review() {
 
   if (error && !cards) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
   if (!cards) return <Loading />;
-  const back = <Link className="back-link" to="/courses"><ArrowLeft size={16} aria-hidden="true" />Back to home</Link>;
+  const back = <Link className="back-link" to="/home"><ArrowLeft size={16} aria-hidden="true" />Back to home</Link>;
 
   if (!card) return <div className="content fc-page">
     {back}
     {position === 0 && mistakes === 0
-      ? <EmptyState icon={Layers} title="Nothing due today" description="Cards and mistakes come back here when it is time to review them." action={<Button as={Link} variant="secondary" to="/courses">Back to home</Button>} />
+      ? <EmptyState icon={Layers} title="Nothing due today" description="Cards and mistakes come back here when it is time to review them." action={<Button as={Link} variant="secondary" to="/home">Back to home</Button>} />
       : <section className="fc-finished">
         <h1>{position > 0 ? "Cards done" : "No cards due"}</h1>
         {position > 0 && <p className="fc-finished-line">You reviewed {plural(position, "card")}.</p>}
         {mistakes > 0 && <p className="muted">{plural(mistakes, "mistake")} due.</p>}
         <div className="button-row button-row--stack">
           {mistakes > 0 && <Button as={Link} to="/practice/mistakes?due=1" state={{ from: "/review" }}>Practise due mistakes</Button>}
-          <Button as={Link} variant="secondary" to="/courses">Back to home</Button>
+          <Button as={Link} variant="secondary" to="/home">Back to home</Button>
         </div>
       </section>}
   </div>;

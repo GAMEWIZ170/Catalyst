@@ -4,7 +4,7 @@ const router = express.Router();
 const authenticate = require("../middlewares/authenticate");
 const authorizeRole = require("../middlewares/authorizeRole");
 const {
-  validateCourse, validateCourseUpdate,
+  validateCourse, validateCourseUpdate, validateCategory, validateCategoryUpdate, validateAuthor, validateAuthorUpdate,
   validateUnit, validateUnitUpdate,
   validateLesson, validateLessonUpdate,
   validateQuestion, validateQuestionUpdate,
@@ -13,10 +13,11 @@ const {
   , validateMaterial, validateMaterialUpdate,
   validateReorderUnits, validateReorderLessons, validateReorderTests,
   validateReorderQuestions, validateReorderFlashcards, validateReorderMaterials,
-  validateUserUpdate, validateAnswer, validateResolveReport
+  validateUserUpdate, validateAnswer, validateResolveReport, validateUnitSummary
 } = require("../middlewares/validate");
 
 const course = require("../controllers/course.controller");
+const catalog = require("../controllers/catalog.controller");
 const unit = require("../controllers/unit.controller");
 const lesson = require("../controllers/lesson.controller");
 const question = require("../controllers/question.controller");
@@ -34,6 +35,7 @@ const preview = require("../controllers/preview.controller");
 const analytics = require("../controllers/analytics.controller");
 const reports = require("../controllers/report.controller");
 const importer = require("../controllers/import.controller");
+const summary = require("../controllers/summary.controller");
 const Course = require("../models/course.models");
 const Unit = require("../models/unit.models");
 const Lesson = require("../models/lesson.models");
@@ -52,6 +54,16 @@ router.post("/courses", validateCourse, course.createCourse);
 router.put("/courses/:id", validateCourseUpdate, course.updateCourse);
 router.delete("/courses/:id", course.deleteCourse);
 
+// Categories and authors for courses
+router.get("/categories", catalog.listCategories);
+router.post("/categories", validateCategory, catalog.createCategory);
+router.put("/categories/:id", validateCategoryUpdate, catalog.updateCategory);
+router.delete("/categories/:id", catalog.deleteCategory);
+router.get("/authors", catalog.listAuthors);
+router.post("/authors", validateAuthor, catalog.createAuthor);
+router.put("/authors/:id", validateAuthorUpdate, catalog.updateAuthor);
+router.delete("/authors/:id", catalog.deleteAuthor);
+
 // Units
 router.put("/units/reorder", validateReorderUnits, reorder({
   model: Unit,
@@ -60,6 +72,8 @@ router.put("/units/reorder", validateReorderUnits, reorder({
   parentError: "Course not found"
 }));
 router.post("/units", validateUnit, unit.createUnit);
+// Makes a PDF summary of the unit and saves it as an (unpublished) PDF material on one of its lessons.
+router.post("/units/:id/summary-pdf", uploadLimiter, validateUnitSummary, summary.createUnitSummary);
 router.put("/units/:id", validateUnitUpdate, unit.updateUnit);
 router.delete("/units/:id", unit.deleteUnit);
 

@@ -34,7 +34,7 @@ export default function Saved() {
     <h1>Saved</h1>
     <p className="sr-only" role="status">{status}</p>
     {items.length === 0
-      ? <EmptyState icon={Bookmark} title="Nothing saved yet" description="Use Save on a lesson, or on a question after you answer it." action={<Button as={Link} variant="secondary" to="/courses">Back to home</Button>} />
+      ? <EmptyState icon={Bookmark} title="Nothing saved yet" description="Use Save on a lesson, or on a question after you answer it." action={<Button as={Link} variant="secondary" to="/home">Back to home</Button>} />
       : <ul className="saved-list">
         {items.map((item) => <li key={`${item.kind}-${item.id}`}>
           <Link to={item.link}><strong>{item.title}</strong><span className="muted">{item.detail}</span></Link>
