@@ -9,11 +9,12 @@ import { ErrorState, Loading } from "./Courses";
 import SetCards from "../components/lab/SetCards";
 import SetQuizzes from "../components/lab/SetQuizzes";
 import SetMaterials from "../components/lab/SetMaterials";
+import AiDrafts from "../components/lab/AiDrafts";
 
 // The rich note editor is a big file, so it is only downloaded when a student opens the Notes tab.
 const SetNotes = lazy(() => import("../components/lab/SetNotes"));
 
-const TAB_IDS = ["notes", "cards", "quizzes"];
+const TAB_IDS = ["notes", "cards", "quizzes", "ai"];
 
 export default function LabSet() {
   const { id } = useParams();
@@ -56,7 +57,8 @@ export default function LabSet() {
   const tabs = [
     { id: "notes", label: "Notes", panel: <><Suspense fallback={<Loading />}><SetNotes setId={id} /></Suspense><SetMaterials setId={id} /></> },
     { id: "cards", label: "Flashcards", panel: <SetCards setId={id} /> },
-    { id: "quizzes", label: "Quizzes", panel: <SetQuizzes setId={id} /> }
+    { id: "quizzes", label: "Quizzes", panel: <SetQuizzes setId={id} /> },
+    { id: "ai", label: "AI drafts", panel: <AiDrafts setId={id} /> }
   ];
   return <div className="content student-page lab-set">
     <Link className="back-link" to="/lab"><ArrowLeft size={16} aria-hidden="true" />Study Lab</Link>

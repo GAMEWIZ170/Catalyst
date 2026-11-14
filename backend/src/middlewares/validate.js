@@ -101,6 +101,16 @@ const validateCircle = validateWith(Joi.object({
 }));
 const validateCircleInvite = validateWith(Joi.object({ friendship: objectId.required() }));
 
+const validateGenerate = validateWith(Joi.object({
+  kind: Joi.string().valid("cards", "questions", "notes").required(),
+  source: Joi.alternatives().try(
+    Joi.object({ type: Joi.string().valid("material").required(), id: objectId.required() }),
+    Joi.object({ type: Joi.string().valid("notes").required() }),
+    Joi.object({ type: Joi.string().valid("text").required(), text: Joi.string().trim().min(40).max(100000).required() })
+  ).required(),
+  part: Joi.number().integer().min(0).max(30).default(0)
+}));
+
 const validateChallenge = validateWith(Joi.object({ test: objectId.required() }));
 
 const validateEvent = validateWith(Joi.object({
@@ -453,6 +463,7 @@ const validateUserUpdate = validateWith(Joi.object({
 
 module.exports = {
   objectId,
+  validateGenerate,
   validateCircle,
   validateCircleInvite,
   validateChallenge,
