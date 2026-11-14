@@ -5,6 +5,7 @@ const Progress = require("../models/progress.models");
 const Lesson = require("../models/lesson.models");
 const { findVisibleLesson, parentIsAvailable } = require("../utils/visibility");
 const getFlashcardSummary = require("../utils/flashcardSummary");
+const { schedule, RATING } = require("../utils/scheduler");
 
 const badId = (id) => !mongoose.isObjectIdOrHexString(id);
 const todayKey = () => new Date().toISOString().slice(0, 10);
@@ -45,12 +46,14 @@ const rateFlashcard = async (req, res, next) => {
   try {
     const card = await Flashcard.findOne({ _id: req.params.id, isPublished: true, deletedAt: null }).lean();
     if (!card || !(await findVisibleLesson(card.lesson))) return res.status(404).json({ message: "Flashcard not found" });
+    const existing = await FlashcardProgress.findOne({ user: req.user.id, flashcard: card._id }).select("fsrs").lean();
+    const next = schedule(existing?.fsrs, RATING[req.body.confidence]);
     // The save and the card list do not depend on each other, so they run together.
     const [progress, cards] = await Promise.all([
       FlashcardProgress.findOneAndUpdate(
         { user: req.user.id, flashcard: card._id },
         {
-          $set: { confidence: req.body.confidence, lastReviewedAt: new Date() },
+          $set: { confidence: req.body.confidence, lastReviewedAt: new Date(), fsrs: next.fsrs, due: next.due },
           $inc: { reviewCount: 1 },
           $addToSet: { reviewedDays: todayKey() }
         },

@@ -8,7 +8,9 @@ const mistakeSchema = new mongoose.Schema({
   wrongCount: { type: Number, min: 1, default: 1 },
   lastWrongAt: { type: Date, default: Date.now },
   correctStreak: { type: Number, min: 0, default: 0 },
-  lastCorrectDay: { type: String, default: null } // UTC day, "YYYY-MM-DD"
+  lastCorrectDay: { type: String, default: null }, // UTC day, "YYYY-MM-DD"
+  fsrs: { type: mongoose.Schema.Types.Mixed, default: null },
+  due: { type: Date, default: null } // null (older rows) counts as due
 }, { timestamps: true });
 
 mistakeSchema.index({ user: 1, question: 1 }, { unique: true });

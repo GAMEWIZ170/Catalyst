@@ -186,6 +186,8 @@ Example outline lesson:
 | POST | `/tests/:id/submit` | Student | Grade answers and update test result |
 | POST | `/questions/:id/answer` | Student | Check one answer. A wrong answer also adds the question to the student's mistakes queue |
 | GET | `/mistakes` | Student | Open mistakes as counts by course and unit (`{ total, data }`), no questions or answers |
+| GET | `/review/due` | Student | `{ data: { cards, mistakes } }`: flashcards and mistakes due now |
+| GET | `/review/session` | Student | Up to 20 due flashcards (`_id`, `front`, `back`, `lessonId`), soonest due first. Rate each with `POST /flashcards/:id/rate` |
 | GET | `/mistakes/practice` | Student | Up to 20 answer-free questions to practise, most-missed first. Optional `course` and `unit` query ids (invalid id returns 400) |
 | POST | `/admin/tests` | Admin | Create a lesson-, unit- or course-scope test |
 | GET | `/admin/tests/:id` | Admin | Full test and questions |
@@ -367,6 +369,10 @@ Deleted items are listed at `GET /admin/trash` and put back with `POST /admin/tr
 | `true_false` | `text`, `correctAnswer` | No options or `correctOption`; answer is `"true"` or `"false"` |
 
 Student serializers omit correct answers. Scores are calculated on the server. An empty test cannot be submitted for credit. Unit tests and course tests record a result but never complete a lesson. Mark as done returns `409` for any lesson with a test that has questions or a published flashcard.
+
+### Spaced repetition
+
+The `ts-fsrs` package schedules reviews at `request_retention` 0.9 with short-term steps off (a rating always schedules a day or more ahead). Don't know maps to Again, Unsure to Hard, Confident to Good. `POST /flashcards/:id/rate` stores the card state (`fsrs`) and `due` on the student's `FlashcardProgress`. Answering a mistake wrong schedules it as Again, right as Good (`Mistake.fsrs`, `Mistake.due`). Rows from before this feature have no `due`: an unsure or unknown card with no `due`, and a mistake with no `due`, count as due, so old confidence data keeps working. `GET /mistakes/practice?due=1` returns only due mistakes.
 
 ### Mistakes queue
 

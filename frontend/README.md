@@ -86,6 +86,7 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 | `/courses/:id` | Authenticated | Course outline with lesson progress |
 | `/lessons/:id` | Authenticated | Lesson hub: explanation, formulas, practice tests, flashcards, materials, Mark as done, next lesson |
 | `/tests/:id` | Authenticated | Take a test, one question at a time, with feedback after each answer. Lesson tests show their pass percent and whether the student passed |
+| `/review` | Authenticated | Today's review: due flashcards (Space flips, 1 to 3 rate), then a link to practise due mistakes. Home shows a Due today chip that links here. There is no Review tab on the phone bar yet |
 | `/practice/mistakes` | Authenticated | Practise questions from the mistakes queue (`?course=` and `?unit=` narrow it), using the test player without submitting. Home and each course page show a Mistakes panel; test results offer Practise the ones I missed |
 | `/lessons/:id/flashcards` | Authenticated | Study a flashcard deck: tap the card to turn it over, then rate it (`?filter=review` shows cards still to review) |
 | `/progress` | Authenticated | View scores, completed lessons, and streak |

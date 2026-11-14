@@ -54,6 +54,7 @@ export default function Test() {
         const query = {};
         if (searchParams.get("course")) query.course = searchParams.get("course");
         if (searchParams.get("unit")) query.unit = searchParams.get("unit");
+        if (searchParams.get("due") === "1") query.due = "1";
         setTest(dataOf(await api.getMistakePractice(query)));
       } else setTest(dataOf(await api.getTest(id)));
     } catch (err) { setError(err.status === 404 ? "This test is not available" : err.message); }

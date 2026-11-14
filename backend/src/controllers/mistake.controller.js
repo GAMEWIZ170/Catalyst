@@ -6,24 +6,30 @@ const Unit = require("../models/unit.models");
 const Course = require("../models/course.models");
 const { testIsVisible } = require("../utils/visibility");
 const { studentQuestion } = require("../utils/serializers");
+const { schedule, Rating } = require("../utils/scheduler");
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
 const PRACTICE_SIZE = 20;
+const isDue = (row) => !row.mistake.due || row.mistake.due <= new Date();
 
 // Called after every graded answer. A wrong answer adds the question to the queue (or bumps it).
 // A right answer counts toward leaving the queue, but only once per UTC day.
 const recordAnswer = async (userId, questionId, isCorrect) => {
+  const existing = await Mistake.findOne({ user: userId, question: questionId }).select("fsrs").lean();
   if (!isCorrect) {
+    const next = schedule(existing?.fsrs, Rating.Again);
     await Mistake.updateOne(
       { user: userId, question: questionId },
-      { $inc: { wrongCount: 1 }, $set: { lastWrongAt: new Date(), correctStreak: 0, lastCorrectDay: null } },
+      { $inc: { wrongCount: 1 }, $set: { lastWrongAt: new Date(), correctStreak: 0, lastCorrectDay: null, fsrs: next.fsrs, due: next.due } },
       { upsert: true, setDefaultsOnInsert: true }
     );
     return;
   }
+  if (!existing) return;
+  const next = schedule(existing.fsrs, Rating.Good);
   const mistake = await Mistake.findOneAndUpdate(
     { user: userId, question: questionId, lastCorrectDay: { $ne: todayKey() } },
-    { $inc: { correctStreak: 1 }, $set: { lastCorrectDay: todayKey() } },
+    { $inc: { correctStreak: 1 }, $set: { lastCorrectDay: todayKey(), fsrs: next.fsrs, due: next.due } },
     { returnDocument: "after" }
   );
   if (mistake && mistake.correctStreak >= 2) await Mistake.deleteOne({ _id: mistake._id });
@@ -92,7 +98,7 @@ const summary = async (req, res, next) => {
 // STUDENT: up to 20 questions to practise, most-missed first. Optional ?course= and ?unit= narrow it.
 // The questions carry no answers; each one is graded by POST /questions/:id/answer like in a test.
 const practice = async (req, res, next) => {
-  const { course, unit } = req.query;
+  const { course, unit, due } = req.query;
   for (const id of [course, unit]) {
     if (id !== undefined && !mongoose.isObjectIdOrHexString(String(id))) return res.status(400).json({ message: "Invalid ID" });
   }
@@ -100,6 +106,7 @@ const practice = async (req, res, next) => {
     let rows = await visibleMistakes(req.user.id);
     if (course) rows = rows.filter((row) => row.course.toString() === String(course));
     if (unit) rows = rows.filter((row) => row.unit && row.unit.toString() === String(unit));
+    if (due === "1") rows = rows.filter(isDue);
     rows = rows.slice(0, PRACTICE_SIZE);
     return res.status(200).json({ data: { title: "Practise my mistakes", questions: rows.map((row) => studentQuestion(row.question)) } });
   } catch (error) {
@@ -107,4 +114,4 @@ const practice = async (req, res, next) => {
   }
 };
 
-module.exports = { recordAnswer, summary, practice };
+module.exports = { recordAnswer, visibleMistakes, isDue, summary, practice };
