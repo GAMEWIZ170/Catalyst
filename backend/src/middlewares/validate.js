@@ -83,13 +83,21 @@ const validatePreferences = validateWith(Joi.object({
   goalKind: Joi.string().valid("none", "minutes", "lesson"),
   goalMinutes: Joi.number().integer().min(5).max(240),
   timeZone: timeZoneRule,
-  notify: Joi.object({ review: Joi.boolean(), lesson: Joi.boolean() }).min(1)
+  notify: Joi.object({ review: Joi.boolean(), lesson: Joi.boolean() }).min(1),
+  extraTime: Joi.number().valid(0, 25, 50, 100)
 }).min(1));
 
 const validateEvent = validateWith(Joi.object({
   type: Joi.string().valid("video_started", "focus_session_completed").required(),
-  props: Joi.object({ lesson: objectId, minutes: Joi.number().integer().min(1).max(240) }).default({})
+  props: Joi.object({ lesson: objectId, minutes: Joi.number().integer().min(1).max(180) }).default({})
 }));
+
+const validateExamDate = validateWith(Joi.object({
+  course: objectId.required(),
+  startsAt: Joi.date().iso().required(),
+  type: Joi.string().valid("mid_semester", "end_semester", "quiz").required()
+}));
+const validateHallGoal = validateWith(Joi.object({ goal: Joi.string().trim().allow("").max(80).default("") }));
 
 const validateStudyTime = validateWith(Joi.object({ seconds: Joi.number().integer().min(1).max(120).required() }));
 
@@ -424,6 +432,8 @@ module.exports = {
   validatePreferences,
   validateStudyTime,
   validateEvent,
+  validateExamDate,
+  validateHallGoal,
   validateBookmark,
   validateNote,
   validateCourse,

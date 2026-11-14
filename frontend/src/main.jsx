@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import App from "./App";
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./components/ui";
+import { TimerProvider } from "./context/TimerContext";
 import "./styles/tokens.css";
 import "./styles/global.css";
 import "./styles/components.css";
@@ -14,7 +15,7 @@ registerServiceWorker();
 const router = createBrowserRouter([
   {
     path: "*",
-    element: <AuthProvider><ToastProvider><App /></ToastProvider></AuthProvider>
+    element: <AuthProvider><TimerProvider><ToastProvider><App /></ToastProvider></TimerProvider></AuthProvider>
   }
 ]);
 

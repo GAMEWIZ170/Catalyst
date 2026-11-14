@@ -9,6 +9,8 @@ import { applyPalette, applyTextSize, currentPalette, currentTextSize, palettes,
 import { detectTimeZone, timeZoneList } from "../utils/timeZone";
 import AccountSection from "../components/AccountSection";
 import Avatar, { AVATAR_KEYS, AVATAR_LABELS } from "../components/Avatar";
+import { useTimer } from "../context/TimerContext";
+import { Link } from "react-router-dom";
 import { t } from "../i18n";
 
 function AccountTab() {
@@ -143,8 +145,48 @@ function NotificationsTab() {
   </section>;
 }
 
+const EXTRA_TIME = [{ value: 0, label: "None" }, { value: 25, label: "25% more time" }, { value: 50, label: "50% more time" }, { value: 100, label: "Double time" }];
+
+function TimerLengths() {
+  const { lengths, setLengths } = useTimer();
+  const [work, setWork] = useState(String(lengths.work));
+  const [rest, setRest] = useState(String(lengths.break));
+  const [status, setStatus] = useState("");
+  function save(event) {
+    event.preventDefault();
+    setLengths({ work: Number(work), break: Number(rest) });
+    setStatus("Saved on this device");
+  }
+  return <section className="settings-section" aria-labelledby="timer-heading">
+    <h2 id="timer-heading">Focus timer</h2>
+    <form className="settings-exam" onSubmit={save}>
+      <TextField label="Focus minutes" type="number" min="1" max="180" required value={work} onChange={(event) => setWork(event.target.value)} />
+      <TextField label="Break minutes" type="number" min="1" max="60" required value={rest} onChange={(event) => setRest(event.target.value)} />
+      <Button variant="secondary" type="submit">Save</Button>
+    </form>
+    <p className="muted settings-help">Start the timer from the top bar. Only minutes you were really active in Catalyst count as focus time, up to 90 a day.</p>
+    <p className="settings-status" aria-live="polite">{status}</p>
+  </section>;
+}
+
 function StudyTab() {
   const { user, updatePreferences } = useAuth();
+  const [extra, setExtra] = useState(user?.extraTime || 0);
+  const [extraStatus, setExtraStatus] = useState("");
+
+  async function saveExtra(value) {
+    const before = extra;
+    setExtra(value);
+    setExtraStatus("");
+    try {
+      await updatePreferences({ extraTime: value });
+      setExtraStatus("Saved");
+    } catch (error) {
+      setExtra(before);
+      setExtraStatus(error.message);
+    }
+  }
+
   const [goal, setGoal] = useState(() => goalKeyOf(user?.dailyGoal));
   const [goalStatus, setGoalStatus] = useState("");
   const [examDate, setExamDate] = useState(() => (user?.examDate ? String(user.examDate).slice(0, 10) : ""));
@@ -177,6 +219,15 @@ function StudyTab() {
 
   if (user?.role !== "student") return <p className="muted settings-help">Study settings are for student accounts.</p>;
   return <>
+    <TimerLengths />
+    <section className="settings-section" aria-labelledby="extra-heading">
+      <h2 id="extra-heading">Extra time on timed quizzes</h2>
+      <SelectField label="Extra time" value={extra} onChange={(event) => saveExtra(Number(event.target.value))}>
+        {EXTRA_TIME.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+      </SelectField>
+      <p className="muted settings-help">Added to the time limit when you start a timed quiz. The server keeps the clock. Untimed practice is always available.</p>
+      <p className="settings-status" aria-live="polite">{extraStatus}</p>
+    </section>
     <section className="settings-section" aria-labelledby="goal-heading">
       <h2 id="goal-heading">Daily goal</h2>
       <div className="settings-radio-grid" role="radiogroup" aria-label="Daily goal">
@@ -187,6 +238,11 @@ function StudyTab() {
       </div>
       <p className="muted settings-help">Your streak counts any study day, with or without a goal.</p>
       <p className="settings-status" aria-live="polite">{goalStatus}</p>
+    </section>
+    <section className="settings-section" aria-labelledby="myexams-heading">
+      <h2 id="myexams-heading">My exams</h2>
+      <p className="muted settings-help">Add your exams to see a countdown on Home and a plan that counts down to the nearest one.</p>
+      <Link className="button button-secondary" to="/exams">Manage my exams</Link>
     </section>
     <section className="settings-section" aria-labelledby="exam-heading">
       <h2 id="exam-heading">Exam date</h2>

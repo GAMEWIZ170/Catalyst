@@ -217,7 +217,13 @@ Example outline lesson:
 | GET | `/review/session` | Student | Up to 20 due flashcards (`_id`, `front`, `back`, `lessonId`), soonest due first. Rate each with `POST /flashcards/:id/rate` |
 | GET | `/topics` | Student | `{ data: { topics, sources, years } }`, each a list of `{ value, count }` for tagged questions the student may see |
 | GET | `/topics/practice` | Student | Up to 20 answer-free questions across lessons, random order. Query `topic`, `source`, `year` (at least one; a bad year or no filter returns 400) |
-| POST | `/tests/:id/exam/start` | Student | Start a timed mock exam (a test with `timeLimitMinutes`), or resume the open one. Returns `attemptId`, `endsAt`, `serverNow`, saved `answers` and `flags`, and answer-free `questions`. If the time ran out while the student was away it marks the saved answers and returns `{ finished: true, result }` |
+| GET | `/my-exams` | Student | The student's own exams: `{ upcoming, past }`. Each has `id`, `course` (`id`, `code`, `title`), `startsAt`, `type` and `daysLeft` (calendar days in the student's time zone). Upcoming is nearest first |
+| POST | `/my-exams` | Student | Body `{ course, startsAt (ISO), type: "mid_semester" | "end_semester" | "quiz" }`. Up to 20 per student. 404 for an unpublished course |
+| DELETE | `/my-exams/:id` | Student | Delete one of your exams |
+| GET | `/hall` | Student | Study Hall: `{ focusing, joined, goal }`. `focusing` counts students with a heartbeat in the last 90 seconds. Never names anyone |
+| POST | `/hall/heartbeat` | Student | Body `{ goal? }` (80 characters). Joins the hall or keeps the place. Send every 30 seconds |
+| DELETE | `/hall` | Student | Leave the hall |
+| POST | `/tests/:id/exam/start` | Student | Start a timed exam, or resume the open one. A test with `timeLimitMinutes` is always timed. Any other test is timed only when the body is `{ timed: true }` (one minute a question). The student's `extraTime` percentage (0, 25, 50 or 100, set with `PUT /auth/me/preferences`) is added when the attempt is created. Returns `attemptId`, `endsAt`, `serverNow`, saved `answers` and `flags`, and answer-free `questions`. If the time ran out while the student was away it marks the saved answers and returns `{ finished: true, result }` |
 | PUT | `/exam-attempts/:attemptId` | Student | Save `answers` (`{ questionId: answer }`) and `flags` (question ids). `409` after submit or after the deadline |
 | POST | `/exam-attempts/:attemptId/submit` | Student | Hand in the exam. Returns `score`, `correct`, `total`, `bestScore`, `attempts`, `passPercent`, `passed` and a `review` of every question with the right answer, explanation and worked solution. Repeating it returns the same result |
 | GET | `/plan` | Student | Today's revision plan, or `{ data: null }` with no exam date or a past one. Returns `examDate`, `daysLeft` (today counts), `remainingLessons`, `perDay`, `doneToday`, up to 6 `lessons` for today, `moreLessons`, and `due: { cards, mistakes }`. The exam date is set with `PUT /auth/me/preferences` |
@@ -438,7 +444,9 @@ A plain sum, not AI. Lessons not yet completed (every published course, in cours
 
 ### Timed mock exams
 
-An admin sets `timeLimitMinutes` (1 to 360) on a test with `PUT /admin/tests/:id`; `null` makes it ordinary again. For a timed test, `GET /tests/:id` returns `timed: true`, `timeLimitMinutes`, `questionCount` and no questions, so the exam is only taken through `/tests/:id/exam/start`. The server sets `endsAt` when the exam starts and the browser counts down to it. A submit that arrives within 30 seconds after `endsAt` uses the browser's final answers; a later one uses only the answers saved before the deadline. The first submit claims the attempt, so two submits cannot record two results. The result counts like a normal test (best score, attempts, lesson completion for a passed lesson test, mastery), and every question is passed to the mistakes queue. Feedback is only in the submit result. Known limit: a student who knows a question id can still call `POST /questions/:id/answer` during the exam, which only hurts their own mark.
+(Any test can be taken timed: see `POST /tests/:id/exam/start` for the `timed` option and extra time. The server owns the clock: `endsAt` is fixed when the attempt is created, `PUT /exam-attempts/:id` is refused after it with 409, and a submit after it plus 5 seconds of grace marks only the answers saved before the deadline. An attempt left open past its deadline is marked the next time the student opens the test.)
+
+An admin sets `timeLimitMinutes` (1 to 360) on a test with `PUT /admin/tests/:id`; `null` makes it ordinary again. For a timed test, `GET /tests/:id` returns `timed: true`, `timeLimitMinutes`, `questionCount` and no questions, so the exam is only taken through `/tests/:id/exam/start`. The server sets `endsAt` when the exam starts and the browser counts down to it. A submit that arrives within 5 seconds after `endsAt` uses the browser's final answers; a later one uses only the answers saved before the deadline. The first submit claims the attempt, so two submits cannot record two results. The result counts like a normal test (best score, attempts, lesson completion for a passed lesson test, mastery), and every question is passed to the mistakes queue. Feedback is only in the submit result. Known limit: a student who knows a question id can still call `POST /questions/:id/answer` during the exam, which only hurts their own mark.
 
 ### Question tags
 
@@ -465,6 +473,12 @@ Every graded answer through `POST /questions/:id/answer` updates the student's q
 ### Event log
 
 Every key action writes one row to `events` (`{ user, type, ts, props }`, indexed on `ts`, on `user` and `ts`, and on `type` and `ts`), for XP, achievements, leaderboards and the admin dashboard to be built from later. Types: signup, login, lesson_opened, lesson_completed, question_answered, test_submitted, review_done, flashcard_rated, focus_session_completed, video_started, set_created, set_studied, challenge_sent, challenge_played (the last four, and focus sessions, are not logged yet because those features are not built). Logging is fire and forget (utils/events.js): nothing waits for it and a failure only prints to the log. `props` keeps ids, numbers, booleans and short words only (never a name, email or free text). `lesson_completed` is written each time a test pass, a finished deck or Mark as done completes a lesson, so a dashboard counts distinct users and lessons. `review_done` is a due card rated or a mistake answered.
+
+### Focus timer, exam countdown and Study Hall
+
+- `POST /events` with `focus_session_completed` and `props.minutes` answers `{ counted }`. The server counts only minutes the student was really active (their `StudyTime` for the day, reported by the page while a focus session runs), never more than 90 a day. The event stores the counted minutes and the day (`props.day`).
+- `/my-exams` exams move to "past" once their day (in the student's time zone) has passed. `GET /plan` counts down to the nearest upcoming exam and returns `examCourse`; with none, it uses the exam date from Settings. `GET /notifications` makes a `type: "exam"` message at 14, 7, 3 and 1 days (one per exam per milestone; opened late, it makes the next milestone once with the real days left).
+- Study Hall rows (`HallPresence`) delete themselves an hour after the last heartbeat.
 
 ### Streaks
 

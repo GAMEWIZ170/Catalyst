@@ -37,6 +37,8 @@ const AdminQuestionImport = lazy(() => import("./pages/AdminQuestionImport"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Me = lazy(() => import("./pages/Me"));
 const Lab = lazy(() => import("./pages/Lab"));
+const Exams = lazy(() => import("./pages/Exams"));
+const Hall = lazy(() => import("./pages/Hall"));
 const AdminCatalog = lazy(() => import("./pages/AdminCatalog"));
 import AdminLayout from "./components/admin/AdminLayout";
 import { Skeleton, SkeletonGroup } from "./components/ui";
@@ -102,6 +104,8 @@ export default function App() {
     <Route path="/saved" element={<ProtectedPage><Saved /></ProtectedPage>} />
     <Route path="/progress" element={<ProtectedPage warm="progress"><Progress /></ProtectedPage>} />
     <Route path="/me" element={<ProtectedPage><Me /></ProtectedPage>} />
+    <Route path="/exams" element={<ProtectedPage><Exams /></ProtectedPage>} />
+    <Route path="/hall" element={<ProtectedPage><Hall /></ProtectedPage>} />
     <Route path="/lab" element={<ProtectedPage><Lab /></ProtectedPage>} />
     <Route path="/settings" element={<ProtectedPage><Settings /></ProtectedPage>} />
     <Route path="/admin/courses/:id" element={<AdminPage><AdminCourseEditor /></AdminPage>} />

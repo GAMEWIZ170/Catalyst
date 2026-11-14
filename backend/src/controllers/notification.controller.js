@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Notification = require("../models/notification.models");
 const User = require("../models/user.models");
 const { dayKey } = require("../utils/day");
+const { loadExams } = require("./examdate.controller");
 const Lesson = require("../models/lesson.models");
 const { dueCards } = require("./review.controller");
 const { visibleMistakes, isDue } = require("./mistake.controller");
@@ -24,6 +25,23 @@ const ensureDueNotification = async (userId, timeZone) => {
     await Notification.create({ user: userId, type: "review", key, title: "Review is ready", body: `${parts.join(" and ")} due today.`, link: "/review" });
   } catch (error) {
     if (error.code !== 11000) throw error; // two tabs asked at once: the other one made it
+  }
+};
+
+// A message when an exam the student added is 14, 7, 3 or 1 days away. One per exam per milestone, made when the bell loads.
+// Opened late (say on day 10), it makes the 14 day message once, with the real days left.
+const MILESTONES = [14, 7, 3, 1];
+const ensureExamNotifications = async (userId, timeZone) => {
+  const { upcoming } = await loadExams(userId, timeZone);
+  for (const exam of upcoming) {
+    const milestone = MILESTONES.filter((n) => n >= exam.daysLeft).pop();
+    if (!milestone) continue;
+    const when = exam.daysLeft === 0 ? "today" : exam.daysLeft === 1 ? "tomorrow" : `in ${exam.daysLeft} days`;
+    try {
+      await Notification.create({ user: userId, type: "exam", key: `exam:${exam.id}:${milestone}`, title: `${exam.course.code} exam ${when}`, body: "Open Home to see today's plan.", link: "/home" });
+    } catch (error) {
+      if (error.code !== 11000) throw error;
+    }
   }
 };
 
@@ -53,6 +71,7 @@ const notifyLessonPublished = async (lessonId) => {
 const list = async (req, res, next) => {
   try {
     if (req.user.role === "student" && req.user.notify?.review !== false) await ensureDueNotification(req.user.id, req.user.timeZone);
+    if (req.user.role === "student") await ensureExamNotifications(req.user.id, req.user.timeZone).catch((error) => console.error("Exam notification failed:", error.message));
     const [unread, items] = await Promise.all([
       Notification.countDocuments({ user: req.user.id, readAt: null }),
       Notification.find({ user: req.user.id }).sort({ createdAt: -1 }).limit(LIST_SIZE).lean()

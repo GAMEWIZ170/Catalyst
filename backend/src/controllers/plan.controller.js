@@ -4,6 +4,7 @@ const Lesson = require("../models/lesson.models");
 const Progress = require("../models/progress.models");
 const User = require("../models/user.models");
 const { dayKey } = require("../utils/day");
+const { loadExams } = require("./examdate.controller");
 const { dueCards } = require("./review.controller");
 const { visibleMistakes, isDue } = require("./mistake.controller");
 
@@ -17,7 +18,12 @@ const getPlan = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id).select("examDate").lean();
     const today = dayKey(req.user.timeZone);
-    const examDay = user && user.examDate ? new Date(user.examDate).toISOString().slice(0, 10) : null; // the exam date is a calendar date, stored at 00:00 UTC
+    // The nearest exam the student added wins. Without one, the single exam date from Settings is used.
+    const { upcoming } = await loadExams(req.user.id, req.user.timeZone);
+    const nearest = upcoming[0];
+    const examDay = nearest
+      ? dayKey(req.user.timeZone, nearest.startsAt)
+      : user && user.examDate ? new Date(user.examDate).toISOString().slice(0, 10) : null; // the exam date is a calendar date, stored at 00:00 UTC
     if (!examDay || examDay < today) return res.status(200).json({ data: null });
     const daysLeft = Math.round((Date.parse(examDay) - Date.parse(today)) / DAY) + 1;
 
@@ -54,6 +60,7 @@ const getPlan = async (req, res, next) => {
     return res.status(200).json({
       data: {
         examDate: examDay,
+        examCourse: nearest ? nearest.course.code : null,
         daysLeft,
         remainingLessons: remaining.length,
         perDay,

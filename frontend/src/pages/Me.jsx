@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Bookmark, ChevronRight, BarChart3, Settings } from "lucide-react";
+import { Bookmark, CalendarDays, ChevronRight, BarChart3, Settings, Users } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "../components/Avatar";
 import { Card } from "../components/ui";
@@ -7,6 +7,8 @@ import { t } from "../i18n";
 
 const LINKS = [
   { to: "/progress", label: "me.progress", icon: BarChart3 },
+  { to: "/exams", label: "me.exams", icon: CalendarDays },
+  { to: "/hall", label: "hall.title", icon: Users },
   { to: "/saved", label: "me.saved", icon: Bookmark },
   { to: "/settings", label: "me.settings", icon: Settings }
 ];
