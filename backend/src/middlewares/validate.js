@@ -67,6 +67,13 @@ const validateWith = (schema) => (req, res, next) => {
   next();
 };
 
+const validatePosition = validateWith(Joi.object({
+  lessonId: objectId.required(),
+  kind: Joi.string().valid("lesson", "flashcards").default("lesson"),
+  position: Joi.number().integer().min(0).max(10000).default(0),
+  total: Joi.number().integer().min(0).max(10000).default(0)
+}));
+
 const validateRegister = validateWith(Joi.object({
   name: Joi.string().trim().min(2).max(60).required(),
   email: Joi.string().trim().lowercase().email().max(254).required(),
@@ -312,6 +319,7 @@ module.exports = {
   validateRegister,
   validateLogin,
   validateAvatar,
+  validatePosition,
   validateCourse,
   validateCourseUpdate,
   validateUnit,

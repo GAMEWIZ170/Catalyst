@@ -289,6 +289,7 @@ Images are limited to 2 MB. The declared MIME type is a cheap first rejection; t
 | GET | `/progress` | Student | Student lesson progress |
 | GET | `/progress/streak` | Student | Streak from progress, test results and flashcard reviews |
 | GET | `/progress/overview` | Student | The progress screen in one call: `progress` rows, `streak` and every published course outline in `courses` |
+| PUT | `/progress/position` | Student | Remember where the student is in a course: `{ lessonId, kind: "lesson"|"flashcards", position, total }`. 204. Home returns it as `last` on each course |
 
 ### Admin content
 

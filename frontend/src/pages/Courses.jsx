@@ -47,10 +47,18 @@ export default function Courses() {
 
   const isStudent = user && user.role === "student";
   const firstName = (user?.name || "").trim().split(/\s+/)[0];
-  // Prefer a course that is started but not finished, then any course with lessons left.
+  // Continue where the student last was (most recent first). A lesson already finished moves on to the next one;
+  // a flashcard deck part-way through resumes at its card. With nothing saved, use a started course, then any with lessons left.
   const open = courses.filter((course) => course.next);
-  const resume = open.find((course) => course.progress?.completedLessons > 0) || open[0];
-  const next = resume ? resume.next : null;
+  const recent = [...courses].filter((course) => course.last && course.next).sort((a, b) => new Date(b.last.at) - new Date(a.last.at))[0];
+  const resume = recent || open.find((course) => course.progress?.completedLessons > 0) || open[0];
+  const last = recent?.last;
+  const midDeck = last && last.kind === "flashcards" && last.total > 0 && last.position < last.total;
+  const target = !resume ? null : midDeck ? last : last && !last.completed ? last : resume.next;
+  const next = target;
+  const where = midDeck ? `flashcards ${last.position + 1}/${last.total}` : "";
+  const nextHref = !target ? "" : midDeck ? `/lessons/${target.lessonId}/flashcards` : `/lessons/${target.lessonId}`;
+  const nextState = !resume ? undefined : midDeck ? { from: `/courses/${resume._id}`, courseFrom: `/courses/${resume._id}`, resume: last.position } : { from: `/courses/${resume._id}` };
   const percent = (course) => (course?.progress?.totalLessons ? Math.round((course.progress.completedLessons / course.progress.totalLessons) * 100) : 0);
 
   return <div className="content student-page home-page">
@@ -64,9 +72,9 @@ export default function Courses() {
     {error && <ErrorState message={error} onRetry={load} />}
     {!loading && !error && resume && next && <Card className="home-continue" aria-labelledby="continue-title">
       <h2 id="continue-title">{resume.progress?.completedLessons > 0 ? "Continue where you left off" : "Start your first lesson"}</h2>
-      <p className="home-continue-copy"><strong>{resume.code}</strong> · Lesson {next.label}: {next.title}</p>
+      <p className="home-continue-copy"><strong>{resume.code}</strong> · Lesson {next.label}: {next.title}{where && `, ${where}`}</p>
       <Progress value={percent(resume)} label={`${resume.code} progress`} showLabel />
-      <div className="button-row button-row--stack"><Button as={Link} variant="primary" to={`/lessons/${next.lessonId}`} state={{ from: `/courses/${resume._id}` }} {...nearToPrefetch(() => prefetchLesson(next.lessonId))}>Resume: Lesson {next.label}</Button></div>
+      <div className="button-row button-row--stack"><Button as={Link} variant="primary" to={nextHref} state={nextState} {...nearToPrefetch(() => prefetchLesson(next.lessonId))}>{midDeck ? "Resume flashcards" : `Resume: Lesson ${next.label}`}</Button></div>
     </Card>}
     {!loading && !error && !courses.length && <EmptyState illustration={<Illustration name="empty" />} title="No courses yet" description="Check back soon." />}
     {!loading && !error && courses.length > 0 && <section aria-labelledby="courses-title">

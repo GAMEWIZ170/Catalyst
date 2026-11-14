@@ -19,3 +19,7 @@ export function cached(key, load, ttl = TTL_MS) {
 export function clearCache() {
   entries.clear();
 }
+
+export function forget(key) {
+  entries.delete(key);
+}

@@ -7,6 +7,7 @@ const Question = require("../models/question.models");
 const { findVisibleLesson } = require("../utils/visibility");
 const calculateStreak = require("../utils/streak");
 const Course = require("../models/course.models");
+const Position = require("../models/position.models");
 const { buildCourseOutline } = require("../utils/courseOutline");
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
@@ -95,4 +96,21 @@ const getOverview = async (req, res, next) => {
   }
 };
 
-module.exports = { markLessonDone, getMyProgress, getStreak, getOverview, loadStreak };
+// Remember where the student is in a course. Only visible lessons count, so a hidden one cannot be saved.
+const savePosition = async (req, res, next) => {
+  try {
+    const { lessonId, kind, position, total } = req.body;
+    const lesson = await findVisibleLesson(lessonId);
+    if (!lesson) return res.status(404).json({ message: "Lesson not found" });
+    await Position.findOneAndUpdate(
+      { user: req.user.id, course: lesson.unit.course._id },
+      { $set: { lesson: lesson._id, kind, position, total } },
+      { upsert: true, setDefaultsOnInsert: true }
+    );
+    return res.status(204).end();
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { markLessonDone, getMyProgress, getStreak, getOverview, loadStreak, savePosition };

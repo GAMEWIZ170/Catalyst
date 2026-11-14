@@ -1,4 +1,4 @@
-import { cached, clearCache } from "./cache";
+import { cached, clearCache, forget } from "./cache";
 
 const API_URL = import.meta.env.VITE_API_URL || "/api/v1";
 
@@ -56,6 +56,8 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ answers })
     })),
+  // Remembers where the student is, so Home can offer "Continue". Only Home's copy goes stale.
+  savePosition: (body) => request("/progress/position", { method: "PUT", body: JSON.stringify(body) }).then((payload) => { forget("home"); return payload; }),
   getProgress: () => request("/progress"),
   getStreak: () => cached("streak", () => request("/progress/streak")),
   getProgressOverview: () => cached("progress-overview", () => request("/progress/overview")),

@@ -66,7 +66,7 @@ export default function Lesson() {
   function load() {
     setError("");
     // One call returns the lesson, whether it is finished, and its materials.
-    api.getLessonHub(id).then(({ data }) => setLesson(data))
+    api.getLessonHub(id).then(({ data }) => { setLesson(data); api.savePosition({ lessonId: id, kind: "lesson" }).catch(() => {}); return data; })
       .catch((err) => setError(err.status === 404 ? "This lesson is not available" : err.message));
   }
 

@@ -43,7 +43,9 @@ export default function Flashcards() {
       setCards(response.cards || []);
       setSummary(response.summary);
       setQueue(response.cards || []);
-      setPosition(0);
+      // Coming from Home's Continue card, pick the deck up at the card the student reached.
+      const resume = Number(location.state?.resume) || 0;
+      setPosition(!filter && resume > 0 ? Math.min(resume, Math.max((response.cards || []).length - 1, 0)) : 0);
       setShown(false);
       setLoaded(true);
       if (!response.cards?.length && filter) setNothingToReview(true);
@@ -54,6 +56,12 @@ export default function Flashcards() {
   }
   useEffect(() => { load(); }, [id, filter]);
   useEffect(() => { if (queue[position]) headingRef.current?.focus(); }, [position, queue]);
+
+  // Save the card number so Home can say "flashcards 12/30". A failure here never interrupts studying.
+  useEffect(() => {
+    if (!queue[position] || filter) return;
+    api.savePosition({ lessonId: id, kind: "flashcards", position, total: queue.length }).catch(() => {});
+  }, [id, position, queue.length, filter]);
 
   // Space reveals the card. Keys 1, 2 and 3 rate it once the answer shows.
   useEffect(() => {
