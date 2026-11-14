@@ -26,7 +26,7 @@ export default function Courses() {
   const { user } = useAuth();
   // Each course arrives with its progress and the next lesson to open ({ lessonId, label, title }).
   const [courses, setCourses] = useState([]);
-  const [streak, setStreak] = useState(null);
+  const streak = user?.streak ?? null;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showWelcome, setShowWelcome] = useState(() => !welcomeSeen());
@@ -36,7 +36,6 @@ export default function Courses() {
     setError("");
     api.getHome().then(({ data }) => setCourses(data || []))
       .catch((err) => setError(err.message)).finally(() => setLoading(false));
-    api.getStreak().then(({ data }) => setStreak(data.streak)).catch(() => setStreak(null));
   }
 
   useEffect(load, []);

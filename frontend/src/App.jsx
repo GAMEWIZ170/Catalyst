@@ -7,8 +7,10 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Courses from "./pages/Courses";
-const CourseOutline = lazy(() => import("./pages/CourseOutline"));
-const Lesson = lazy(() => import("./pages/Lesson"));
+// The course outline and the lesson are the main student path, so they ship in the first bundle: a separate
+// file would cost one more round trip on a slow connection, more than the few KB it saves.
+import CourseOutline from "./pages/CourseOutline";
+import Lesson from "./pages/Lesson";
 const Test = lazy(() => import("./pages/Test"));
 const Flashcards = lazy(() => import("./pages/Flashcards"));
 const Progress = lazy(() => import("./pages/Progress"));
@@ -36,7 +38,9 @@ const warmers = {
   courses: () => { api.getHome().catch(() => {}); },
   course: ({ id }) => { api.getCourse(id).catch(() => {}); },
   lesson: ({ id }) => { api.getLessonHub(id).catch(() => {}); },
-  progress: () => { api.getProgressOverview().catch(() => {}); }
+  progress: () => { api.getProgressOverview().catch(() => {}); },
+  test: ({ id }) => { api.getTest(id).catch(() => {}); },
+  flashcards: ({ id }) => { api.getLessonFlashcards(id, "").catch(() => {}); }
 };
 
 function ProtectedPage({ children, warm }) {
@@ -62,8 +66,8 @@ export default function App() {
     <Route path="/courses" element={<ProtectedPage warm="courses"><Courses /></ProtectedPage>} />
     <Route path="/courses/:id" element={<ProtectedPage warm="course"><CourseOutline /></ProtectedPage>} />
     <Route path="/lessons/:id" element={<ProtectedPage warm="lesson"><Lesson /></ProtectedPage>} />
-    <Route path="/tests/:id" element={<ProtectedPage><Test /></ProtectedPage>} />
-    <Route path="/lessons/:id/flashcards" element={<ProtectedPage><Flashcards /></ProtectedPage>} />
+    <Route path="/tests/:id" element={<ProtectedPage warm="test"><Test /></ProtectedPage>} />
+    <Route path="/lessons/:id/flashcards" element={<ProtectedPage warm="flashcards"><Flashcards /></ProtectedPage>} />
     <Route path="/progress" element={<ProtectedPage warm="progress"><Progress /></ProtectedPage>} />
     <Route path="/settings" element={<ProtectedPage><Settings /></ProtectedPage>} />
     <Route path="/admin/courses/:id" element={<AdminPage><AdminCourseEditor /></AdminPage>} />

@@ -15,6 +15,17 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false));
   }, []);
 
+  // The streak lives on the user so every screen reads one number. /auth/me includes it; after login it is
+  // fetched once, and after anything that changes progress the screens fire "catalyst:refresh-streak".
+  const refreshStreak = () => api.getStreak()
+    .then(({ data }) => setUser((current) => (current ? { ...current, streak: data.streak } : current)))
+    .catch(() => {});
+
+  useEffect(() => {
+    window.addEventListener("catalyst:refresh-streak", refreshStreak);
+    return () => window.removeEventListener("catalyst:refresh-streak", refreshStreak);
+  }, []);
+
   const value = useMemo(() => ({
     user,
     loading,
@@ -22,12 +33,14 @@ export function AuthProvider({ children }) {
       const response = await api.login(credentials);
       clearCache();
       setUser(response.data);
+      refreshStreak();
       return response;
     },
     async register(details) {
       const response = await api.register(details);
       clearCache();
       setUser(response.data);
+      refreshStreak();
       return response;
     },
     async logout() {
@@ -37,7 +50,8 @@ export function AuthProvider({ children }) {
     },
     async updateAvatar(avatar) {
       const response = await api.updateAvatar({ avatar });
-      setUser(response.data);
+      // The avatar response has no streak; keep the one we have.
+      setUser((current) => ({ ...response.data, streak: current?.streak }));
       return response;
     }
   }), [loading, user]);

@@ -95,4 +95,4 @@ const getOverview = async (req, res, next) => {
   }
 };
 
-module.exports = { markLessonDone, getMyProgress, getStreak, getOverview };
+module.exports = { markLessonDone, getMyProgress, getStreak, getOverview, loadStreak };

@@ -39,11 +39,12 @@ export const api = {
   getCourse: (id) => cached(`course:${id}`, () => request(`/courses/${id}`)),
   getLesson: (id) => request(`/lessons/${id}`),
   getLessonHub: (id) => cached(`lesson:${id}`, () => request(`/lessons/${id}/hub`)),
-  getLessonFlashcards: (id, filter) => request(`/lessons/${id}/flashcards${filter ? `?filter=${encodeURIComponent(filter)}` : ""}`),
+  getLessonFlashcards: (id, filter) => cached(`flashcards:${id}:${filter || ""}`, () => request(`/lessons/${id}/flashcards${filter ? `?filter=${encodeURIComponent(filter)}` : ""}`), 5000),
   rateFlashcard: (id, confidence) => changed(request(`/flashcards/${id}/rate`, { method: "POST", body: JSON.stringify({ confidence }) })),
   getLessonMaterials: (id) => request(`/lessons/${id}/materials`),
   markLessonDone: (id) => changed(request(`/lessons/${id}/mark-done`, { method: "POST" })),
-  getTest: (id) => request(`/tests/${id}`),
+  // Cached only for a few seconds: enough for the page to reuse the request started on route match.
+  getTest: (id) => cached(`test:${id}`, () => request(`/tests/${id}`), 5000),
   submitTest: (id, answers) => changed(request(`/tests/${id}/submit`, { method: "POST", body: JSON.stringify({ answers }) })),
   answerQuestion: (id, answer) =>
     request(`/questions/${id}/answer`, {

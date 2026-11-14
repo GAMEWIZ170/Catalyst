@@ -68,11 +68,12 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 
 ## Speed
 
-- **Lazy routes.** Every page except login, register and the course list loads its code when opened. KaTeX and mhchem load only when a page has a formula, and the KaTeX stylesheet loads with them.
+- **Lazy routes.** Tests, flashcards, progress, settings and the admin pages load their code when opened. Login, register, the course list, the course outline and the lesson are in the first bundle (a separate file for them cost one more round trip on a slow connection). KaTeX and mhchem load only when a page has a formula, and the KaTeX stylesheet loads with them.
+- **The streak** comes with `GET /auth/me` and lives on the user in `AuthContext`; it is refreshed after login and after the `catalyst:refresh-streak` event.
 - **One call per screen.** Home uses `GET /home`, the lesson screen `GET /lessons/:id/hub`, the progress screen `GET /progress/overview`.
 - **Data starts early.** `ProtectedPage` in `App.jsx` starts the screen's requests the moment the route matches, while its code is still downloading.
-- **Read cache.** `src/api/cache.js` keeps student reads for 60 seconds and shares one request between callers. Finishing a lesson, submitting a test and rating a card clear it (`changed()` in `api/client.js`), and login, register and logout clear it too. Tests and flashcards are not cached.
-- **Prefetch.** `src/api/prefetch.js`: hovering, touching or focusing a link to a lesson or course starts loading it. Spread `nearToPrefetch(...)` onto a link to add it.
+- **Read cache.** `src/api/cache.js` keeps student reads for 60 seconds and shares one request between callers. Finishing a lesson, submitting a test and rating a card clear it (`changed()` in `api/client.js`), and login, register and logout clear it too. Tests and flashcards are kept for 5 seconds only, enough for the page to reuse the request started when the route matched.
+- **Prefetch.** `src/api/prefetch.js`: hovering, touching or focusing a link to a lesson or course starts loading its data. Spread `nearToPrefetch(...)` onto a link to add it.
 - **Images.** `ResponsiveImage` serves 400, 800 and 1200 px versions through `srcset` and uses the stored `width` and `height` to reserve space. The lesson video is a small still and a play button; the player loads only after a tap.
 
 ## Application routes

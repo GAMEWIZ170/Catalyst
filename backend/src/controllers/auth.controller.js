@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const hashPassword = require("../utils/bcrypt");
 const ms = require("ms");
 const { hasAccess } = require("../middlewares/requireAccess");
+const { loadStreak } = require("./progress.controller");
 
 
 const cookieOptions = {
@@ -125,7 +126,11 @@ const logout = async (req, res, next) => {
 
 const getMe = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id).select("name email role avatar subscriptionEndsAt");
+    // The streak rides along, so the top bar has it without a second request on every page load.
+    const [user, streak] = await Promise.all([
+      User.findById(req.user.id).select("name email role avatar subscriptionEndsAt"),
+      loadStreak(req.user.id)
+    ]);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -134,7 +139,7 @@ const getMe = async (req, res, next) => {
     res.status(200).json({
       data: {
         id: user._id, name: user.name, email: user.email, role: user.role, avatar: user.avatar,
-        subscriptionEndsAt: user.subscriptionEndsAt, hasAccess: hasAccess(user)
+        subscriptionEndsAt: user.subscriptionEndsAt, hasAccess: hasAccess(user), streak: streak.streak
       }
     });
   } catch (error) {

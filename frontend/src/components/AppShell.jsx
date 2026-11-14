@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useMatch, useNavigate } from "react-router-dom";
-import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "./Avatar";
 import { Mail, Zap } from "lucide-react";
@@ -11,22 +10,12 @@ export default function AppShell({ children }) {
   const navigate = useNavigate();
   // A test hides the site navigation so nothing pulls attention from the question.
   const focusMode = Boolean(useMatch("/tests/:id"));
-  const [streak, setStreak] = useState(null);
+  const streak = user?.streak ?? null;
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const notificationButtonRef = useRef(null);
   const profileButtonRef = useRef(null);
   const profileMenuRef = useRef(null);
-
-  useEffect(() => {
-    api.getStreak().then(({ data }) => setStreak(data.streak)).catch(() => setStreak(null));
-  }, []);
-
-  useEffect(() => {
-    const refresh = () => api.getStreak().then(({ data }) => setStreak(data.streak)).catch(() => setStreak(null));
-    window.addEventListener("catalyst:refresh-streak", refresh);
-    return () => window.removeEventListener("catalyst:refresh-streak", refresh);
-  }, []);
 
   useEffect(() => {
     const handlePointerDown = (event) => {

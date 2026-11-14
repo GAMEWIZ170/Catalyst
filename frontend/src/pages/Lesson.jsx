@@ -30,15 +30,21 @@ function LessonSkeleton() {
 }
 
 // A still picture and a play button. The player (about 500 KB of YouTube code) loads only after a tap.
-// The still is a small 320 by 180 image from YouTube; if it cannot load, the button still works.
+// The still is a small 320 by 180 image from another site (YouTube), so it waits two seconds and the lesson text
+// gets the connection first. The frame keeps its 16:9 shape meanwhile. If the still cannot load, the button still works.
 function LessonVideo({ title, videoId }) {
   const [playing, setPlaying] = useState(false);
   const [stillFailed, setStillFailed] = useState(false);
+  const [stillWanted, setStillWanted] = useState(false);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setStillWanted(true), 2000);
+    return () => window.clearTimeout(timer);
+  }, []);
   return <div className="video-frame">
     {playing
       ? <iframe title={`${title} video`} src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?autoplay=1`} allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
       : <button type="button" className="video-play" onClick={() => setPlaying(true)}>
-        {!stillFailed && <img className="video-still" src={`https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/mqdefault.jpg`} alt="" width="320" height="180" loading="lazy" decoding="async" onError={() => setStillFailed(true)} />}
+        {stillWanted && !stillFailed && <img className="video-still" src={`https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/mqdefault.jpg`} alt="" width="320" height="180" loading="lazy" decoding="async" onError={() => setStillFailed(true)} />}
         <span className="video-play-mark"><Play size={20} aria-hidden="true" /></span>
         <span className="video-play-label">Play video</span>
       </button>}

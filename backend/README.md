@@ -145,7 +145,7 @@ All routes start with `/api/v1`. Successful responses use `{ "data": ... }` wher
 | POST | `/auth/register` | Public | Create a student and set the cookie |
 | POST | `/auth/login` | Public | Log in |
 | POST | `/auth/logout` | Public | Clear the cookie |
-| GET | `/auth/me` | Student | Return `id`, `name`, `email`, `role` and `avatar` |
+| GET | `/auth/me` | Student | Return `id`, `name`, `email`, `role`, `avatar`, `subscriptionEndsAt`, `hasAccess` and the current `streak` (so the top bar needs no second request) |
 | PUT | `/auth/me/avatar` | Student | Body `{ "avatar": "beaker" }` or `{ "avatar": null }` |
 
 Example avatar response:
