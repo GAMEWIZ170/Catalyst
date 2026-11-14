@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { api, ACCESS_ENDED } from "../api/client";
 import { nearToPrefetch, prefetchCourse, prefetchLesson } from "../api/prefetch";
 import { useAuth } from "../context/AuthContext";
@@ -46,6 +46,8 @@ export default function Courses() {
   }
 
   const isStudent = user && user.role === "student";
+  // A brand-new student sees the three welcome steps first.
+  if (isStudent && user.onboarded === false) return <Navigate to="/welcome" replace />;
   const firstName = (user?.name || "").trim().split(/\s+/)[0];
   // Continue where the student last was (most recent first). A lesson already finished moves on to the next one;
   // a flashcard deck part-way through resumes at its card. With nothing saved, use a started course, then any with lessons left.

@@ -74,6 +74,13 @@ const validatePosition = validateWith(Joi.object({
   total: Joi.number().integer().min(0).max(10000).default(0)
 }));
 
+const validatePreferences = validateWith(Joi.object({
+  onboarded: Joi.boolean(),
+  examDate: Joi.date().iso().allow(null),
+  goalKind: Joi.string().valid("none", "minutes", "lesson"),
+  goalMinutes: Joi.number().integer().min(5).max(240)
+}).min(1));
+
 const validateRegister = validateWith(Joi.object({
   name: Joi.string().trim().min(2).max(60).required(),
   email: Joi.string().trim().lowercase().email().max(254).required(),
@@ -320,6 +327,7 @@ module.exports = {
   validateLogin,
   validateAvatar,
   validatePosition,
+  validatePreferences,
   validateCourse,
   validateCourseUpdate,
   validateUnit,

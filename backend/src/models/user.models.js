@@ -42,6 +42,21 @@ const userSchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: true
+    },
+    // False only for accounts created through register, until the student finishes or skips the welcome steps.
+    // Older accounts have no value and count as done.
+    onboarded: {
+        type: Boolean,
+        default: true
+    },
+    examDate: {
+        type: Date,
+        default: null
+    },
+    // Optional daily goal. "minutes" counts study time, "lesson" counts a lesson finished today.
+    dailyGoal: {
+        kind: { type: String, enum: ["none", "minutes", "lesson"], default: "none" },
+        minutes: { type: Number, min: 5, max: 240, default: 10 }
     }
 }, {
     timestamps: true

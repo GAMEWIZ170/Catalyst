@@ -17,7 +17,7 @@ export default function AppShell({ children }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   // A test hides the site navigation so nothing pulls attention from the question.
-  const focusMode = Boolean(useMatch("/tests/:id"));
+  const focusMode = Boolean(useMatch("/tests/:id")) || Boolean(useMatch("/welcome"));
   const streak = user?.streak ?? null;
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);

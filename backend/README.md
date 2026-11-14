@@ -147,6 +147,7 @@ All routes start with `/api/v1`. Successful responses use `{ "data": ... }` wher
 | POST | `/auth/logout` | Public | Clear the cookie |
 | GET | `/auth/me` | Student | Return `id`, `name`, `email`, `role`, `avatar`, `subscriptionEndsAt`, `hasAccess` and the current `streak` (so the top bar needs no second request) |
 | PUT | `/auth/me/avatar` | Student | Body `{ "avatar": "beaker" }` or `{ "avatar": null }` |
+| PUT | `/auth/me/preferences` | Student | Any of `{ onboarded, examDate (ISO date or null), goalKind: "none"|"minutes"|"lesson", goalMinutes (5 to 240) }`. `/auth/me` and login return `onboarded`, `examDate` and `dailyGoal`. New accounts start with `onboarded: false`; older accounts count as done |
 
 Example avatar response:
 

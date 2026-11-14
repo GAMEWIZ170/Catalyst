@@ -14,6 +14,13 @@ const cookieOptions = {
 };
 
 
+// The student's own settings, sent with the account so every screen can read them.
+const preferencesOf = (user) => ({
+  onboarded: user.onboarded !== false,
+  examDate: user.examDate || null,
+  dailyGoal: { kind: user.dailyGoal?.kind || "none", minutes: user.dailyGoal?.minutes || 10 }
+});
+
 const sendTokenResponse = (user, statusCode, res) => {
   const token = jwt.sign(
     { id: user._id, role: user.role },
@@ -33,7 +40,8 @@ const sendTokenResponse = (user, statusCode, res) => {
         role: user.role
         , avatar: user.avatar,
         subscriptionEndsAt: user.subscriptionEndsAt || null,
-        hasAccess: hasAccess(user)
+        hasAccess: hasAccess(user),
+        ...preferencesOf(user)
       }
     });
 };
@@ -61,7 +69,8 @@ const register = async (req, res, next) => {
       name,
       email: normalizedEmail,
       password: hashedPassword,
-      role: "student"
+      role: "student",
+      onboarded: false
     });
 
 
@@ -128,7 +137,7 @@ const getMe = async (req, res, next) => {
   try {
     // The streak rides along, so the top bar has it without a second request on every page load.
     const [user, streak] = await Promise.all([
-      User.findById(req.user.id).select("name email role avatar subscriptionEndsAt"),
+      User.findById(req.user.id).select("name email role avatar subscriptionEndsAt onboarded examDate dailyGoal"),
       loadStreak(req.user.id)
     ]);
 
@@ -139,7 +148,7 @@ const getMe = async (req, res, next) => {
     res.status(200).json({
       data: {
         id: user._id, name: user.name, email: user.email, role: user.role, avatar: user.avatar,
-        subscriptionEndsAt: user.subscriptionEndsAt, hasAccess: hasAccess(user), streak: streak.streak
+        subscriptionEndsAt: user.subscriptionEndsAt, hasAccess: hasAccess(user), streak: streak.streak, ...preferencesOf(user)
       }
     });
   } catch (error) {
@@ -157,7 +166,24 @@ const updateAvatar = async (req, res, next) => {
   }
 };
 
+const updatePreferences = async (req, res, next) => {
+  try {
+    const { onboarded, examDate, goalKind, goalMinutes } = req.body;
+    const set = {};
+    if (onboarded !== undefined) set.onboarded = onboarded;
+    if (examDate !== undefined) set.examDate = examDate;
+    if (goalKind !== undefined) set["dailyGoal.kind"] = goalKind;
+    if (goalMinutes !== undefined) set["dailyGoal.minutes"] = goalMinutes;
+    const user = await User.findByIdAndUpdate(req.user.id, { $set: set }, { returnDocument: "after", runValidators: true }).select("onboarded examDate dailyGoal");
+    if (!user) return res.status(404).json({ message: "User not found" });
+    return res.status(200).json({ data: preferencesOf(user) });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
+  updatePreferences,
   register,
   login,
   logout,

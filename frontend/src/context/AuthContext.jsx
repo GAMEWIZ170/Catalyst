@@ -48,6 +48,12 @@ export function AuthProvider({ children }) {
       clearCache();
       setUser(null);
     },
+    async updatePreferences(body) {
+      const response = await api.updatePreferences(body);
+      clearCache();
+      setUser((current) => ({ ...current, ...response.data }));
+      return response;
+    },
     async updateAvatar(avatar) {
       const response = await api.updateAvatar({ avatar });
       // The avatar response has no streak; keep the one we have.
