@@ -2,21 +2,24 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Zap } from "lucide-react";
 import { api } from "../api/client";
-import { Button, Card, Progress as Bar } from "../components/ui";
+import { Button, Card, EmptyState, Progress as Bar } from "../components/ui";
 import { ErrorState, Loading } from "./Courses";
 
 export default function Progress() {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
 
-  useEffect(() => {
+  function load() {
+    setError("");
     // One call returns the finished lessons, the streak and every course outline.
     api.getProgressOverview()
       .then(({ data }) => setData({ progress: data.progress || [], streak: data.streak, trees: data.courses || [] }))
       .catch((err) => setError(err.message));
-  }, []);
+  }
 
-  if (error) return <div className="content"><ErrorState message={error} /></div>;
+  useEffect(load, []);
+
+  if (error) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
   if (!data) return <Loading />;
   const { progress, streak, trees } = data;
   const completed = progress.filter((item) => item.completed);
@@ -36,6 +39,7 @@ export default function Progress() {
       <Stat label="Lessons completed" value={completed.length} />
       <Stat label="Average score" value={average === null ? "No scores yet" : `${average}%`} />
     </div>
+    {trees.length === 0 && <EmptyState title="No courses to show yet" description="Your progress will appear here once a course is open." action={<Button as={Link} variant="secondary" to="/courses">Back to home</Button>} />}
     {trees.map((tree) => <Card key={tree._id} aria-labelledby={`progress-${tree._id}`}>
       <h2 id={`progress-${tree._id}`}>{tree.code} · {tree.title}</h2>
       <div className="progress-units">

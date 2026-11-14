@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, CheckCircle2, ChevronDown, ChevronRight, Circle, PlayCircle } from "lucide-react";
 import { api } from "../api/client";
 import { nearToPrefetch, prefetchLesson } from "../api/prefetch";
-import { Button, Card, Progress } from "../components/ui";
+import { Button, Card, EmptyState, Progress } from "../components/ui";
 import { rememberCourse } from "../utils/courseCache";
 import { ErrorState, Loading } from "./Courses";
 
@@ -101,6 +101,7 @@ export default function CourseOutline() {
       </div>}
     </header>
     <div className="ol-units">
+      {course.units.length === 0 && !course.tests?.length && <EmptyState title="No lessons yet" description="Lessons for this course will appear here when they are ready." action={<Button as={Link} variant="secondary" to="/courses">Back to courses</Button>} />}
       {course.units.map((unit, index) => <Unit key={unit._id} unit={unit} number={index + 1} nextId={nextLesson?._id} from={from} />)}
       {course.tests?.length > 0 && <Card className="ol-unit"><div className="ol-tests ol-tests--course"><h2>Course tests</h2>{course.tests.map((test) => <TestRow key={test._id} test={test} from={from} />)}</div></Card>}
     </div>

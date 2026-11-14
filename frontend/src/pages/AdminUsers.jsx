@@ -129,6 +129,7 @@ export default function AdminUsers() {
     </div>
     <StatusMessage message={error || message} error={Boolean(error)} />
     {loading && <Loading />}
+    {!loading && error && !users.length && <Button variant="secondary" onClick={load}>Retry</Button>}
     {!loading && !users.length && !error && <EmptyState icon={Users} title={filtered ? "No user matches these filters" : "No users yet"} action={filtered ? <Button variant="secondary" onClick={() => { setSearch(""); setFilters({ q: "", role: "", status: "" }); setPage(1); }}>Clear filters</Button> : undefined} />}
     {!loading && users.length > 0 && <div className="user-list">
       {users.map((user) => {

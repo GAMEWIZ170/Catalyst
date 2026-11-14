@@ -56,6 +56,7 @@ export default function AdminTrash() {
     </div>
     <StatusMessage message={error || message} error={Boolean(error)} />
     {loading && <Loading />}
+    {!loading && error && !items.length && <Button variant="secondary" onClick={load}>Retry</Button>}
     {!loading && !items.length && !error && <EmptyState icon={Trash2} title="The Trash is empty" description="Anything you delete will appear here." />}
     {!loading && items.length > 0 && <ul className="trash-list">
       {items.map((item) => <li className="trash-row" key={`${item.type}-${item.id}`}>
