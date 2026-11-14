@@ -6,6 +6,9 @@ import AppShell from "./components/AppShell";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import VerifyEmail from "./pages/VerifyEmail";
 import Courses from "./pages/Courses";
 // The course outline and the lesson are the main student path, so they ship in the first bundle: a separate
 // file would cost one more round trip on a slow connection, more than the few KB it saves.
@@ -69,6 +72,9 @@ export default function App() {
   return <Routes>
     <Route path="/login" element={user ? <Navigate to="/courses" replace /> : <Login />} />
     <Route path="/register" element={user ? <Navigate to="/courses" replace /> : <Register />} />
+    <Route path="/forgot-password" element={user ? <Navigate to="/courses" replace /> : <ForgotPassword />} />
+    <Route path="/reset-password" element={<ResetPassword />} />
+    <Route path="/verify-email" element={<VerifyEmail />} />
     <Route path="/courses" element={<ProtectedPage warm="courses"><Courses /></ProtectedPage>} />
     <Route path="/courses/:id" element={<ProtectedPage warm="course"><CourseOutline /></ProtectedPage>} />
     <Route path="/lessons/:id" element={<ProtectedPage warm="lesson"><Lesson /></ProtectedPage>} />

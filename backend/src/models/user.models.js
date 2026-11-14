@@ -49,6 +49,12 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    // False only for accounts created through register, until the student opens the emailed link.
+    // Older accounts have no value and count as verified. Unverified students are warned, not blocked.
+    emailVerified: {
+        type: Boolean,
+        default: true
+    },
     examDate: {
         type: Date,
         default: null

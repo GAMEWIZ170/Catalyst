@@ -48,6 +48,9 @@ export function AuthProvider({ children }) {
       clearCache();
       setUser(null);
     },
+    markVerified() {
+      setUser((current) => (current ? { ...current, emailVerified: true } : current));
+    },
     async updatePreferences(body) {
       const response = await api.updatePreferences(body);
       clearCache();

@@ -860,6 +860,49 @@ h3 {
   padding: var(--space-3) var(--space-3);
 }
 
+.form-success {
+  background: var(--success-tint);
+  border: 1px solid var(--success);
+  border-radius: var(--radius-control);
+  color: var(--ink);
+  margin: 0;
+  padding: var(--space-3);
+}
+
+.verify-banner {
+  align-items: center;
+  background: var(--warning-tint);
+  border-bottom: 1px solid var(--warning);
+  color: var(--ink);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: var(--text-sm);
+  gap: var(--space-2) var(--space-3);
+  justify-content: center;
+  padding: var(--space-2) var(--space-4);
+}
+
+.verify-banner-action {
+  background: none;
+  border: 0;
+  color: var(--accent);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  text-decoration: underline;
+}
+
+.verify-banner-action:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.verify-banner-note--error {
+  color: var(--error);
+}
+
 .screen-center {
   align-items: center;
   color: var(--muted);

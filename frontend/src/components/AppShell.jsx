@@ -5,6 +5,7 @@ import Avatar from "./Avatar";
 import { Bookmark, BarChart3, House, Layers, Mail, Search, UserRound, Zap } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import ShortcutHelp from "./ShortcutHelp";
+import VerifyBanner from "./VerifyBanner";
 import useStudyTimer from "../utils/useStudyTimer";
 
 // Phones get a bottom tab bar for the places a student goes most. Laptops keep the top bar only.

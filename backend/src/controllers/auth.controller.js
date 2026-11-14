@@ -5,6 +5,9 @@ const hashPassword = require("../utils/bcrypt");
 const ms = require("ms");
 const { hasAccess } = require("../middlewares/requireAccess");
 const { loadStreak } = require("./progress.controller");
+const { issueToken, consumeToken } = require("../utils/authTokens");
+const sendEmail = require("../utils/sendEmail");
+const authCache = require("../utils/authCache");
 
 
 const cookieOptions = {
@@ -17,11 +20,23 @@ const cookieOptions = {
 // The student's own settings, sent with the account so every screen can read them.
 const preferencesOf = (user) => ({
   onboarded: user.onboarded !== false,
+  emailVerified: user.emailVerified !== false,
   examDate: user.examDate || null,
   dailyGoal: { kind: user.dailyGoal?.kind || "none", minutes: user.dailyGoal?.minutes || 10 }
 });
 
-const sendTokenResponse = (user, statusCode, res) => {
+const linkTo = (path, token) => `${process.env.CLIENT_URL}${path}?token=${token}`;
+
+const sendVerifyEmail = async (user) => {
+  const token = await issueToken(user._id, "verify");
+  await sendEmail({
+    to: user.email,
+    subject: "Verify your Catalyst email",
+    text: `Hi ${user.name},\n\nOpen this link to verify your email (valid for 24 hours):\n${linkTo("/verify-email", token)}\n`
+  });
+};
+
+const sendTokenResponse =(user, statusCode, res) => {
   const token = jwt.sign(
     { id: user._id, role: user.role },
     process.env.JWT_SECRET,
@@ -70,9 +85,12 @@ const register = async (req, res, next) => {
       email: normalizedEmail,
       password: hashedPassword,
       role: "student",
-      onboarded: false
+      onboarded: false,
+      emailVerified: false
     });
 
+    // A failed email must not fail the sign-up. The student can ask for another link.
+    sendVerifyEmail(user).catch((err) => console.error("Verification email failed:", err.message));
 
     sendTokenResponse(user, 201, res);
   } catch (error) {
@@ -137,7 +155,7 @@ const getMe = async (req, res, next) => {
   try {
     // The streak rides along, so the top bar has it without a second request on every page load.
     const [user, streak] = await Promise.all([
-      User.findById(req.user.id).select("name email role avatar subscriptionEndsAt onboarded examDate dailyGoal"),
+      User.findById(req.user.id).select("name email role avatar subscriptionEndsAt onboarded emailVerified examDate dailyGoal"),
       loadStreak(req.user.id)
     ]);
 
@@ -182,7 +200,66 @@ const updatePreferences = async (req, res, next) => {
   }
 };
 
+// Same answer whether or not the email has an account, so nobody can use this to find who is registered.
+const forgotPassword = async (req, res, next) => {
+  try {
+    const user = await User.findOne({ email: req.body.email, isActive: { $ne: false } });
+    if (user) {
+      const token = await issueToken(user._id, "reset");
+      await sendEmail({
+        to: user.email,
+        subject: "Reset your Catalyst password",
+        text: `Hi ${user.name},\n\nOpen this link to choose a new password (valid for 30 minutes):\n${linkTo("/reset-password", token)}\n\nIf you did not ask for this, ignore this email.\n`
+      }).catch((err) => console.error("Reset email failed:", err.message));
+    }
+    return res.status(200).json({ message: "If that email has an account, a reset link is on its way." });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const resetPassword = async (req, res, next) => {
+  try {
+    const userId = await consumeToken(req.body.token, "reset");
+    if (!userId) return res.status(400).json({ message: "This reset link is invalid or has expired. Ask for a new one." });
+    const hashed = await hashPassword(req.body.password);
+    if (!hashed) return res.status(500).json({ message: "Error hashing password" });
+    await User.updateOne({ _id: userId }, { $set: { password: hashed } });
+    authCache.forget(userId);
+    return res.status(200).json({ message: "Password changed. You can log in now." });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const verifyEmail = async (req, res, next) => {
+  try {
+    const userId = await consumeToken(req.body.token, "verify");
+    if (!userId) return res.status(400).json({ message: "This verification link is invalid or has expired. Ask for a new one." });
+    await User.updateOne({ _id: userId }, { $set: { emailVerified: true } });
+    return res.status(200).json({ message: "Email verified." });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const resendVerification = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id).select("name email emailVerified");
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (user.emailVerified !== false) return res.status(200).json({ message: "Your email is already verified." });
+    await sendVerifyEmail(user);
+    return res.status(200).json({ message: "Verification link sent." });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
+  forgotPassword,
+  resetPassword,
+  verifyEmail,
+  resendVerification,
   updatePreferences,
   register,
   login,

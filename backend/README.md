@@ -145,6 +145,10 @@ All routes start with `/api/v1`. Successful responses use `{ "data": ... }` wher
 | POST | `/auth/register` | Public | Create a student and set the cookie |
 | POST | `/auth/login` | Public | Log in |
 | POST | `/auth/logout` | Public | Clear the cookie |
+| POST | `/auth/forgot-password` | Public | Body `{ email }`. Always answers 200 with the same message, whether or not the email has an account. If it does, a reset link (valid 30 minutes) goes to `sendEmail` |
+| POST | `/auth/reset-password` | Public | Body `{ token, password }`. Single-use token. 400 when the token is wrong, used or expired |
+| POST | `/auth/verify-email` | Public | Body `{ token }`. Single-use token valid 24 hours. Sets `emailVerified: true` |
+| POST | `/auth/resend-verification` | Student | Sends a new verification link and cancels the old one. 200 with a note if already verified |
 | GET | `/auth/me` | Student | Return `id`, `name`, `email`, `role`, `avatar`, `subscriptionEndsAt`, `hasAccess` and the current `streak` (so the top bar needs no second request) |
 | PUT | `/auth/me/avatar` | Student | Body `{ "avatar": "beaker" }` or `{ "avatar": null }` |
 | PUT | `/auth/me/preferences` | Student | Any of `{ onboarded, examDate (ISO date or null), goalKind: "none"|"minutes"|"lesson", goalMinutes (5 to 240) }`. `/auth/me` and login return `onboarded`, `examDate` and `dailyGoal`. New accounts start with `onboarded: false`; older accounts count as done |
@@ -440,6 +444,8 @@ Joi validators trim strings, strip unknown fields and reject malformed IDs. Imag
 | General, per IP | Every route | 5,000/IP/15 minutes (`RATE_LIMIT_IP`), a ceiling against floods that many students on one network will not reach |
 | Strict, per account | Register and login failures | 20/IP and email/15 minutes (`RATE_LIMIT_AUTH_FAILS`) |
 | Strict, per IP | Register and login failures | 200/IP/15 minutes (`RATE_LIMIT_AUTH_IP`) |
+| Email, per account | Forgot password and resend verification (every request counts) | 5/IP and email, or 5/user, per 15 minutes |
+| Email, per IP | Same routes | 30/IP/15 minutes |
 | Answer | `POST /questions/:id/answer` | 100/user/15 minutes |
 | Submit | `POST /tests/:id/submit` | 60/user/15 minutes |
 | Mock exam | Exam start, save and submit | 600/user/15 minutes |
@@ -456,7 +462,8 @@ All schemas have timestamps. Soft-deletable content has `deletedAt`.
 
 | Model | Main fields |
 | --- | --- |
-| **User** | `name`, `email`, hidden bcrypt `password`, `role`, `avatar`, `isActive`, `subscriptionEndsAt` |
+| **AuthToken** | `user`, `type` (`reset` or `verify`), `tokenHash` (SHA-256, never the plain token), `expiresAt` (TTL index removes it) |
+| **User** | `name`, `email`, hidden bcrypt `password`, `role`, `avatar`, `isActive`, `subscriptionEndsAt`, `emailVerified` |
 | **Course** | `code`, `title`, `description`, `isPublished`, `deletedAt` |
 | **Unit** | `course`, `title`, `order`, `deletedAt` |
 | **Lesson** | `unit`, `title`, `order`, `explanation`, optional `explanationImage`, `videoHost`, `videoId`, `isPublished`, `deletedAt` |
@@ -528,3 +535,8 @@ src/
 - The frontend has not yet been updated for tests, flashcards, materials and avatars.
 - There are no automated tests; verification is currently performed with isolated scripts and HTTP checks.
 - Admin promotion is manual.
+
+
+### Password reset and email verification
+
+Emailed links carry a random 32-byte token. Only its SHA-256 hash is stored in `AuthToken`, and the row is deleted when used, so a link works once. Asking for a new link cancels the older one. `utils/sendEmail.js` is the only place that sends mail: in development it prints the message, with the link, to the server console; in production it throws until real sending is built. Links point to `CLIENT_URL` (`/reset-password?token=...`, `/verify-email?token=...`). New accounts start with `emailVerified: false`; older accounts count as verified. Unverified students are only warned (a banner with a resend button): nothing is blocked. A password reset does not end sessions that are already logged in.
