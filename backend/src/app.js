@@ -35,6 +35,7 @@ const flashcardRoutes = require("./routes/flashcard.routes");
 const materialRoutes = require("./routes/material.routes");
 const studyRoutes = require("./routes/study.routes");
 const notificationRoutes = require("./routes/notification.routes");
+const reportRoutes = require("./routes/report.routes");
 
 // middlewares that run on every request, in this order
 app.use(helmet());                       // safe response headers
@@ -57,6 +58,7 @@ app.use("/api/v1/review", reviewRoutes);
 app.use("/api/v1/topics", topicRoutes);
 app.use("/api/v1/plan", planRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
+app.use("/api/v1/reports", reportRoutes);
 app.use("/api/v1", examRoutes);
 app.use("/api/v1/lessons", lessonRoutes);
 app.use("/api/v1/questions", questionRoutes);

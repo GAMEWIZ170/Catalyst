@@ -9,6 +9,7 @@ const Mastery = require("../models/mastery.models");
 const Mistake = require("../models/mistake.models");
 const Note = require("../models/note.models");
 const Notification = require("../models/notification.models");
+const Report = require("../models/report.models");
 const Position = require("../models/position.models");
 const Progress = require("../models/progress.models");
 const StudyTime = require("../models/studytime.models");
@@ -25,7 +26,7 @@ const exportData = async (req, res, next) => {
   try {
     const user = req.user.id;
     const own = (Model, select) => Model.find({ user }).select(`-_id -user -__v ${select || ""}`).lean();
-    const [profile, progress, testResults, mistakes, flashcards, mastery, notes, bookmarks, positions, studyTime, examAttempts] = await Promise.all([
+    const [profile, progress, testResults, mistakes, flashcards, mastery, notes, bookmarks, positions, studyTime, examAttempts, reports] = await Promise.all([
       User.findById(user).select("name email role avatar emailVerified onboarded examDate dailyGoal subscriptionEndsAt createdAt -_id").lean(),
       own(Progress),
       own(TestResult),
@@ -37,13 +38,14 @@ const exportData = async (req, res, next) => {
       own(Position),
       own(StudyTime),
       // The marked result of an exam holds correct answers, so it is left out. The student's own answers stay.
-      own(ExamAttempt, "-result")
+      own(ExamAttempt, "-result"),
+      own(Report, "-test -target -link -resolvedBy")
     ]);
     if (!profile) return res.status(404).json({ message: "User not found" });
     res.setHeader("Content-Disposition", 'attachment; filename="catalyst-my-data.json"');
     return res.status(200).json({
       exportedAt: new Date().toISOString(),
-      profile, progress, testResults, mistakes, flashcards, mastery, notes, bookmarks, positions, studyTime, examAttempts
+      profile, progress, testResults, mistakes, flashcards, mastery, notes, bookmarks, positions, studyTime, examAttempts, reports
     });
   } catch (error) {
     next(error);
@@ -91,6 +93,7 @@ const deleteAccount = async (req, res, next) => {
       StudyTime.deleteMany({ user: id }),
       ExamAttempt.deleteMany({ user: id }),
       Notification.deleteMany({ user: id }),
+      Report.deleteMany({ user: id }),
       AuthToken.deleteMany({ user: id })
     ]);
 

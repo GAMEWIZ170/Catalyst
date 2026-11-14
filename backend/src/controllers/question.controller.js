@@ -6,6 +6,7 @@ const { questionForAdmin } = require("../utils/serializers");
 const { recordAnswer } = require("./mistake.controller");
 const mastery = require("../utils/mastery");
 const { grade, correctAnswerOf } = require("../utils/grading");
+const { recordStat } = require("../utils/questionStats");
 
 const HAS_OPTIONS = ["mcq", "multi_select"];
 const has = (body, key) => Object.prototype.hasOwnProperty.call(body, key);
@@ -57,6 +58,7 @@ const checkAnswer = async (req, res, next) => {
     const { isCorrect, unitWrong } = grade(question, answer);
     const correctAnswer = correctAnswerOf(question);
     const wasMistake = await recordAnswer(req.user.id, question._id, isCorrect);
+    await recordStat(question, answer, isCorrect);
     // Lesson mastery follows questions from lesson tests. A right answer only counts as review when it was a mistake before.
     if (test.scope === "lesson") {
       if (!isCorrect) await mastery.record(req.user.id, test.lesson._id, { type: "wrong" });
@@ -134,4 +136,4 @@ const deleteQuestion = async (req, res, next) => {
   }
 };
 
-module.exports = { checkAnswer, createQuestion, updateQuestion, deleteQuestion };
+module.exports = { checkAnswer, createQuestion, updateQuestion, deleteQuestion, questionData, setCorrectFromIndexes };

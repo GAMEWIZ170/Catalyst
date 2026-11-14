@@ -13,7 +13,7 @@ const {
   , validateMaterial, validateMaterialUpdate,
   validateReorderUnits, validateReorderLessons, validateReorderTests,
   validateReorderQuestions, validateReorderFlashcards, validateReorderMaterials,
-  validateUserUpdate
+  validateUserUpdate, validateAnswer, validateResolveReport
 } = require("../middlewares/validate");
 
 const course = require("../controllers/course.controller");
@@ -30,6 +30,10 @@ const flashcard = require("../controllers/flashcard.controller");
 const material = require("../controllers/material.controller");
 const { uploadMaterial } = require("../middlewares/materialUpload");
 const reorder = require("../controllers/reorder.controller");
+const preview = require("../controllers/preview.controller");
+const analytics = require("../controllers/analytics.controller");
+const reports = require("../controllers/report.controller");
+const importer = require("../controllers/import.controller");
 const Course = require("../models/course.models");
 const Unit = require("../models/unit.models");
 const Lesson = require("../models/lesson.models");
@@ -68,6 +72,8 @@ router.put("/lessons/reorder", validateReorderLessons, reorder({
 }));
 router.post("/lessons", validateLesson, lesson.createLesson);
 router.get("/lessons/:id", lesson.getLessonForAdmin);
+router.get("/lessons/:id/versions", lesson.listLessonVersions);
+router.post("/lessons/:id/versions/:versionId/restore", lesson.restoreLessonVersion);
 router.put("/lessons/:id", validateLessonUpdate, lesson.updateLesson);
 router.delete("/lessons/:id", lesson.deleteLesson);
 
@@ -87,6 +93,8 @@ router.put("/tests/reorder", validateReorderTests, reorder({
 }));
 router.post("/tests", validateTest, test.createTest);
 router.get("/tests/:id", test.getTestForAdmin);
+// CSV import: the file arrives as text/csv, up to 1 MB. Dry run by default; ?dryRun=0 saves.
+router.post("/tests/:id/import", express.text({ type: "text/csv", limit: "1mb" }), importer.importQuestions);
 router.put("/tests/:id", validateTestUpdate, test.updateTest);
 router.delete("/tests/:id", test.deleteTest);
 
@@ -97,6 +105,7 @@ router.put("/questions/reorder", validateReorderQuestions, reorder({
   getParentFilter: (req) => ({ parentFilter: { _id: req.body.test, deletedAt: null }, childFilter: { test: req.body.test } }),
   parentError: "Test not found"
 }));
+router.get("/questions/import-template", importer.downloadTemplate);
 router.post("/questions", validateQuestion, question.createQuestion);
 router.put("/questions/:id", validateQuestionUpdate, question.updateQuestion);
 router.delete("/questions/:id", question.deleteQuestion);
@@ -123,6 +132,16 @@ router.delete("/materials/:id", material.deleteMaterial);
 
 // Uploads
 router.post("/uploads", uploadLimiter, uploadImage, upload.uploadImage);
+
+// Preview as student (read-only, nothing is recorded)
+router.get("/preview/lessons/:id", preview.previewLesson);
+router.get("/preview/tests/:id", preview.previewTest);
+router.post("/preview/questions/:id/answer", validateAnswer, preview.previewAnswer);
+
+// Question analytics and the report inbox
+router.get("/analytics/questions", analytics.questionAnalytics);
+router.get("/reports", reports.listReports);
+router.put("/reports/:id/resolve", validateResolveReport, reports.resolveReport);
 
 // Users
 router.get("/users", admin.getAllUsers);

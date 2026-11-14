@@ -14,6 +14,7 @@ import RichText from "../components/RichText";
 import FormulaHelp from "../components/admin/FormulaHelp";
 import ImageField from "../components/admin/ImageField";
 import MoveButton from "../components/admin/MoveButton";
+import LessonHistory from "../components/admin/LessonHistory";
 
 function dataOf(payload) {
   return payload.data || payload;
@@ -181,10 +182,11 @@ export default function AdminLessonEditor() {
     { key: "details", label: "Details" },
     { key: "tests", label: "Tests" },
     { key: "flashcards", label: "Flashcards" },
-    { key: "materials", label: "Materials" }
+    { key: "materials", label: "Materials" },
+    { key: "history", label: "History" }
   ];
   const list = lesson[tab] || [];
-  const content = tab === "details" ? <form className="admin-editor-section lesson-details-form" onSubmit={save}>
+  const content = tab === "history" ? <LessonHistory lessonId={id} onRestored={() => { setMessage("Version restored"); load(); }} /> : tab === "details" ? <form className="admin-editor-section lesson-details-form" onSubmit={save}>
       <TextField label="Title" required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
       <TextArea label="Explanation" required rows="12" value={form.explanation} onChange={(event) => setForm({ ...form, explanation: event.target.value })} />
       <div className="field-heading"><p className="preview-label">Preview</p><FormulaHelp /></div><div className="explanation-preview"><RichText>{form.explanation}</RichText></div>
@@ -209,7 +211,7 @@ export default function AdminLessonEditor() {
     </section>;
   return <div className="admin-layout"><div className="admin-layout-inner">
     <Breadcrumbs items={[{ label: "Courses", to: "/admin" }, { label: context.courseCode || "Course" }, { label: context.unitTitle || "Unit" }, { label: lesson.title }]} />
-    <div className="admin-heading"><h1>{lesson.title}</h1><Switch checked={lesson.isPublished} onChange={publish} disabled={form.explanation === "Explanation coming soon."} label={lesson.isPublished ? "Published" : "Publish"} /></div>
+    <div className="admin-heading"><h1>{lesson.title}</h1><div className="heading-actions"><Button as={Link} variant="secondary" to={`/admin/preview/lessons/${id}`} state={{ from: location.pathname }}>Preview as student</Button><Switch checked={lesson.isPublished} onChange={publish} disabled={form.explanation === "Explanation coming soon."} label={lesson.isPublished ? "Published" : "Publish"} /></div></div>
     <StatusMessage message={error || message} error={Boolean(error)} />
     <Tabs label="Lesson sections" value={tab} onChange={setTab} tabs={tabs.map((item) => ({ id: item.key, label: item.label, panel: content }))} />
     {dialog && <Dialog open onClose={() => setDialog(null)} title={<>{dialog.item ? "Edit" : "Add"} {dialog.kind}</>} actions={<><Button variant="secondary" onClick={() => setDialog(null)}>Cancel</Button><Button type="submit" form="content-form">Save</Button></>}><form id="content-form" className="form-stack" onSubmit={saveContent}>

@@ -30,6 +30,9 @@ const AdminTestEditor = lazy(() => import("./pages/AdminTestEditor"));
 const AdminLessonEditor = lazy(() => import("./pages/AdminLessonEditor"));
 const AdminUsers = lazy(() => import("./pages/AdminUsers"));
 const AdminTrash = lazy(() => import("./pages/AdminTrash"));
+const AdminReports = lazy(() => import("./pages/AdminReports"));
+const AdminAnalytics = lazy(() => import("./pages/AdminAnalytics"));
+const AdminQuestionImport = lazy(() => import("./pages/AdminQuestionImport"));
 const Settings = lazy(() => import("./pages/Settings"));
 import AdminLayout from "./components/admin/AdminLayout";
 import { Skeleton, SkeletonGroup } from "./components/ui";
@@ -99,6 +102,11 @@ export default function App() {
     <Route path="/admin/lessons/:id" element={<AdminPage><AdminLessonEditor /></AdminPage>} />
     <Route path="/admin/users" element={<AdminPage><AdminUsers /></AdminPage>} />
     <Route path="/admin/trash" element={<AdminPage><AdminTrash /></AdminPage>} />
+    <Route path="/admin/reports" element={<AdminPage><AdminReports /></AdminPage>} />
+    <Route path="/admin/analytics" element={<AdminPage><AdminAnalytics /></AdminPage>} />
+    <Route path="/admin/tests/:id/import" element={<AdminPage><AdminQuestionImport /></AdminPage>} />
+    <Route path="/admin/preview/lessons/:id" element={<AdminPage><Lesson /></AdminPage>} />
+    <Route path="/admin/preview/tests/:id" element={<AdminPage><Test /></AdminPage>} />
     <Route path="/admin/*" element={<AdminPage><AdminCourses /></AdminPage>} />
     {DevComponents && <Route path="/dev/components" element={<Suspense fallback={null}><DevComponents /></Suspense>} />}
     <Route path="*" element={<Navigate to={user ? "/courses" : "/login"} replace />} />

@@ -131,7 +131,24 @@ export const api = {
   updateUser: (id, body) => request(`/admin/users/${id}`, { method: "PUT", body: JSON.stringify(body) }),
   getAdminStats: () => request("/admin/stats"),
   getTrash: () => request("/admin/trash"),
-  restoreTrashItem: (type, id) => request(`/admin/trash/${type}/${id}/restore`, { method: "POST" })
+  restoreTrashItem: (type, id) => request(`/admin/trash/${type}/${id}/restore`, { method: "POST" }),
+  // Preview as student: the same data a student gets, drafts included, nothing recorded.
+  previewLesson: (id) => request(`/admin/preview/lessons/${id}`),
+  previewTest: (id) => request(`/admin/preview/tests/${id}`),
+  previewAnswer: (id, answer) => request(`/admin/preview/questions/${id}/answer`, { method: "POST", body: JSON.stringify({ answer }) }),
+  createReport: (body) => request("/reports", { method: "POST", body: JSON.stringify(body) }),
+  getReports: (params = {}) => request(`/admin/reports?${new URLSearchParams(params)}`),
+  resolveReport: (id, body) => request(`/admin/reports/${id}/resolve`, { method: "PUT", body: JSON.stringify(body) }),
+  getQuestionAnalytics: (params = {}) => request(`/admin/analytics/questions?${new URLSearchParams(params)}`),
+  getLessonVersions: (id) => request(`/admin/lessons/${id}/versions`),
+  restoreLessonVersion: (id, versionId) => request(`/admin/lessons/${id}/versions/${versionId}/restore`, { method: "POST" }),
+  // The CSV goes up as plain text. dryRun checks it and saves nothing.
+  importQuestions: (testId, csv, dryRun) => request(`/admin/tests/${testId}/import?dryRun=${dryRun ? "1" : "0"}`, { method: "POST", headers: { "Content-Type": "text/csv" }, body: csv }),
+  downloadQuestionTemplate: async () => {
+    const response = await fetch(`${API_URL}/admin/questions/import-template`, { credentials: "include" });
+    if (!response.ok) throw new Error("Could not download the template.");
+    return response.blob();
+  }
 };
 
 // The message the server sends when a student's subscription has ended.

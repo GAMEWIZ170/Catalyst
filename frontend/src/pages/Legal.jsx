@@ -29,6 +29,8 @@ export function Privacy() {
       <li><strong>Your choices:</strong> your avatar, exam date, daily goal, and whether you finished the welcome steps.</li>
       <li><strong>Your study activity:</strong> lessons you finished, test scores and answers, flashcard ratings, mistakes, how well you know each topic, notes, saved items, where you stopped in a lesson, and how many minutes you studied.</li>
       <li><strong>Messages:</strong> the notifications shown under the bell.</li>
+      <li><strong>Reports:</strong> what you write when you report a problem in a lesson or question, and our reply.</li>
+      <li><strong>Answer statistics:</strong> every answer adds to a total for its question, such as how many students got it right. These totals have no name on them.</li>
     </ul>
     <p>We do not collect your phone contacts, location, or payment details. Catalyst does not use advertising or tracking services.</p>
 
@@ -51,7 +53,7 @@ export function Privacy() {
     <h2>See your data, change it, delete it</h2>
     <ul>
       <li>In <Link to="/settings">Settings</Link> you can download all your data as a file, change your password, change your email, and delete your account.</li>
-      <li>Deleting is permanent. Your name and email are removed and the account cannot be opened again. Your notes, saved items, study time and exam answers are deleted. Scores and progress stay without your name, so overall learning statistics keep working.</li>
+      <li>Deleting is permanent. Your name and email are removed and the account cannot be opened again. Your notes, saved items, study time, exam answers and reports are deleted. Scores and progress stay without your name, so overall learning statistics keep working.</li>
     </ul>
 
     <h2>Changes</h2>

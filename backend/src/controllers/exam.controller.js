@@ -6,6 +6,7 @@ const { studentQuestion } = require("../utils/serializers");
 const { grade, correctAnswerOf } = require("../utils/grading");
 const { recordResult } = require("./test.controller");
 const { recordAnswer } = require("./mistake.controller");
+const { recordStat } = require("../utils/questionStats");
 
 const badId = (id) => !mongoose.isObjectIdOrHexString(id);
 const GRACE_MS = 30 * 1000; // a submit that left just before the deadline may arrive a little after it
@@ -53,6 +54,7 @@ const finish = async (attempt, test, questions, answers) => {
   const { result, passPercent, passed } = await recordResult(attempt.user, test, score);
   // Wrong answers join the mistakes queue and right ones count toward leaving it, as with any answered question.
   await Promise.all(questions.map((question, index) => recordAnswer(attempt.user, question._id, review[index].isCorrect)));
+  await Promise.all(questions.map((question, index) => recordStat(question, answers[question._id.toString()], review[index].isCorrect)));
   return { score, correct, total, bestScore: result.bestScore, attempts: result.attempts, passPercent, passed, review };
 };
 

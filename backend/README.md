@@ -174,6 +174,12 @@ All routes need login. Messages are in-app only (no email).
 | POST | `/notifications/read-all` | Authenticated | Mark every message read |
 | POST | `/notifications/:id/read` | Authenticated | Mark one read. 400 bad id, 404 not yours |
 
+### Reports
+
+| Method | Path | Access | Purpose |
+| --- | --- | --- | --- |
+| POST | `/reports` | Student | Body `{ kind: "question" or "lesson", target (id), category: "wrong_answer", "typo", "unclear" or "other", note (up to 500 characters, optional) }`. 404 when the item is hidden from students, 409 when this student already has an open report on it. 10 per 15 minutes |
+
 ### Courses and lessons
 
 | Method | Path | Access | Purpose |
@@ -346,7 +352,17 @@ Create routes require an available parent. Delete routes are soft deletes.
 | PUT | `/admin/units/reorder` | Reorder units with `{ "course", "ids" }` |
 | POST | `/admin/lessons` | Create a lesson |
 | GET | `/admin/lessons/:id` | Get a lesson with tests, flashcards and materials |
-| PUT | `/admin/lessons/:id` | Update a lesson |
+| PUT | `/admin/lessons/:id` | Update a lesson. A save that changes the title, explanation, image or video first keeps the old text as a version |
+| GET | `/admin/lessons/:id/versions` | The saved versions of a lesson, newest first (up to 50), with the full old text |
+| POST | `/admin/lessons/:id/versions/:versionId/restore` | Put an older version back. The current text is saved as a version first |
+| GET | `/admin/preview/lessons/:id` | The lesson as a student gets it (same shape as `/lessons/:id/hub`), drafts included, with `isPublished`, `visibleToStudents`, a `draft` flag on tests, cards and materials, and the cards listed. Writes nothing |
+| GET | `/admin/preview/tests/:id` | The test as the student player gets it, drafts included, no answers. A timed test is shown untimed. Writes nothing |
+| POST | `/admin/preview/questions/:id/answer` | Body `{ answer }`. Graded like `/questions/:id/answer`, but records nothing (no mistake, mastery or statistic) |
+| GET | `/admin/analytics/questions` | Query `minAttempts` (default 5) and `limit` (default 50, at most 200). Questions by lowest percent correct: `attempts`, `correct`, `percentCorrect`, `topWrong` (`{ label, count }`, multiple choice and true/false only) |
+| GET | `/admin/reports` | The report inbox. Query `status` (`open` or `resolved`) and `page`. Returns `counts`, and for each report the kind, category, note, student name, reply and an `editorLink` |
+| PUT | `/admin/reports/:id/resolve` | Body `{ reply }` (optional, up to 1000 characters). Marks it resolved and sends the student a notification with the reply. 409 if already resolved |
+| GET | `/admin/questions/import-template` | The CSV template, one example row for each of the 8 question types |
+| POST | `/admin/tests/:id/import` | CSV import. Send the file as the body with `Content-Type: text/csv` (up to 1 MB, 200 rows). `?dryRun=0` saves; otherwise it is a dry run that saves nothing. Returns `total`, `valid`, `errors` (`{ line, message }` per bad row) and `rows`. A real import saves all rows or none (409 when any row is bad) and adds the questions at the end of the test |
 | DELETE | `/admin/lessons/:id` | Soft-delete a lesson |
 | PUT | `/admin/lessons/reorder` | Reorder lessons with `{ "unit", "ids" }` |
 | POST | `/admin/tests` | Create a test |
@@ -463,6 +479,7 @@ Joi validators trim strings, strip unknown fields and reject malformed IDs. Imag
 | Email, per IP | Same routes | 30/IP/15 minutes |
 | Account, per user | Change password, change email and delete account failures | 10/user/15 minutes |
 | Export, per user | Download my data | 3/user/15 minutes |
+| Report, per user | `POST /reports` | 10/user/15 minutes |
 | Answer | `POST /questions/:id/answer` | 100/user/15 minutes |
 | Submit | `POST /tests/:id/submit` | 60/user/15 minutes |
 | Mock exam | Exam start, save and submit | 600/user/15 minutes |
@@ -490,6 +507,9 @@ All schemas have timestamps. Soft-deletable content has `deletedAt`.
 | **Progress** | `user`, `lesson`, `completed`, best `score`, `completedAt`, `completedDays` |
 | **Flashcard** | `lesson`, `front`, `back`, `order`, `isPublished`, `deletedAt` |
 | **FlashcardProgress** | `user`, `flashcard`, `confidence`, `reviewCount`, `lastReviewedAt`, `reviewedDays` |
+| **QuestionStat** | `question` (unique), `attempts`, `correct`, `wrong` (a count per wrong choice). No student id, so it is anonymous |
+| **Report** | `user`, `kind`, `target`, `test`, `category`, `note`, `title`, `link`, `status`, `reply`, `resolvedAt`, `resolvedBy` |
+| **LessonVersion** | `lesson`, the old `title`, `explanation`, `explanationImage`, `videoHost`, `videoId`, `savedBy`, `reason` (`edit` or `restore`) |
 | **Material** | `lesson`, `title`, `description`, `kind`, file metadata or `linkUrl`, `order`, `isPublished`, `deletedAt` |
 
 Allowed avatar keys are `beaker`, `flask`, `atom`, `test-tube`, `microscope`, `flame`, `molecule`, `magnet`, `crystal`, `dna`, `leaf` and `periodic-tile`. The default avatar is `null`.
@@ -561,6 +581,18 @@ Emailed links carry a random 32-byte token. Only its SHA-256 hash is stored in `
 ### Notifications
 
 `Notification` rows hold one message for one student. A unique `key` per user stops repeats: `lesson:<lessonId>` (one per lesson) and `review:<UTC date>` (one per day). Two things create messages. (1) An admin saves a lesson with `isPublished: true` when it was hidden: every active student gets "New lesson" (only if the unit and course are visible; editing an already published lesson, or re-publishing after hiding, sends nothing new). This runs in the background after the save answers, so it can take a moment on a large student list. (2) The first `GET /notifications` of a UTC day creates "Review is ready" when flashcards or mistakes are due. Messages delete themselves after 60 days (TTL index) and are removed when the account is deleted. A "report answered" message is not built because Catalyst has no reporting feature yet.
+
+### Admin tools
+
+**Preview as student** reads the same data as the student screens but ignores the published flags, and it never writes. The preview answer route grades with the same code as the student route and skips the mistakes queue, mastery and statistics. The preview test is never timed and never submitted.
+
+**Question analytics.** `QuestionStat` is updated by `POST /questions/:id/answer` (every practice and test answer) and when a mock exam is marked. Preview answers are not counted. Only multiple choice and true/false record which wrong choice was picked; other types still count attempts and right answers. Counting began with this feature, so earlier answers are not in it. Deleting a question drops it from the table.
+
+**Reports.** A student can have one open report per question or lesson. Resolving a report creates a `report` notification (key `report:<id>`) for the student, linking to the lesson or test. Reports are deleted with the account and included in "download my data".
+
+**CSV import.** Every row becomes the same body the question form sends. It then goes through the question form's Joi rules and the model's own validation, so imported questions follow the same rules as typed ones. Pictures cannot be imported. `correct` is 1-based (or a letter) for multiple choice; list answers are separated by `|`; matching uses `left=right`; balancing uses `2 H2 + O2 -> 2 H2O`. Row numbers in errors count records in the file, with the header as row 1.
+
+**Lesson history.** `LessonVersion` keeps the text a save replaced. Changing only order, unit or published state does not make a version. Restoring saves the current text first, so a restore can be undone. The newest 50 versions per lesson are kept.
 
 ### Account changes
 

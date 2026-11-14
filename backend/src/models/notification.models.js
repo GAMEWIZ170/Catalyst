@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 // (for example one "cards due" message per day, or one "new lesson" message per lesson).
 const notificationSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  type: { type: String, enum: ["lesson", "review"], required: true },
+  type: { type: String, enum: ["lesson", "review", "report"], required: true },
   title: { type: String, required: true, trim: true, maxlength: 140 },
   body: { type: String, default: "", trim: true, maxlength: 300 },
   link: { type: String, default: "" }, // a path inside the app, such as /lessons/<id>

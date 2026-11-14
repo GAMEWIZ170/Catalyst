@@ -1,6 +1,6 @@
 import { plural } from "../utils/plural";
 import { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import AdminLayout from "../components/admin/AdminLayout";
 import { Badge, Button, Radio, RadioGroup, SelectField, TextArea, TextField } from "../components/ui";
@@ -231,7 +231,11 @@ export default function AdminTestEditor() {
     <Breadcrumbs items={trail} />
     <div className="admin-heading">
       <div><InlineRename as="h1" name={test.title} onSave={rename} /><p className="muted">{test.scope === "true_false" ? "True or false" : `${test.scope[0].toUpperCase()}${test.scope.slice(1)} test`} · {plural(questions.length, "question")}</p></div>
-      <Switch checked={test.isPublished} onChange={publish} label={test.isPublished ? "Published" : "Publish"} />
+      <div className="heading-actions">
+        <Button as={Link} variant="secondary" to={`/admin/preview/tests/${id}`} state={{ from: location.pathname }}>Preview as student</Button>
+        <Button as={Link} variant="secondary" to={`/admin/tests/${id}/import`} state={{ from: location.pathname }}>Import CSV</Button>
+        <Switch checked={test.isPublished} onChange={publish} label={test.isPublished ? "Published" : "Publish"} />
+      </div>
     </div>
     {test.scope === "lesson" && <form className="pass-percent" onSubmit={savePassPercent}>
       <div className="pass-percent-row">

@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useMatch, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Bookmark, Check, CheckCircle2, TriangleAlert, X } from "lucide-react";
 import ConfirmDialog from "../components/admin/ConfirmDialog";
 import RichText from "../components/RichText";
+import ReportButton from "../components/ReportButton";
+import { PreviewBanner } from "../components/PreviewBits";
 import WorkedSolution from "../components/WorkedSolution";
 import { Correct, QuestionInput } from "../components/QuestionInputs";
 import { Button, Card, EmptyState, Illustration } from "../components/ui";
@@ -26,12 +28,14 @@ export default function Test() {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  // An admin looking at the test as a student. Questions are graded as usual, but nothing is recorded or submitted.
+  const preview = Boolean(useMatch("/admin/preview/tests/:id"));
   // /practice/mistakes has no test behind it: the questions come from the student's mistakes queue.
   const isMistakes = location.pathname === "/practice/mistakes";
   const [subset, setSubset] = useState(false); // "Practise the ones I missed" inside a normal test
   // /practice/topic is the same: questions pulled from many lessons by topic, source or year.
   const isTopic = location.pathname === "/practice/topic";
-  const practice = isMistakes || isTopic || subset; // practice runs are graded per question but never submitted
+  const practice = isMistakes || isTopic || subset || preview; // practice runs are graded per question but never submitted
   const [test, setTest] = useState(null);
   const [phase, setPhase] = useState("intro");
   const [index, setIndex] = useState(0);
@@ -47,10 +51,10 @@ export default function Test() {
   const [hintFor, setHintFor] = useState(null); // id of the question whose hint is open
   const feedbackHeading = useRef(null);
   const missedRef = useRef(null);
-  const backTo = location.state?.from || "/courses";
+  const backTo = location.state?.from || (preview ? `/admin/tests/${id}` : "/courses");
   const backState = location.state?.courseFrom ? { from: location.state.courseFrom } : undefined;
-  const backLabel = isMistakes || isTopic ? "Back" : `Back to ${backTo.startsWith("/lessons/") ? "lesson" : "course"}`;
-  const dirty = phase === "question" && answers.length > 0;
+  const backLabel = preview ? "Back to editor" : isMistakes || isTopic ? "Back" : `Back to ${backTo.startsWith("/lessons/") ? "lesson" : "course"}`;
+  const dirty = !preview && phase === "question" && answers.length > 0;
   const blocker = useUnsavedChanges(dirty);
 
   async function load() {
@@ -64,7 +68,7 @@ export default function Test() {
         setTest(dataOf(await api.getMistakePractice(query)));
       } else if (isTopic) {
         setTest(dataOf(await api.getTopicPractice(Object.fromEntries(searchParams))));
-      } else setTest(dataOf(await api.getTest(id)));
+      } else setTest(dataOf(await (preview ? api.previewTest(id) : api.getTest(id))));
     } catch (err) { setError(err.status === 404 ? "This test is not available" : err.message); }
   }
   useEffect(() => { load(); }, [id, isMistakes, isTopic]);
@@ -127,7 +131,7 @@ export default function Test() {
     setBusy(true);
     try {
       const current = test.questions[index];
-      const response = dataOf(await api.answerQuestion(current._id, chosen));
+      const response = dataOf(await (preview ? api.previewAnswer(current._id, chosen) : api.answerQuestion(current._id, chosen)));
       setAnswers((items) => [...items.filter((item) => item.questionId !== current._id), { questionId: current._id, answer: chosen }]);
       setMissed((items) => {
         const rest = items.filter((item) => item.id !== current._id);
@@ -210,6 +214,7 @@ export default function Test() {
   if (phase === "intro") return <div className="exam exam--page">
     <Link className="back-link" to={backTo} state={backState}><ArrowLeft size={16} aria-hidden="true" />{backLabel}</Link>
     <Card className="exam-intro">
+      {preview && <PreviewBanner published={test.isPublished} visible={test.visibleToStudents} />}
       <h1>{test.title}</h1>
       <p>{test.questions.length} {test.questions.length === 1 ? "question" : "questions"}{isMistakes ? " you got wrong before" : ""}. Pick an answer, check it, then continue.</p>
       {needsPass && <p className="muted">You need at least {test.passPercent}% to complete the lesson.</p>}
@@ -273,6 +278,7 @@ export default function Test() {
     </header>
     <div className="exam-body">
       <h1 className="sr-only">{test.title}</h1>
+      {preview && <PreviewBanner published={test.isPublished} visible={test.visibleToStudents} />}
       <div className="exam-question"><RichText>{question.text}</RichText></div>
       {question.image?.url && <ResponsiveImage className="exam-image" image={question.image} sizes="(max-width: 600px) 100vw, 600px" />}
       {question.type !== "mcq" && question.type !== "true_false"
@@ -306,10 +312,11 @@ export default function Test() {
         {feedback.unitWrong && <p>The number is right, but the unit is not.</p>}
         {!feedback.isCorrect && <div className="qi-correct"><strong>Correct answer:</strong> <Correct question={question} correct={correct} /></div>}
         <RichText>{feedback.explanation}</RichText>
-        <Button variant="tertiary" icon={Bookmark} aria-pressed={savedQuestions.has(question._id)} onClick={() => toggleSavedQuestion(question._id)}>{savedQuestions.has(question._id) ? "Saved" : "Save question"}</Button>
+        {!preview && <Button variant="tertiary" icon={Bookmark} aria-pressed={savedQuestions.has(question._id)} onClick={() => toggleSavedQuestion(question._id)}>{savedQuestions.has(question._id) ? "Saved" : "Save question"}</Button>}
         {feedback.explanationImage?.url && <ResponsiveImage image={feedback.explanationImage} sizes="(max-width: 600px) 100vw, 600px" />}
         <WorkedSolution steps={feedback.workedSolution} />
       </section>}
+      {!preview && <ReportButton key={question._id} kind="question" target={question._id} />}
       {error && <p className="form-error" role="alert">{error}</p>}
     </div>
     <div className="exam-bar">

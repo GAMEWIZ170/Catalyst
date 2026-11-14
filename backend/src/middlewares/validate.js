@@ -242,12 +242,13 @@ const questionSchema = Joi.object(questionFields).custom((value, helpers) => {
   }
   return value;
 }).messages({ "any.invalid": "{{#message}}" });
-const validateQuestion = validateWith(questionSchema.keys({
+const questionCreateSchema = questionSchema.keys({
   test: questionFields.test.required(),
   type: questionFields.type.required(),
   text: questionFields.text.required(),
   order: questionFields.order.required()
-}));
+});
+const validateQuestion = validateWith(questionCreateSchema);
 const validateQuestionUpdate = validateWith(Joi.object({
   test: questionFields.test,
   type: Joi.any().forbidden().messages({ "any.unknown": "Question type cannot be changed" }),
@@ -287,6 +288,13 @@ const validateExamSave = validateWith(Joi.object({
   flags: Joi.array().items(objectId).max(200)
 }));
 const validateAnswer = validateWith(Joi.object({ answer: Joi.string().trim().min(1).max(1000).required() }));
+const validateReport = validateWith(Joi.object({
+  kind: Joi.string().valid("question", "lesson").required(),
+  target: objectId.required(),
+  category: Joi.string().valid("wrong_answer", "typo", "unclear", "other").required(),
+  note: Joi.string().trim().allow("").max(500)
+}));
+const validateResolveReport = validateWith(Joi.object({ reply: Joi.string().trim().allow("").max(1000) }));
 const validateTestSubmission = validateWith(Joi.object({
   answers: Joi.array().items(Joi.object({
     questionId: objectId.required(),
@@ -405,8 +413,11 @@ module.exports = {
   validateTest,
   validateTestUpdate,
   validateQuestion,
+  questionCreateSchema,
   validateQuestionUpdate,
   validateAnswer,
+  validateReport,
+  validateResolveReport,
   validateExamSave,
   validateTestSubmission,
   validateFlashcard,

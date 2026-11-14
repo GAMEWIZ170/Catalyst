@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useMatch, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Bookmark, CheckCircle2, Circle, ExternalLink, FileText, Link2, Play } from "lucide-react";
 import { api } from "../api/client";
 import { nearToPrefetch, prefetchLesson } from "../api/prefetch";
 import DeckSummary from "../components/DeckSummary";
 import RichText from "../components/RichText";
+import ReportButton from "../components/ReportButton";
+import { PreviewBanner, PreviewCards } from "../components/PreviewBits";
 import { Badge, Button, SelectField, Skeleton, SkeletonGroup, TextArea } from "../components/ui";
 import ResponsiveImage from "../components/ResponsiveImage";
 import { recallCourse } from "../utils/courseCache";
@@ -85,19 +87,21 @@ export default function Lesson() {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  // An admin looking at the lesson as a student. Drafts show, and nothing is saved: no position, bookmark, note or progress.
+  const preview = Boolean(useMatch("/admin/preview/lessons/:id"));
   const [lesson, setLesson] = useState(null);
   const [course, setCourse] = useState(null);
   const [error, setError] = useState("");
   const [doneMessage, setDoneMessage] = useState("");
   const [savedOverride, setSavedOverride] = useState(null);
 
-  const from = location.state?.from || "/courses";
+  const from = location.state?.from || (preview ? `/admin/lessons/${id}` : "/courses");
   const courseId = /^\/courses\/([^/]+)$/.exec(from)?.[1];
 
   function load() {
     setError("");
     // One call returns the lesson, whether it is finished, and its materials.
-    api.getLessonHub(id).then(({ data }) => { setLesson(data); api.savePosition({ lessonId: id, kind: "lesson" }).catch(() => {}); return data; })
+    (preview ? api.previewLesson(id) : api.getLessonHub(id)).then(({ data }) => { setLesson(data); if (!preview) api.savePosition({ lessonId: id, kind: "lesson" }).catch(() => {}); return data; })
       .catch((err) => setError(err.status === 404 ? "This lesson is not available" : err.message));
   }
 
@@ -154,14 +158,15 @@ export default function Lesson() {
   const unit = course?.units.find((item) => item.lessons.some((entry) => String(entry._id) === String(id)));
   const unitPosition = unit ? unit.lessons.findIndex((entry) => String(entry._id) === String(id)) : -1;
   // One main action at a time: the test, else the flashcards, else Mark as done. Once complete, the next lesson.
-  const nextStep = completed ? null : lesson.tests.length > 0 ? "test" : lesson.flashcards.total > 0 ? "deck" : canMarkDone ? "done" : null;
+  const nextStep = preview || completed ? null : lesson.tests.length > 0 ? "test" : lesson.flashcards.total > 0 ? "deck" : canMarkDone ? "done" : null;
   const mainTest = lesson.tests.find((test) => test.bestScore === null) || lesson.tests[0];
   const state = { from: `/lessons/${id}`, courseFrom: from };
   const goTo = (lessonId) => navigate(`/lessons/${lessonId}`, { state: { from } });
   const primaryLabel = { test: "Take the test", deck: "Practise flashcards", done: doneMessage || "Mark as done" }[nextStep];
 
   return <div className="content lesson-hub">
-    <Link className="back-link" to={from}><ArrowLeft size={16} aria-hidden="true" />Back to course</Link>
+    <Link className="back-link" to={from}><ArrowLeft size={16} aria-hidden="true" />{preview ? "Back to editor" : "Back to course"}</Link>
+    {preview && <PreviewBanner published={lesson.isPublished} visible={lesson.visibleToStudents} />}
     <div className={`lesson-layout ${unit ? "has-sidebar" : ""}`}>
       {unit && <aside className="lesson-side">
         <div className="lesson-picker">
@@ -189,7 +194,7 @@ export default function Lesson() {
       <div className="lesson-main">
         <article className="reading-column">
           <h1>{lesson.title}</h1>
-          <Button variant="tertiary" icon={Bookmark} aria-pressed={savedLesson} onClick={toggleSaved}>{savedLesson ? "Saved" : "Save"}</Button>
+          {!preview && <Button variant="tertiary" icon={Bookmark} aria-pressed={savedLesson} onClick={toggleSaved}>{savedLesson ? "Saved" : "Save"}</Button>}
           {(unit || completed) && <p className="lesson-meta">
             {unit && <span>{unit.title}</span>}
             {completed && <Badge tone="success" icon={CheckCircle2}>Completed</Badge>}
@@ -201,10 +206,11 @@ export default function Lesson() {
           </figure>}
           {lesson.videoHost === "youtube" && lesson.videoId && <LessonVideo title={lesson.title} videoId={lesson.videoId} />}
         </article>
-        {lesson.tests.length > 0 && <section className="lesson-section"><h2>Practice</h2><div className="student-test-list">{lesson.tests.map((test) => <Link className="student-test-row" to={`/tests/${test._id}`} state={state} key={test._id}><span><strong>{test.title}</strong><span className="muted">{test.questionCount} questions · {test.passPercent != null ? `Pass at ${test.passPercent}% · ` : ""}{test.bestScore === null ? "Not taken yet" : `Best score: ${test.bestScore}%`}</span></span><span className="row-action">{test.bestScore === null ? "Start" : "Retake"}</span></Link>)}</div></section>}
-        {lesson.flashcards.total > 0 && <section className="lesson-section"><h2>Flashcards</h2><DeckSummary summary={lesson.flashcards} /><div className="button-row button-row--stack"><Button as={Link} variant={nextStep === "deck" ? "primary" : "secondary"} to={`/lessons/${id}/flashcards`} state={{ courseFrom: from }}>Study all cards</Button>{lesson.flashcards.unsure + lesson.flashcards.unknown + lesson.flashcards.unrated > 0 && <Button as={Link} variant="secondary" to={`/lessons/${id}/flashcards?filter=review`} state={{ courseFrom: from }}>Review cards I'm not sure about</Button>}</div></section>}
+        {lesson.tests.length > 0 && <section className="lesson-section"><h2>Practice</h2><div className="student-test-list">{lesson.tests.map((test) => <Link className="student-test-row" to={preview ? `/admin/preview/tests/${test._id}` : `/tests/${test._id}`} state={preview ? { from: `/admin/preview/lessons/${id}` } : state} key={test._id}><span><strong>{test.title}</strong>{test.draft && <Badge>Draft</Badge>}<span className="muted">{test.questionCount} questions · {test.passPercent != null ? `Pass at ${test.passPercent}% · ` : ""}{test.bestScore === null ? "Not taken yet" : `Best score: ${test.bestScore}%`}</span></span><span className="row-action">{test.bestScore === null ? "Start" : "Retake"}</span></Link>)}</div></section>}
+        {lesson.flashcards.total > 0 && <section className="lesson-section"><h2>Flashcards</h2>{preview ? <PreviewCards cards={lesson.cards} /> : <DeckSummary summary={lesson.flashcards} />}{!preview && <div className="button-row button-row--stack"><Button as={Link} variant={nextStep === "deck" ? "primary" : "secondary"} to={`/lessons/${id}/flashcards`} state={{ courseFrom: from }}>Study all cards</Button>{lesson.flashcards.unsure + lesson.flashcards.unknown + lesson.flashcards.unrated > 0 && <Button as={Link} variant="secondary" to={`/lessons/${id}/flashcards?filter=review`} state={{ courseFrom: from }}>Review cards I'm not sure about</Button>}</div>}</section>}
         {lesson.materialCount > 0 && <section className="lesson-section"><h2>Materials</h2><div className="material-list">{(lesson.materials || []).map((material) => <div className="material-row" key={material._id}>{material.kind === "file" ? <FileText size={20} aria-hidden="true" /> : <Link2 size={20} aria-hidden="true" />}<span><strong>{material.title}</strong><span className="muted">{material.description}{material.bytes ? ` · ${formatBytes(material.bytes)}` : ""}</span></span><a href={material.url} target="_blank" rel="noopener noreferrer" aria-label={`Open ${material.title}${material.kind === "file" ? " (PDF)" : ""}`}>Open<ExternalLink size={16} aria-hidden="true" /></a></div>)}</div></section>}
-        <NoteBox key={id} lessonId={id} initial={lesson.note} />
+        {!preview && <NoteBox key={id} lessonId={id} initial={lesson.note} />}
+        {!preview && <ReportButton key={`report-${id}`} kind="lesson" target={id} />}
         <section className="lesson-end" aria-label="Next steps">
           {nextStep === "test" && <Button as={Link} to={`/tests/${mainTest._id}`} state={state}>{primaryLabel}</Button>}
           {nextStep === "deck" && <Button as={Link} to={`/lessons/${id}/flashcards`} state={{ courseFrom: from }}>{primaryLabel}</Button>}
