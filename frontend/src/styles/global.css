@@ -2,6 +2,10 @@
   box-sizing: border-box;
 }
 
+/* Text size setting: everything sized in rem follows the root. */
+html[data-text="large"] { font-size: 112.5%; }
+html[data-text="xlarge"] { font-size: 125%; }
+
 html {
   background: var(--paper);
   color: var(--ink);
@@ -1903,6 +1907,8 @@ h3 {
   *,
   *::before,
   *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     scroll-behavior: auto;
     transition-duration: 0.01ms;
   }
@@ -3560,3 +3566,8 @@ textarea {
 .shortcut-list dt { flex: 0 0 6rem; }
 .shortcut-list dd { margin: 0; }
 .shortcut-list kbd { background: var(--sunken); border: 1px solid var(--control-line); border-radius: var(--radius-control); font: inherit; font-size: var(--text-sm); padding: 2px var(--space-2); }
+
+.text-size-sample { font-weight: var(--weight-strong); }
+.text-size-sample--standard { font-size: 1rem; }
+.text-size-sample--large { font-size: 1.25rem; }
+.text-size-sample--xlarge { font-size: 1.5rem; }

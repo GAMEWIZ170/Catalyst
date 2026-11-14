@@ -11,6 +11,27 @@ const palettes = [
   { key: "graphite", name: "Graphite" }
 ];
 
+const textSizes = [
+  { key: "standard", name: "Standard" },
+  { key: "large", name: "Large" },
+  { key: "xlarge", name: "Extra large" }
+];
+
+function currentTextSize() {
+  const value = document.documentElement.dataset.text;
+  return value === "large" || value === "xlarge" ? value : "standard";
+}
+
+function applyTextSize(size) {
+  if (size === "standard") delete document.documentElement.dataset.text;
+  else document.documentElement.dataset.text = size;
+  try {
+    window.localStorage.setItem("catalyst-text", size);
+  } catch {
+    // The size still applies for this session when storage is unavailable.
+  }
+}
+
 function currentPalette() {
   return palettes.some(({ key }) => key === document.documentElement.dataset.palette)
     ? document.documentElement.dataset.palette
@@ -30,6 +51,7 @@ function applyPalette(palette) {
 export default function Settings() {
   const { user, updateAvatar } = useAuth();
   const [palette, setPalette] = useState(currentPalette);
+  const [textSize, setTextSize] = useState(currentTextSize);
   const [avatar, setAvatar] = useState(user?.avatar || null);
   const [status, setStatus] = useState("");
 
@@ -62,6 +84,17 @@ export default function Settings() {
         </label>)}
       </div>
       <p className="muted settings-help">Use the sun and moon button in the top bar to switch between light and dark.</p>
+    </section>
+    <section className="settings-section" aria-labelledby="text-heading">
+      <h2 id="text-heading">Text size</h2>
+      <div className="settings-radio-grid" role="radiogroup" aria-label="Text size">
+        {textSizes.map((item) => <label className="palette-card text-size-card" key={item.key}>
+          <input type="radio" name="text-size" value={item.key} checked={textSize === item.key} onChange={() => { setTextSize(item.key); applyTextSize(item.key); }} />
+          <span className={`text-size-sample text-size-sample--${item.key}`} aria-hidden="true">Aa</span>
+          <span>{item.name}</span>
+        </label>)}
+      </div>
+      <p className="muted settings-help">Animations follow your device's reduced-motion setting.</p>
     </section>
     <section className="settings-section" aria-labelledby="avatar-heading">
       <h2 id="avatar-heading">Profile picture</h2>
