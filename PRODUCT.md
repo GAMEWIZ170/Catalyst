@@ -17,7 +17,7 @@ Success: students pass their courses and come back daily.
 
 ## Positioning
 
-Structured, graded courses for the University of Ghana syllabus, at a price students can afford. The first course is CHEM113, and more subjects will follow.
+Structured, graded courses for students, at a price students can afford. The first course is CHEM113, and more subjects will follow.
 
 Free alternatives (YouTube, WhatsApp study groups, past-question PDFs) give students content but not a path through it. Catalyst gives them an ordered course, tests graded by the server, and tracked progress with streaks.
 ## Operating Context

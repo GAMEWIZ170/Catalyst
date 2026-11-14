@@ -563,6 +563,20 @@ The app is a single-page app, so WhatsApp and other chat apps cannot read its pa
 
 A bad id or code is a 404. The page is cacheable for 5 minutes. The image is `/icons/icon-512.png` on the app's address. In development Vite proxies `/s` to the backend (`frontend/vite.config.js`). **In production, `/s/*` on the app's address must be routed to the backend** (the same rule as `/api`), or the links will land on the single-page app without previews.
 
+### Study circles (Phase X5.6)
+
+A `StudyCircle` is 2 to 6 friends with one shared weekly goal (`goalDays`, 1 to 6 study days per member, so there is always a rest day). It is co-operative: the response has one combined bar and no per-person numbers. `progress` is `{ done, target, met }` where `target = goalDays * joined members` and each member adds at most `goalDays` (so one very busy member cannot carry the circle). It is null until 2 people have joined. Study days are the same activity the streak and weekly goal use, counted Monday to Sunday of the viewer's week. Members show a display name and avatar only.
+
+The owner invites one of their accepted friends (by the friendship id from `GET /friends`); the friend gets a notification and must accept. A student can be in 10 circles at most. When the owner leaves, the longest-standing joined member becomes owner, and a circle with nobody left is removed. Deleting an account leaves every circle the same way.
+
+| Method | Path | Access | Notes |
+|---|---|---|---|
+| GET | `/circles` | Student | Circles the student is in or invited to, with `status` ("joined" or "invited"), `owner`, members and `progress` |
+| POST | `/circles` | Student | `{ name (2 to 40), goalDays (1 to 6, default 4) }` |
+| POST | `/circles/:id/invite` | Owner | `{ friendship }`. 404 for a non-friend, 409 when already in, full (6) or the friend is in 10 circles |
+| POST | `/circles/:id/accept` | Invited student | Joins the circle |
+| DELETE | `/circles/:id` | Member | Leaves a circle or declines an invite (204) |
+
 ### Study sets (the Study Lab)
 
 A `StudySet` belongs to one student and is private (`visibility` also allows `link` and `community`, which Phase X7 will use; nothing sets them yet). It holds:

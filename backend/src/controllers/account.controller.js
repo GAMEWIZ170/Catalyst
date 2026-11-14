@@ -25,6 +25,7 @@ const ExamDate = require("../models/examdate.models");
 const HallPresence = require("../models/hallpresence.models");
 const Friendship = require("../models/friendship.models");
 const Challenge = require("../models/challenge.models");
+const Circle = require("../models/circle.models");
 const AchievementUnlock = require("../models/achievement.models");
 const XpEntry = require("../models/xp.models");
 const hashPassword = require("../utils/bcrypt");
@@ -115,6 +116,19 @@ const exportData = async (req, res, next) => {
   }
 };
 
+// Takes the student out of every circle. A circle they owned goes to its longest-standing joined member,
+// and one with nobody left is removed.
+const leaveAllCircles = async (id) => {
+  const circles = await Circle.find({ "members.user": id });
+  for (const circle of circles) {
+    circle.members = circle.members.filter((member) => String(member.user) !== String(id));
+    const joined = circle.members.filter((member) => member.status === "joined");
+    if (!joined.length) { await Circle.deleteOne({ _id: circle._id }); continue; }
+    if (String(circle.owner) === String(id)) circle.owner = joined[0].user;
+    await circle.save();
+  }
+};
+
 // Permanent. Personal data is removed and the account can never be opened again.
 // The account row stays, renamed and with a dead password, so the anonymous progress and mistake counts
 // that other features read keep working. Notes, bookmarks, positions, study time and exam answers are deleted.
@@ -166,6 +180,7 @@ const deleteAccount = async (req, res, next) => {
       AchievementUnlock.deleteMany({ user: id }),
       XpEntry.deleteMany({ user: id }),
       User.updateOne({ _id: id }, { $unset: { friendCode: 1 } }),
+      leaveAllCircles(id),
       deleteStudySets(id),
       AuthToken.deleteMany({ user: id })
     ]);

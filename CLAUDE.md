@@ -4,7 +4,7 @@ Read this at the start of every session. It is the short version of how this pro
 
 ## What this project is
 
-Catalyst is a low-cost learning platform for University of Ghana students (target price about 50 cedis a month). The first course is CHEM113. Students get lessons (explanation, video, images, chemical formulas), named tests, flashcards, materials, progress and streaks. One admin (the owner) writes all content through an in-app builder.
+Catalyst is a low-cost learning platform for students (target price about 50 cedis a month). The first course is CHEM113. Students get lessons (explanation, video, images, chemical formulas), named tests, flashcards, materials, progress and streaks. One admin (the owner) writes all content through an in-app builder.
 
 Structure: course > unit > lesson. Tests can belong to a lesson, a unit or a course.
 

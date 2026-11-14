@@ -95,6 +95,12 @@ const validateFriendSettings = validateWith(Joi.object({
   hideActivity: Joi.boolean()
 }).min(1));
 
+const validateCircle = validateWith(Joi.object({
+  name: Joi.string().trim().min(2).max(40).required(),
+  goalDays: Joi.number().integer().min(1).max(6).default(4)
+}));
+const validateCircleInvite = validateWith(Joi.object({ friendship: objectId.required() }));
+
 const validateChallenge = validateWith(Joi.object({ test: objectId.required() }));
 
 const validateEvent = validateWith(Joi.object({
@@ -447,6 +453,8 @@ const validateUserUpdate = validateWith(Joi.object({
 
 module.exports = {
   objectId,
+  validateCircle,
+  validateCircleInvite,
   validateChallenge,
   validateFriendRequest,
   validateFriendSettings,

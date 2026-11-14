@@ -1,6 +1,6 @@
 ---
 name: Catalyst
-description: Calm study-desk and lab-notebook interface for University of Ghana students. Shared warm neutrals, one accent per palette, five palettes and two modes.
+description: Calm study-desk and lab-notebook interface for students. Shared warm neutrals, one accent per palette, five palettes and two modes.
 colors:
   paper: "#FAF8F4"
   surface: "#FFFFFF"
@@ -59,7 +59,7 @@ One family, Atkinson Hyperlegible Next, self-hosted as one Latin WOFF2 variable 
 
 Only these sizes exist: `--text-xs` 12, `--text-sm` 14, `--text-md` 16, `--text-lg` 19, `--text-xl` 23, `--text-2xl` 28, `--text-3xl` 33. Weights 400 and 600. Headings: h1 33 (28 on phones), h2 23, h3 19, line height 1.25. Body line height 1.55. Lesson reading column is `--measure` (68ch). Never use `word-break: break-all`; body wraps with `overflow-wrap: break-word`; buttons never break inside a word.
 
-Known gap: the Ghana cedi sign (U+20B5) is not in the Latin subset. Write "GHS" or "cedis" in text until a symbol subset is added.
+Known gap: some currency signs (for example U+20B5) are not in the Latin subset. Write the currency name or code in text until a symbol subset is added.
 
 ## Space and layout
 
