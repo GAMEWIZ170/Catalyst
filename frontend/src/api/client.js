@@ -140,6 +140,7 @@ export const api = {
   getReports: (params = {}) => request(`/admin/reports?${new URLSearchParams(params)}`),
   resolveReport: (id, body) => request(`/admin/reports/${id}/resolve`, { method: "PUT", body: JSON.stringify(body) }),
   getQuestionAnalytics: (params = {}) => request(`/admin/analytics/questions?${new URLSearchParams(params)}`),
+  createUnitSummaryPdf: (unitId, body = {}) => request(`/admin/units/${unitId}/summary-pdf`, { method: "POST", body: JSON.stringify(body) }),
   getLessonVersions: (id) => request(`/admin/lessons/${id}/versions`),
   restoreLessonVersion: (id, versionId) => request(`/admin/lessons/${id}/versions/${versionId}/restore`, { method: "POST" }),
   // The CSV goes up as plain text. dryRun checks it and saves nothing.

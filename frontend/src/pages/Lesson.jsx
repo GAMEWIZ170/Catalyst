@@ -202,7 +202,7 @@ export default function Lesson() {
             {unit && <span>{unit.title}</span>}
             {completed && <Badge tone="success" icon={CheckCircle2}>Completed</Badge>}
           </p>}
-          <div className="lesson-explanation"><RichText>{lesson.explanation}</RichText></div>
+          <div className="lesson-explanation"><RichText math={lesson.explanationMath}>{lesson.explanation}</RichText></div>
           {lesson.explanationImage?.url && <figure className="lesson-figure">
             <ResponsiveImage image={lesson.explanationImage} loading="lazy" />
             {lesson.explanationImage.alt && <figcaption>{lesson.explanationImage.alt}</figcaption>}

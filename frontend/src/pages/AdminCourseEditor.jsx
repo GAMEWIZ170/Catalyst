@@ -37,6 +37,7 @@ export default function AdminCourseEditor() {
   const [addLesson, setAddLesson] = useState(null);
   const [newLesson, setNewLesson] = useState("");
   const [confirmTarget, setConfirmTarget] = useState(null);
+  const [summaryBusy, setSummaryBusy] = useState(null); // id of the unit whose PDF is being made
   const [focusTarget, setFocusTarget] = useState(null);
   const unitButtonRefs = useRef({});
   const lessonButtonRefs = useRef({});
@@ -111,6 +112,22 @@ export default function AdminCourseEditor() {
       await load();
     } catch (err) {
       setError(err.message);
+    }
+  }
+
+  // Makes a PDF of the unit's published lessons and saves it as an unpublished material on the unit's first lesson.
+  async function createSummary(unit) {
+    const unitId = idOf(unit);
+    setSummaryBusy(unitId);
+    setError("");
+    setMessage("");
+    try {
+      const response = await api.createUnitSummaryPdf(unitId);
+      setMessage(`Summary PDF of ${response.data.lessonCount} ${response.data.lessonCount === 1 ? "lesson" : "lessons"} saved as a material on the first lesson of "${unit.title}". Open that lesson's Materials tab to check it and publish it.`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSummaryBusy(null);
     }
   }
 
@@ -209,7 +226,7 @@ export default function AdminCourseEditor() {
               </div>;
             })}
             {unit.tests?.map((test) => <Link className="test-row" key={idOf(test)} to={`/admin/tests/${idOf(test)}`} state={{ trail: [{ label: "Courses", to: "/admin" }, { label: course.code || course.title, to: `/admin/courses/${id}` }, { label: unit.title, to: `/admin/courses/${id}` }, { label: test.title }] }}><span>{test.title}</span><StatusBadge isPublished={test.isPublished} /><span>{test.questionCount || test.questions?.length || 0} questions</span></Link>)}
-            {addLesson === unitId ? <form className="inline-add-form" onSubmit={(event) => createLesson(event, unit)}><input autoFocus required value={newLesson} onChange={(event) => setNewLesson(event.target.value)} aria-label="Lesson title" /><Button variant="primary" type="submit">Add lesson</Button><Button variant="secondary" type="button" onClick={() => setAddLesson(null)}>Cancel</Button></form> : <div className="tree-add-actions"><Button variant="secondary" type="button" onClick={() => setAddLesson(unitId)}>Add lesson</Button><Button variant="secondary" type="button" onClick={() => createTest("unit", unitId)}>Add unit test</Button></div>}
+            {addLesson === unitId ? <form className="inline-add-form" onSubmit={(event) => createLesson(event, unit)}><input autoFocus required value={newLesson} onChange={(event) => setNewLesson(event.target.value)} aria-label="Lesson title" /><Button variant="primary" type="submit">Add lesson</Button><Button variant="secondary" type="button" onClick={() => setAddLesson(null)}>Cancel</Button></form> : <div className="tree-add-actions"><Button variant="secondary" type="button" onClick={() => setAddLesson(unitId)}>Add lesson</Button><Button variant="secondary" type="button" onClick={() => createTest("unit", unitId)}>Add unit test</Button><Button variant="secondary" type="button" loading={summaryBusy === unitId} disabled={Boolean(summaryBusy) || lessons.length === 0} onClick={() => createSummary(unit)}>Create summary PDF</Button></div>}
           </article>;
         })}
       </div>

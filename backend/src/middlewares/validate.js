@@ -295,6 +295,7 @@ const validateReport = validateWith(Joi.object({
   note: Joi.string().trim().allow("").max(500)
 }));
 const validateResolveReport = validateWith(Joi.object({ reply: Joi.string().trim().allow("").max(1000) }));
+const validateUnitSummary = validateWith(Joi.object({ lesson: objectId }));
 const validateTestSubmission = validateWith(Joi.object({
   answers: Joi.array().items(Joi.object({
     questionId: objectId.required(),
@@ -417,6 +418,7 @@ module.exports = {
   validateQuestionUpdate,
   validateAnswer,
   validateReport,
+  validateUnitSummary,
   validateResolveReport,
   validateExamSave,
   validateTestSubmission,

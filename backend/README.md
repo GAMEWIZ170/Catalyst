@@ -347,6 +347,7 @@ Create routes require an available parent. Delete routes are soft deletes.
 | PUT | `/admin/courses/:id` | Update a course |
 | DELETE | `/admin/courses/:id` | Soft-delete a course |
 | POST | `/admin/units` | Create a unit |
+| POST | `/admin/units/:id/summary-pdf` | Body `{ lesson }` (optional: one of the unit's lessons, else the first). Makes a PDF of the unit's published lessons and saves it as an unpublished PDF material on that lesson. 409 when the unit has no published lessons. 30 per 15 minutes (upload limit) |
 | PUT | `/admin/units/:id` | Update a unit |
 | DELETE | `/admin/units/:id` | Soft-delete a unit |
 | PUT | `/admin/units/reorder` | Reorder units with `{ "course", "ids" }` |
@@ -500,7 +501,7 @@ All schemas have timestamps. Soft-deletable content has `deletedAt`.
 | **User** | `name`, `email`, hidden bcrypt `password`, `role`, `avatar`, `isActive`, `subscriptionEndsAt`, `emailVerified`, `passwordChangedAt`, `deletedAt` |
 | **Course** | `code`, `title`, `description`, `isPublished`, `deletedAt` |
 | **Unit** | `course`, `title`, `order`, `deletedAt` |
-| **Lesson** | `unit`, `title`, `order`, `explanation`, optional `explanationImage`, `videoHost`, `videoId`, `isPublished`, `deletedAt` |
+| **Lesson** | `unit`, `title`, `order`, `explanation`, `explanationMath` (formulas drawn by the server, hidden from reads unless asked for), optional `explanationImage`, `videoHost`, `videoId`, `isPublished`, `deletedAt` |
 | **Test** | `scope`, one of `lesson`/`unit`/`course`, `title`, `order`, `isPublished`, `deletedAt` |
 | **Question** | `test`, `type`, `text`, option objects, `correctOption`, `correctAnswer`, explanation images, `order`, `deletedAt` |
 | **TestResult** | `user`, `test`, `bestScore`, `lastScore`, `attempts`, `completedAt`, `completedDays` |
@@ -581,6 +582,18 @@ Emailed links carry a random 32-byte token. Only its SHA-256 hash is stored in `
 ### Notifications
 
 `Notification` rows hold one message for one student. A unique `key` per user stops repeats: `lesson:<lessonId>` (one per lesson) and `review:<UTC date>` (one per day). Two things create messages. (1) An admin saves a lesson with `isPublished: true` when it was hidden: every active student gets "New lesson" (only if the unit and course are visible; editing an already published lesson, or re-publishing after hiding, sends nothing new). This runs in the background after the save answers, so it can take a moment on a large student list. (2) The first `GET /notifications` of a UTC day creates "Review is ready" when flashcards or mistakes are due. Messages delete themselves after 60 days (TTL index) and are removed when the account is deleted. A "report answered" message is not built because Catalyst has no reporting feature yet.
+
+### Formulas drawn on save
+
+When a lesson is created, edited or restored from history, `utils/math.js` finds every `$formula$` and `$$formula$$` in the explanation (the same splitting rules as `RichText.jsx` in the frontend), draws each with KaTeX (with mhchem, `trust: false`, the same options as the browser) and stores the HTML in `Lesson.explanationMath` as `[{ s: formula text, b: block?, h: html }]`. The lesson screen (`/lessons/:id/hub`, and the admin preview) returns it as `explanationMath`. A phone that gets it does not download or run the KaTeX script. The browser never sends this HTML: it is made only from the admin's text. Entries are matched by formula text, so a stale entry is never used, and a lesson or formula with no entry is drawn by the browser as before. A formula KaTeX cannot draw is stored with `h: null`, so the browser shows its plain text without downloading KaTeX to fail again.
+
+- Lessons saved before this feature have no entry. Run `npm run render:math` once per database to fill them (`-- --all` redoes every lesson, for example after a KaTeX upgrade). Use the same KaTeX version as the frontend (`package.json` in both).
+- Only the lesson explanation is pre-rendered. Questions, explanations of answers and flashcards are still drawn by the browser.
+- The stored HTML adds bytes to the lesson response (about 1 to 2 KB per distinct formula before compression) in exchange for about 80 KB of script not being downloaded.
+
+### Unit summary PDFs
+
+`utils/summaryPdf.js` builds an A4 PDF with `pdf-lib` and its built-in fonts (no font files): a title block, then each published lesson of the unit in order, with a page footer. It is text only. Formulas are written as plain text (`H2O`, `x^2`, `(a)/(b)`, `->`), Greek letters as their names, and any other character the font lacks becomes `?`. Pictures and videos are not included. The PDF must start with `%PDF-` and be 10 MB or less, is uploaded to Cloudinary like any PDF material (`catalyst/materials`, raw), and becomes an unpublished `Material` on the chosen lesson. Making another one makes another material; the old Cloudinary file stays until orphaned files are cleaned up.
 
 ### Admin tools
 

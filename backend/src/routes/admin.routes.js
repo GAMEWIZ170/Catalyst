@@ -13,7 +13,7 @@ const {
   , validateMaterial, validateMaterialUpdate,
   validateReorderUnits, validateReorderLessons, validateReorderTests,
   validateReorderQuestions, validateReorderFlashcards, validateReorderMaterials,
-  validateUserUpdate, validateAnswer, validateResolveReport
+  validateUserUpdate, validateAnswer, validateResolveReport, validateUnitSummary
 } = require("../middlewares/validate");
 
 const course = require("../controllers/course.controller");
@@ -34,6 +34,7 @@ const preview = require("../controllers/preview.controller");
 const analytics = require("../controllers/analytics.controller");
 const reports = require("../controllers/report.controller");
 const importer = require("../controllers/import.controller");
+const summary = require("../controllers/summary.controller");
 const Course = require("../models/course.models");
 const Unit = require("../models/unit.models");
 const Lesson = require("../models/lesson.models");
@@ -60,6 +61,8 @@ router.put("/units/reorder", validateReorderUnits, reorder({
   parentError: "Course not found"
 }));
 router.post("/units", validateUnit, unit.createUnit);
+// Makes a PDF summary of the unit and saves it as an (unpublished) PDF material on one of its lessons.
+router.post("/units/:id/summary-pdf", uploadLimiter, validateUnitSummary, summary.createUnitSummary);
 router.put("/units/:id", validateUnitUpdate, unit.updateUnit);
 router.delete("/units/:id", unit.deleteUnit);
 

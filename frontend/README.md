@@ -68,7 +68,7 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 
 ## Speed
 
-- **Lazy routes.** Tests, flashcards, progress, settings and the admin pages load their code when opened. Login, register, the course list, the course outline and the lesson are in the first bundle (a separate file for them cost one more round trip on a slow connection). KaTeX and mhchem load only when a page has a formula, and the KaTeX stylesheet loads with them.
+- **Lazy routes.** Tests, flashcards, progress, settings and the admin pages load their code when opened. Login, register, the course list, the course outline and the lesson are in the first bundle (a separate file for them cost one more round trip on a slow connection). KaTeX and mhchem load only when a page has a formula the server has not already drawn, and the KaTeX stylesheet loads with them. Lesson explanations come with their formulas already drawn by the server (`explanationMath`, see the backend README), so on a lesson saved after that feature only the stylesheet loads and the 80 KB KaTeX script does not.
 - **The streak** comes with `GET /auth/me` and lives on the user in `AuthContext`; it is refreshed after login and after the `catalyst:refresh-streak` event.
 - **One call per screen.** Home uses `GET /home`, the lesson screen `GET /lessons/:id/hub`, the progress screen `GET /progress/overview`.
 - **Data starts early.** `ProtectedPage` in `App.jsx` starts the screen's requests the moment the route matches, while its code is still downloading.

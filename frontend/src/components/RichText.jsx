@@ -49,14 +49,25 @@ function tokenize(source) {
   return parts;
 }
 
-function Formula({ source, block }) {
-  const [html, setHtml] = useState(null);
+// stored: what the server found when the lesson was saved (see backend/src/utils/math.js): the HTML it drew for this
+// formula, or null when the formula cannot be drawn (then the plain text is shown). undefined means it has no entry.
+// With an entry, only the small stylesheet is loaded (and nothing at all for null); the KaTeX script (about 80 KB)
+// is never downloaded. Without an entry
+// (older lessons, or a formula the server could not draw) the browser draws the formula itself, as before.
+function Formula({ source, block, stored }) {
+  const [html, setHtml] = useState(stored || null);
+  const known = stored !== undefined;
   useEffect(() => {
     let active = true;
+    if (known) {
+      setHtml(stored);
+      if (stored) import("./katexStyles").catch(() => {});
+      return undefined;
+    }
     Promise.all([
       import("katex"),
       import("katex/contrib/mhchem"),
-      import("katex/dist/katex.min.css")
+      import("./katexStyles")
     ]).then(([module]) => {
       if (!active) return;
       try {
@@ -72,14 +83,17 @@ function Formula({ source, block }) {
       }
     }).catch(() => setHtml(null));
     return () => { active = false; };
-  }, [source]);
+  }, [source, stored, known]);
   if (!html) return <span>{block ? `$$${source}$$` : `$${source}$`}</span>;
   return <span className={`rich-formula ${block ? "rich-formula--block" : ""}`} {...(block ? { tabIndex: 0, role: "group", "aria-label": "Formula (scrolls sideways)" } : {})} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
-export default function RichText({ children = "", className = "" }) {
+// math: the server's stored formulas for this text, [{ s: formula, b: block?, h: html }]. Optional.
+// Entries are found by formula text, so an entry for text that has since changed is never used.
+export default function RichText({ children = "", className = "", math }) {
   const parts = useMemo(() => tokenize(String(children)), [children]);
+  const stored = useMemo(() => new Map((math || []).map((entry) => [`${entry.b ? "b" : "i"}:${entry.s}`, entry.h])), [math]);
   return <span className={`rich-text ${className}`.trim()}>{parts.map((part, index) => part.type === "text"
     ? <span key={index}>{part.value.split("\n").map((line, lineIndex) => <span key={lineIndex}>{line}{lineIndex < part.value.split("\n").length - 1 && <br />}</span>)}</span>
-    : <Formula key={index} source={part.value} block={part.type === "block"} />)}</span>;
+    : <Formula key={index} source={part.value} block={part.type === "block"} stored={stored.get(`${part.type === "block" ? "b" : "i"}:${part.value}`)} />)}</span>;
 }
