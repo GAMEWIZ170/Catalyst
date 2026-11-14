@@ -19,7 +19,7 @@ const lessonSchema = new mongoose.Schema({
     deletedAt: { type: Date, default: null }
 }, { timestamps: true });
 
-lessonSchema.index({ title: "text" });
+lessonSchema.index({ title: "text", explanation: "text" }, { weights: { title: 5, explanation: 1 }, name: "lesson_search" }); // student search
 lessonSchema.index({ unit: 1, order: 1 }); // the lessons of some units, in order
 
 module.exports = mongoose.model("Lesson", lessonSchema);

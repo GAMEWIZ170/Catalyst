@@ -292,6 +292,11 @@ Images are limited to 2 MB. The declared MIME type is a cheap first rejection; t
 | GET | `/progress/overview` | Student | The progress screen in one call: `progress` rows, `streak` and every published course outline in `courses` |
 | PUT | `/progress/position` | Student | Remember where the student is in a course: `{ lessonId, kind: "lesson"|"flashcards", position, total }`. 204. Home returns it as `last` on each course. `/home` also returns `goal: { kind, target, done, met }` for today. The streak counts any study day, whether or not the goal is met |
 | POST | `/progress/study-time` | Student | Body `{ seconds }` (1 to 120). Adds study time for today; feeds the "minutes" daily goal |
+| GET | `/search?q=` | Student | Search lesson titles and text (2 to 80 characters, best 20). Only visible lessons. Needs the `lesson_search` text index: run `npm run sync:search-index` once per database (it drops the old title-only index first) |
+| GET | `/bookmarks` | Student | The saved list (lessons and questions). Hidden or deleted items are left out |
+| PUT | `/bookmarks` | Student | Body `{ kind: "lesson"|"question", id }`. 204. Saving twice is fine |
+| DELETE | `/bookmarks/:kind/:id` | Student | 204 |
+| PUT | `/notes/:lessonId` | Student | Body `{ text }` (up to 2000 characters, private). Empty text removes the note. The lesson hub returns `note` and `saved` |
 
 ### Admin content
 

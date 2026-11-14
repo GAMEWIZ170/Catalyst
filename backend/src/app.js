@@ -28,6 +28,7 @@ const testRoutes = require("./routes/test.routes");
 const adminRoutes = require("./routes/admin.routes");
 const flashcardRoutes = require("./routes/flashcard.routes");
 const materialRoutes = require("./routes/material.routes");
+const studyRoutes = require("./routes/study.routes");
 
 // middlewares that run on every request, in this order
 app.use(helmet());                       // safe response headers
@@ -52,6 +53,7 @@ app.use("/api/v1/tests", testRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1", flashcardRoutes);
 app.use("/api/v1", materialRoutes);
+app.use("/api/v1", studyRoutes);
 
 // these two must come after all the routes, in this order
 app.use(notFound);

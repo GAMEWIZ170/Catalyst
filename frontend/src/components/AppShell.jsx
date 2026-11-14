@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useMatch, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "./Avatar";
-import { BarChart3, House, Mail, UserRound, Zap } from "lucide-react";
+import { Bookmark, BarChart3, House, Mail, Search, UserRound, Zap } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import ShortcutHelp from "./ShortcutHelp";
 import useStudyTimer from "../utils/useStudyTimer";
@@ -10,6 +10,8 @@ import useStudyTimer from "../utils/useStudyTimer";
 // Phones get a bottom tab bar for the places a student goes most. Laptops keep the top bar only.
 const TABS = [
   { to: "/courses", label: "Home", icon: House },
+  { to: "/search", label: "Search", icon: Search },
+  { to: "/saved", label: "Saved", icon: Bookmark },
   { to: "/progress", label: "Progress", icon: BarChart3 },
   { to: "/settings", label: "Profile", icon: UserRound }
 ];

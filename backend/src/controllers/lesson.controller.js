@@ -7,6 +7,8 @@ const TestResult = require("../models/testresult.models");
 const Flashcard = require("../models/flashcard.models");
 const Material = require("../models/material.models");
 const Progress = require("../models/progress.models");
+const Bookmark = require("../models/bookmark.models");
+const Note = require("../models/note.models");
 const studentMaterial = require("../utils/studentMaterial");
 const getFlashcardSummary = require("../utils/flashcardSummary");
 const { findVisibleLesson, findTestsWithQuestions, findTestQuestionCounts } = require("../utils/visibility");
@@ -40,12 +42,14 @@ const adminTestSummary = (tests) => tests.map((test) => ({
 // the materials and the completed flag are independent of each other, so they are read together with the
 // visibility check: 3 round trips instead of 9. When the lesson is hidden the extra reads are thrown away.
 const loadLesson = async (id, userId, withHub) => {
-  const [lesson, tests, flashcards, materials, done] = await Promise.all([
+  const [lesson, tests, flashcards, materials, done, note, saved] = await Promise.all([
     findVisibleLesson(id),
     findTestsWithQuestions({ scope: "lesson", lesson: id, isPublished: true, deletedAt: null }).then((rows) => studentTestSummary(rows, userId)),
     getFlashcardSummary(id, userId),
     Material.find({ lesson: id, isPublished: true, deletedAt: null }).sort({ order: 1 }).lean(),
-    withHub ? Progress.exists({ user: userId, lesson: id, completed: true }) : null
+    withHub ? Progress.exists({ user: userId, lesson: id, completed: true }) : null,
+    withHub ? Note.findOne({ user: userId, lesson: id }).select("text").lean() : null,
+    withHub ? Bookmark.exists({ user: userId, kind: "lesson", target: id }) : null
   ]);
   if (!lesson) return null;
   const data = {
@@ -64,6 +68,8 @@ const loadLesson = async (id, userId, withHub) => {
   if (withHub) {
     data.completed = Boolean(done);
     data.materials = materials.map(studentMaterial);
+    data.note = note ? note.text : "";
+    data.saved = Boolean(saved);
   }
   return data;
 };

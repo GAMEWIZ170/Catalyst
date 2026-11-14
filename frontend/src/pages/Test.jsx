@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Check, CheckCircle2, TriangleAlert, X } from "lucide-react";
+import { ArrowLeft, Bookmark, Check, CheckCircle2, TriangleAlert, X } from "lucide-react";
 import ConfirmDialog from "../components/admin/ConfirmDialog";
 import RichText from "../components/RichText";
 import { Button, Card, Illustration } from "../components/ui";
@@ -85,6 +85,19 @@ export default function Test() {
     setAnswers([]);
     setMissed([]);
     setShowMissed(false);
+  }
+  // Saving is idempotent on the server; the list here only tracks what was saved during this test.
+  const [savedQuestions, setSavedQuestions] = useState(() => new Set());
+  async function toggleSavedQuestion(questionId) {
+    const wasSaved = savedQuestions.has(questionId);
+    setSavedQuestions((items) => { const next = new Set(items); if (wasSaved) next.delete(questionId); else next.add(questionId); return next; });
+    try {
+      if (wasSaved) await api.removeBookmark("question", questionId);
+      else await api.saveBookmark("question", questionId);
+    } catch (err) {
+      setSavedQuestions((items) => { const next = new Set(items); if (wasSaved) next.add(questionId); else next.delete(questionId); return next; });
+      setError(err.message);
+    }
   }
   function selectAnswer(value) { if (!feedback) setChosen(value); }
   async function checkAnswer() {
@@ -225,6 +238,7 @@ export default function Test() {
         <h2 tabIndex="-1" ref={feedbackHeading}>{feedback.isCorrect ? <CheckCircle2 size={20} aria-hidden="true" /> : <TriangleAlert size={20} aria-hidden="true" />}{feedback.isCorrect ? "Correct" : "Not quite"}</h2>
         {!feedback.isCorrect && <p><strong>Correct answer:</strong> {typeof correct === "object" ? <RichText>{correct.text}</RichText> : correct === "true" ? "True" : correct === "false" ? "False" : correct}</p>}
         <RichText>{feedback.explanation}</RichText>
+        <Button variant="tertiary" icon={Bookmark} aria-pressed={savedQuestions.has(question._id)} onClick={() => toggleSavedQuestion(question._id)}>{savedQuestions.has(question._id) ? "Saved" : "Save question"}</Button>
         {feedback.explanationImage?.url && <ResponsiveImage image={feedback.explanationImage} sizes="(max-width: 600px) 100vw, 600px" />}
       </section>}
       {error && <p className="form-error" role="alert">{error}</p>}

@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, Circle, ExternalLink, FileText, Link2, Play } from "lucide-react";
+import { ArrowLeft, Bookmark, CheckCircle2, Circle, ExternalLink, FileText, Link2, Play } from "lucide-react";
 import { api } from "../api/client";
 import { nearToPrefetch, prefetchLesson } from "../api/prefetch";
 import DeckSummary from "../components/DeckSummary";
 import RichText from "../components/RichText";
-import { Badge, Button, SelectField, Skeleton, SkeletonGroup } from "../components/ui";
+import { Badge, Button, SelectField, Skeleton, SkeletonGroup, TextArea } from "../components/ui";
 import ResponsiveImage from "../components/ResponsiveImage";
 import { recallCourse } from "../utils/courseCache";
 import { ErrorState } from "./Courses";
@@ -51,6 +51,36 @@ function LessonVideo({ title, videoId }) {
   </div>;
 }
 
+// The student's private note on this lesson. Saving empty text removes it.
+function NoteBox({ lessonId, initial }) {
+  const [text, setText] = useState(initial || "");
+  const [saved, setSaved] = useState(initial || "");
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function save() {
+    setBusy(true);
+    setStatus("");
+    try {
+      await api.saveNote(lessonId, text.trim());
+      setSaved(text.trim());
+      setStatus(text.trim() ? "Note saved" : "Note removed");
+    } catch (err) {
+      setStatus(err.message);
+    }
+    setBusy(false);
+  }
+
+  return <section className="lesson-section lesson-note" aria-labelledby="note-heading">
+    <h2 id="note-heading">My note</h2>
+    <TextArea label="Private note" hint="Only you can see this." value={text} maxLength={2000} rows={4} onChange={(event) => setText(event.target.value)} />
+    <div className="button-row">
+      <Button variant="secondary" loading={busy} disabled={text.trim() === saved} onClick={save}>Save note</Button>
+      <span className="muted" role="status">{status}</span>
+    </div>
+  </section>;
+}
+
 export default function Lesson() {
   const { id } = useParams();
   const location = useLocation();
@@ -59,6 +89,7 @@ export default function Lesson() {
   const [course, setCourse] = useState(null);
   const [error, setError] = useState("");
   const [doneMessage, setDoneMessage] = useState("");
+  const [savedOverride, setSavedOverride] = useState(null);
 
   const from = location.state?.from || "/courses";
   const courseId = /^\/courses\/([^/]+)$/.exec(from)?.[1];
@@ -72,6 +103,7 @@ export default function Lesson() {
 
   useEffect(() => {
     setLesson(null);
+    setSavedOverride(null);
     setDoneMessage("");
     load();
   }, [id]);
@@ -99,6 +131,19 @@ export default function Lesson() {
 
   if (error) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
   if (!lesson) return <LessonSkeleton />;
+
+  const savedLesson = savedOverride ?? lesson.saved;
+  async function toggleSaved() {
+    const next = !savedLesson;
+    setSavedOverride(next);
+    try {
+      if (next) await api.saveBookmark("lesson", id);
+      else await api.removeBookmark("lesson", id);
+    } catch (err) {
+      setSavedOverride(!next);
+      setError(err.message);
+    }
+  }
 
   const completed = lesson.completed;
   const canMarkDone = lesson.tests.length === 0 && lesson.flashcards.total === 0;
@@ -144,6 +189,7 @@ export default function Lesson() {
       <div className="lesson-main">
         <article className="reading-column">
           <h1>{lesson.title}</h1>
+          <Button variant="tertiary" icon={Bookmark} aria-pressed={savedLesson} onClick={toggleSaved}>{savedLesson ? "Saved" : "Save"}</Button>
           {(unit || completed) && <p className="lesson-meta">
             {unit && <span>{unit.title}</span>}
             {completed && <Badge tone="success" icon={CheckCircle2}>Completed</Badge>}
@@ -158,6 +204,7 @@ export default function Lesson() {
         {lesson.tests.length > 0 && <section className="lesson-section"><h2>Practice</h2><div className="student-test-list">{lesson.tests.map((test) => <Link className="student-test-row" to={`/tests/${test._id}`} state={state} key={test._id}><span><strong>{test.title}</strong><span className="muted">{test.questionCount} questions · {test.passPercent != null ? `Pass at ${test.passPercent}% · ` : ""}{test.bestScore === null ? "Not taken yet" : `Best score: ${test.bestScore}%`}</span></span><span className="row-action">{test.bestScore === null ? "Start" : "Retake"}</span></Link>)}</div></section>}
         {lesson.flashcards.total > 0 && <section className="lesson-section"><h2>Flashcards</h2><DeckSummary summary={lesson.flashcards} /><div className="button-row button-row--stack"><Button as={Link} variant={nextStep === "deck" ? "primary" : "secondary"} to={`/lessons/${id}/flashcards`} state={{ courseFrom: from }}>Study all cards</Button>{lesson.flashcards.unsure + lesson.flashcards.unknown + lesson.flashcards.unrated > 0 && <Button as={Link} variant="secondary" to={`/lessons/${id}/flashcards?filter=review`} state={{ courseFrom: from }}>Review cards I'm not sure about</Button>}</div></section>}
         {lesson.materialCount > 0 && <section className="lesson-section"><h2>Materials</h2><div className="material-list">{(lesson.materials || []).map((material) => <div className="material-row" key={material._id}>{material.kind === "file" ? <FileText size={20} aria-hidden="true" /> : <Link2 size={20} aria-hidden="true" />}<span><strong>{material.title}</strong><span className="muted">{material.description}{material.bytes ? ` · ${formatBytes(material.bytes)}` : ""}</span></span><a href={material.url} target="_blank" rel="noopener noreferrer" aria-label={`Open ${material.title}${material.kind === "file" ? " (PDF)" : ""}`}>Open<ExternalLink size={16} aria-hidden="true" /></a></div>)}</div></section>}
+        <NoteBox key={id} lessonId={id} initial={lesson.note} />
         <section className="lesson-end" aria-label="Next steps">
           {nextStep === "test" && <Button as={Link} to={`/tests/${mainTest._id}`} state={state}>{primaryLabel}</Button>}
           {nextStep === "deck" && <Button as={Link} to={`/lessons/${id}/flashcards`} state={{ courseFrom: from }}>{primaryLabel}</Button>}

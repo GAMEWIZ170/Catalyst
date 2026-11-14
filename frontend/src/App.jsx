@@ -15,6 +15,8 @@ const Test = lazy(() => import("./pages/Test"));
 const Flashcards = lazy(() => import("./pages/Flashcards"));
 const Progress = lazy(() => import("./pages/Progress"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
+const Search = lazy(() => import("./pages/Search"));
+const Saved = lazy(() => import("./pages/Saved"));
 const AdminCourses = lazy(() => import("./pages/AdminCourses"));
 const AdminCourseEditor = lazy(() => import("./pages/AdminCourseEditor"));
 const AdminTestEditor = lazy(() => import("./pages/AdminTestEditor"));
@@ -70,6 +72,8 @@ export default function App() {
     <Route path="/tests/:id" element={<ProtectedPage warm="test"><Test /></ProtectedPage>} />
     <Route path="/lessons/:id/flashcards" element={<ProtectedPage warm="flashcards"><Flashcards /></ProtectedPage>} />
     <Route path="/welcome" element={<ProtectedPage><Onboarding /></ProtectedPage>} />
+    <Route path="/search" element={<ProtectedPage><Search /></ProtectedPage>} />
+    <Route path="/saved" element={<ProtectedPage><Saved /></ProtectedPage>} />
     <Route path="/progress" element={<ProtectedPage warm="progress"><Progress /></ProtectedPage>} />
     <Route path="/settings" element={<ProtectedPage><Settings /></ProtectedPage>} />
     <Route path="/admin/courses/:id" element={<AdminPage><AdminCourseEditor /></AdminPage>} />
