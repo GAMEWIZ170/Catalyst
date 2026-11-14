@@ -1,9 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useMatch, useNavigate } from "react-router-dom";
+import { Link, NavLink, useMatch, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "./Avatar";
-import { Mail, Zap } from "lucide-react";
+import { BarChart3, House, Mail, UserRound, Zap } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+
+// Phones get a bottom tab bar for the places a student goes most. Laptops keep the top bar only.
+const TABS = [
+  { to: "/courses", label: "Home", icon: House },
+  { to: "/progress", label: "Progress", icon: BarChart3 },
+  { to: "/settings", label: "Profile", icon: UserRound }
+];
 
 export default function AppShell({ children }) {
   const { user, logout } = useAuth();
@@ -125,6 +132,11 @@ export default function AppShell({ children }) {
       </header>
       <main className="page-wrap">{children}</main>
       <footer className="footer">Keep learning with momentum.</footer>
+      {user?.role === "student" && <nav className="tabbar" aria-label="Main">
+        {TABS.map(({ to, label, icon: Icon }) => <NavLink key={to} to={to} className="tabbar-link">
+          <Icon size={22} aria-hidden="true" /><span>{label}</span>
+        </NavLink>)}
+      </nav>}
     </div>
   );
 }

@@ -3523,3 +3523,34 @@ textarea {
     transition: background-color 120ms ease, transform 80ms ease;
   }
 }
+
+/* Bottom tab bar: phones only. Each tab is at least 44 px tall and wide. */
+.tabbar { display: none; }
+@media (max-width: 767px) {
+  .tabbar {
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    bottom: 0;
+    display: flex;
+    left: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    position: fixed;
+    right: 0;
+    z-index: 3;
+  }
+  .tabbar-link {
+    align-items: center;
+    color: var(--muted);
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    font-size: var(--text-xs);
+    gap: 2px;
+    justify-content: center;
+    min-height: 56px;
+    min-width: 44px;
+    text-decoration: none;
+  }
+  .tabbar-link[aria-current="page"] { color: var(--accent); font-weight: var(--weight-strong); }
+  .app-shell { padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
+}
