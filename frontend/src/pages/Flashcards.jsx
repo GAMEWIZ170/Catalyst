@@ -10,8 +10,13 @@ import { ErrorState, Loading } from "./Courses";
 
 const RATINGS = [["unknown", "Don't know", RotateCcw], ["unsure", "Unsure", CircleHelp], ["confident", "Confident", Check]];
 
-export default function Flashcards() {
-  const { id } = useParams();
+// One deck player for a lesson's flashcards (/lessons/:id/flashcards) and for a student's own study set (/lab/:setId/study).
+export default function Flashcards({ setMode = false }) {
+  const routeParams = useParams();
+  const id = setMode ? routeParams.setId : routeParams.id;
+  const home = setMode ? `/lab/${id}?tab=cards` : `/lessons/${id}`;
+  const homeLabel = setMode ? "Back to my set" : "Back to lesson";
+  const reviewPath = setMode ? `/lab/${id}/study?filter=review` : `/lessons/${id}/flashcards?filter=review`;
   const location = useLocation();
   const lessonState = location.state?.courseFrom ? { from: location.state.courseFrom } : undefined;
   const [params] = useSearchParams();
@@ -38,7 +43,7 @@ export default function Flashcards() {
     setNothingToReview(false);
     repeated.current = new Set();
     try {
-      const response = (await api.getLessonFlashcards(id, filter)).data;
+      const response = (await (setMode ? api.getSetStudy(id, filter) : api.getLessonFlashcards(id, filter))).data;
       if (mine !== loadCount.current) return;
       setCards(response.cards || []);
       setSummary(response.summary);
@@ -59,7 +64,7 @@ export default function Flashcards() {
 
   // Save the card number so Home can say "flashcards 12/30". A failure here never interrupts studying.
   useEffect(() => {
-    if (!queue[position] || filter) return;
+    if (!queue[position] || filter || setMode) return;
     api.savePosition({ lessonId: id, kind: "flashcards", position, total: queue.length }).catch(() => {});
   }, [id, position, queue.length, filter]);
 
@@ -106,9 +111,9 @@ export default function Flashcards() {
 
   if (error && !cards.length) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
   if (!cards.length && !nothingToReview && !loaded) return <Loading />;
-  if (!cards.length && !nothingToReview) return <div className="content fc-page"><EmptyState icon={Layers} title="No flashcards yet" description="This lesson has no flashcards." action={<Button as={Link} to={`/lessons/${id}`} state={lessonState}>Back to lesson</Button>} /></div>;
-  const back = <Link className="back-link" to={`/lessons/${id}`} state={lessonState}><ArrowLeft size={16} aria-hidden="true" />Back to lesson</Link>;
-  if (nothingToReview) return <div className="content fc-page">{back}<EmptyState icon={Layers} title="No cards to review" description="You have rated every card as confident." action={<Button as={Link} to={`/lessons/${id}`} state={lessonState}>Back to lesson</Button>} /></div>;
+  if (!cards.length && !nothingToReview) return <div className="content fc-page"><EmptyState icon={Layers} title="No flashcards yet" description={setMode ? "Add cards to this set first." : "This lesson has no flashcards."} action={<Button as={Link} to={home} state={lessonState}>{homeLabel}</Button>} /></div>;
+  const back = <Link className="back-link" to={home} state={lessonState}><ArrowLeft size={16} aria-hidden="true" />{homeLabel}</Link>;
+  if (nothingToReview) return <div className="content fc-page">{back}<EmptyState icon={Layers} title="No cards to review" description="You have rated every card as confident." action={<Button as={Link} to={home} state={lessonState}>{homeLabel}</Button>} /></div>;
   if (finished) {
     const toRevisit = summary.total - summary.confident;
     return <div className="content fc-page">
@@ -117,8 +122,8 @@ export default function Flashcards() {
         <p className="fc-finished-line">Confident on {summary.confident} of {summary.total}{toRevisit > 0 ? `, ${toRevisit} to revisit` : ""}</p>
         <DeckSummary summary={summary} />
         <div className="button-row button-row--stack">
-          {toRevisit > 0 && <Button as={Link} to={`/lessons/${id}/flashcards?filter=review`} state={location.state}>Review cards I'm not sure about</Button>}
-          <Button as={Link} variant={toRevisit > 0 ? "secondary" : "primary"} to={`/lessons/${id}`} state={lessonState}>Back to lesson</Button>
+          {toRevisit > 0 && <Button as={Link} to={reviewPath} state={location.state}>Review cards I'm not sure about</Button>}
+          <Button as={Link} variant={toRevisit > 0 ? "secondary" : "primary"} to={home} state={lessonState}>{homeLabel}</Button>
         </div>
       </section>
     </div>;

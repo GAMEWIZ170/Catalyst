@@ -38,6 +38,8 @@ const Settings = lazy(() => import("./pages/Settings"));
 const Me = lazy(() => import("./pages/Me"));
 const Lab = lazy(() => import("./pages/Lab"));
 const Exams = lazy(() => import("./pages/Exams"));
+const LabSet = lazy(() => import("./pages/LabSet"));
+const LabQuiz = lazy(() => import("./pages/LabQuiz"));
 const Hall = lazy(() => import("./pages/Hall"));
 const AdminCatalog = lazy(() => import("./pages/AdminCatalog"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
@@ -108,6 +110,9 @@ export default function App() {
     <Route path="/exams" element={<ProtectedPage><Exams /></ProtectedPage>} />
     <Route path="/hall" element={<ProtectedPage><Hall /></ProtectedPage>} />
     <Route path="/lab" element={<ProtectedPage><Lab /></ProtectedPage>} />
+    <Route path="/lab/quizzes/:testId" element={<ProtectedPage><LabQuiz /></ProtectedPage>} />
+    <Route path="/lab/:id" element={<ProtectedPage><LabSet /></ProtectedPage>} />
+    <Route path="/lab/:setId/study" element={<ProtectedPage><Flashcards setMode /></ProtectedPage>} />
     <Route path="/settings" element={<ProtectedPage><Settings /></ProtectedPage>} />
     <Route path="/admin/courses/:id" element={<AdminPage><AdminCourseEditor /></AdminPage>} />
     <Route path="/admin/tests/:id" element={<AdminPage><AdminTestEditor /></AdminPage>} />

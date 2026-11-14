@@ -1,6 +1,7 @@
 const Joi = require("joi");
 const avatarKeys = require("../config/avatars");
 const { isValidTimeZone } = require("../utils/day");
+const { noteDocProblem } = require("../utils/noteDoc");
 
 const timeZoneRule = Joi.string().max(64).custom((value, helpers) => (isValidTimeZone(value) ? value : helpers.message("Unknown time zone")));
 
@@ -98,6 +99,27 @@ const validateExamDate = validateWith(Joi.object({
   type: Joi.string().valid("mid_semester", "end_semester", "quiz").required()
 }));
 const validateHallGoal = validateWith(Joi.object({ goal: Joi.string().trim().allow("").max(80).default("") }));
+
+const setFields = {
+  title: Joi.string().trim().min(1).max(80),
+  description: Joi.string().trim().allow("").max(300),
+  topic: Joi.string().trim().allow("").max(80),
+  course: objectId.allow(null)
+};
+const validateSet = validateWith(Joi.object({ title: setFields.title.required(), description: setFields.description.default(""), topic: setFields.topic.default(""), course: setFields.course.default(null) }));
+const validateSetUpdate = validateWith(Joi.object(setFields).min(1));
+const validateSetNote = validateWith(Joi.object({
+  content: Joi.object().unknown(true).required().custom((value, helpers) => {
+    const problem = noteDocProblem(value);
+    return problem ? helpers.message(problem) : value;
+  })
+}));
+const cardSide = Joi.string().trim().min(1).max(500);
+const validateSetCard = validateWith(Joi.object({ front: cardSide.required(), back: cardSide.required() }));
+const validateSetCardUpdate = validateWith(Joi.object({ front: cardSide, back: cardSide }).min(1));
+const validateSetCards = validateWith(Joi.object({ cards: Joi.array().items(Joi.object({ front: cardSide.required(), back: cardSide.required() })).min(1).max(200).required() }));
+const validateSetText = validateWith(Joi.object({ title: Joi.string().trim().min(1).max(120).required(), text: Joi.string().trim().min(20).max(100000).required() }));
+const validateSetQuiz = validateWith(Joi.object({ title: Joi.string().trim().min(1).max(80).required() }));
 
 const validateStudyTime = validateWith(Joi.object({ seconds: Joi.number().integer().min(1).max(120).required() }));
 
@@ -432,6 +454,14 @@ module.exports = {
   validatePreferences,
   validateStudyTime,
   validateEvent,
+  validateSet,
+  validateSetUpdate,
+  validateSetNote,
+  validateSetCard,
+  validateSetCardUpdate,
+  validateSetCards,
+  validateSetQuiz,
+  validateSetText,
   validateExamDate,
   validateHallGoal,
   validateBookmark,

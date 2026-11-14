@@ -1,10 +1,11 @@
 const mongoose = require("mongoose");
 
 const testSchema = new mongoose.Schema({
-  scope: { type: String, enum: ["lesson", "unit", "course"], required: true },
+  scope: { type: String, enum: ["lesson", "unit", "course", "set"], required: true },
   lesson: { type: mongoose.Schema.Types.ObjectId, ref: "Lesson", default: null },
   unit: { type: mongoose.Schema.Types.ObjectId, ref: "Unit", default: null },
   course: { type: mongoose.Schema.Types.ObjectId, ref: "Course", default: null },
+  set: { type: mongoose.Schema.Types.ObjectId, ref: "StudySet", default: null }, // a quiz inside a student's study set
   title: { type: String, trim: true, maxlength: 80 },
   order: { type: Number, min: 1 },
   isPublished: { type: Boolean, default: false },
@@ -18,9 +19,10 @@ const testSchema = new mongoose.Schema({
 testSchema.index({ lesson: 1 });
 testSchema.index({ unit: 1 });
 testSchema.index({ course: 1 });
+testSchema.index({ set: 1 });
 
 testSchema.pre("validate", async function () {
-  const parents = [this.lesson, this.unit, this.course].filter(Boolean);
+  const parents = [this.lesson, this.unit, this.course, this.set].filter(Boolean);
   if (parents.length !== 1 || !this[this.scope]) {
     this.invalidate("scope", "A test must have exactly one parent matching its scope");
     return;
@@ -34,6 +36,7 @@ testSchema.pre("validate", async function () {
 
   if (this.title == null || this.title === "") {
     this.title = this.scope === "lesson" ? `Test ${this.order}` :
+      this.scope === "set" ? `Quiz ${this.order}` :
       this.scope === "unit" ? "Unit test" : "Course test";
   }
 });

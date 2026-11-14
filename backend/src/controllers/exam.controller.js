@@ -58,6 +58,7 @@ const finish = async (attempt, test, questions, answers) => {
   const score = Math.round((correct / total) * 100);
   const { result, passPercent, passed } = await recordResult(attempt.user, test, score, timeZone);
   // Wrong answers join the mistakes queue and right ones count toward leaving it, as with any answered question.
+  if (test.scope === "set") return { score, correct, total, bestScore: result.bestScore, attempts: result.attempts, passPercent, passed, review }; // a student's own quiz stays out of the mistakes queue and the statistics
   await Promise.all(questions.map((question, index) => recordAnswer(attempt.user, question._id, review[index].isCorrect, timeZone)));
   await Promise.all(questions.map((question, index) => recordStat(question, answers[question._id.toString()], review[index].isCorrect)));
   return { score, correct, total, bestScore: result.bestScore, attempts: result.attempts, passPercent, passed, review };
@@ -83,7 +84,7 @@ const submitAttempt = async (attempt, test, finalAnswers, finalFlags) => {
 const start = async (req, res, next) => {
   if (badId(req.params.id)) return res.status(400).json({ message: "Invalid test ID" });
   try {
-    const test = await findVisibleTest(req.params.id);
+    const test = await findVisibleTest(req.params.id, req.user.id);
     if (!test) return res.status(404).json({ message: "Test not found" });
     const questions = await loadQuestions(test._id);
     // Any test can be taken timed. One with no limit of its own gets a minute per question when the student asks for it.
@@ -137,7 +138,7 @@ const submit = async (req, res, next) => {
   try {
     const attempt = await findOwn(req, res);
     if (!attempt) return;
-    const test = await findVisibleTest(attempt.test);
+    const test = await findVisibleTest(attempt.test, req.user.id);
     if (!test) return res.status(404).json({ message: "Test not found" });
     const result = attempt.submittedAt ? attempt.result : await submitAttempt(attempt, test, req.body?.answers, req.body?.flags);
     if (!result) return res.status(409).json({ message: "Your exam is being marked. Try again in a moment." });

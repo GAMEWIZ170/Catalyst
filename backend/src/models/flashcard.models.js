@@ -12,7 +12,9 @@ const sideSchema = new mongoose.Schema({
 }, { _id: false });
 
 const flashcardSchema = new mongoose.Schema({
-  lesson: { type: mongoose.Schema.Types.ObjectId, ref: "Lesson", required: true },
+  // A card belongs to a lesson (admin) or to a student's study set, never both.
+  lesson: { type: mongoose.Schema.Types.ObjectId, ref: "Lesson", default: null },
+  set: { type: mongoose.Schema.Types.ObjectId, ref: "StudySet", default: null },
   front: { type: sideSchema, required: true },
   back: { type: sideSchema, required: true },
   order: { type: Number, required: true, min: 1 },
@@ -21,6 +23,7 @@ const flashcardSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 flashcardSchema.index({ lesson: 1, order: 1 });
+flashcardSchema.index({ set: 1, order: 1 });
 
 const validateSide = (side, path, invalidate) => {
   if (!side || (!side.text && !(side.image && side.image.url))) {
@@ -32,6 +35,7 @@ const validateSide = (side, path, invalidate) => {
 };
 
 flashcardSchema.pre("validate", function () {
+  if (Boolean(this.lesson) === Boolean(this.set)) this.invalidate("lesson", "A flashcard belongs to a lesson or a study set");
   validateSide(this.front, "front", (path, message) => this.invalidate(path, message));
   validateSide(this.back, "back", (path, message) => this.invalidate(path, message));
 });
