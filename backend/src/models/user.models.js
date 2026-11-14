@@ -71,6 +71,12 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    // Extra time on timed quizzes, as a percentage on top of the limit.
+    extraTime: {
+        type: Number,
+        enum: [0, 25, 50, 100],
+        default: 0
+    },
     // Which in-app messages the student wants. Report replies always arrive. Missing values count as on.
     notify: {
         review: { type: Boolean, default: true },

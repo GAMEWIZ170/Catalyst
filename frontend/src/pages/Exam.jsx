@@ -39,7 +39,7 @@ export default function Exam() {
   async function load() {
     setError("");
     try {
-      const data = (await api.startExam(id)).data;
+      const data = (await api.startExam(id, new URLSearchParams(window.location.search).get("timed") === "1")).data;
       if (data.finished) { setResult(data.result); return; }
       offset.current = new Date(data.serverNow).getTime() - Date.now();
       setAttempt(data);

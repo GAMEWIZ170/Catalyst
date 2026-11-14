@@ -6,6 +6,8 @@ import { Bell, BookOpen, FlaskConical, House, Layers, PanelLeftClose, PanelLeftO
 import ShortcutHelp from "./ShortcutHelp";
 import NotificationPanel, { useNotifications } from "./NotificationPanel";
 import QuickSettings from "./QuickSettings";
+import { TimerAnnouncer, TimerButton, TimerPanel } from "./TimerMenu";
+import { useTimer } from "../context/TimerContext";
 import useStudyTimer from "../utils/useStudyTimer";
 import { useOnline } from "../utils/offline";
 import { t } from "../i18n";
@@ -17,7 +19,7 @@ const PLACES = [
   { to: "/courses", label: "nav.courses", icon: BookOpen },
   { to: "/review", label: "nav.review", icon: Layers },
   { to: "/lab", label: "nav.lab", icon: FlaskConical },
-  { to: "/me", label: "nav.me", icon: UserRound, also: ["/progress", "/settings", "/saved", "/achievements"] }
+  { to: "/me", label: "nav.me", icon: UserRound, also: ["/progress", "/settings", "/saved", "/achievements", "/exams", "/hall"] }
 ];
 
 const sidebarKey = "catalyst-sidebar";
@@ -42,7 +44,9 @@ export default function AppShell({ children }) {
   const focusMatches = [useMatch("/tests/:id"), useMatch("/tests/:id/exam"), useMatch("/practice/*"), useMatch("/welcome")];
   const focusMode = focusMatches.some(Boolean);
   const streak = user?.streak ?? null;
-  useStudyTimer(user?.role === "student" && user?.dailyGoal?.kind === "minutes");
+  const { timer } = useTimer();
+  // Study time is counted for a minutes goal, and while a focus session runs (the server needs it to count focus minutes).
+  useStudyTimer(user?.role === "student" && (user?.dailyGoal?.kind === "minutes" || Boolean(timer && !timer.done && timer.phase === "work")));
   const notifications = useNotifications(Boolean(user));
   const online = useOnline();
   // Only one top bar popover is open at a time: "notifications", "quick", "profile" or none.
@@ -76,6 +80,7 @@ export default function AppShell({ children }) {
   useEffect(() => {
     if (open === "profile") profileMenuRef.current?.querySelector("[role='menuitem']")?.focus();
     if (open === "quick") quickRef.current?.querySelector("input, select")?.focus();
+    if (open === "timer") document.querySelector("#timer-panel button")?.focus();
   }, [open]);
 
   // A page change closes whatever was open.
@@ -107,6 +112,7 @@ export default function AppShell({ children }) {
   return (
     <div className={`app-shell${isStudent ? " has-nav" : ""}${isStudent && collapsed ? " nav-collapsed" : ""}`}>
       <a className="skip-link" href="#main">Skip to content</a>
+      {isStudent && <TimerAnnouncer />}
       <header className="topbar">
         <Link className="brand" to={isStudent ? "/home" : "/admin"} aria-label="Catalyst home">
           <span className="brand-mark">C</span>
@@ -116,6 +122,10 @@ export default function AppShell({ children }) {
           <Link className="icon-button" to="/search" aria-label={t("tools.search")} title={t("tools.search")}>
             <Search size={20} aria-hidden="true" />
           </Link>
+          {isStudent && <div className="timer-menu popover-host">
+            <TimerButton buttonRef={(node) => { buttons.current.timer = node; }} open={open === "timer"} onClick={() => toggle("timer")} />
+            {open === "timer" && <TimerPanel onNavigate={() => setOpen(null)} />}
+          </div>}
           <div className="notification-menu popover-host">
             <button
               ref={(node) => { buttons.current.notifications = node; }}

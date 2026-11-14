@@ -13,7 +13,7 @@ const authenticate = async (req, res, next) => {
 
     let user = authCache.get(decoded.id);
     if (!user) {
-      user = await User.findById(decoded.id).select("role isActive subscriptionEndsAt passwordChangedAt timeZone notify").lean();
+      user = await User.findById(decoded.id).select("role isActive subscriptionEndsAt passwordChangedAt timeZone notify extraTime").lean();
       if (user) authCache.set(decoded.id, user);
     }
     if (!user || user.isActive === false) {
@@ -24,7 +24,7 @@ const authenticate = async (req, res, next) => {
       return res.status(401).json({ message: "Your session is invalid or has expired. Please log in again" });
     }
 
-    req.user = { id: user._id.toString(), role: user.role, subscriptionEndsAt: user.subscriptionEndsAt, timeZone: user.timeZone || "UTC", notify: user.notify || {} };
+    req.user = { id: user._id.toString(), role: user.role, subscriptionEndsAt: user.subscriptionEndsAt, timeZone: user.timeZone || "UTC", notify: user.notify || {}, extraTime: user.extraTime || 0 };
     next();
   } catch (error) {
     if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {

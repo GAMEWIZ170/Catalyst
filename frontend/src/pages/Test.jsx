@@ -10,6 +10,7 @@ import { Correct, QuestionInput } from "../components/QuestionInputs";
 import { Button, Card, EmptyState, Illustration } from "../components/ui";
 import useUnsavedChanges from "../hooks/useUnsavedChanges";
 import { api } from "../api/client";
+import { useAuth } from "../context/AuthContext";
 import ResponsiveImage from "../components/ResponsiveImage";
 import { ErrorState, Loading } from "./Courses";
 
@@ -24,6 +25,7 @@ function scoreMessage(score) {
 }
 
 export default function Test() {
+  const { user } = useAuth();
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -218,7 +220,8 @@ export default function Test() {
       <h1>{test.title}</h1>
       <p>{test.questions.length} {test.questions.length === 1 ? "question" : "questions"}{isMistakes ? " you got wrong before" : ""}. Pick an answer, check it, then continue.</p>
       {needsPass && <p className="muted">You need at least {test.passPercent}% to complete the lesson.</p>}
-      <div><Button onClick={start}>Start test</Button></div>
+      <div className="button-row"><Button onClick={start}>Start test</Button>{!practice && test.questions.length > 0 && <Button as={Link} variant="secondary" to={`/tests/${test._id}/exam?timed=1`} state={location.state}>Take it timed</Button>}</div>
+      {!practice && test.questions.length > 0 && <p className="muted">Timed: one minute a question, with no feedback until you hand in.{user?.extraTime ? ` Your extra time of ${user.extraTime}% is added.` : ""}</p>}
     </Card>
   </div>;
 

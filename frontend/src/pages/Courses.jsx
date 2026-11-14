@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import { Zap } from "lucide-react";
 import DueChip from "../components/DueChip";
 import TodayPlan from "../components/TodayPlan";
+import ExamCountdown from "../components/ExamCountdown";
 import TopicsLink from "../components/TopicsLink";
 import MistakesPanel from "../components/MistakesPanel";
 import CourseByline from "../components/CourseByline";
@@ -87,6 +88,7 @@ export default function Courses() {
       <Progress value={percent(resume)} label={`${resume.code} progress`} showLabel />
       <div className="button-row button-row--stack"><Button as={Link} variant="primary" to={nextHref} state={nextState} {...nearToPrefetch(() => prefetchLesson(next.lessonId))}>{midDeck ? "Resume flashcards" : `Resume: Lesson ${next.label}`}</Button></div>
     </Card>}
+    {isStudent && !loading && !error && <ExamCountdown />}
     {isStudent && !loading && !error && <TodayPlan />}
     {isStudent && !loading && !error && <DueChip />}
     {isStudent && !loading && !error && <MistakesPanel from="/home" />}

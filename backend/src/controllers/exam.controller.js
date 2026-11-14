@@ -10,7 +10,8 @@ const { recordAnswer } = require("./mistake.controller");
 const { recordStat } = require("../utils/questionStats");
 
 const badId = (id) => !mongoose.isObjectIdOrHexString(id);
-const GRACE_MS = 30 * 1000; // a submit that left just before the deadline may arrive a little after it
+const GRACE_MS = 5 * 1000; // a submit that left just before the deadline may arrive a little after it
+const MINUTES_PER_QUESTION = 1; // the limit for a test with no limit of its own, when the student chooses to take it timed
 
 const studentView = (attempt, questions) => ({
   attemptId: attempt._id,
@@ -83,8 +84,11 @@ const start = async (req, res, next) => {
   if (badId(req.params.id)) return res.status(400).json({ message: "Invalid test ID" });
   try {
     const test = await findVisibleTest(req.params.id);
-    if (!test || !test.timeLimitMinutes) return res.status(404).json({ message: "Test not found" });
+    if (!test) return res.status(404).json({ message: "Test not found" });
     const questions = await loadQuestions(test._id);
+    // Any test can be taken timed. One with no limit of its own gets a minute per question when the student asks for it.
+    const baseMinutes = test.timeLimitMinutes || (req.body?.timed === true ? Math.min(360, Math.max(1, questions.length * MINUTES_PER_QUESTION)) : null);
+    if (!baseMinutes) return res.status(404).json({ message: "Test not found" });
     if (!questions.length) return res.status(409).json({ message: "This test has no questions yet" });
     const open = await ExamAttempt.findOne({ user: req.user.id, test: test._id, submittedAt: null }).sort({ startedAt: -1 });
     if (open && Date.now() > open.endsAt.getTime()) {
@@ -94,7 +98,9 @@ const start = async (req, res, next) => {
     }
     if (open) return res.status(200).json({ data: studentView(open, questions) });
     const now = new Date();
-    const attempt = await ExamAttempt.create({ user: req.user.id, test: test._id, startedAt: now, endsAt: new Date(now.getTime() + test.timeLimitMinutes * 60 * 1000) });
+    // Extra time is the student's own setting (a percentage). The server works out the deadline once, here.
+    const extra = 1 + (req.user.extraTime || 0) / 100;
+    const attempt = await ExamAttempt.create({ user: req.user.id, test: test._id, startedAt: now, endsAt: new Date(now.getTime() + Math.round(baseMinutes * extra * 60 * 1000)) });
     return res.status(201).json({ data: studentView(attempt, questions) });
   } catch (error) {
     next(error);
