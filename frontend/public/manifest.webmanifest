@@ -2,7 +2,7 @@
   "id": "/",
   "name": "Catalyst Learning",
   "short_name": "Catalyst",
-  "description": "Structured revision for UG students.",
+  "description": "Structured revision for students.",
   "start_url": "/courses",
   "scope": "/",
   "display": "standalone",

@@ -21,7 +21,7 @@ function LegalPage({ title, updated, children }) {
 
 export function Privacy() {
   return <LegalPage title="Privacy" updated="14 November 2026">
-    <p>Catalyst is a revision platform for University of Ghana students. This page says what we keep about you, why, for how long, and how to remove it.</p>
+    <p>Catalyst is a revision platform for students. This page says what we keep about you, why, for how long, and how to remove it.</p>
 
     <h2>What we collect</h2>
     <ul>
