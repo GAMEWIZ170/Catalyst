@@ -76,6 +76,22 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 - **Prefetch.** `src/api/prefetch.js`: hovering, touching or focusing a link to a lesson or course starts loading its data. Spread `nearToPrefetch(...)` onto a link to add it.
 - **Images.** `ResponsiveImage` serves 400, 800 and 1200 px versions through `srcset` and uses the stored `width` and `height` to reserve space. The lesson video is a small still and a play button; the player loads only after a tap.
 
+## Offline use, install and low-data mode
+
+**Install and offline.** The built site is a PWA: `public/manifest.webmanifest`, the icons in `public/icons` and the service worker `public/sw.js`, with no extra package. The worker is registered only in the built site (`import.meta.env.PROD`), never in `npm run dev`. To test it, run `npm run build` then `npm run preview`.
+
+- It keeps the app itself (page shell, script, style, fonts) from the first visit, so the app opens with no network.
+- It keeps the two reads a student opened: a lesson screen (`/api/<version>/lessons/:id/hub`) and a course outline (`/api/<version>/courses/:id`). They are fetched from the network first; a saved copy is shown when offline, on error, or after 4 seconds without an answer.
+- **It never stores** answers, tests and their questions, login, notifications, review, progress, admin routes, or any request that is not a GET. Everything outside the two reads above goes straight to the network. Pages other than the ones opened before, and the lazy page files not yet visited, are not available offline.
+- With no network the app cannot ask who is logged in, so the last profile (no password, no token) is kept in `localStorage` as `catalyst-offline-user` and used only when the request fails for lack of a network. A 401 still means logged out.
+- Saved lessons and the remembered profile are removed on log in, register, log out and account deletion, so the next person on the same phone sees nothing of the last.
+- A banner says "You are offline" while the browser reports no connection.
+- `public/icons` is made by `node scripts/make-icons.mjs` (a white C on the lagoon accent). The manifest colours are the default lagoon values, because a manifest cannot read CSS variables.
+- **Hosting needs:** HTTPS (localhost is exempt), `sw.js` and `manifest.webmanifest` served with `Cache-Control: no-cache` (the preview server in `vite.config.js` does this), `/assets/*` cached for a year, and an API path of the form `/api/<version>/...` on the page's own address or behind the same rules. Change `VERSION` in `sw.js` when its rules change.
+- Settings has an Install section. The button shows when the browser offers installing; otherwise it explains the browser menu.
+
+**Low-data mode.** Settings, "Use less data". Saved on the device (`catalyst-lowdata` in `localStorage`, applied as `data-lowdata` before the page paints), not on the account. It serves pictures at 320 and 640 px wide with Cloudinary's low-quality setting (instead of 400, 800 and 1200), skips the video preview picture (the Play button stays), and stops loading lessons ahead when a link is hovered or touched.
+
 ## Application routes
 
 | Route | Access | Purpose |
@@ -98,7 +114,7 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 | `/practice/mistakes` | Authenticated | Practise questions from the mistakes queue (`?course=` and `?unit=` narrow it), using the test player without submitting. Home and each course page show a Mistakes panel; test results offer Practise the ones I missed |
 | `/lessons/:id/flashcards` | Authenticated | Study a flashcard deck: tap the card to turn it over, then rate it (`?filter=review` shows cards still to review) |
 | `/progress` | Authenticated | View scores, completed lessons, and streak |
-| `/settings` | Authenticated | Colour palette, light or dark theme, profile picture, change email, change password, download my data and delete account |
+| `/settings` | Authenticated | Colour palette, light or dark theme, text size, low-data mode, install, profile picture, change email, change password, download my data and delete account |
 | Notification bell | Authenticated | Top bar bell with an unread count. The panel lists new-lesson and review-due messages, each linking to its page, plus Mark all as read. On phones the panel spans the screen under the top bar |
 | `/admin` | Admin | Overview numbers and the course list, with search |
 | `/admin/users` | Admin | Find users, change roles, deactivate accounts and manage subscriptions |

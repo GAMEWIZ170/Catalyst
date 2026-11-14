@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { syncThemeColor } from "../utils/themeColor";
 import { GOALS, goalKeyOf } from "../utils/goals";
-import { Button, TextField } from "../components/ui";
+import { Button, Checkbox, TextField } from "../components/ui";
+import { isLowData, setLowData } from "../utils/lowData";
+import { useInstall } from "../utils/offline";
 import AccountSection from "../components/AccountSection";
 import Avatar, { AVATAR_KEYS, AVATAR_LABELS } from "../components/Avatar";
 
@@ -55,6 +57,8 @@ export default function Settings() {
   const { user, updateAvatar, updatePreferences } = useAuth();
   const [palette, setPalette] = useState(currentPalette);
   const [textSize, setTextSize] = useState(currentTextSize);
+  const [lowData, setLowDataState] = useState(isLowData);
+  const installer = useInstall();
   const [avatar, setAvatar] = useState(user?.avatar || null);
   const [status, setStatus] = useState("");
   const [goal, setGoal] = useState(() => goalKeyOf(user?.dailyGoal));
@@ -127,6 +131,22 @@ export default function Settings() {
         </label>)}
       </div>
       <p className="muted settings-help">Animations follow your device's reduced-motion setting.</p>
+    </section>
+    <section className="settings-section" aria-labelledby="lowdata-heading">
+      <h2 id="lowdata-heading">Low-data mode</h2>
+      <Checkbox label="Use less data" hint="Smaller pictures, no video preview picture, and nothing loaded ahead of time. Saved on this device only." checked={lowData}
+        onChange={(event) => { setLowDataState(event.target.checked); setLowData(event.target.checked); }} />
+    </section>
+    <section className="settings-section" aria-labelledby="install-heading">
+      <h2 id="install-heading">Install Catalyst</h2>
+      {installer.installed
+        ? <p className="muted settings-help">Catalyst is installed on this device.</p>
+        : <>
+          <p className="muted settings-help">Put Catalyst on your home screen. It opens like an app, and lessons you have opened stay available without internet.</p>
+          {installer.canInstall
+            ? <Button variant="secondary" onClick={installer.install}>Install the app</Button>
+            : <p className="muted settings-help">In your browser menu, choose Install app or Add to Home screen.</p>}
+        </>}
     </section>
     {user?.role === "student" && <section className="settings-section" aria-labelledby="goal-heading">
       <h2 id="goal-heading">Daily goal</h2>

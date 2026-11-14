@@ -7,6 +7,9 @@ import { ToastProvider } from "./components/ui";
 import "./styles/tokens.css";
 import "./styles/global.css";
 import "./styles/components.css";
+import { registerServiceWorker } from "./utils/offline";
+
+registerServiceWorker();
 
 const router = createBrowserRouter([
   {

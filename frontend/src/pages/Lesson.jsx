@@ -10,6 +10,7 @@ import { PreviewBanner, PreviewCards } from "../components/PreviewBits";
 import { Badge, Button, SelectField, Skeleton, SkeletonGroup, TextArea } from "../components/ui";
 import ResponsiveImage from "../components/ResponsiveImage";
 import { recallCourse } from "../utils/courseCache";
+import { isLowData } from "../utils/lowData";
 import { ErrorState } from "./Courses";
 
 function formatBytes(bytes) {
@@ -39,6 +40,8 @@ function LessonVideo({ title, videoId }) {
   const [stillFailed, setStillFailed] = useState(false);
   const [stillWanted, setStillWanted] = useState(false);
   useEffect(() => {
+    // Low-data mode never downloads the preview picture. The Play button works the same.
+    if (isLowData()) return undefined;
     const timer = window.setTimeout(() => setStillWanted(true), 2000);
     return () => window.clearTimeout(timer);
   }, []);

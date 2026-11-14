@@ -23,7 +23,8 @@ const cacheHeaders = {
     server.middlewares.use((request, response, next) => {
       const path = (request.url || "").split("?")[0];
       if (path.startsWith("/assets/")) response.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-      else if (path === "/" || path.endsWith(".html") || !path.includes(".")) response.setHeader("Cache-Control", "no-cache");
+      // The service worker file and the manifest must be re-checked every time, or a fix could never reach phones.
+      else if (path === "/" || path.endsWith(".html") || !path.includes(".") || path === "/sw.js" || path === "/manifest.webmanifest") response.setHeader("Cache-Control", "no-cache");
       next();
     });
   }

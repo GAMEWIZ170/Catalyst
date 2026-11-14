@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { api } from "../api/client";
 import { clearCache } from "../api/cache";
+import { clearOfflineData, recallUser, rememberUser } from "../utils/offline";
 
 const AuthContext = createContext(null);
 
@@ -10,8 +11,9 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     api.getMe()
-      .then(({ data }) => setUser(data))
-      .catch(() => setUser(null))
+      .then(({ data }) => { rememberUser(data); setUser(data); })
+      // No status means the request never reached the server (offline): use the remembered profile.
+      .catch((error) => setUser(error.status ? null : recallUser()))
       .finally(() => setLoading(false));
   }, []);
 
@@ -32,6 +34,8 @@ export function AuthProvider({ children }) {
     async login(credentials) {
       const response = await api.login(credentials);
       clearCache();
+      await clearOfflineData();
+      rememberUser(response.data);
       setUser(response.data);
       refreshStreak();
       return response;
@@ -39,11 +43,14 @@ export function AuthProvider({ children }) {
     async register(details) {
       const response = await api.register(details);
       clearCache();
+      await clearOfflineData();
+      rememberUser(response.data);
       setUser(response.data);
       refreshStreak();
       return response;
     },
     async logout() {
+      await clearOfflineData(); // first, so the saved lessons go even when the network is down
       await api.logout();
       clearCache();
       setUser(null);
@@ -57,6 +64,7 @@ export function AuthProvider({ children }) {
     async deleteAccount(body) {
       await api.deleteAccount(body);
       clearCache();
+      await clearOfflineData();
       setUser(null);
     },
     async updatePreferences(body) {

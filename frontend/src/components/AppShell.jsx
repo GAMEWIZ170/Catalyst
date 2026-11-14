@@ -8,6 +8,7 @@ import ShortcutHelp from "./ShortcutHelp";
 import VerifyBanner from "./VerifyBanner";
 import NotificationPanel, { useNotifications } from "./NotificationPanel";
 import useStudyTimer from "../utils/useStudyTimer";
+import { useOnline } from "../utils/offline";
 
 // Phones get a bottom tab bar for the places a student goes most. Laptops keep the top bar only.
 const TABS = [
@@ -30,6 +31,7 @@ export default function AppShell({ children }) {
   useStudyTimer(user?.role === "student" && user?.dailyGoal?.kind === "minutes");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notifications = useNotifications(Boolean(user));
+  const online = useOnline();
   const [profileOpen, setProfileOpen] = useState(false);
   const notificationButtonRef = useRef(null);
   const profileButtonRef = useRef(null);
@@ -141,6 +143,7 @@ export default function AppShell({ children }) {
           </div>
         </div>
       </header>
+      {!online && <div className="offline-banner" role="status">You are offline. Lessons you opened before are still here. Answers need a connection.</div>}
       <main className="page-wrap" id="main" tabIndex="-1">{children}</main>
       <ShortcutHelp />
       <footer className="footer">Keep learning with momentum. <span className="footer-links"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link></span></footer>

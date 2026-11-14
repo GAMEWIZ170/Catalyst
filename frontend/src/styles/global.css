@@ -3714,3 +3714,6 @@ textarea {
 @media (max-width: 600px) {
   .history-row { grid-template-columns: 1fr; }
 }
+
+/* Offline banner and Settings extras (phase 6) */
+.offline-banner { background: var(--sunken); border-bottom: 1px solid var(--line); font-size: var(--text-sm); padding: var(--space-2) var(--space-4); text-align: center; }
