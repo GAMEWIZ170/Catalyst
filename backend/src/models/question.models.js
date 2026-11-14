@@ -23,6 +23,10 @@ const questionSchema = new mongoose.Schema({
   correctAnswer: { type: String, enum: ["true", "false"], default: null },
   explanation: { type: String, default: "", trim: true, maxlength: 4000 },
   explanationImage: { type: imageSchema, default: null },
+  // Shown on request before answering.
+  hint: { type: String, default: "", trim: true, maxlength: 500 },
+  // Numbered steps, shown only after the student answers.
+  workedSolution: { type: [{ type: String, trim: true, maxlength: 1000 }], default: [] },
   order: { type: Number, required: true, min: 1 },
   deletedAt: { type: Date, default: null }
 }, { timestamps: true });
@@ -40,6 +44,7 @@ questionSchema.pre("validate", function () {
   validateImage(this.explanationImage, "explanationImage", (path, message) => this.invalidate(path, message));
 
   if (this.type === "mcq") {
+    if (this.workedSolution && this.workedSolution.length > 12) this.invalidate("workedSolution", "A worked solution can have at most 12 steps");
     if (this.options.length < 2 || this.options.length > 6) {
       this.invalidate("options", "A multiple choice question needs 2 to 6 options");
     }

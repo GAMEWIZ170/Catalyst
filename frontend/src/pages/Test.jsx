@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useParams, useSearchParams } from "reac
 import { ArrowLeft, Bookmark, Check, CheckCircle2, TriangleAlert, X } from "lucide-react";
 import ConfirmDialog from "../components/admin/ConfirmDialog";
 import RichText from "../components/RichText";
+import WorkedSolution from "../components/WorkedSolution";
 import { Button, Card, EmptyState, Illustration } from "../components/ui";
 import useUnsavedChanges from "../hooks/useUnsavedChanges";
 import { api } from "../api/client";
@@ -39,6 +40,7 @@ export default function Test() {
   const [error, setError] = useState("");
   const [blocking, setBlocking] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [hintFor, setHintFor] = useState(null); // id of the question whose hint is open
   const feedbackHeading = useRef(null);
   const missedRef = useRef(null);
   const backTo = location.state?.from || "/courses";
@@ -122,7 +124,7 @@ export default function Test() {
       setAnswers((items) => [...items.filter((item) => item.questionId !== current._id), { questionId: current._id, answer: chosen }]);
       setMissed((items) => {
         const rest = items.filter((item) => item.id !== current._id);
-        return response.isCorrect ? rest : [...rest, { id: current._id, number: index + 1, text: current.text, correct: response.correctAnswer, explanation: response.explanation }];
+        return response.isCorrect ? rest : [...rest, { id: current._id, number: index + 1, text: current.text, correct: response.correctAnswer, explanation: response.explanation, workedSolution: response.workedSolution }];
       });
       setFeedback(response);
     } catch (err) { setError(err.message); }
@@ -221,6 +223,7 @@ export default function Test() {
               <div className="exam-question"><RichText>{item.text}</RichText></div>
               <p><strong>Correct answer:</strong> {typeof item.correct === "object" ? <RichText>{item.correct.text}</RichText> : item.correct}</p>
               {item.explanation && <RichText>{item.explanation}</RichText>}
+              <WorkedSolution steps={item.workedSolution} />
             </div>
           </details>)}
         </div>}
@@ -272,12 +275,16 @@ export default function Test() {
             </button>;
           })}
         </fieldset>}
+      {!feedback && question.hint && (hintFor === question._id
+        ? <aside className="exam-hint" aria-label="Hint"><strong>Hint</strong><RichText>{question.hint}</RichText></aside>
+        : <Button variant="tertiary" onClick={() => setHintFor(question._id)}>Show hint</Button>)}
       {feedback && <section className={`exam-feedback exam-feedback--${feedback.isCorrect ? "correct" : "wrong"}`} aria-live="polite">
         <h2 tabIndex="-1" ref={feedbackHeading}>{feedback.isCorrect ? <CheckCircle2 size={20} aria-hidden="true" /> : <TriangleAlert size={20} aria-hidden="true" />}{feedback.isCorrect ? "Correct" : "Not quite"}</h2>
         {!feedback.isCorrect && <p><strong>Correct answer:</strong> {typeof correct === "object" ? <RichText>{correct.text}</RichText> : correct === "true" ? "True" : correct === "false" ? "False" : correct}</p>}
         <RichText>{feedback.explanation}</RichText>
         <Button variant="tertiary" icon={Bookmark} aria-pressed={savedQuestions.has(question._id)} onClick={() => toggleSavedQuestion(question._id)}>{savedQuestions.has(question._id) ? "Saved" : "Save question"}</Button>
         {feedback.explanationImage?.url && <ResponsiveImage image={feedback.explanationImage} sizes="(max-width: 600px) 100vw, 600px" />}
+        <WorkedSolution steps={feedback.workedSolution} />
       </section>}
       {error && <p className="form-error" role="alert">{error}</p>}
     </div>

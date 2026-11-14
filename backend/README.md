@@ -199,6 +199,8 @@ Example outline lesson:
 
 To create or update a multiple-choice question, send options (a list without ids) and correctIndex (the position of the correct option) together. The server saves the options, gives each an id, and stores the id of the correct one. A question's type and a material's kind cannot be changed after creation. A true/false question has no options or correctIndex and requires correctAnswer equal to `"true"` or `"false"`. Question and explanation images use `{ "url", "publicId", "alt" }` and may also carry `width` and `height` in pixels (the upload response returns them; send them back when saving, so the browser can reserve the space before the image loads). `alt` is required when a URL is present. Images saved without a size keep working.
 
+Questions can also carry an optional `hint` (up to 500 characters, sent to students with the test so they can open it before answering) and an optional `workedSolution` (up to 12 steps of up to 1000 characters, each may use formulas). The worked solution is never sent with the test: `POST /questions/:id/answer` returns it as `workedSolution` (an empty list when there is none) after the student answers.
+
 `POST /questions/:id/answer` example:
 
 ```json

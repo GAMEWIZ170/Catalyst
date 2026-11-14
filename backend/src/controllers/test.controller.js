@@ -15,7 +15,7 @@ const getTest = async (req, res, next) => {
     const test = await findVisibleTest(req.params.id);
     if (!test) return res.status(404).json({ message: "Test not found" });
     const questions = await Question.find({ test: test._id, deletedAt: null })
-      .select("_id type text image options order")
+      .select("_id type text image options order hint")
       .sort({ order: 1 })
       .lean();
     return res.status(200).json({

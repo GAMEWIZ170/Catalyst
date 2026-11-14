@@ -3,6 +3,7 @@ const studentQuestion = (question) => ({
   type: question.type,
   text: question.text,
   image: question.image,
+  hint: question.hint || "",
   ...(question.type === "mcq" ? {
     options: question.options.map((option) => ({ _id: option._id, text: option.text, image: option.image }))
   } : {}),

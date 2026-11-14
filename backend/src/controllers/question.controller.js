@@ -43,7 +43,7 @@ const checkAnswer = async (req, res, next) => {
     }
     await recordAnswer(req.user.id, question._id, isCorrect);
     return res.status(200).json({
-      data: { isCorrect, correctAnswer, explanation: question.explanation, explanationImage: question.explanationImage }
+      data: { isCorrect, correctAnswer, explanation: question.explanation, explanationImage: question.explanationImage, workedSolution: question.workedSolution || [] }
     });
   } catch (error) {
     next(error);

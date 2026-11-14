@@ -186,6 +186,8 @@ const questionFields = {
   correctAnswer: Joi.string().valid("true", "false"),
   explanation: Joi.string().trim().allow("").max(4000),
   explanationImage: optionalImage,
+  hint: Joi.string().trim().allow("").max(500),
+  workedSolution: Joi.array().items(Joi.string().trim().min(1).max(1000)).max(12),
   order: Joi.number().integer().min(1)
 };
 const questionSchema = Joi.object(questionFields).custom((value, helpers) => {
@@ -217,6 +219,8 @@ const validateQuestionUpdate = validateWith(Joi.object({
   correctAnswer: questionFields.correctAnswer,
   explanation: questionFields.explanation,
   explanationImage: questionFields.explanationImage,
+  hint: questionFields.hint,
+  workedSolution: questionFields.workedSolution,
   order: questionFields.order
 }).min(1).custom((value, helpers) => {
   if (value.options !== undefined && value.correctIndex === undefined) {
