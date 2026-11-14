@@ -193,6 +193,7 @@ Example outline lesson:
 | POST | `/tests/:id/exam/start` | Student | Start a timed mock exam (a test with `timeLimitMinutes`), or resume the open one. Returns `attemptId`, `endsAt`, `serverNow`, saved `answers` and `flags`, and answer-free `questions`. If the time ran out while the student was away it marks the saved answers and returns `{ finished: true, result }` |
 | PUT | `/exam-attempts/:attemptId` | Student | Save `answers` (`{ questionId: answer }`) and `flags` (question ids). `409` after submit or after the deadline |
 | POST | `/exam-attempts/:attemptId/submit` | Student | Hand in the exam. Returns `score`, `correct`, `total`, `bestScore`, `attempts`, `passPercent`, `passed` and a `review` of every question with the right answer, explanation and worked solution. Repeating it returns the same result |
+| GET | `/plan` | Student | Today's revision plan, or `{ data: null }` with no exam date or a past one. Returns `examDate`, `daysLeft` (today counts), `remainingLessons`, `perDay`, `doneToday`, up to 6 `lessons` for today, `moreLessons`, and `due: { cards, mistakes }`. The exam date is set with `PUT /auth/me/preferences` |
 | GET | `/mistakes/practice` | Student | Up to 20 answer-free questions to practise, most-missed first. Optional `course` and `unit` query ids (invalid id returns 400) |
 | POST | `/admin/tests` | Admin | Create a lesson-, unit- or course-scope test |
 | GET | `/admin/tests/:id` | Admin | Full test and questions |
@@ -384,6 +385,10 @@ Deleted items are listed at `GET /admin/trash` and put back with `POST /admin/tr
 The shuffle for matching and ordering is seeded by the question id, so the server rebuilds the order the student saw. Every type is graded by `utils/grading.js`, for both `POST /questions/:id/answer` and `POST /tests/:id/submit`. After answering, `correctAnswer` has the right answer in a shape that fits the type.
 
 Student serializers omit correct answers. Scores are calculated on the server. An empty test cannot be submitted for credit. Unit tests and course tests record a result but never complete a lesson. Mark as done returns `409` for any lesson with a test that has questions or a published flashcard.
+
+### Revision plan
+
+A plain sum, not AI. Lessons not yet completed (every published course, in course code, unit and lesson order) are shared evenly over the days left until the exam, today included: today's share is `ceil((remaining + done today) / days left)`. Counting lessons already done today keeps the share steady while the student works through it. The list shows the first lessons still to do for today's share, with today's due flashcards and mistakes. With an exam today, everything left is today's share.
 
 ### Timed mock exams
 

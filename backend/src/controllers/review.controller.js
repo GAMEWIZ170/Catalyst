@@ -51,4 +51,4 @@ const session = async (req, res, next) => {
   }
 };
 
-module.exports = { due, session };
+module.exports = { dueCards, due, session };

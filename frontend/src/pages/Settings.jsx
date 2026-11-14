@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { syncThemeColor } from "../utils/themeColor";
 import { GOALS, goalKeyOf } from "../utils/goals";
+import { Button, TextField } from "../components/ui";
 import Avatar, { AVATAR_KEYS, AVATAR_LABELS } from "../components/Avatar";
 
 const palettes = [
@@ -57,6 +58,19 @@ export default function Settings() {
   const [status, setStatus] = useState("");
   const [goal, setGoal] = useState(() => goalKeyOf(user?.dailyGoal));
   const [goalStatus, setGoalStatus] = useState("");
+  const [examDate, setExamDate] = useState(() => (user?.examDate ? String(user.examDate).slice(0, 10) : ""));
+  const [examStatus, setExamStatus] = useState("");
+
+  async function saveExamDate(event) {
+    event.preventDefault();
+    setExamStatus("");
+    try {
+      await updatePreferences({ examDate: examDate || null });
+      setExamStatus(examDate ? "Saved. Today's plan is on Home." : "Exam date cleared");
+    } catch (error) {
+      setExamStatus(error.message);
+    }
+  }
 
   async function selectGoal(key) {
     const chosen = GOALS.find((item) => item.key === key);
@@ -123,6 +137,15 @@ export default function Settings() {
       </div>
       <p className="muted settings-help">Your streak counts any study day, with or without a goal.</p>
       <p className="settings-status" aria-live="polite">{goalStatus}</p>
+    </section>}
+    {user?.role === "student" && <section className="settings-section" aria-labelledby="exam-heading">
+      <h2 id="exam-heading">Exam date</h2>
+      <form className="settings-exam" onSubmit={saveExamDate}>
+        <TextField label="Exam date" type="date" value={examDate} onChange={(event) => setExamDate(event.target.value)} />
+        <Button variant="secondary" type="submit">Save</Button>
+      </form>
+      <p className="muted settings-help">Catalyst spreads the lessons you have left over the days until your exam and shows Today's plan on Home. Clear the date to turn it off.</p>
+      <p className="settings-status" aria-live="polite">{examStatus}</p>
     </section>}
     <section className="settings-section" aria-labelledby="avatar-heading">
       <h2 id="avatar-heading">Profile picture</h2>

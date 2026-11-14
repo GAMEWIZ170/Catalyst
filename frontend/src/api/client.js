@@ -66,6 +66,7 @@ export const api = {
   startExam: (testId) => request(`/tests/${testId}/exam/start`, { method: "POST" }),
   saveExam: (attemptId, answers, flags) => request(`/exam-attempts/${attemptId}`, { method: "PUT", body: JSON.stringify({ answers, flags }) }),
   submitExam: (attemptId, answers, flags) => changed(request(`/exam-attempts/${attemptId}/submit`, { method: "POST", body: JSON.stringify({ answers, flags }) })),
+  getPlan: () => request("/plan"),
   getTopics: () => request("/topics"),
   getTopicPractice: (query) => request(`/topics/practice?${new URLSearchParams(query)}`),
   getMistakes: () => request("/mistakes"),
