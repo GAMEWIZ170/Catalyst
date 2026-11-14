@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 // props holds ids and small facts only (never a name, email or free text).
 const TYPES = [
   "signup", "login", "lesson_opened", "lesson_completed", "question_answered", "test_submitted", "review_done",
-  "flashcard_rated", "focus_session_completed", "video_started", "set_created", "set_studied", "challenge_sent", "challenge_played"
+  "flashcard_rated", "focus_session_completed", "video_started", "set_created", "set_studied", "challenge_sent", "challenge_played", "ai_generated"
 ];
 
 const eventSchema = new mongoose.Schema({

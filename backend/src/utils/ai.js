@@ -59,7 +59,9 @@ const cloudflare = async (model, messages, maxTokens, temperature, signal) => {
     if (response.status === 401 || response.status === 403) throw new AiError("not_configured", "The AI key was refused");
     throw new AiError("provider", `The AI provider failed (${response.status})`);
   }
-  const text = payload.result?.response;
+  // Workers AI sometimes returns JSON the model wrote as an already-parsed object instead of a string.
+  const raw = payload.result?.response;
+  const text = raw && typeof raw === "object" ? JSON.stringify(raw) : raw;
   if (typeof text !== "string") throw new AiError("provider", "The AI provider sent no text");
   const usage = payload.result?.usage || {};
   return { text, usage: { inputTokens: usage.prompt_tokens || 0, outputTokens: usage.completion_tokens || 0 } };

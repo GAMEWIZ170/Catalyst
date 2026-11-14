@@ -592,6 +592,17 @@ The owner invites one of their accepted friends (by the friendship id from `GET 
 - **Training on prompts.** Cloudflare says Workers AI does not train on customer content, but terms change, so confirm at signup. Some other free tiers (for example Google's Gemini API free tier) say they may use prompts to improve their products, which is why they were not chosen for students' study notes.
 - Free beta: low daily limits apply. Per-student quotas and the global cap come in X6.4.
 
+### AI drafts inside a study set (Phase X6.2)
+
+`POST /study-sets/:id/generate` (owner only, 10 per 15 minutes per student; the daily quotas arrive in X6.4) makes **drafts** and saves nothing. Body: `{ kind: "cards" | "questions" | "notes", source: { type: "material", id } | { type: "notes" } | { type: "text", text }, part }`. The text comes from one of the set's materials, the set's own notes (turned to plain text, formulas kept as `$...$`), or pasted text (40 to 100,000 characters). Long text is read in parts of about 7,000 characters; `part` picks one (0 first) and the answer says how many `parts` there are.
+
+The response is `{ kind, drafts, part, parts, cached }`: up to 10 `cards` (`{ front, back }`), 4 `questions` (`{ text, options[3-4], correctIndex, explanation }`, multiple choice only) or 6 note `sections` (`{ heading, points[] }`). The student edits the drafts and saves the ones they want through the existing routes (`POST /study-sets/:id/cards/bulk`, `POST /study-sets/questions`, `PUT /study-sets/:id/notes`), so every saved item passes the same checks as one typed by hand.
+
+- **Untrusted text.** The source goes to the model only inside `<source>` tags, with an instruction to ignore instructions inside it. The reply is parsed as JSON (a missing closing bracket from the small model is repaired) and every field is checked: empty, too long, placeholder ("..."), duplicate-option and out-of-range answers are dropped. If nothing usable is left the answer is 502 `bad_output`.
+- **Cache per document.** `AiDraft` stores the checked drafts under the student, the kind and a hash of the exact text, for 30 days. Asking again for the same text is answered from it with `cached: true` and no AI call. Editing the text makes a new draft. Failures are never cached.
+- **Privacy.** The student's name and display name are scrubbed from the text before it is sent, as well as any email address. Nothing else about the student goes to the provider.
+- **Errors** are calm messages with a fitting status: 503 `not_configured` ("AI is not set up yet") and `capacity` ("AI is resting until tomorrow"), 504 `timeout`, 413 `too_long`, 502 `bad_output` and `provider`. Each real generation writes an `ai_generated` event (`kind`, `input` and `output` tokens) for the usage numbers in X6.4. Account deletion removes the student's drafts.
+
 ### Study sets (the Study Lab)
 
 A `StudySet` belongs to one student and is private (`visibility` also allows `link` and `community`, which Phase X7 will use; nothing sets them yet). It holds:

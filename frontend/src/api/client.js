@@ -112,6 +112,7 @@ export const api = {
   addSetText: (id, body) => request(`/study-sets/${id}/materials/text`, { method: "POST", body: JSON.stringify(body) }),
   uploadSetPdf: (id, file) => { const form = new FormData(); form.append("file", file); return request(`/study-sets/${id}/materials/pdf`, { method: "POST", body: form }); },
   deleteSetMaterial: (materialId) => request(`/study-sets/materials/${materialId}`, { method: "DELETE" }),
+  generateDrafts: (id, body) => request(`/study-sets/${id}/generate`, { method: "POST", body: JSON.stringify(body) }),
   getSetStudy: (id, filter) => request(`/study-sets/${id}/study${filter ? `?filter=${encodeURIComponent(filter)}` : ""}`),
   getSetQuizzes: (id) => request(`/study-sets/${id}/quizzes`),
   createSetQuiz: (id, title) => request(`/study-sets/${id}/quizzes`, { method: "POST", body: JSON.stringify({ title }) }),
