@@ -523,6 +523,18 @@ It runs when `GET /achievements` is called, and from `GET /xp/me` at most once a
 
 `GET /xp/me` also returns `newAchievements: [{ key, title }]` for the toast. "Your set helped others" counts `set_studied` events from other students, so it cannot be earned until community sets exist. The friend and challenge achievements count rows in the `Friendship` and `Challenge` collections once those exist.
 
+### Friends (Phase X5.4)
+
+A friendship is a `Friendship` row (`requester`, `recipient`, `status` pending or accepted; unique per pair). Both sides must agree: the recipient accepts. Students find each other only by a **friend code** (8 characters from a clear alphabet, made on first use, `User.friendCode`, unique). There is no search by name or email. Other students see only a display name (`User.displayName`, or the first word of the name) and an avatar. A friend's level is shown only to accepted friends, and not at all when that student turns on `hideActivity`.
+
+| Method | Path | Access | Notes |
+|---|---|---|---|
+| GET | `/friends` | Student | `{ me: { code, displayName, defaultName, hideActivity }, friends, incoming, outgoing }`. Each person is `{ id, name, avatar }` (friends also `level`, null when hidden). `id` is the friendship id |
+| POST | `/friends/requests` | Student | Body `{ code }`. 404 for an unknown code or your own (same answer). 409 when already friends or already asked. Asking someone who already asked you accepts. 20 per 15 minutes per student. Sends the other student a notification |
+| POST | `/friends/requests/:id/accept` | Recipient | 404 for anyone else |
+| DELETE | `/friends/:id` | Either side | Removes a friend, declines a request or cancels one |
+| PUT | `/friends/settings` | Student | `{ displayName, hideActivity }` (at least one). Display names are 2 to 30 letters, numbers, spaces and `. _ ' -`. An empty string clears it |
+
 ### Study sets (the Study Lab)
 
 A `StudySet` belongs to one student and is private (`visibility` also allows `link` and `community`, which Phase X7 will use; nothing sets them yet). It holds:

@@ -89,6 +89,12 @@ const validatePreferences = validateWith(Joi.object({
   extraTime: Joi.number().valid(0, 25, 50, 100)
 }).min(1));
 
+const validateFriendRequest = validateWith(Joi.object({ code: Joi.string().trim().uppercase().alphanum().min(6).max(12).required() }));
+const validateFriendSettings = validateWith(Joi.object({
+  displayName: Joi.string().trim().allow("").min(2).max(30).pattern(/^[\p{L}\p{N} ._'-]+$/u).messages({ "string.pattern.base": "A display name can use letters, numbers, spaces and . _ ' -" }),
+  hideActivity: Joi.boolean()
+}).min(1));
+
 const validateEvent = validateWith(Joi.object({
   type: Joi.string().valid("video_started", "focus_session_completed").required(),
   props: Joi.object({ lesson: objectId, minutes: Joi.number().integer().min(1).max(180) }).default({})
@@ -439,6 +445,8 @@ const validateUserUpdate = validateWith(Joi.object({
 
 module.exports = {
   objectId,
+  validateFriendRequest,
+  validateFriendSettings,
   validateUserUpdate,
   imageSchema,
   optionalImage,

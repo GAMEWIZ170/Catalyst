@@ -88,6 +88,7 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 - **Level and XP.** The avatar menu shows the level and Me shows a level card with a thin bar (`components/XpBits.jsx`). `useXp` loads `/xp/me` after each page change, so a level reached during a test shows its small panel only on the next page change, never mid-test. The panel is a plain dialog with one button; no confetti.
 - **Achievements.** Me has two tabs, Overview and Achievements (`?tab=achievements`). A new achievement shows a small success toast (`useAchievementToasts`, sent by `/xp/me`) and is then marked as seen. Hidden ones show as locked until earned.
 - **Weekly goal.** Settings, Study has a weekly goal (off, or 3 to 6 study days a week). Home shows a thin "This week" bar under the daily goal. The text is only encouraging ("Weekly goal met. Enjoy your rest days.") and never mentions missed days.
+- **Friends.** `/friends` (linked from Me) shows the student's friend code with a copy button, a box to type a friend's code, requests to accept, decline or cancel, the friend list with Remove, a display name and a switch to hide the level. Other students only ever see the display name and avatar.
 - **Read aloud.** Lessons have a Read aloud button (play, pause, stop and speed 0.75x to 1.5x) that uses the browser's own voice. Formulas are read as "formula". Nothing is sent anywhere, and the button is hidden in browsers with no speech voice.
 
 ## Offline use, install and low-data mode

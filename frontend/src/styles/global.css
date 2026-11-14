@@ -3887,6 +3887,10 @@ textarea {
 .exam-list { display: grid; gap: var(--space-2); list-style: none; margin: var(--space-3) 0; padding: 0; }
 .exam-row { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-3); justify-content: space-between; }
 .exam-row-when { display: block; font-size: var(--text-sm); }
+.friend-code { font-family: var(--font-mono, monospace); font-size: var(--text-xl); font-weight: var(--weight-strong); letter-spacing: 0.12em; margin: 0 0 var(--space-3); }
+.friend-list { display: grid; gap: var(--space-2); list-style: none; margin: 0 0 var(--space-3); padding: 0; }
+.friend-row { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.friend-name { flex: 1; min-width: 8rem; }
 .hall-count { font-size: var(--text-xl); font-weight: var(--weight-strong); }
 .hall-form { max-width: 28rem; }
 .hall-in { display: grid; gap: var(--space-3); justify-items: start; }

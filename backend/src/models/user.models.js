@@ -87,6 +87,24 @@ const userSchema = new mongoose.Schema({
         default: null
     },
     // Optional daily goal. "minutes" counts study time, "lesson" counts a lesson finished today.
+    // What other students see instead of the full name (friends, challenges). Empty means the first name only.
+    displayName: {
+        type: String,
+        trim: true,
+        minlength: 2,
+        maxlength: 30,
+        default: null
+    },
+    // A short code a student gives to a friend so the friend can send a request. Made the first time it is needed.
+    friendCode: {
+        type: String,
+        default: undefined
+    },
+    // True hides this student's level from friends. Friends then see a name and avatar only.
+    hideActivity: {
+        type: Boolean,
+        default: false
+    },
     // Total XP earned. Only goes up. The level is worked out from it (see utils/xp.js).
     xp: {
         type: Number,
@@ -114,6 +132,8 @@ const userSchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
+
+userSchema.index({ friendCode: 1 }, { unique: true, partialFilterExpression: { friendCode: { $type: "string" } } });
 
 const User = mongoose.model('User', userSchema);
 
