@@ -7,6 +7,7 @@ const TestResult = require("../models/testresult.models");
 const Question = require("../models/question.models");
 const Flashcard = require("../models/flashcard.models");
 const Material = require("../models/material.models");
+const Mastery = require("../models/mastery.models");
 
 const countBy = (rows, field) => new Map(rows.map((row) => [row._id.toString(), row[field]]));
 
@@ -29,7 +30,7 @@ const buildCourseOutline = async (courseId, userId) => {
   const lessonIds = lessons.map((lesson) => lesson._id);
 
   // Round trip 3: tests, flashcard and material counts, and this student's finished lessons.
-  const [tests, flashcardCounts, materialCounts, done] = await Promise.all([
+  const [tests, flashcardCounts, materialCounts, done, masteryRows] = await Promise.all([
     Test.find({
       deletedAt: null,
       isPublished: true,
@@ -47,7 +48,8 @@ const buildCourseOutline = async (courseId, userId) => {
       { $match: { lesson: { $in: lessonIds }, isPublished: true, deletedAt: null } },
       { $group: { _id: "$lesson", count: { $sum: 1 } } }
     ]),
-    Progress.find({ user: userId, lesson: { $in: lessonIds }, completed: true }).select("lesson score").lean()
+    Progress.find({ user: userId, lesson: { $in: lessonIds }, completed: true }).select("lesson score").lean(),
+    Mastery.find({ user: userId, lesson: { $in: lessonIds } }).select("lesson level").lean()
   ]);
 
   // Round trip 4: question counts (a test with no questions is hidden) and best scores.
@@ -64,6 +66,7 @@ const buildCourseOutline = async (courseId, userId) => {
   const scoreByTest = new Map(results.map((result) => [result.test.toString(), result.bestScore]));
   const flashcardCountByLesson = countBy(flashcardCounts, "count");
   const materialCountByLesson = countBy(materialCounts, "count");
+  const masteryByLesson = new Map(masteryRows.map((row) => [row.lesson.toString(), row.level]));
   const scoreByLesson = new Map(done.map((item) => [item.lesson.toString(), item.score]));
 
   const testsByLesson = new Map();
@@ -97,6 +100,7 @@ const buildCourseOutline = async (courseId, userId) => {
           order: lesson.order,
           hasVideo: Boolean(lesson.videoId),
           completed: scoreByLesson.has(lesson._id.toString()),
+          mastery: masteryByLesson.get(lesson._id.toString()) || 0,
           score: scoreByLesson.get(lesson._id.toString()) ?? null,
           testCount: (testsByLesson.get(lesson._id.toString()) || []).length,
           flashcardCount: flashcardCountByLesson.get(lesson._id.toString()) || 0,

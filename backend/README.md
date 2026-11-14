@@ -380,6 +380,16 @@ The shuffle for matching and ordering is seeded by the question id, so the serve
 
 Student serializers omit correct answers. Scores are calculated on the server. An empty test cannot be submitted for credit. Unit tests and course tests record a result but never complete a lesson. Mark as done returns `409` for any lesson with a test that has questions or a published flashcard.
 
+### Mastery per lesson
+
+Each student has a level per lesson (`Mastery`): none (Not started), 1 Attempted, 2 Familiar, 3 Proficient, 4 Mastered. `GET /courses/:id` returns it as `mastery` (0 to 4) on each lesson. Rules (`utils/mastery.js`):
+
+- Any lesson test submit, flashcard rating or Mark as done: Attempted.
+- Lesson test score of 70% or more: Familiar. 100%: Proficient.
+- Mastered: from Proficient, 100% on the lesson test again, a right answer on a lesson question that was in the mistakes queue, or a flashcard marked Confident, each on a later UTC day than the day Proficient was reached.
+- A wrong answer on a lesson question drops one level, at most once a day, never below Attempted. A low test score by itself never lowers a level.
+- Unit and course tests do not change mastery. Their questions are not linked to a lesson, so they cannot say which lesson a student knows. Linking them needs the topic tags in step 3.6.
+
 ### Spaced repetition
 
 The `ts-fsrs` package schedules reviews at `request_retention` 0.9 with short-term steps off (a rating always schedules a day or more ahead). Don't know maps to Again, Unsure to Hard, Confident to Good. `POST /flashcards/:id/rate` stores the card state (`fsrs`) and `due` on the student's `FlashcardProgress`. Answering a mistake wrong schedules it as Again, right as Good (`Mistake.fsrs`, `Mistake.due`). Rows from before this feature have no `due`: an unsure or unknown card with no `due`, and a mistake with no `due`, count as due, so old confidence data keeps working. `GET /mistakes/practice?due=1` returns only due mistakes.

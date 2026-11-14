@@ -6,6 +6,7 @@ const Progress = require("../models/progress.models");
 const { findVisibleTest, parentIsAvailable } = require("../utils/visibility");
 const { studentQuestion, questionForAdmin } = require("../utils/serializers");
 const { grade } = require("../utils/grading");
+const mastery = require("../utils/mastery");
 
 const badId = (id) => !mongoose.isObjectIdOrHexString(id);
 const todayKey = () => new Date().toISOString().slice(0, 10);
@@ -71,6 +72,10 @@ const submitTest = async (req, res, next) => {
         },
         { upsert: true, setDefaultsOnInsert: true }
       );
+    }
+    if (test.scope === "lesson") {
+      await mastery.record(req.user.id, test.lesson._id, { type: "attempt" });
+      await mastery.record(req.user.id, test.lesson._id, { type: "score", score });
     }
     return res.status(200).json({ data: { score, correct, total, bestScore: result.bestScore, attempts: result.attempts, passPercent, passed } });
   } catch (error) {

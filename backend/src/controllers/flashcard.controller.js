@@ -6,6 +6,7 @@ const Lesson = require("../models/lesson.models");
 const { findVisibleLesson, parentIsAvailable } = require("../utils/visibility");
 const getFlashcardSummary = require("../utils/flashcardSummary");
 const { schedule, RATING } = require("../utils/scheduler");
+const mastery = require("../utils/mastery");
 
 const badId = (id) => !mongoose.isObjectIdOrHexString(id);
 const todayKey = () => new Date().toISOString().slice(0, 10);
@@ -73,6 +74,8 @@ const rateFlashcard = async (req, res, next) => {
         { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
       );
     }
+    await mastery.record(req.user.id, card.lesson, { type: "attempt" });
+    if (req.body.confidence === "confident") await mastery.record(req.user.id, card.lesson, { type: "review" });
     return res.status(200).json({ data: { summary: getFlashcardSummary.summarize(cards, progressByCard), reviewCount: progress.reviewCount } });
   } catch (error) {
     next(error);

@@ -23,9 +23,9 @@ const recordAnswer = async (userId, questionId, isCorrect) => {
       { $inc: { wrongCount: 1 }, $set: { lastWrongAt: new Date(), correctStreak: 0, lastCorrectDay: null, fsrs: next.fsrs, due: next.due } },
       { upsert: true, setDefaultsOnInsert: true }
     );
-    return;
+    return Boolean(existing);
   }
-  if (!existing) return;
+  if (!existing) return false;
   const next = schedule(existing.fsrs, Rating.Good);
   const mistake = await Mistake.findOneAndUpdate(
     { user: userId, question: questionId, lastCorrectDay: { $ne: todayKey() } },
@@ -33,6 +33,7 @@ const recordAnswer = async (userId, questionId, isCorrect) => {
     { returnDocument: "after" }
   );
   if (mistake && mistake.correctStreak >= 2) await Mistake.deleteOne({ _id: mistake._id });
+  return true;
 };
 
 // The student's queue, limited to questions they may still see, each with its course and unit.

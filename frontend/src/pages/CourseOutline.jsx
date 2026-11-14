@@ -8,6 +8,7 @@ import { Button, Card, EmptyState, Progress } from "../components/ui";
 import { rememberCourse } from "../utils/courseCache";
 import { ErrorState, Loading } from "./Courses";
 
+const MASTERY = ["Not started", "Attempted", "Familiar", "Proficient", "Mastered"];
 const plural = (count, word) => `${count} ${word}${count === 1 ? "" : "s"}`;
 
 // Quiet meta line: "1 test · 20 cards · Video". Empty when the lesson has nothing extra.
@@ -17,6 +18,7 @@ function lessonMeta(lesson) {
   if (lesson.flashcardCount > 0) parts.push(plural(lesson.flashcardCount, "card"));
   if (lesson.materialCount > 0) parts.push(plural(lesson.materialCount, "material"));
   if (lesson.hasVideo) parts.push("Video");
+  if (lesson.mastery > 0) parts.push(MASTERY[lesson.mastery]);
   return parts.join(" · ");
 }
 

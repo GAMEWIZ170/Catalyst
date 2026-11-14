@@ -4,6 +4,7 @@ const Test = require("../models/test.models");
 const { findVisibleTest } = require("../utils/visibility");
 const { questionForAdmin } = require("../utils/serializers");
 const { recordAnswer } = require("./mistake.controller");
+const mastery = require("../utils/mastery");
 const { grade, correctAnswerOf } = require("../utils/grading");
 
 const HAS_OPTIONS = ["mcq", "multi_select"];
@@ -47,16 +48,20 @@ const checkAnswer = async (req, res, next) => {
   if (badId(req.params.id)) return res.status(400).json({ message: "Invalid question ID" });
   try {
     const question = await Question.findOne({ _id: req.params.id, deletedAt: null }).lean();
-    if (!question || !question.test || !(await findVisibleTest(question.test))) {
-      return res.status(404).json({ message: "Question not found" });
-    }
+    const test = question && question.test ? await findVisibleTest(question.test) : null;
+    if (!test) return res.status(404).json({ message: "Question not found" });
     const answer = req.body.answer;
     if (typeof answer !== "string") {
       return res.status(400).json({ message: "Please provide an answer" });
     }
     const { isCorrect, unitWrong } = grade(question, answer);
     const correctAnswer = correctAnswerOf(question);
-    await recordAnswer(req.user.id, question._id, isCorrect);
+    const wasMistake = await recordAnswer(req.user.id, question._id, isCorrect);
+    // Lesson mastery follows questions from lesson tests. A right answer only counts as review when it was a mistake before.
+    if (test.scope === "lesson") {
+      if (!isCorrect) await mastery.record(req.user.id, test.lesson._id, { type: "wrong" });
+      else if (wasMistake) await mastery.record(req.user.id, test.lesson._id, { type: "review" });
+    }
     return res.status(200).json({
       data: { isCorrect, ...(unitWrong ? { unitWrong: true } : {}), correctAnswer, explanation: question.explanation, explanationImage: question.explanationImage, workedSolution: question.workedSolution || [] }
     });

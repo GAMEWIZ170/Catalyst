@@ -10,6 +10,7 @@ const Course = require("../models/course.models");
 const Position = require("../models/position.models");
 const StudyTime = require("../models/studytime.models");
 const { buildCourseOutline } = require("../utils/courseOutline");
+const mastery = require("../utils/mastery");
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
 
@@ -40,6 +41,7 @@ const markLessonDone = async (req, res, next) => {
       { $set: { completed: true }, $setOnInsert: { completedAt: new Date() }, $addToSet: { completedDays: todayKey() } },
       { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
     );
+    await mastery.record(req.user.id, lesson._id, { type: "attempt" });
     return res.status(200).json({
       message: "Lesson completed",
       data: {
