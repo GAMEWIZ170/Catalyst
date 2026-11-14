@@ -40,6 +40,7 @@ export default function Register() {
       {error && <p className="form-error" role="alert">{error}</p>}
       <Button type="submit" block loading={busy}>Create account</Button>
     </form>
+    <p className="auth-switch">By creating an account you agree to the <Link to="/terms">Terms</Link> and the <Link to="/privacy">Privacy</Link> page.</p>
     <p className="auth-switch">Already have an account? <Link to="/login">Sign in</Link></p>
   </AuthLayout>;
 }

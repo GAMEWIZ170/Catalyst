@@ -103,6 +103,10 @@ const validateChangePassword = validateWith(Joi.object({
   currentPassword: Joi.string().max(72).required(),
   newPassword: Joi.string().min(8).max(72).required()
 }));
+const validateChangeEmail = validateWith(Joi.object({
+  password: Joi.string().max(72).required(),
+  email: Joi.string().trim().lowercase().email().required()
+}));
 const validateDeleteAccount = validateWith(Joi.object({
   password: Joi.string().max(72).required(),
   confirm: Joi.string().valid("DELETE").required().messages({ "any.only": "Type DELETE to confirm" })
@@ -384,6 +388,7 @@ module.exports = {
   validateResetPassword,
   validateVerifyEmail,
   validateChangePassword,
+  validateChangeEmail,
   validateDeleteAccount,
   validateAvatar,
   validatePosition,

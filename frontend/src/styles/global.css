@@ -3646,3 +3646,38 @@ textarea {
 .search-results li, .saved-list li { align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-panel); display: flex; gap: var(--space-3); justify-content: space-between; padding: var(--space-3) var(--space-4); }
 .search-results li a { flex: 1; min-height: 44px; }
 .saved-list li a { flex: 1; min-height: 44px; }
+
+/* Notification bell (phase 4.3) */
+.icon-button { position: relative; }
+.notification-badge { align-items: center; background: var(--accent); border-radius: 999px; color: var(--on-accent); display: inline-flex; font-size: 0.6875rem; font-weight: var(--weight-strong); height: 18px; justify-content: center; min-width: 18px; padding: 0 4px; position: absolute; right: -6px; top: -6px; }
+.notification-panel { gap: var(--space-2); max-height: min(70dvh, 28rem); overflow-y: auto; width: min(340px, calc(100vw - 2rem)); }
+.notification-head { align-items: center; display: flex; gap: var(--space-3); justify-content: space-between; }
+.notification-readall { background: none; border: 0; color: var(--accent); cursor: pointer; font: inherit; font-size: var(--text-sm); font-weight: var(--weight-strong); min-height: 44px; padding: 0 var(--space-2); }
+.notification-readall:disabled { color: var(--muted); cursor: default; }
+.notification-empty { display: grid; gap: var(--space-1); margin: 0; }
+.notification-list { display: grid; gap: var(--space-1); list-style: none; margin: 0; padding: 0; }
+.notification-panel .notification-item { border-radius: var(--radius-control); color: inherit; display: grid; gap: 2px; min-height: 44px; padding: var(--space-2) var(--space-3); text-decoration: none; }
+.notification-item:hover, .notification-item:focus-visible { background: var(--sunken); }
+.notification-item--unread { background: var(--accent-soft); }
+.notification-panel .notification-title { color: var(--ink); font-size: var(--text-md); font-weight: var(--weight-strong); }
+.notification-panel .notification-body, .notification-panel .notification-time { color: var(--muted); font-size: var(--text-sm); }
+
+/* Privacy and terms (phase 4.4) */
+.footer-links { display: inline-flex; gap: var(--space-4); margin-left: var(--space-3); }
+.footer-links a { color: var(--accent); display: inline-flex; min-height: 44px; align-items: center; }
+.legal-page { align-items: center; display: flex; flex-direction: column; min-height: 100dvh; padding: var(--space-6) var(--space-4); position: relative; }
+.legal-page > .theme-toggle { position: absolute; right: 1rem; top: 1rem; }
+.legal-card { max-width: 42rem; width: 100%; }
+.legal-card h1 { font-size: var(--text-2xl); }
+.legal-card h2 { font-size: var(--text-lg); margin: var(--space-5) 0 var(--space-2); }
+.legal-card p, .legal-card li { line-height: 1.6; }
+.legal-card ul { display: grid; gap: var(--space-2); padding-left: var(--space-5); }
+.legal-card a { color: var(--accent); }
+.legal-links { border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-6); padding-top: var(--space-4); }
+.legal-links a { align-items: center; display: inline-flex; min-height: 44px; }
+
+/* On phones the bell sits left of centre, so the panel spans the screen under the top bar instead of hanging off the left edge. */
+@media (max-width: 600px) {
+  .notification-menu { position: static; }
+  .notification-panel { left: var(--space-4); right: var(--space-4); width: auto; }
+}

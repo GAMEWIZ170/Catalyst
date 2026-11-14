@@ -82,6 +82,8 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 |---|---|---|
 | `/login` | Public | Sign in |
 | `/register` | Public | Create a student account |
+| `/confirm-email` | Public | Opened from the link sent to a new address. Confirms an email change (`?token=`) |
+| `/privacy`, `/terms` | Public | Plain-English privacy and terms pages. Linked in the footer and on Register |
 | `/courses` | Authenticated | Browse published courses |
 | `/courses/:id` | Authenticated | Course outline with lesson progress |
 | `/lessons/:id` | Authenticated | Lesson hub: explanation, formulas, practice tests, flashcards, materials, Mark as done, next lesson |
@@ -96,7 +98,8 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 | `/practice/mistakes` | Authenticated | Practise questions from the mistakes queue (`?course=` and `?unit=` narrow it), using the test player without submitting. Home and each course page show a Mistakes panel; test results offer Practise the ones I missed |
 | `/lessons/:id/flashcards` | Authenticated | Study a flashcard deck: tap the card to turn it over, then rate it (`?filter=review` shows cards still to review) |
 | `/progress` | Authenticated | View scores, completed lessons, and streak |
-| `/settings` | Authenticated | Colour palette, light or dark theme, and profile picture |
+| `/settings` | Authenticated | Colour palette, light or dark theme, profile picture, change email, change password, download my data and delete account |
+| Notification bell | Authenticated | Top bar bell with an unread count. The panel lists new-lesson and review-due messages, each linking to its page, plus Mark all as read. On phones the panel spans the screen under the top bar |
 | `/admin` | Admin | Overview numbers and the course list, with search |
 | `/admin/users` | Admin | Find users, change roles, deactivate accounts and manage subscriptions |
 | `/admin/trash` | Admin | Deleted content, with a Restore button for each item |

@@ -4,13 +4,16 @@ import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { Button, Dialog, TextField } from "./ui";
 
-// Account tools on the Settings page: change password, download my data, delete account.
+// Account tools on the Settings page: change email, change password, download my data, delete account.
 export default function AccountSection() {
-  const { deleteAccount } = useAuth();
+  const { user, deleteAccount } = useAuth();
   const navigate = useNavigate();
   const [pw, setPw] = useState({ current: "", next: "", repeat: "" });
   const [pwStatus, setPwStatus] = useState({ text: "", failed: false });
   const [pwBusy, setPwBusy] = useState(false);
+  const [mail, setMail] = useState({ email: "", password: "" });
+  const [mailStatus, setMailStatus] = useState({ text: "", failed: false });
+  const [mailBusy, setMailBusy] = useState(false);
   const [dataStatus, setDataStatus] = useState({ text: "", failed: false });
   const [dataBusy, setDataBusy] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -32,6 +35,21 @@ export default function AccountSection() {
       setPwStatus({ text: err.message, failed: true });
     } finally {
       setPwBusy(false);
+    }
+  }
+
+  async function changeEmail(event) {
+    event.preventDefault();
+    setMailStatus({ text: "", failed: false });
+    setMailBusy(true);
+    try {
+      const { message } = await api.requestEmailChange(mail);
+      setMail({ email: "", password: "" });
+      setMailStatus({ text: message, failed: false });
+    } catch (err) {
+      setMailStatus({ text: err.message, failed: true });
+    } finally {
+      setMailBusy(false);
     }
   }
 
@@ -75,6 +93,18 @@ export default function AccountSection() {
   }
 
   return <>
+    <section className="settings-section" aria-labelledby="email-heading">
+      <h2 id="email-heading">Change email</h2>
+      <p className="muted settings-help">Your email is {user?.email}. We send a link to the new address, and the change happens when you open it.</p>
+      <form className="auth-form" onSubmit={changeEmail}>
+        <TextField label="New email" type="email" required autoComplete="email" value={mail.email}
+          onChange={(e) => setMail({ ...mail, email: e.target.value })} />
+        <TextField label="Current password" type="password" required autoComplete="current-password" value={mail.password}
+          onChange={(e) => setMail({ ...mail, password: e.target.value })} />
+        <Button type="submit" loading={mailBusy}>Send confirmation link</Button>
+      </form>
+      <p className={mailStatus.failed ? "form-error" : "settings-status"} role={mailStatus.failed ? "alert" : undefined} aria-live="polite">{mailStatus.text}</p>
+    </section>
     <section className="settings-section" aria-labelledby="password-heading">
       <h2 id="password-heading">Change password</h2>
       <form className="auth-form" onSubmit={changePassword}>

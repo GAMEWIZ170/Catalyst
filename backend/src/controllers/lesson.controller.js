@@ -10,6 +10,7 @@ const Progress = require("../models/progress.models");
 const Bookmark = require("../models/bookmark.models");
 const Note = require("../models/note.models");
 const studentMaterial = require("../utils/studentMaterial");
+const { notifyLessonPublished } = require("./notification.controller");
 const getFlashcardSummary = require("../utils/flashcardSummary");
 const { findVisibleLesson, findTestsWithQuestions, findTestQuestionCounts } = require("../utils/visibility");
 
@@ -129,8 +130,11 @@ const updateLesson = async (req, res, next) => {
       const unit = await Unit.findOne({ _id: req.body.unit, deletedAt: null }).populate("course", "deletedAt");
       if (!unit || !unit.course || unit.course.deletedAt) return res.status(404).json({ message: "Unit not found" });
     }
+    // Only the move from hidden to published tells students. Saving an already published lesson stays quiet.
+    const before = req.body.isPublished === true ? await Lesson.findOne({ _id: req.params.id, deletedAt: null }).select("isPublished").lean() : null;
     const lesson = await Lesson.findOneAndUpdate({ _id: req.params.id, deletedAt: null }, req.body, { returnDocument: "after", runValidators: true });
     if (!lesson) return res.status(404).json({ message: "Lesson not found" });
+    if (before && !before.isPublished) notifyLessonPublished(lesson._id);
     return res.status(200).json({ message: "Lesson updated successfully", data: lesson });
   } catch (error) {
     next(error);

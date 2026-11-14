@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useMatch, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "./Avatar";
-import { Bookmark, BarChart3, House, Layers, Mail, Search, UserRound, Zap } from "lucide-react";
+import { Bell, Bookmark, BarChart3, House, Layers, Search, UserRound, Zap } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import ShortcutHelp from "./ShortcutHelp";
 import VerifyBanner from "./VerifyBanner";
+import NotificationPanel, { useNotifications } from "./NotificationPanel";
 import useStudyTimer from "../utils/useStudyTimer";
 
 // Phones get a bottom tab bar for the places a student goes most. Laptops keep the top bar only.
@@ -28,6 +29,7 @@ export default function AppShell({ children }) {
   const streak = user?.streak ?? null;
   useStudyTimer(user?.role === "student" && user?.dailyGoal?.kind === "minutes");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const notifications = useNotifications(Boolean(user));
   const [profileOpen, setProfileOpen] = useState(false);
   const notificationButtonRef = useRef(null);
   const profileButtonRef = useRef(null);
@@ -93,20 +95,19 @@ export default function AppShell({ children }) {
               ref={notificationButtonRef}
               className="icon-button"
               type="button"
-              aria-label="Notifications"
+              aria-label={notifications.unread > 0 ? `Notifications, ${notifications.unread} unread` : "Notifications"}
               aria-expanded={notificationsOpen}
               aria-controls="notification-panel"
               onClick={() => {
+                if (!notificationsOpen) notifications.refresh();
                 setNotificationsOpen((current) => !current);
                 setProfileOpen(false);
               }}
             >
-              <Mail size={20} aria-hidden="true" />
+              <Bell size={20} aria-hidden="true" />
+              {notifications.unread > 0 && <span className="notification-badge" aria-hidden="true">{notifications.unread > 9 ? "9+" : notifications.unread}</span>}
             </button>
-            {notificationsOpen && <div className="notification-panel" id="notification-panel" role="status">
-              <strong>No notifications yet</strong>
-              <span>Messages from Catalyst will appear here.</span>
-            </div>}
+            {notificationsOpen && <NotificationPanel notifications={notifications} onNavigate={() => setNotificationsOpen(false)} />}
           </div>
           <ThemeToggle />
           {streak !== null && <span className="streak-indicator" aria-label={`Current streak: ${streak} ${streak === 1 ? "day" : "days"}`}>
@@ -142,7 +143,7 @@ export default function AppShell({ children }) {
       </header>
       <main className="page-wrap" id="main" tabIndex="-1">{children}</main>
       <ShortcutHelp />
-      <footer className="footer">Keep learning with momentum.</footer>
+      <footer className="footer">Keep learning with momentum. <span className="footer-links"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link></span></footer>
       {user?.role === "student" && <nav className="tabbar" aria-label="Main">
         {TABS.map(({ to, label, icon: Icon }) => <NavLink key={to} to={to} className="tabbar-link">
           <Icon size={22} aria-hidden="true" /><span>{label}</span>

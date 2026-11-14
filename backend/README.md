@@ -151,6 +151,8 @@ All routes start with `/api/v1`. Successful responses use `{ "data": ... }` wher
 | POST | `/auth/resend-verification` | Student | Sends a new verification link and cancels the old one. 200 with a note if already verified |
 | GET | `/auth/me` | Student | Return `id`, `name`, `email`, `role`, `avatar`, `subscriptionEndsAt`, `hasAccess` and the current `streak` (so the top bar needs no second request) |
 | PUT | `/auth/me/avatar` | Student | Body `{ "avatar": "beaker" }` or `{ "avatar": null }` |
+| PUT | `/auth/me/email` | Student | Body `{ password, email }`. 401 wrong password, 400 same email, 409 address already used. Sends a link (valid 1 hour) to the NEW address and a warning to the old one. The account email does not change yet |
+| POST | `/auth/confirm-email` | Public | Body `{ token }`. Single-use. Switches the account to the new email and marks it verified. 400 for a wrong, used or expired token, 409 if someone took the address meanwhile |
 | PUT | `/auth/me/password` | Student | Body `{ currentPassword, newPassword }` (8 to 72 characters). 401 when the current password is wrong, 400 when the new one is the same. Logs out every other device and sets a fresh cookie on this one |
 | GET | `/auth/me/export` | Student | The student's own data as JSON: profile, progress, test results, mistakes, flashcard progress, mastery, notes, bookmarks, positions, study time and exam answers. No password hash, no correct answers, no marked exam results. 3 per 15 minutes |
 | DELETE | `/auth/me` | Student | Body `{ password, confirm: "DELETE" }`. Permanent, see below. 409 for the only remaining admin |
@@ -161,6 +163,16 @@ Example avatar response:
 ```json
 { "data": { "id": "...", "name": "Ama", "email": "ama@example.com", "role": "student", "avatar": "beaker" } }
 ```
+
+### Notifications
+
+All routes need login. Messages are in-app only (no email).
+
+| Method | Path | Access | Purpose |
+| --- | --- | --- | --- |
+| GET | `/notifications` | Authenticated | `{ unread, items }`, newest 20 first. Each item has `id`, `type` (`lesson` or `review`), `title`, `body`, `link` (an app path), `read`, `createdAt`. For students it first creates today's "Review is ready" message if cards or mistakes are due |
+| POST | `/notifications/read-all` | Authenticated | Mark every message read |
+| POST | `/notifications/:id/read` | Authenticated | Mark one read. 400 bad id, 404 not yours |
 
 ### Courses and lessons
 
@@ -449,7 +461,7 @@ Joi validators trim strings, strip unknown fields and reject malformed IDs. Imag
 | Strict, per IP | Register and login failures | 200/IP/15 minutes (`RATE_LIMIT_AUTH_IP`) |
 | Email, per account | Forgot password and resend verification (every request counts) | 5/IP and email, or 5/user, per 15 minutes |
 | Email, per IP | Same routes | 30/IP/15 minutes |
-| Account, per user | Change password and delete account failures | 10/user/15 minutes |
+| Account, per user | Change password, change email and delete account failures | 10/user/15 minutes |
 | Export, per user | Download my data | 3/user/15 minutes |
 | Answer | `POST /questions/:id/answer` | 100/user/15 minutes |
 | Submit | `POST /tests/:id/submit` | 60/user/15 minutes |
@@ -546,6 +558,10 @@ src/
 
 Emailed links carry a random 32-byte token. Only its SHA-256 hash is stored in `AuthToken`, and the row is deleted when used, so a link works once. Asking for a new link cancels the older one. `utils/sendEmail.js` is the only place that sends mail: in development it prints the message, with the link, to the server console; in production it throws until real sending is built. Links point to `CLIENT_URL` (`/reset-password?token=...`, `/verify-email?token=...`). New accounts start with `emailVerified: false`; older accounts count as verified. Unverified students are only warned (a banner with a resend button): nothing is blocked. A password reset does not end sessions that are already logged in.
 
+### Notifications
+
+`Notification` rows hold one message for one student. A unique `key` per user stops repeats: `lesson:<lessonId>` (one per lesson) and `review:<UTC date>` (one per day). Two things create messages. (1) An admin saves a lesson with `isPublished: true` when it was hidden: every active student gets "New lesson" (only if the unit and course are visible; editing an already published lesson, or re-publishing after hiding, sends nothing new). This runs in the background after the save answers, so it can take a moment on a large student list. (2) The first `GET /notifications` of a UTC day creates "Review is ready" when flashcards or mistakes are due. Messages delete themselves after 60 days (TTL index) and are removed when the account is deleted. A "report answered" message is not built because Catalyst has no reporting feature yet.
+
 ### Account changes
 
-`User.passwordChangedAt` is set by a password reset and by change password. `authenticate` rejects any login cookie issued before it, so those actions end sessions on other devices. **Delete account is permanent.** The user row is kept but renamed to "Deleted user", given the email `deleted-<id>@deleted.invalid` and a random unusable password, set inactive, and stamped with `deletedAt`. Notes, bookmarks, positions, study time, exam attempts and auth tokens are deleted. Progress, test results, mistakes, mastery and flashcard progress stay under the anonymous row so counts that read them keep working. The old email can register again. Admin user lists still show the row as "Deleted user". Changing email is not built yet.
+`User.passwordChangedAt` is set by a password reset and by change password. `authenticate` rejects any login cookie issued before it, so those actions end sessions on other devices. **Delete account is permanent.** The user row is kept but renamed to "Deleted user", given the email `deleted-<id>@deleted.invalid` and a random unusable password, set inactive, and stamped with `deletedAt`. Notes, bookmarks, positions, study time, exam attempts and auth tokens are deleted. Progress, test results, mistakes, mastery and flashcard progress stay under the anonymous row so counts that read them keep working. The old email can register again. Admin user lists still show the row as "Deleted user". **Changing email** takes two steps: the signed-in student gives the new address and the current password, and the account email changes only when the link sent to the new address is opened (single use, 1 hour). The old address gets a warning message. The address is checked again at confirm time, so a race ends in 409 instead of a duplicate.

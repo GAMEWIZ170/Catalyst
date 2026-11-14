@@ -51,6 +51,9 @@ export function AuthProvider({ children }) {
     markVerified() {
       setUser((current) => (current ? { ...current, emailVerified: true } : current));
     },
+    setEmail(email) {
+      setUser((current) => (current ? { ...current, email, emailVerified: true } : current));
+    },
     async deleteAccount(body) {
       await api.deleteAccount(body);
       clearCache();
