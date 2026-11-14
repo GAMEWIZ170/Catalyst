@@ -70,6 +70,7 @@ export default function App() {
     <Route path="/courses/:id" element={<ProtectedPage warm="course"><CourseOutline /></ProtectedPage>} />
     <Route path="/lessons/:id" element={<ProtectedPage warm="lesson"><Lesson /></ProtectedPage>} />
     <Route path="/tests/:id" element={<ProtectedPage warm="test"><Test /></ProtectedPage>} />
+    <Route path="/practice/mistakes" element={<ProtectedPage><Test /></ProtectedPage>} />
     <Route path="/lessons/:id/flashcards" element={<ProtectedPage warm="flashcards"><Flashcards /></ProtectedPage>} />
     <Route path="/welcome" element={<ProtectedPage><Onboarding /></ProtectedPage>} />
     <Route path="/search" element={<ProtectedPage><Search /></ProtectedPage>} />

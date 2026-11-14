@@ -184,7 +184,9 @@ Example outline lesson:
 | --- | --- | --- | --- |
 | GET | `/tests/:id` | Student | Published test with student-safe questions |
 | POST | `/tests/:id/submit` | Student | Grade answers and update test result |
-| POST | `/questions/:id/answer` | Student | Check one answer |
+| POST | `/questions/:id/answer` | Student | Check one answer. A wrong answer also adds the question to the student's mistakes queue |
+| GET | `/mistakes` | Student | Open mistakes as counts by course and unit (`{ total, data }`), no questions or answers |
+| GET | `/mistakes/practice` | Student | Up to 20 answer-free questions to practise, most-missed first. Optional `course` and `unit` query ids (invalid id returns 400) |
 | POST | `/admin/tests` | Admin | Create a lesson-, unit- or course-scope test |
 | GET | `/admin/tests/:id` | Admin | Full test and questions |
 | PUT | `/admin/tests/:id` | Admin | Update title, order, publication or pass percent |
@@ -365,6 +367,10 @@ Deleted items are listed at `GET /admin/trash` and put back with `POST /admin/tr
 | `true_false` | `text`, `correctAnswer` | No options or `correctOption`; answer is `"true"` or `"false"` |
 
 Student serializers omit correct answers. Scores are calculated on the server. An empty test cannot be submitted for credit. Unit tests and course tests record a result but never complete a lesson. Mark as done returns `409` for any lesson with a test that has questions or a published flashcard.
+
+### Mistakes queue
+
+Every graded answer through `POST /questions/:id/answer` updates the student's queue (`Mistake`: wrong count, last wrong date, correct streak). A wrong answer adds the question and resets its streak. A right answer counts once per UTC day, and the question leaves the queue after two right answers on different days. Questions whose test is unpublished or deleted are left out of both mistakes routes. Practice answers are graded by the same answer route and never submitted, so they do not change test scores.
 
 ### Streaks
 

@@ -3,6 +3,7 @@ const Question = require("../models/question.models");
 const Test = require("../models/test.models");
 const { findVisibleTest } = require("../utils/visibility");
 const { questionForAdmin } = require("../utils/serializers");
+const { recordAnswer } = require("./mistake.controller");
 
 const badId = (id) => !mongoose.isObjectIdOrHexString(id);
 const sendValidationError = (error, res) => res.status(400).json({ message: Object.values(error.errors)[0].message });
@@ -40,6 +41,7 @@ const checkAnswer = async (req, res, next) => {
       isCorrect = answer.toLowerCase() === question.correctAnswer;
       correctAnswer = question.correctAnswer;
     }
+    await recordAnswer(req.user.id, question._id, isCorrect);
     return res.status(200).json({
       data: { isCorrect, correctAnswer, explanation: question.explanation, explanationImage: question.explanationImage }
     });

@@ -61,6 +61,8 @@ export const api = {
   updatePreferences: (body) => request("/auth/me/preferences", { method: "PUT", body: JSON.stringify(body) }),
   recordStudyTime: (seconds) => request("/progress/study-time", { method: "POST", body: JSON.stringify({ seconds }) }).then((payload) => { forget("home"); return payload; }),
   search: (q) => request(`/search?q=${encodeURIComponent(q)}`),
+  getMistakes: () => request("/mistakes"),
+  getMistakePractice: (query = {}) => request(`/mistakes/practice${Object.keys(query).length ? `?${new URLSearchParams(query)}` : ""}`),
   getBookmarks: () => request("/bookmarks"),
   saveBookmark: (kind, id) => request("/bookmarks", { method: "PUT", body: JSON.stringify({ kind, id }) }).then((payload) => { forget(`lesson:${id}`); return payload; }),
   removeBookmark: (kind, id) => request(`/bookmarks/${kind}/${id}`, { method: "DELETE" }).then((payload) => { forget(`lesson:${id}`); return payload; }),

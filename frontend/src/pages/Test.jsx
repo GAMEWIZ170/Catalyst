@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Bookmark, Check, CheckCircle2, TriangleAlert, X } from "lucide-react";
 import ConfirmDialog from "../components/admin/ConfirmDialog";
 import RichText from "../components/RichText";
-import { Button, Card, Illustration } from "../components/ui";
+import { Button, Card, EmptyState, Illustration } from "../components/ui";
 import useUnsavedChanges from "../hooks/useUnsavedChanges";
 import { api } from "../api/client";
 import ResponsiveImage from "../components/ResponsiveImage";
@@ -22,6 +22,11 @@ export default function Test() {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  // /practice/mistakes has no test behind it: the questions come from the student's mistakes queue.
+  const isMistakes = location.pathname === "/practice/mistakes";
+  const [subset, setSubset] = useState(false); // "Practise the ones I missed" inside a normal test
+  const practice = isMistakes || subset; // practice runs are graded per question but never submitted
   const [test, setTest] = useState(null);
   const [phase, setPhase] = useState("intro");
   const [index, setIndex] = useState(0);
@@ -38,15 +43,22 @@ export default function Test() {
   const missedRef = useRef(null);
   const backTo = location.state?.from || "/courses";
   const backState = location.state?.courseFrom ? { from: location.state.courseFrom } : undefined;
-  const backLabel = `Back to ${backTo.startsWith("/lessons/") ? "lesson" : "course"}`;
+  const backLabel = isMistakes ? "Back" : `Back to ${backTo.startsWith("/lessons/") ? "lesson" : "course"}`;
   const dirty = phase === "question" && answers.length > 0;
   const blocker = useUnsavedChanges(dirty);
 
   async function load() {
     setError("");
-    try { setTest(dataOf(await api.getTest(id))); } catch (err) { setError(err.status === 404 ? "This test is not available" : err.message); }
+    try {
+      if (isMistakes) {
+        const query = {};
+        if (searchParams.get("course")) query.course = searchParams.get("course");
+        if (searchParams.get("unit")) query.unit = searchParams.get("unit");
+        setTest(dataOf(await api.getMistakePractice(query)));
+      } else setTest(dataOf(await api.getTest(id)));
+    } catch (err) { setError(err.status === 404 ? "This test is not available" : err.message); }
   }
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => { load(); }, [id, isMistakes]);
   useEffect(() => {
     if (blocker.state === "blocked") setBlocking(true);
   }, [blocker.state]);
@@ -118,6 +130,14 @@ export default function Test() {
   async function finish() {
     setBusy(true);
     try {
+      if (practice) {
+        const total = test.questions.length;
+        const correct = total - missed.length;
+        setResult({ practice: true, score: Math.round((correct / total) * 100), correct, total });
+        setPhase("results");
+        setBusy(false);
+        return;
+      }
       const response = dataOf(await api.submitTest(id, answers));
       setResult(response);
       setPhase("results");
@@ -137,6 +157,17 @@ export default function Test() {
     if (blocker.state === "blocked") blocker.proceed();
     else navigate(backTo, { state: backState });
   }
+  // Run the test again with only the questions answered wrong. Nothing is submitted, so scores stay as they were.
+  function practiseMissed() {
+    const ids = new Set(missed.map((item) => item.id));
+    setTest((current) => ({ ...current, questions: current.questions.filter((item) => ids.has(item._id)) }));
+    setSubset(true);
+    start();
+  }
+  async function tryAgain() {
+    if (!subset) await load(); // a mistakes queue may have changed; a normal test is fetched fresh
+    start();
+  }
   function reviewMistakes() {
     setShowMissed(true);
     window.setTimeout(() => missedRef.current?.focus(), 0);
@@ -145,13 +176,18 @@ export default function Test() {
   if (error && !test) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
   if (!test) return <Loading />;
   // Only lesson tests can complete a lesson, so only they show a pass percent.
-  const needsPass = test.scope === "lesson" && test.passPercent != null;
+  const needsPass = !practice && test.scope === "lesson" && test.passPercent != null;
+
+  if (isMistakes && test.questions.length === 0) return <div className="exam exam--page">
+    <Link className="back-link" to={backTo} state={backState}><ArrowLeft size={16} aria-hidden="true" />{backLabel}</Link>
+    <EmptyState illustration={<Illustration name="done" />} title="No mistakes to practise" description="Questions you get wrong will appear here until you answer them right on two different days." action={<Button as={Link} variant="secondary" to={backTo} state={backState}>{backLabel}</Button>} />
+  </div>;
 
   if (phase === "intro") return <div className="exam exam--page">
     <Link className="back-link" to={backTo} state={backState}><ArrowLeft size={16} aria-hidden="true" />{backLabel}</Link>
     <Card className="exam-intro">
       <h1>{test.title}</h1>
-      <p>{test.questions.length} {test.questions.length === 1 ? "question" : "questions"}. Pick an answer, check it, then continue.</p>
+      <p>{test.questions.length} {test.questions.length === 1 ? "question" : "questions"}{isMistakes ? " you got wrong before" : ""}. Pick an answer, check it, then continue.</p>
       {needsPass && <p className="muted">You need at least {test.passPercent}% to complete the lesson.</p>}
       <div><Button onClick={start}>Start test</Button></div>
     </Card>
@@ -165,14 +201,15 @@ export default function Test() {
         <Illustration name="done" className="results-illustration" />
         <p className="exam-score" id="score-heading"><span className="sr-only">Your score: </span>{result.score}%</p>
         <p className="exam-correct">{result.correct} of {result.total} correct. {scoreMessage(result.score)}</p>
-        <p className="muted">Best score {result.bestScore}% · Attempts {result.attempts}</p>
+        {!result.practice && <p className="muted">Best score {result.bestScore}% · Attempts {result.attempts}</p>}
         {needsPass && <p className={`exam-verdict ${result.passed ? "exam-verdict--passed" : ""}`} role="status">
           {result.passed ? <CheckCircle2 size={16} aria-hidden="true" /> : <TriangleAlert size={16} aria-hidden="true" />}
           {result.passed ? "Passed. This lesson is complete." : `Not yet. You need ${result.passPercent}% to pass.`}
         </p>}
         <div className="button-row button-row--stack">
+          {missed.length > 0 && !practice && <Button variant="secondary" onClick={practiseMissed}>Practise the ones I missed</Button>}
           {missed.length > 0 && !showMissed && <Button variant="secondary" onClick={reviewMistakes}>Review mistakes</Button>}
-          <Button variant={passed || missed.length === 0 ? "secondary" : "tertiary"} onClick={async () => { await load(); start(); }}>Try again</Button>
+          <Button variant={passed || missed.length === 0 ? "secondary" : "tertiary"} onClick={tryAgain}>Try again</Button>
           <Button as={Link} variant={passed || !needsPass ? "primary" : "secondary"} to={backTo} state={backState}>{backLabel}</Button>
         </div>
         {missed.length > 0 && showMissed && <div className="exam-missed" ref={missedRef} tabIndex="-1">

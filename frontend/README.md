@@ -86,6 +86,7 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 | `/courses/:id` | Authenticated | Course outline with lesson progress |
 | `/lessons/:id` | Authenticated | Lesson hub: explanation, formulas, practice tests, flashcards, materials, Mark as done, next lesson |
 | `/tests/:id` | Authenticated | Take a test, one question at a time, with feedback after each answer. Lesson tests show their pass percent and whether the student passed |
+| `/practice/mistakes` | Authenticated | Practise questions from the mistakes queue (`?course=` and `?unit=` narrow it), using the test player without submitting. Home and each course page show a Mistakes panel; test results offer Practise the ones I missed |
 | `/lessons/:id/flashcards` | Authenticated | Study a flashcard deck: tap the card to turn it over, then rate it (`?filter=review` shows cards still to review) |
 | `/progress` | Authenticated | View scores, completed lessons, and streak |
 | `/settings` | Authenticated | Colour palette, light or dark theme, and profile picture |
