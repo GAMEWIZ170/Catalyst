@@ -4,6 +4,7 @@ import { ArrowLeft, Bookmark, Check, CheckCircle2, TriangleAlert, X } from "luci
 import ConfirmDialog from "../components/admin/ConfirmDialog";
 import RichText from "../components/RichText";
 import WorkedSolution from "../components/WorkedSolution";
+import { CorrectAnswer, CorrectEquation, QuestionInput } from "../components/QuestionInputs";
 import { Button, Card, EmptyState, Illustration } from "../components/ui";
 import useUnsavedChanges from "../hooks/useUnsavedChanges";
 import { api } from "../api/client";
@@ -11,6 +12,13 @@ import ResponsiveImage from "../components/ResponsiveImage";
 import { ErrorState, Loading } from "./Courses";
 
 const dataOf = (payload) => payload.data || payload;
+
+// The right answer for any question type.
+function Correct({ question, correct }) {
+  return question.type === "balancing"
+    ? <CorrectEquation question={question} coefficients={correct} />
+    : <CorrectAnswer type={question.type} correct={correct} />;
+}
 
 function scoreMessage(score) {
   if (score === 100) return "Every answer was right.";
@@ -73,7 +81,8 @@ export default function Test() {
   useEffect(() => {
     if (phase !== "question" || !test) return undefined;
     const question = test.questions[index];
-    const values = question.type === "mcq" ? question.options.map((option) => option._id) : ["true", "false"];
+    // Keys 1 to 4 only apply to multiple choice and true or false. The other types have their own inputs.
+    const values = question.type === "mcq" ? question.options.map((option) => option._id) : question.type === "true_false" ? ["true", "false"] : [];
     function onKey(event) {
       if (event.ctrlKey || event.metaKey || event.altKey) return;
       if (event.target.closest?.("input, textarea, select")) return;
@@ -124,7 +133,7 @@ export default function Test() {
       setAnswers((items) => [...items.filter((item) => item.questionId !== current._id), { questionId: current._id, answer: chosen }]);
       setMissed((items) => {
         const rest = items.filter((item) => item.id !== current._id);
-        return response.isCorrect ? rest : [...rest, { id: current._id, number: index + 1, text: current.text, correct: response.correctAnswer, explanation: response.explanation, workedSolution: response.workedSolution }];
+        return response.isCorrect ? rest : [...rest, { id: current._id, number: index + 1, text: current.text, correct: response.correctAnswer, question: current, explanation: response.explanation, workedSolution: response.workedSolution }];
       });
       setFeedback(response);
     } catch (err) { setError(err.message); }
@@ -221,7 +230,7 @@ export default function Test() {
             <summary>Question {item.number}</summary>
             <div className="exam-missed-body">
               <div className="exam-question"><RichText>{item.text}</RichText></div>
-              <p><strong>Correct answer:</strong> {typeof item.correct === "object" ? <RichText>{item.correct.text}</RichText> : item.correct}</p>
+              <div className="qi-correct"><strong>Correct answer:</strong> <Correct question={item.question} correct={item.correct} /></div>
               {item.explanation && <RichText>{item.explanation}</RichText>}
               <WorkedSolution steps={item.workedSolution} />
             </div>
@@ -254,7 +263,9 @@ export default function Test() {
       <h1 className="sr-only">{test.title}</h1>
       <div className="exam-question"><RichText>{question.text}</RichText></div>
       {question.image?.url && <ResponsiveImage className="exam-image" image={question.image} sizes="(max-width: 600px) 100vw, 600px" />}
-      {question.type === "mcq"
+      {question.type !== "mcq" && question.type !== "true_false"
+        ? <QuestionInput key={question._id} question={question} disabled={Boolean(feedback)} onAnswer={setChosen} onEnter={checkAnswer} />
+        : question.type === "mcq"
         ? <fieldset className="exam-options"><legend>Choose an answer. Keys 1 to {question.options.length}.</legend>
           {question.options.map((option, position) => {
             const state = stateOf(option._id, correct?._id === option._id);
@@ -280,7 +291,8 @@ export default function Test() {
         : <Button variant="tertiary" onClick={() => setHintFor(question._id)}>Show hint</Button>)}
       {feedback && <section className={`exam-feedback exam-feedback--${feedback.isCorrect ? "correct" : "wrong"}`} aria-live="polite">
         <h2 tabIndex="-1" ref={feedbackHeading}>{feedback.isCorrect ? <CheckCircle2 size={20} aria-hidden="true" /> : <TriangleAlert size={20} aria-hidden="true" />}{feedback.isCorrect ? "Correct" : "Not quite"}</h2>
-        {!feedback.isCorrect && <p><strong>Correct answer:</strong> {typeof correct === "object" ? <RichText>{correct.text}</RichText> : correct === "true" ? "True" : correct === "false" ? "False" : correct}</p>}
+        {feedback.unitWrong && <p>The number is right, but the unit is not.</p>}
+        {!feedback.isCorrect && <div className="qi-correct"><strong>Correct answer:</strong> <Correct question={question} correct={correct} /></div>}
         <RichText>{feedback.explanation}</RichText>
         <Button variant="tertiary" icon={Bookmark} aria-pressed={savedQuestions.has(question._id)} onClick={() => toggleSavedQuestion(question._id)}>{savedQuestions.has(question._id) ? "Saved" : "Save question"}</Button>
         {feedback.explanationImage?.url && <ResponsiveImage image={feedback.explanationImage} sizes="(max-width: 600px) 100vw, 600px" />}

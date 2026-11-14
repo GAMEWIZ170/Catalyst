@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import AdminLayout from "../components/admin/AdminLayout";
-import { Badge, Button, Radio, RadioGroup, TextArea, TextField } from "../components/ui";
+import { Badge, Button, Radio, RadioGroup, SelectField, TextArea, TextField } from "../components/ui";
 import { Loading } from "./Courses";
 import RichText from "../components/RichText";
 import FormulaHelp from "../components/admin/FormulaHelp";
@@ -17,6 +17,7 @@ import Switch from "../components/admin/Switch";
 import useUnsavedChanges from "../hooks/useUnsavedChanges";
 import MoveButton from "../components/admin/MoveButton";
 import WorkedSolution from "../components/WorkedSolution";
+import QuestionTypeFields, { TYPE_LABELS, typeBody, typeDefaults, typeProblem } from "../components/admin/QuestionTypeFields";
 
 const dataOf = (payload) => payload.data || payload;
 const idOf = (item) => item._id || item.id;
@@ -135,6 +136,8 @@ export default function AdminTestEditor() {
       if (!Number.isInteger(question.correctIndex)) return setError("Choose a correct answer.");
     }
     if (question.type === "true_false" && !question.correctAnswer) return setError("Choose the correct answer.");
+    const problem = typeProblem(question);
+    if (problem) return setError(problem);
     try {
       const body = {
         test: id,
@@ -150,7 +153,8 @@ export default function AdminTestEditor() {
       if (question.type === "mcq") {
         body.options = question.options.map(({ text, image }) => ({ text, image }));
         body.correctIndex = question.correctIndex;
-      } else body.correctAnswer = question.correctAnswer;
+      } else if (question.type === "true_false") body.correctAnswer = question.correctAnswer;
+      else Object.assign(body, typeBody(question));
       const saved = dataOf(question._id ? await api.updateQuestion(question._id, body) : await api.createQuestion(body));
       if (addAnother && !question._id) {
         setQuestions((current) => [...current, saved]);
@@ -213,18 +217,18 @@ export default function AdminTestEditor() {
       <div className="section-heading"><h2>Questions</h2><Button variant="primary" type="button" onClick={addQuestion}>Add question</Button></div>
       <div className="question-list">
         {questions.map((item, index) => <div className="question-row" key={idOf(item)}>
-          <button className="question-row-main" type="button" onClick={() => openQuestion(item)}><span>{index + 1}</span><span className="question-preview"><RichText>{item.text}</RichText></span><Badge>{item.type === "mcq" ? "Multiple choice" : "True or false"}</Badge>{(item.image || item.options?.some((option) => option.image)) && <span aria-label="Has image">Image</span>}</button>
+          <button className="question-row-main" type="button" onClick={() => openQuestion(item)}><span>{index + 1}</span><span className="question-preview"><RichText>{item.text}</RichText></span><Badge>{TYPE_LABELS[item.type] || item.type}</Badge>{(item.image || item.options?.some((option) => option.image)) && <span aria-label="Has image">Image</span>}</button>
           <div className="row-actions"><MoveButton direction="up" disabled={index === 0} onClick={() => moveQuestion(item, -1)} /><MoveButton direction="down" disabled={index === questions.length - 1} onClick={() => moveQuestion(item, 1)} /><Button variant="tertiary" type="button" onClick={() => setDeleteTarget(item)}>Delete</Button></div>
         </div>)}
       </div>
     </section>
     {question && <aside className="question-editor admin-editor-section">
       <div className="section-heading"><h2>{question._id ? "Edit question" : "Add question"}</h2><Button variant="tertiary" type="button" onClick={() => { setQuestion(null); setOriginalQuestion(null); }}>Close</Button></div>
-      <fieldset className="ui-fieldset" disabled={Boolean(question._id)}><RadioGroup legend="Type"><Radio name="question-type" label="Multiple choice" checked={question.type === "mcq"} onChange={() => setQuestion({ ...question, type: "mcq", options: blankQuestion().options, correctIndex: 0 })} /><Radio name="question-type" label="True or false" checked={question.type === "true_false"} onChange={() => setQuestion({ ...question, type: "true_false", options: [] })} /></RadioGroup>{question._id && <p className="muted">A question's type cannot be changed.</p>}</fieldset>
+      <fieldset className="ui-fieldset" disabled={Boolean(question._id)}><SelectField label="Type" value={question.type} onChange={(event) => setQuestion({ ...question, type: event.target.value, ...typeDefaults(event.target.value) })}>{Object.entries(TYPE_LABELS).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</SelectField>{question._id && <p className="muted">A question's type cannot be changed.</p>}</fieldset>
       <TextArea label="Question text" maxLength="1500" rows="5" value={question.text} onChange={(event) => setQuestion({ ...question, text: event.target.value })} hint={`${question.text.length}/1500`} />
       <FormulaHelp /><div className="preview-box"><RichText>{question.text}</RichText></div>
       <ImageField label="Question image" value={question.image} onChange={(image) => setQuestion({ ...question, image })} />
-      {question.type === "mcq" ? <div className="option-editor"><h3>Options</h3>{question.options.map((option, index) => <div className="option-row" key={index}><TextField label={`Option ${index + 1}`} maxLength="300" value={option.text || ""} onChange={(event) => updateOption(index, { text: event.target.value })} /><Radio name="correct-option" label="Correct answer" checked={question.correctIndex === index} onChange={() => setQuestion({ ...question, correctIndex: index })} /><ImageField compact label={`Option ${index + 1} image`} value={option.image} onChange={(image) => updateOption(index, { image })} /><Button variant="tertiary" type="button" disabled={question.options.length <= 2} onClick={() => setQuestion({ ...question, options: question.options.filter((_, optionIndex) => optionIndex !== index), correctIndex: question.correctIndex === index ? 0 : question.correctIndex > index ? question.correctIndex - 1 : question.correctIndex })}>Remove</Button></div>)}<Button variant="secondary" type="button" disabled={question.options.length >= 6} onClick={() => setQuestion({ ...question, options: [...question.options, { text: "", image: null }] })}>Add option</Button></div> : <RadioGroup legend="Correct answer"><Radio name="correct-answer" label="True" checked={question.correctAnswer === "true"} onChange={() => setQuestion({ ...question, correctAnswer: "true" })} /><Radio name="correct-answer" label="False" checked={question.correctAnswer === "false"} onChange={() => setQuestion({ ...question, correctAnswer: "false" })} /></RadioGroup>}
+      {!["mcq", "true_false"].includes(question.type) ? <QuestionTypeFields question={question} setQuestion={setQuestion} /> : question.type === "mcq" ? <div className="option-editor"><h3>Options</h3>{question.options.map((option, index) => <div className="option-row" key={index}><TextField label={`Option ${index + 1}`} maxLength="300" value={option.text || ""} onChange={(event) => updateOption(index, { text: event.target.value })} /><Radio name="correct-option" label="Correct answer" checked={question.correctIndex === index} onChange={() => setQuestion({ ...question, correctIndex: index })} /><ImageField compact label={`Option ${index + 1} image`} value={option.image} onChange={(image) => updateOption(index, { image })} /><Button variant="tertiary" type="button" disabled={question.options.length <= 2} onClick={() => setQuestion({ ...question, options: question.options.filter((_, optionIndex) => optionIndex !== index), correctIndex: question.correctIndex === index ? 0 : question.correctIndex > index ? question.correctIndex - 1 : question.correctIndex })}>Remove</Button></div>)}<Button variant="secondary" type="button" disabled={question.options.length >= 6} onClick={() => setQuestion({ ...question, options: [...question.options, { text: "", image: null }] })}>Add option</Button></div> : <RadioGroup legend="Correct answer"><Radio name="correct-answer" label="True" checked={question.correctAnswer === "true"} onChange={() => setQuestion({ ...question, correctAnswer: "true" })} /><Radio name="correct-answer" label="False" checked={question.correctAnswer === "false"} onChange={() => setQuestion({ ...question, correctAnswer: "false" })} /></RadioGroup>}
       <TextArea label="Explanation" maxLength="4000" rows="5" value={question.explanation || ""} onChange={(event) => setQuestion({ ...question, explanation: event.target.value })} /><FormulaHelp /><div className="preview-box"><RichText>{question.explanation || ""}</RichText></div><ImageField label="Explanation image" value={question.explanationImage} onChange={(explanationImage) => setQuestion({ ...question, explanationImage })} />
       <TextArea label="Hint (optional)" maxLength="500" rows="2" value={question.hint || ""} onChange={(event) => setQuestion({ ...question, hint: event.target.value })} hint="Students can open it before they answer. Do not give the answer away." /><div className="preview-box"><RichText>{question.hint || ""}</RichText></div>
       <TextArea label="Worked solution (optional)" rows="6" value={(question.workedSolution || []).join("\n")} onChange={(event) => setQuestion({ ...question, workedSolution: event.target.value.split("\n") })} hint="One step per line, up to 12. Students see it as numbered steps after they answer." /><div className="preview-box"><WorkedSolution steps={question.workedSolution} /></div>

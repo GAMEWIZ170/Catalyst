@@ -4,21 +4,43 @@ const Test = require("../models/test.models");
 const { findVisibleTest } = require("../utils/visibility");
 const { questionForAdmin } = require("../utils/serializers");
 const { recordAnswer } = require("./mistake.controller");
+const { grade, correctAnswerOf } = require("../utils/grading");
+
+const HAS_OPTIONS = ["mcq", "multi_select"];
+const has = (body, key) => Object.prototype.hasOwnProperty.call(body, key);
+
+// Options arrive without ids plus the position(s) of the right one(s). The server makes the ids and stores the right ones.
+const setCorrectFromIndexes = (question, prepared) => {
+  if (question.type === "mcq") {
+    if (!Number.isInteger(prepared.correctIndex) || prepared.correctIndex < 0 ||
+      prepared.correctIndex >= question.options.length) return "correctIndex must match one of the options";
+    question.correctOption = question.options[prepared.correctIndex]._id;
+  } else if (question.type === "multi_select") {
+    const indexes = prepared.correctIndexes;
+    if (!Array.isArray(indexes) || !indexes.length || !indexes.every((index) => Number.isInteger(index) && index >= 0 && index < question.options.length)) {
+      return "correctIndexes must match the options";
+    }
+    question.correctOptions = [...new Set(indexes)].map((index) => question.options[index]._id);
+  }
+  return null;
+};
 
 const badId = (id) => !mongoose.isObjectIdOrHexString(id);
 const sendValidationError = (error, res) => res.status(400).json({ message: Object.values(error.errors)[0].message });
 
 const questionData = (body, storedType = body.type) => {
   const data = { ...body, type: storedType };
-  const correctIndex = data.correctIndex;
+  const { correctIndex, correctIndexes } = data;
   delete data.correctIndex;
+  delete data.correctIndexes;
+  delete data.correctOptions;
   if (data.type === "mcq") {
     delete data.correctOption;
   } else {
-    data.options = [];
     data.correctOption = null;
   }
-  return { data, correctIndex };
+  if (!HAS_OPTIONS.includes(data.type)) data.options = [];
+  return { data, correctIndex, correctIndexes };
 };
 
 const checkAnswer = async (req, res, next) => {
@@ -32,18 +54,11 @@ const checkAnswer = async (req, res, next) => {
     if (typeof answer !== "string") {
       return res.status(400).json({ message: "Please provide an answer" });
     }
-    let isCorrect = false;
-    let correctAnswer;
-    if (question.type === "mcq") {
-      isCorrect = answer === question.correctOption.toString();
-      correctAnswer = question.options.find((option) => option._id.toString() === question.correctOption.toString());
-    } else {
-      isCorrect = answer.toLowerCase() === question.correctAnswer;
-      correctAnswer = question.correctAnswer;
-    }
+    const { isCorrect, unitWrong } = grade(question, answer);
+    const correctAnswer = correctAnswerOf(question);
     await recordAnswer(req.user.id, question._id, isCorrect);
     return res.status(200).json({
-      data: { isCorrect, correctAnswer, explanation: question.explanation, explanationImage: question.explanationImage, workedSolution: question.workedSolution || [] }
+      data: { isCorrect, ...(unitWrong ? { unitWrong: true } : {}), correctAnswer, explanation: question.explanation, explanationImage: question.explanationImage, workedSolution: question.workedSolution || [] }
     });
   } catch (error) {
     next(error);
@@ -56,13 +71,8 @@ const createQuestion = async (req, res, next) => {
     if (!test) return res.status(404).json({ message: "Test not found" });
     const prepared = questionData(req.body);
     const question = new Question(prepared.data);
-    if (question.type === "mcq") {
-      if (!Number.isInteger(prepared.correctIndex) || prepared.correctIndex < 0 ||
-        prepared.correctIndex >= question.options.length) {
-        return res.status(400).json({ message: "correctIndex must match one of the options" });
-      }
-      question.correctOption = question.options[prepared.correctIndex]._id;
-    }
+    const problem = setCorrectFromIndexes(question, prepared);
+    if (problem) return res.status(400).json({ message: problem });
     await question.save();
     return res.status(201).json({ message: "Question created successfully", data: questionForAdmin(question) });
   } catch (error) {
@@ -82,23 +92,21 @@ const updateQuestion = async (req, res, next) => {
     if (req.body.test && !(await Test.exists({ _id: req.body.test, deletedAt: null }))) {
       return res.status(404).json({ message: "Test not found" });
     }
-    const hasOptions = Object.prototype.hasOwnProperty.call(req.body, "options");
-    const hasCorrectIndex = Object.prototype.hasOwnProperty.call(req.body, "correctIndex");
+    const hasOptions = has(req.body, "options");
+    const hasCorrectIndex = has(req.body, question.type === "multi_select" ? "correctIndexes" : "correctIndex");
+    if (!HAS_OPTIONS.includes(question.type) && (hasOptions || has(req.body, "correctIndex") || has(req.body, "correctIndexes"))) {
+      return res.status(400).json({ message: "This question type cannot include options or correctIndex" });
+    }
     if (hasOptions !== hasCorrectIndex) return res.status(400).json({ message: "options and correctIndex must be sent together" });
     if (hasOptions) {
-      if (question.type === "true_false") {
-        return res.status(400).json({ message: "True/false questions cannot include options or correctIndex" });
-      }
       const prepared = questionData(req.body, question.type);
       question.set(prepared.data);
-      if (!Number.isInteger(prepared.correctIndex) || prepared.correctIndex < 0 ||
-        prepared.correctIndex >= req.body.options.length) {
-        return res.status(400).json({ message: "correctIndex must match one of the options" });
-      }
-      question.correctOption = question.options[prepared.correctIndex]._id;
+      const problem = setCorrectFromIndexes(question, prepared);
+      if (problem) return res.status(400).json({ message: problem });
     } else {
       const data = { ...req.body };
       delete data.correctIndex;
+      delete data.correctIndexes;
       data.type = question.type;
       question.set(data);
     }

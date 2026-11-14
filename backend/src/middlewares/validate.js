@@ -178,12 +178,29 @@ const optionFields = Joi.object({
 }).or("text", "image");
 const questionFields = {
   test: objectId,
-  type: Joi.string().valid("mcq", "true_false"),
+  type: Joi.string().valid("mcq", "true_false", "multi_select", "numeric", "fill_blank", "matching", "ordering", "balancing"),
   text: Joi.string().trim().max(1500),
   image: optionalImage,
   options: Joi.array().items(optionFields).max(6),
   correctIndex: Joi.number().integer().min(0),
+  correctIndexes: Joi.array().items(Joi.number().integer().min(0)).unique().min(1).max(6),
   correctAnswer: Joi.string().valid("true", "false"),
+  numeric: Joi.object({
+    value: Joi.number().required(),
+    tolerance: Joi.number().min(0),
+    toleranceKind: Joi.string().valid("absolute", "percent"),
+    unit: Joi.string().trim().allow("").max(30)
+  }),
+  acceptedAnswers: Joi.array().items(Joi.string().trim().min(1).max(200)).min(1).max(20),
+  pairs: Joi.array().items(Joi.object({ left: Joi.string().trim().min(1).max(200).required(), right: Joi.string().trim().min(1).max(200).required() })).min(2).max(8),
+  items: Joi.array().items(Joi.string().trim().min(1).max(200)).min(2).max(8),
+  equation: Joi.object({
+    species: Joi.array().items(Joi.object({
+      formula: Joi.string().trim().min(1).max(40).required(),
+      side: Joi.string().valid("reactant", "product").required(),
+      coefficient: Joi.number().integer().min(1).max(99).required()
+    })).min(2).max(8).required()
+  }),
   explanation: Joi.string().trim().allow("").max(4000),
   explanationImage: optionalImage,
   hint: Joi.string().trim().allow("").max(500),
@@ -216,17 +233,21 @@ const validateQuestionUpdate = validateWith(Joi.object({
   image: questionFields.image,
   options: questionFields.options,
   correctIndex: questionFields.correctIndex,
+  correctIndexes: questionFields.correctIndexes,
   correctAnswer: questionFields.correctAnswer,
+  numeric: questionFields.numeric,
+  acceptedAnswers: questionFields.acceptedAnswers,
+  pairs: questionFields.pairs,
+  items: questionFields.items,
+  equation: questionFields.equation,
   explanation: questionFields.explanation,
   explanationImage: questionFields.explanationImage,
   hint: questionFields.hint,
   workedSolution: questionFields.workedSolution,
   order: questionFields.order
 }).min(1).custom((value, helpers) => {
-  if (value.options !== undefined && value.correctIndex === undefined) {
-    return helpers.error("any.invalid", { message: "options and correctIndex must be sent together" });
-  }
-  if (value.correctIndex !== undefined && value.options === undefined) {
+  const hasIndex = value.correctIndex !== undefined || value.correctIndexes !== undefined;
+  if ((value.options !== undefined) !== hasIndex) {
     return helpers.error("any.invalid", { message: "options and correctIndex must be sent together" });
   }
   if (value.options !== undefined && value.correctIndex !== undefined &&

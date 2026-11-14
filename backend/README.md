@@ -369,6 +369,14 @@ Deleted items are listed at `GET /admin/trash` and put back with `POST /admin/tr
 | --- | --- | --- |
 | `mcq` | `text`, `options`, `correctOption` | 2 to 6 option objects; each option has text or an image; correct option must be one option |
 | `true_false` | `text`, `correctAnswer` | No options or `correctOption`; answer is `"true"` or `"false"` |
+| `multi_select` | `text`, `options`, `correctIndexes` | 2 to 6 options; send `options` (no ids) and `correctIndexes` together; fully right or fully wrong. Answer: JSON list of option ids |
+| `numeric` | `text`, `numeric: { value, tolerance, toleranceKind, unit }` | `toleranceKind` is `absolute` or `percent`. If `unit` is set the student must give it (case and spaces ignored). Answer: JSON `{ "value": "2.5", "unit": "mol/L" }`. A right number with a wrong unit returns `isCorrect: false` and `unitWrong: true` |
+| `fill_blank` | `text`, `acceptedAnswers` | 1 to 20 answers; case and extra spaces ignored. Answer: the text |
+| `matching` | `text`, `pairs: [{ left, right }]` | 2 to 8 pairs. Students get `left` and a shuffled `right` list and answer with a JSON list: for each left item, the position of the chosen right item |
+| `ordering` | `text`, `items` | 2 to 8 items in the correct order. Students get them shuffled and answer with a JSON list of the shown positions in the order chosen |
+| `balancing` | `text`, `equation: { species: [{ formula, side, coefficient }] }` | 2 to 8 species, `side` is `reactant` or `product`, coefficients are the lowest whole numbers (a common factor is rejected). Students get formulas and sides only and answer with a JSON list of coefficients |
+
+The shuffle for matching and ordering is seeded by the question id, so the server rebuilds the order the student saw. Every type is graded by `utils/grading.js`, for both `POST /questions/:id/answer` and `POST /tests/:id/submit`. After answering, `correctAnswer` has the right answer in a shape that fits the type.
 
 Student serializers omit correct answers. Scores are calculated on the server. An empty test cannot be submitted for credit. Unit tests and course tests record a result but never complete a lesson. Mark as done returns `409` for any lesson with a test that has questions or a published flashcard.
 

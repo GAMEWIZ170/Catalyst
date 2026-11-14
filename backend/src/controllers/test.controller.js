@@ -5,6 +5,7 @@ const TestResult = require("../models/testresult.models");
 const Progress = require("../models/progress.models");
 const { findVisibleTest, parentIsAvailable } = require("../utils/visibility");
 const { studentQuestion, questionForAdmin } = require("../utils/serializers");
+const { grade } = require("../utils/grading");
 
 const badId = (id) => !mongoose.isObjectIdOrHexString(id);
 const todayKey = () => new Date().toISOString().slice(0, 10);
@@ -15,7 +16,7 @@ const getTest = async (req, res, next) => {
     const test = await findVisibleTest(req.params.id);
     if (!test) return res.status(404).json({ message: "Test not found" });
     const questions = await Question.find({ test: test._id, deletedAt: null })
-      .select("_id type text image options order hint")
+      .select("_id type text image options order hint numeric pairs items equation")
       .sort({ order: 1 })
       .lean();
     return res.status(200).json({
@@ -32,7 +33,7 @@ const submitTest = async (req, res, next) => {
     const test = await findVisibleTest(req.params.id);
     if (!test) return res.status(404).json({ message: "Test not found" });
     const questions = await Question.find({ test: test._id, deletedAt: null })
-      .select("type correctOption correctAnswer")
+      .select("type correctOption correctOptions correctAnswer numeric acceptedAnswers pairs items equation")
       .lean();
     if (!questions.length) {
       return res.status(409).json({ message: "This test has no questions yet" });
@@ -41,11 +42,7 @@ const submitTest = async (req, res, next) => {
     let correct = 0;
     for (const question of questions) {
       const answer = given.get(question._id.toString());
-      if (answer !== undefined && (
-        question.type === "mcq"
-          ? answer === question.correctOption.toString()
-          : answer.toLowerCase() === question.correctAnswer
-      )) correct++;
+      if (answer !== undefined && grade(question, answer).isCorrect) correct++;
     }
     const total = questions.length;
     const score = total === 0 ? 100 : Math.round((correct / total) * 100);
