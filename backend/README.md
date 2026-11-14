@@ -217,6 +217,21 @@ Example outline lesson:
 | GET | `/review/session` | Student | Up to 20 due flashcards (`_id`, `front`, `back`, `lessonId`), soonest due first. Rate each with `POST /flashcards/:id/rate` |
 | GET | `/topics` | Student | `{ data: { topics, sources, years } }`, each a list of `{ value, count }` for tagged questions the student may see |
 | GET | `/topics/practice` | Student | Up to 20 answer-free questions across lessons, random order. Query `topic`, `source`, `year` (at least one; a bad year or no filter returns 400) |
+| GET | `/study-sets` | Authenticated | The student's own sets, newest change first, each with `cardCount` and `quizCount`. `?q=` searches title, topic and description |
+| POST | `/study-sets` | Authenticated | Body `{ title, topic?, description?, course? }`. Always private. Up to 100 sets per student |
+| GET / PUT / DELETE | `/study-sets/:id` | Owner | Read, change or delete (soft delete) a set. Anyone else gets 404, admins included |
+| GET / PUT | `/study-sets/:id/notes` | Owner | The notes as a Tiptap document (`{ content }`). Only a short list of node types (paragraph, headings 1 to 3, lists, quote, code, formulas) and marks (bold, italic, strike, code) is accepted, up to 60,000 characters |
+| GET / POST | `/study-sets/:id/cards` | Owner | List or add a flashcard (`{ front, back }`, 500 characters each). Up to 500 per set |
+| POST | `/study-sets/:id/cards/bulk` | Owner | Body `{ cards: [{ front, back }] }`, 1 to 200. All or none. For the paste-and-split helper |
+| PUT / DELETE | `/study-sets/cards/:cardId` | Owner | Change or delete a card |
+| GET | `/study-sets/:id/study` | Owner | The deck with the student's rating on each card (`?filter=review` for unrated, unsure and don't-know cards). Ratings go to `POST /flashcards/:id/rate`, which also works for set cards (owner only) |
+| GET / POST | `/study-sets/:id/quizzes` | Owner | List or add a quiz (`{ title }`). Up to 20 per set |
+| GET / PUT / DELETE | `/study-sets/quizzes/:testId` | Owner | The quiz with its questions and answers, rename it, or delete it |
+| POST / PUT / DELETE | `/study-sets/questions`, `/study-sets/questions/:id` | Owner | Same bodies as the admin question routes, but only `mcq` and `true_false`, only in the student's own quiz, up to 100 per quiz |
+| GET | `/study-sets/:id/materials` | Owner | Source material (no text), plus `usedBytes` and `limitBytes` |
+| POST | `/study-sets/:id/materials/text` | Owner | Body `{ title, text }` (20 to 100,000 characters) |
+| POST | `/study-sets/:id/materials/pdf` | Owner | Multipart field `file`: a PDF up to 10 MB (checked by type and `%PDF-` bytes). 30 uploads per 15 minutes. 400 when the PDF has no readable text |
+| DELETE | `/study-sets/materials/:materialId` | Owner | Removes the row and the private file |
 | GET | `/my-exams` | Student | The student's own exams: `{ upcoming, past }`. Each has `id`, `course` (`id`, `code`, `title`), `startsAt`, `type` and `daysLeft` (calendar days in the student's time zone). Upcoming is nearest first |
 | POST | `/my-exams` | Student | Body `{ course, startsAt (ISO), type: "mid_semester" | "end_semester" | "quiz" }`. Up to 20 per student. 404 for an unpublished course |
 | DELETE | `/my-exams/:id` | Student | Delete one of your exams |
@@ -474,6 +489,17 @@ Every graded answer through `POST /questions/:id/answer` updates the student's q
 ### Event log
 
 Every key action writes one row to `events` (`{ user, type, ts, props }`, indexed on `ts`, on `user` and `ts`, and on `type` and `ts`), for XP, achievements, leaderboards and the admin dashboard to be built from later. Types: signup, login, lesson_opened, lesson_completed, question_answered, test_submitted, review_done, flashcard_rated, focus_session_completed, video_started, set_created, set_studied, challenge_sent, challenge_played (the last four, and focus sessions, are not logged yet because those features are not built). Logging is fire and forget (utils/events.js): nothing waits for it and a failure only prints to the log. `props` keeps ids, numbers, booleans and short words only (never a name, email or free text). `lesson_completed` is written each time a test pass, a finished deck or Mark as done completes a lesson, so a dashboard counts distinct users and lessons. `review_done` is a due card rated or a mistake answered.
+
+### Study sets (the Study Lab)
+
+A `StudySet` belongs to one student and is private (`visibility` also allows `link` and `community`, which Phase X7 will use; nothing sets them yet). It holds:
+
+- **Notes** (`SetNote`): one Tiptap JSON document per set, checked by `utils/noteDoc.js` before it is saved.
+- **Flashcards**: ordinary `Flashcard` rows with `set` instead of `lesson` (a card has exactly one of the two). `GET /review/due` and `/review/session` include a student's own set cards, so they join the normal spaced-repetition queue; the session card has `setId` and a null `lessonId`. Rating a set card never completes a lesson and does not touch mastery.
+- **Quizzes**: `Test` rows with `scope: "set"` and `set` (always published). They are played in the normal test screens (`/tests/:id`, answers, submit, timed attempts), which now pass the student's id to `findVisibleTest(id, viewerId)`: a set quiz is visible only to its owner. Answers in a set quiz do not enter the mistakes queue or the question statistics (those are for official content), and admin counts leave them out.
+- **Source material** (`SetMaterial`): a PDF or pasted text. PDF text is read once at upload with `unpdf` and stored; the file goes to the private Cloudinary folder `catalyst/private/study-sets` (`type: "private"`, no public link is kept or returned). A student may upload 50 MB in total and 20 materials per set. Material is not used by anything yet; Phase X6 will read it.
+
+Everything is checked against the owner (`utils/ownSet.js`), so another student's set looks like a set that does not exist, and so does an admin's view of it. `GET /auth/me/export` includes a student's sets with notes, cards, quizzes (with the answers the student wrote) and material text. Deleting an account deletes the sets, cards, quizzes, questions, notes and materials for good, and the private files.
 
 ### Admin dashboard numbers
 

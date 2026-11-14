@@ -124,7 +124,7 @@ const getStats = async (req, res, next) => {
       Course.countDocuments({ deletedAt: null, isPublished: true }),
       Course.countDocuments({ deletedAt: null, isPublished: false }),
       Lesson.countDocuments({ deletedAt: null }),
-      Test.countDocuments({ deletedAt: null }),
+      Test.countDocuments({ deletedAt: null, scope: { $ne: "set" } }),
       TestResult.countDocuments({ updatedAt: { $gte: since } }),
       Progress.distinct("user", { updatedAt: { $gte: since } }),
       TestResult.distinct("user", { updatedAt: { $gte: since } }),

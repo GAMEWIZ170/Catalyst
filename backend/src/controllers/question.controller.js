@@ -50,16 +50,17 @@ const checkAnswer = async (req, res, next) => {
   if (badId(req.params.id)) return res.status(400).json({ message: "Invalid question ID" });
   try {
     const question = await Question.findOne({ _id: req.params.id, deletedAt: null }).lean();
-    const test = question && question.test ? await findVisibleTest(question.test) : null;
+    const test = question && question.test ? await findVisibleTest(question.test, req.user.id) : null;
     if (!test) return res.status(404).json({ message: "Question not found" });
+    const inSet = test.scope === "set"; // a student's own quiz: no mistakes queue and no question statistics (those are for official content)
     const answer = req.body.answer;
     if (typeof answer !== "string") {
       return res.status(400).json({ message: "Please provide an answer" });
     }
     const { isCorrect, unitWrong } = grade(question, answer);
     const correctAnswer = correctAnswerOf(question);
-    const wasMistake = await recordAnswer(req.user.id, question._id, isCorrect, req.user.timeZone);
-    await recordStat(question, answer, isCorrect);
+    const wasMistake = inSet ? false : await recordAnswer(req.user.id, question._id, isCorrect, req.user.timeZone);
+    if (!inSet) await recordStat(question, answer, isCorrect);
     logEvent(req.user.id, "question_answered", { question: question._id, correct: isCorrect });
     if (wasMistake) logEvent(req.user.id, "review_done", { kind: "mistake", correct: isCorrect });
     // Lesson mastery follows questions from lesson tests. A right answer only counts as review when it was a mistake before.

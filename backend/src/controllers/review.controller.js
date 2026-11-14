@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const StudySet = require("../models/studyset.models");
 const Flashcard = require("../models/flashcard.models");
 const FlashcardProgress = require("../models/flashcardprogress.models");
 const Lesson = require("../models/lesson.models");
@@ -17,7 +18,11 @@ const dueCards = async (userId) => {
   }).sort({ due: 1 }).limit(300).select("flashcard").lean();
   if (!rows.length) return [];
   const cards = await Flashcard.find({ _id: { $in: rows.map((row) => row.flashcard) }, isPublished: true, deletedAt: null }).lean();
-  const lessonIds = [...new Set(cards.map((card) => card.lesson.toString()))].map((id) => new mongoose.Types.ObjectId(id));
+  const lessonIds = [...new Set(cards.filter((card) => card.lesson).map((card) => card.lesson.toString()))].map((id) => new mongoose.Types.ObjectId(id));
+  // Cards from a student's own study sets count while the set exists and is theirs.
+  const setIds = [...new Set(cards.filter((card) => card.set).map((card) => card.set.toString()))];
+  const ownSets = setIds.length ? await StudySet.find({ _id: { $in: setIds }, owner: userId, deletedAt: null }).select("_id").lean() : [];
+  const ownSetIds = new Set(ownSets.map((row) => row._id.toString()));
   const visible = await Lesson.aggregate([
     { $match: { _id: { $in: lessonIds }, isPublished: true, deletedAt: null } },
     { $lookup: { from: Unit.collection.name, localField: "unit", foreignField: "_id", pipeline: [{ $match: { deletedAt: null } }, { $project: { course: 1 } }], as: "unit" } },
@@ -28,7 +33,7 @@ const dueCards = async (userId) => {
   ]);
   const visibleSet = new Set(visible.map((lesson) => lesson._id.toString()));
   const cardById = new Map(cards.map((card) => [card._id.toString(), card]));
-  return rows.map((row) => cardById.get(row.flashcard.toString())).filter((card) => card && visibleSet.has(card.lesson.toString()));
+  return rows.map((row) => cardById.get(row.flashcard.toString())).filter((card) => card && (card.lesson ? visibleSet.has(card.lesson.toString()) : ownSetIds.has(card.set.toString())));
 };
 
 // STUDENT: how much is due today.
@@ -45,7 +50,7 @@ const due = async (req, res, next) => {
 const session = async (req, res, next) => {
   try {
     const cards = (await dueCards(req.user.id)).slice(0, SESSION_SIZE);
-    return res.status(200).json({ data: { cards: cards.map((card) => ({ _id: card._id, front: card.front, back: card.back, lessonId: card.lesson })) } });
+    return res.status(200).json({ data: { cards: cards.map((card) => ({ _id: card._id, front: card.front, back: card.back, lessonId: card.lesson || null, setId: card.set || null })) } });
   } catch (error) {
     next(error);
   }

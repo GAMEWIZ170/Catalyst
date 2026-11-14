@@ -15,7 +15,7 @@ const { dayKey } = require("../utils/day");
 const getTest = async (req, res, next) => {
   if (badId(req.params.id)) return res.status(400).json({ message: "Invalid test ID" });
   try {
-    const test = await findVisibleTest(req.params.id);
+    const test = await findVisibleTest(req.params.id, req.user.id);
     if (!test) return res.status(404).json({ message: "Test not found" });
     if (test.timeLimitMinutes) {
       // A timed mock exam is only taken through /tests/:id/exam/start, so no questions are sent here.
@@ -76,7 +76,7 @@ const recordResult = async (userId, test, score, timeZone) => {
 const submitTest = async (req, res, next) => {
   if (badId(req.params.id)) return res.status(400).json({ message: "Invalid test ID" });
   try {
-    const test = await findVisibleTest(req.params.id);
+    const test = await findVisibleTest(req.params.id, req.user.id);
     if (!test) return res.status(404).json({ message: "Test not found" });
     const questions = await Question.find({ test: test._id, deletedAt: null })
       .select("type correctOption correctOptions correctAnswer numeric acceptedAnswers pairs items equation")

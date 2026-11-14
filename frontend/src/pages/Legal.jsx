@@ -28,6 +28,7 @@ export function Privacy() {
       <li><strong>Account:</strong> your name, your email, and your password. The password is stored scrambled (hashed), so nobody, including us, can read it.</li>
       <li><strong>Your choices:</strong> your avatar, exam date, daily goal, and whether you finished the welcome steps.</li>
       <li><strong>Your study activity:</strong> lessons you finished, test scores and answers, flashcard ratings, mistakes, how well you know each topic, notes, saved items, where you stopped in a lesson, and how many minutes you studied.</li>
+      <li><strong>Your study sets:</strong> the notes, flashcards, quizzes and source material (PDF files and pasted text) you put in the Study Lab. They are private to you.</li>
       <li><strong>Messages:</strong> the notifications shown under the bell.</li>
       <li><strong>Reports:</strong> what you write when you report a problem in a lesson or question, and our reply.</li>
       <li><strong>Answer statistics:</strong> every answer adds to a total for its question, such as how many students got it right. These totals have no name on them.</li>
@@ -76,6 +77,7 @@ export function Terms() {
       <li>Use it to study. Do not try to break it, overload it, or look for answers by attacking the site.</li>
       <li>Do not copy, resell or publish Catalyst lessons, questions, flashcards or materials without permission.</li>
       <li>Your own notes stay yours.</li>
+      <li>Only upload or paste study material you wrote or have the right to use. It stays private to you and is used only for your own study. We may remove material that breaks this rule.</li>
     </ul>
 
     <h2>Learning content</h2>

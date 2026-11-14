@@ -84,6 +84,7 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 - **Text.** The text for the shell and Settings is in `src/i18n/en.js`, read through `t("key")`. Another language is a sibling file added to `src/i18n/index.js`. Screens outside the shell still carry their own English text.
 - **Time zone.** Register sends the browser's time zone. An account with none (made before time zones existed) reports it once on the first visit. Students can change it under Settings, Account.
 - **Focus timer.** The timer button in the top bar (students) starts a focus session or a break. Lengths are in Settings, Study (saved on the device). `TimerContext` stores `endsAt` and the phase in `localStorage`, never a counter: the screen shows `endsAt` minus now, ticks every second, wakes at the exact end and re-checks when the tab becomes visible, so a hidden tab stays accurate. It survives page changes and reloads, and works across tabs. At the end it plays a short sound, shows a browser notification (permission is asked only when the student first starts a timer) and sets a message that screen readers hear ("Focus session complete"). The countdown itself is hidden from screen readers. While a focus session runs the study timer reports active seconds, so the server can count focus minutes.
+- **Notes editor.** Tiptap (`@tiptap/react`, `starter-kit`, `extension-mathematics`) is loaded only when a student opens a set's Notes tab (a separate file of about 134 KB compressed), so the rest of the app is unchanged. The Mathematics extension asks for KaTeX 0.16 to 0.18 and the app uses 0.19, so it was installed with `--legacy-peer-deps`; formulas draw correctly. Run `npm install --legacy-peer-deps` if npm complains. Notes are saved as Tiptap JSON and never as HTML.
 - **Read aloud.** Lessons have a Read aloud button (play, pause, stop and speed 0.75x to 1.5x) that uses the browser's own voice. Formulas are read as "formula". Nothing is sent anywhere, and the button is hidden in browsers with no speech voice.
 
 ## Offline use, install and low-data mode
@@ -116,7 +117,11 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 | `/exams` | Authenticated | My exams: add an exam (course, date and time, type), upcoming and past lists. Home shows the nearest as "CHEM113 exam in 18 days" and Today's plan counts down to it |
 | `/hall` | Authenticated | Study Hall: set a goal, join, and the focus timer starts. Shows how many are focusing now. No names, chat or ranking |
 | `/tests/:id/exam?timed=1` | Authenticated | Any test taken timed: a "Take it timed" button on the test intro. Timed quizzes add the extra time from Settings, Study |
-| `/lab` | Authenticated | Study Lab. A "coming soon" page until Phase X4 |
+| `/lab` | Authenticated | Study Lab: my sets with search and a New set button |
+| `/lab/:id` | Authenticated | One set, with tabs (`?tab=notes\|cards\|quizzes`). Notes: a Tiptap editor (bold, italic, headings, lists, quote, code) with formulas through KaTeX and mhchem, autosaved, plus Source material (PDF or pasted text, with a "right to use" box). Flashcards: add, edit, delete, Paste a list (term - definition lines become cards you can edit before saving) and Study these cards. Quizzes: add, take and edit |
+| `/lab/:setId/study` | Authenticated | The deck player for a set (the lesson flashcard player, run on a set). Ratings feed Review |
+| `/lab/quizzes/:testId` | Authenticated | Edit a quiz: multiple choice and true or false questions. Taking a quiz uses `/tests/:id`, including "Take it timed" |
+
 | `/courses/:id` | Authenticated | Course outline with lesson progress |
 | `/lessons/:id` | Authenticated | Lesson hub: explanation, formulas, practice tests, flashcards, materials, Mark as done, next lesson |
 | `/tests/:id` | Authenticated | Take a test, one question at a time, with feedback after each answer. Lesson tests show their pass percent and whether the student passed |

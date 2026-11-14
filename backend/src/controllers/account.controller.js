@@ -14,11 +14,62 @@ const Position = require("../models/position.models");
 const Progress = require("../models/progress.models");
 const StudyTime = require("../models/studytime.models");
 const TestResult = require("../models/testresult.models");
+const StudySet = require("../models/studyset.models");
+const SetNote = require("../models/setnote.models");
+const Flashcard = require("../models/flashcard.models");
+const Test = require("../models/test.models");
+const Question = require("../models/question.models");
+const SetMaterial = require("../models/setmaterial.models");
+const cloudinary = require("../config/cloudinary");
+const ExamDate = require("../models/examdate.models");
+const HallPresence = require("../models/hallpresence.models");
 const hashPassword = require("../utils/bcrypt");
 const authCache = require("../utils/authCache");
 const sendEmail = require("../utils/sendEmail");
 const { issueToken, consumeRow } = require("../utils/authTokens");
 const { cookieOptions } = require("./auth.controller");
+
+// A student's own study sets with their notes, cards and quizzes (the quizzes hold the answers the student wrote).
+const exportStudySets = async (user) => {
+  const sets = await StudySet.find({ owner: user, deletedAt: null }).select("-__v -owner").lean();
+  const ids = sets.map((set) => set._id);
+  const [notes, cards, tests, materials] = await Promise.all([
+    SetNote.find({ set: { $in: ids } }).select("-_id -__v").lean(),
+    Flashcard.find({ set: { $in: ids }, deletedAt: null }).select("set front back order -_id").lean(),
+    Test.find({ set: { $in: ids }, deletedAt: null }).select("_id set title").lean(),
+    SetMaterial.find({ set: { $in: ids } }).select("set kind title text pages -_id").lean()
+  ]);
+  const questions = await Question.find({ test: { $in: tests.map((test) => test._id) }, deletedAt: null }).select("-__v -deletedAt").lean();
+  const by = (rows, key) => (id) => rows.filter((row) => String(row[key]) === String(id));
+  return sets.map((set) => ({
+    ...set,
+    notes: by(notes, "set")(set._id)[0]?.content || null,
+    cards: by(cards, "set")(set._id).map(({ front, back, order }) => ({ front, back, order })),
+    materials: by(materials, "set")(set._id).map(({ kind, title, text, pages }) => ({ kind, title, text, pages })),
+    quizzes: by(tests, "set")(set._id).map((test) => ({ title: test.title, questions: by(questions, "test")(test._id).map(({ _id, test: t, createdAt, updatedAt, ...rest }) => rest) }))
+  }));
+};
+
+// Removes a student's study sets and everything in them for good (they are private to the student).
+const deleteStudySets = async (user) => {
+  const sets = await StudySet.find({ owner: user }).select("_id").lean();
+  const ids = sets.map((set) => set._id);
+  if (!ids.length) return;
+  const tests = await Test.find({ set: { $in: ids } }).select("_id").lean();
+  const cards = await Flashcard.find({ set: { $in: ids } }).select("_id").lean();
+  // Private PDFs are removed from storage first, then the rows.
+  const files = await SetMaterial.find({ owner: user, publicId: { $ne: "" } }).select("publicId").lean();
+  await Promise.all(files.map((file) => cloudinary.uploader.destroy(file.publicId, { resource_type: "raw", type: "private" }).catch(() => {})));
+  await Promise.all([
+    SetMaterial.deleteMany({ owner: user }),
+    Question.deleteMany({ test: { $in: tests.map((test) => test._id) } }),
+    FlashcardProgress.deleteMany({ flashcard: { $in: cards.map((card) => card._id) } }),
+    SetNote.deleteMany({ set: { $in: ids } }),
+    Test.deleteMany({ set: { $in: ids } }),
+    Flashcard.deleteMany({ set: { $in: ids } })
+  ]);
+  await StudySet.deleteMany({ _id: { $in: ids } });
+};
 
 // Everything Catalyst keeps about the student, as one JSON file. It holds the student's own data only:
 // never the password hash, and never correct answers or explanations (grading data stays on the server).
@@ -26,7 +77,7 @@ const exportData = async (req, res, next) => {
   try {
     const user = req.user.id;
     const own = (Model, select) => Model.find({ user }).select(`-_id -user -__v ${select || ""}`).lean();
-    const [profile, progress, testResults, mistakes, flashcards, mastery, notes, bookmarks, positions, studyTime, examAttempts, reports] = await Promise.all([
+    const [profile, progress, testResults, mistakes, flashcards, mastery, notes, bookmarks, positions, studyTime, examAttempts, reports, studySets, myExams] = await Promise.all([
       User.findById(user).select("name email role avatar emailVerified onboarded examDate dailyGoal timeZone notify subscriptionEndsAt createdAt -_id").lean(),
       own(Progress),
       own(TestResult),
@@ -39,13 +90,15 @@ const exportData = async (req, res, next) => {
       own(StudyTime),
       // The marked result of an exam holds correct answers, so it is left out. The student's own answers stay.
       own(ExamAttempt, "-result"),
-      own(Report, "-test -target -link -resolvedBy")
+      own(Report, "-test -target -link -resolvedBy"),
+      exportStudySets(user),
+      own(ExamDate)
     ]);
     if (!profile) return res.status(404).json({ message: "User not found" });
     res.setHeader("Content-Disposition", 'attachment; filename="catalyst-my-data.json"');
     return res.status(200).json({
       exportedAt: new Date().toISOString(),
-      profile, progress, testResults, mistakes, flashcards, mastery, notes, bookmarks, positions, studyTime, examAttempts, reports
+      profile, progress, testResults, mistakes, flashcards, mastery, notes, bookmarks, positions, studyTime, examAttempts, reports, studySets, myExams
     });
   } catch (error) {
     next(error);
@@ -94,6 +147,9 @@ const deleteAccount = async (req, res, next) => {
       ExamAttempt.deleteMany({ user: id }),
       Notification.deleteMany({ user: id }),
       Report.deleteMany({ user: id }),
+      ExamDate.deleteMany({ user: id }),
+      HallPresence.deleteMany({ user: id }),
+      deleteStudySets(id),
       AuthToken.deleteMany({ user: id })
     ]);
 
