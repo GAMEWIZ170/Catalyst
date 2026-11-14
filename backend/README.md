@@ -592,11 +592,11 @@ Everything is checked against the owner (`utils/ownSet.js`), so another student'
 
 ### Weekly goal with rest days (Phase X5.3)
 
-`PUT /auth/me/preferences` accepts `weeklyDays` (0 to 6; 0 is no goal; the account carries `weeklyGoal: { days }`). The most is 6, so every week has at least one rest day. A week runs Monday to Sunday in the student's own time zone (`weekStart` in `utils/day.js`). `GET /home` returns `weekly: { target, done, met }` (null with no goal), where `done` is the number of different days this week with study activity (the same days the streak uses). Progress only goes up during the week, so a missed day never takes anything away, and the wording on screen never mentions missed days. When `met` is true the `weekly_goal` XP (75, once per week, keyed by the Monday) is given. The streak itself still counts consecutive days; whether a rest day should keep a streak alive is an open owner decision.
+`PUT /auth/me/preferences` accepts `weeklyDays` (0 to 6; 0 is no goal; the account carries `weeklyGoal: { days }`). The most is 6, so every week has at least one rest day. A week runs Monday to Sunday in the student's own time zone (`weekStart` in `utils/day.js`). `GET /home` returns `weekly: { target, done, met }` (null with no goal), where `done` is the number of different days this week with study activity (the same days the streak uses). Progress only goes up during the week, so a missed day never takes anything away, and the wording on screen never mentions missed days. When `met` is true the `weekly_goal` XP (75, once per week, keyed by the Monday) is given. A single rest day also keeps the streak alive (see Streaks).
 
 ### Streaks
 
-A "day" is the student's own calendar day, from `User.timeZone` (utils/day.js; UTC when none is set or the name is unknown). Day keys saved before time zones existed were UTC days and stay as they are. The streak is calculated from distinct `YYYY-MM-DD` dates in lesson progress, test results and `FlashcardProgress.reviewedDays`. Consecutive activity ending today or yesterday is counted.
+A "day" is the student's own calendar day, from `User.timeZone` (utils/day.js; UTC when none is set or the name is unknown). Day keys saved before time zones existed were UTC days and stay as they are. The streak is calculated from distinct `YYYY-MM-DD` dates in lesson progress, test results and `FlashcardProgress.reviewedDays`. Consecutive activity ending today or yesterday is counted, and one rest day never breaks it: a single day with no activity between two active days is skipped and adds nothing to the count (`utils/streak.js`). Two missed days in a row end the streak.
 
 ### Speed
 

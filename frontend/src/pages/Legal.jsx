@@ -28,6 +28,9 @@ export function Privacy() {
       <li><strong>Account:</strong> your name, your email, and your password. The password is stored scrambled (hashed), so nobody, including us, can read it.</li>
       <li><strong>Your choices:</strong> your avatar, exam date, daily goal, and whether you finished the welcome steps.</li>
       <li><strong>Your study activity:</strong> lessons you finished, test scores and answers, flashcard ratings, mistakes, how well you know each topic, notes, saved items, where you stopped in a lesson, and how many minutes you studied.</li>
+      <li><strong>Your progress and rewards:</strong> your XP and level, the achievements you earned, and your weekly goal.</li>
+      <li><strong>Friends:</strong> a friend code that is only made when you open the Friends page, an optional display name, and your friend list. Friends see your display name (or just your first name) and your avatar. They see your level unless you choose to hide it. Nobody can find you by searching: only someone who has your code can send a request, and you must accept it. You can remove a friend at any time.</li>
+      <li><strong>Challenges:</strong> when you challenge a friend, we keep the questions chosen, your score and your friend's score so you can compare. Only you and the friend who played can open it.</li>
       <li><strong>Your study sets:</strong> the notes, flashcards, quizzes and source material (PDF files and pasted text) you put in the Study Lab. They are private to you.</li>
       <li><strong>Messages:</strong> the notifications shown under the bell.</li>
       <li><strong>Reports:</strong> what you write when you report a problem in a lesson or question, and our reply.</li>
@@ -49,6 +52,7 @@ export function Privacy() {
       <li>Your account and study data stay until you delete your account.</li>
       <li>Password reset links last 30 minutes, email links 24 hours, and email-change links 1 hour. They work once.</li>
       <li>Notifications are removed after 60 days.</li>
+      <li>Friend codes, friendships, challenges, XP and achievements are removed when you delete your account.</li>
     </ul>
 
     <h2>See your data, change it, delete it</h2>

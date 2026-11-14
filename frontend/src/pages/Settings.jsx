@@ -251,7 +251,7 @@ function StudyTab() {
           <span>{item.label}</span>
         </label>)}
       </div>
-      <p className="muted settings-help">Your streak counts any study day, with or without a goal.</p>
+      <p className="muted settings-help">Your streak counts any study day, with or without a goal. One rest day never breaks it.</p>
       <p className="settings-status" aria-live="polite">{goalStatus}</p>
     </section>
     <section className="settings-section" aria-labelledby="week-heading">
