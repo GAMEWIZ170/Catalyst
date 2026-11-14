@@ -181,6 +181,8 @@ export default function AdminTestEditor() {
         body.correctIndex = question.correctIndex;
       } else if (question.type === "true_false") body.correctAnswer = question.correctAnswer;
       else Object.assign(body, typeBody(question));
+      // The server refuses a type on update (a question's type cannot change), so only a new question sends it.
+      if (question._id) delete body.type;
       const saved = dataOf(question._id ? await api.updateQuestion(question._id, body) : await api.createQuestion(body));
       if (addAnother && !question._id) {
         setQuestions((current) => [...current, saved]);

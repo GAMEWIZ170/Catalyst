@@ -20,7 +20,9 @@ export default function AppShell({ children }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   // A test hides the site navigation so nothing pulls attention from the question.
-  const focusMode = Boolean(useMatch("/tests/:id")) || Boolean(useMatch("/tests/:id/exam")) || Boolean(useMatch("/welcome"));
+  // Every useMatch runs on every render (no ||), because React needs the same hooks in the same order each time.
+  const focusMatches = [useMatch("/tests/:id"), useMatch("/tests/:id/exam"), useMatch("/practice/*"), useMatch("/welcome")];
+  const focusMode = focusMatches.some(Boolean);
   const streak = user?.streak ?? null;
   useStudyTimer(user?.role === "student" && user?.dailyGoal?.kind === "minutes");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
