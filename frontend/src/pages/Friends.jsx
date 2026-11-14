@@ -117,7 +117,7 @@ export default function Friends() {
             <Button variant="secondary" disabled={busy} onClick={() => run(() => api.removeFriend(item.id), t("friends.removed"))} aria-label={`${t("friends.remove")} ${item.name}`}>{t("friends.remove")}</Button>
           </li>)}
         </ul>}
-      <p className="muted"><Link to="/challenges">{t("challenges.title")}</Link></p>
+      <p className="muted"><Link to="/challenges">{t("challenges.title")}</Link> · <Link to="/circles">{t("circles.title")}</Link></p>
     </section>
 
     <section className="settings-section" aria-labelledby="privacy-heading">
