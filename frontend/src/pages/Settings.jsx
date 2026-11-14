@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { syncThemeColor } from "../utils/themeColor";
+import { GOALS, goalKeyOf } from "../utils/goals";
 import Avatar, { AVATAR_KEYS, AVATAR_LABELS } from "../components/Avatar";
 
 const palettes = [
@@ -49,11 +50,27 @@ function applyPalette(palette) {
 }
 
 export default function Settings() {
-  const { user, updateAvatar } = useAuth();
+  const { user, updateAvatar, updatePreferences } = useAuth();
   const [palette, setPalette] = useState(currentPalette);
   const [textSize, setTextSize] = useState(currentTextSize);
   const [avatar, setAvatar] = useState(user?.avatar || null);
   const [status, setStatus] = useState("");
+  const [goal, setGoal] = useState(() => goalKeyOf(user?.dailyGoal));
+  const [goalStatus, setGoalStatus] = useState("");
+
+  async function selectGoal(key) {
+    const chosen = GOALS.find((item) => item.key === key);
+    const before = goal;
+    setGoal(key);
+    setGoalStatus("");
+    try {
+      await updatePreferences({ goalKind: chosen.kind, ...(chosen.minutes ? { goalMinutes: chosen.minutes } : {}) });
+      setGoalStatus("Saved");
+    } catch (error) {
+      setGoal(before);
+      setGoalStatus(error.message);
+    }
+  }
 
   function selectPalette(value) {
     setPalette(value);
@@ -96,6 +113,17 @@ export default function Settings() {
       </div>
       <p className="muted settings-help">Animations follow your device's reduced-motion setting.</p>
     </section>
+    {user?.role === "student" && <section className="settings-section" aria-labelledby="goal-heading">
+      <h2 id="goal-heading">Daily goal</h2>
+      <div className="settings-radio-grid" role="radiogroup" aria-label="Daily goal">
+        {GOALS.map((item) => <label className="palette-card text-size-card" key={item.key}>
+          <input type="radio" name="goal" value={item.key} checked={goal === item.key} onChange={() => selectGoal(item.key)} />
+          <span>{item.label}</span>
+        </label>)}
+      </div>
+      <p className="muted settings-help">Your streak counts any study day, with or without a goal.</p>
+      <p className="settings-status" aria-live="polite">{goalStatus}</p>
+    </section>}
     <section className="settings-section" aria-labelledby="avatar-heading">
       <h2 id="avatar-heading">Profile picture</h2>
       <div className="settings-avatar-grid" role="radiogroup" aria-label="Profile picture">

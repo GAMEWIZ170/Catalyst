@@ -3,6 +3,8 @@ const Unit = require("../models/unit.models");
 const Lesson = require("../models/lesson.models");
 const Progress = require("../models/progress.models");
 const Position = require("../models/position.models");
+const StudyTime = require("../models/studytime.models");
+const User = require("../models/user.models");
 
 // STUDENT: the home screen in one call. Every published course with this student's progress and the
 // next lesson to open, so the screen does not fetch each course tree one after another.
@@ -14,10 +16,14 @@ const getHome = async (req, res, next) => {
       .select("code title description")
       .sort({ code: 1 })
       .lean();
-    const [units, doneRows, positions] = await Promise.all([
+    const today = new Date().toISOString().slice(0, 10);
+    const [units, doneRows, positions, goalUser, studied, lessonsToday] = await Promise.all([
       Unit.find({ course: { $in: courses.map((course) => course._id) }, deletedAt: null }).select("course order").sort({ order: 1 }).lean(),
       Progress.find({ user: req.user.id, completed: true }).select("lesson").lean(),
-      Position.find({ user: req.user.id }).select("course lesson kind position total updatedAt").lean()
+      Position.find({ user: req.user.id }).select("course lesson kind position total updatedAt").lean(),
+      User.findById(req.user.id).select("dailyGoal").lean(),
+      StudyTime.findOne({ user: req.user.id, day: today }).select("seconds").lean(),
+      Progress.countDocuments({ user: req.user.id, completedDays: today })
     ]);
     const lessons = await Lesson.find({ unit: { $in: units.map((unit) => unit._id) }, isPublished: true, deletedAt: null })
       .select("unit title order").sort({ order: 1 }).lean();
@@ -57,7 +63,12 @@ const getHome = async (req, res, next) => {
       });
       return { ...course, progress: { completedLessons: completed, totalLessons: total }, next, last };
     });
-    return res.status(200).json({ count: data.length, data });
+    // Today's progress toward the student's own goal. Kind "none" means no bar is shown.
+    const kind = goalUser?.dailyGoal?.kind || "none";
+    const target = kind === "minutes" ? goalUser?.dailyGoal?.minutes || 10 : 1;
+    const doneSoFar = kind === "minutes" ? Math.floor((studied?.seconds || 0) / 60) : lessonsToday;
+    const goal = { kind, target, done: doneSoFar, met: kind !== "none" && doneSoFar >= target };
+    return res.status(200).json({ count: data.length, data, goal });
   } catch (error) {
     next(error);
   }

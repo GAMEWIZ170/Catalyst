@@ -3571,3 +3571,6 @@ textarea {
 .text-size-sample--standard { font-size: 1rem; }
 .text-size-sample--large { font-size: 1.25rem; }
 .text-size-sample--xlarge { font-size: 1.5rem; }
+
+.home-goal { margin-bottom: var(--space-4); }
+.home-goal-text { font-size: var(--text-sm); margin: var(--space-1) 0 0; }

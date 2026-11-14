@@ -4,14 +4,7 @@ import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { Button, Radio, RadioGroup, TextField } from "../components/ui";
 import { ErrorState, Loading } from "./Courses";
-
-const GOALS = [
-  { key: "none", label: "No goal for now", kind: "none" },
-  { key: "m10", label: "10 minutes a day", kind: "minutes", minutes: 10 },
-  { key: "m20", label: "20 minutes a day", kind: "minutes", minutes: 20 },
-  { key: "m30", label: "30 minutes a day", kind: "minutes", minutes: 30 },
-  { key: "lesson", label: "Finish one lesson a day", kind: "lesson" }
-];
+import { GOALS } from "../utils/goals";
 
 // Three short steps for a new student: course, exam date, daily goal. Every step after the first can be skipped.
 export default function Onboarding() {

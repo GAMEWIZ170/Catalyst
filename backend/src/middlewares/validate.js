@@ -81,6 +81,8 @@ const validatePreferences = validateWith(Joi.object({
   goalMinutes: Joi.number().integer().min(5).max(240)
 }).min(1));
 
+const validateStudyTime = validateWith(Joi.object({ seconds: Joi.number().integer().min(1).max(120).required() }));
+
 const validateRegister = validateWith(Joi.object({
   name: Joi.string().trim().min(2).max(60).required(),
   email: Joi.string().trim().lowercase().email().max(254).required(),
@@ -328,6 +330,7 @@ module.exports = {
   validateAvatar,
   validatePosition,
   validatePreferences,
+  validateStudyTime,
   validateCourse,
   validateCourseUpdate,
   validateUnit,

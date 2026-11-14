@@ -59,6 +59,7 @@ export const api = {
   // Remembers where the student is, so Home can offer "Continue". Only Home's copy goes stale.
   savePosition: (body) => request("/progress/position", { method: "PUT", body: JSON.stringify(body) }).then((payload) => { forget("home"); return payload; }),
   updatePreferences: (body) => request("/auth/me/preferences", { method: "PUT", body: JSON.stringify(body) }),
+  recordStudyTime: (seconds) => request("/progress/study-time", { method: "POST", body: JSON.stringify({ seconds }) }).then((payload) => { forget("home"); return payload; }),
   getProgress: () => request("/progress"),
   getStreak: () => cached("streak", () => request("/progress/streak")),
   getProgressOverview: () => cached("progress-overview", () => request("/progress/overview")),

@@ -28,13 +28,14 @@ export default function Courses() {
   const [courses, setCourses] = useState([]);
   const streak = user?.streak ?? null;
   const [loading, setLoading] = useState(true);
+  const [goal, setGoal] = useState(null);
   const [error, setError] = useState("");
   const [showWelcome, setShowWelcome] = useState(() => !welcomeSeen());
 
   function load() {
     setLoading(true);
     setError("");
-    api.getHome().then(({ data }) => setCourses(data || []))
+    api.getHome().then(({ data, goal: today }) => { setCourses(data || []); setGoal(today || null); })
       .catch((err) => setError(err.message)).finally(() => setLoading(false));
   }
 
@@ -68,6 +69,10 @@ export default function Courses() {
       <h1>{firstName ? `Hello, ${firstName}` : "Courses"}</h1>
       {streak !== null && <Badge tone="accent" icon={Zap}>{streak} {streak === 1 ? "day" : "days"} streak</Badge>}
     </header>
+    {!loading && !error && goal && goal.kind !== "none" && <div className="home-goal">
+      <Progress value={Math.round((Math.min(goal.done, goal.target) / goal.target) * 100)} label="Today's goal" />
+      <p className="muted home-goal-text">{goal.kind === "minutes" ? `Today: ${goal.done} of ${goal.target} minutes` : `Today: ${goal.done} of 1 lesson`}{goal.met ? ". Goal met." : ""}</p>
+    </div>}
     {isStudent && user.hasAccess === false && <p className="notice" role="status">Your access has ended. You can still look around, but lessons, tests and flashcards are locked until your subscription is renewed.</p>}
     {isStudent && showWelcome && <Welcome onDone={dismissWelcome} />}
     {loading && <Loading />}

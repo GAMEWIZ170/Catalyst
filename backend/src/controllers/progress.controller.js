@@ -8,6 +8,7 @@ const { findVisibleLesson } = require("../utils/visibility");
 const calculateStreak = require("../utils/streak");
 const Course = require("../models/course.models");
 const Position = require("../models/position.models");
+const StudyTime = require("../models/studytime.models");
 const { buildCourseOutline } = require("../utils/courseOutline");
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
@@ -113,4 +114,18 @@ const savePosition = async (req, res, next) => {
   }
 };
 
-module.exports = { markLessonDone, getMyProgress, getStreak, getOverview, loadStreak, savePosition };
+// The page reports study time in small pieces while the student is active. It only feeds the "minutes" goal.
+const addStudyTime = async (req, res, next) => {
+  try {
+    await StudyTime.updateOne(
+      { user: req.user.id, day: todayKey() },
+      { $inc: { seconds: req.body.seconds } },
+      { upsert: true }
+    );
+    return res.status(204).end();
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { markLessonDone, getMyProgress, getStreak, getOverview, loadStreak, savePosition, addStudyTime };

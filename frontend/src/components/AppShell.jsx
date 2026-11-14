@@ -5,6 +5,7 @@ import Avatar from "./Avatar";
 import { BarChart3, House, Mail, UserRound, Zap } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import ShortcutHelp from "./ShortcutHelp";
+import useStudyTimer from "../utils/useStudyTimer";
 
 // Phones get a bottom tab bar for the places a student goes most. Laptops keep the top bar only.
 const TABS = [
@@ -19,6 +20,7 @@ export default function AppShell({ children }) {
   // A test hides the site navigation so nothing pulls attention from the question.
   const focusMode = Boolean(useMatch("/tests/:id")) || Boolean(useMatch("/welcome"));
   const streak = user?.streak ?? null;
+  useStudyTimer(user?.role === "student" && user?.dailyGoal?.kind === "minutes");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const notificationButtonRef = useRef(null);
