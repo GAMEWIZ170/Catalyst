@@ -64,7 +64,7 @@ export default function NotificationPanel({ notifications, onNavigate }) {
     </p>}
     {items.length > 0 && <ul className="notification-list">
       {items.map((n) => <li key={n.id}>
-        <Link className={n.read ? "notification-item" : "notification-item notification-item--unread"} to={n.link || "/courses"}
+        <Link className={n.read ? "notification-item" : "notification-item notification-item--unread"} to={n.link || "/home"}
           onClick={() => { markRead(n.id); onNavigate(); }}>
           <span className="notification-title">{!n.read && <span className="sr-only">Unread: </span>}{n.title}</span>
           {n.body && <span className="notification-body">{n.body}</span>}

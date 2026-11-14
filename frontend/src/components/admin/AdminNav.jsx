@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 
 const SECTIONS = [
   { label: "Courses", to: "/admin" },
+  { label: "Catalog", to: "/admin/catalog" },
   { label: "Reports", to: "/admin/reports" },
   { label: "Analytics", to: "/admin/analytics" },
   { label: "Users", to: "/admin/users" },
@@ -10,7 +11,7 @@ const SECTIONS = [
 
 // Courses covers the list and every editor under it.
 const isCurrent = (to, pathname) => (to === "/admin"
-  ? !["/admin/users", "/admin/trash", "/admin/reports", "/admin/analytics"].some((prefix) => pathname.startsWith(prefix))
+  ? !["/admin/users", "/admin/trash", "/admin/reports", "/admin/analytics", "/admin/catalog"].some((prefix) => pathname.startsWith(prefix))
   : pathname.startsWith(to));
 
 export default function AdminNav() {

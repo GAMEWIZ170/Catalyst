@@ -27,7 +27,7 @@ const exportData = async (req, res, next) => {
     const user = req.user.id;
     const own = (Model, select) => Model.find({ user }).select(`-_id -user -__v ${select || ""}`).lean();
     const [profile, progress, testResults, mistakes, flashcards, mastery, notes, bookmarks, positions, studyTime, examAttempts, reports] = await Promise.all([
-      User.findById(user).select("name email role avatar emailVerified onboarded examDate dailyGoal subscriptionEndsAt createdAt -_id").lean(),
+      User.findById(user).select("name email role avatar emailVerified onboarded examDate dailyGoal timeZone notify subscriptionEndsAt createdAt -_id").lean(),
       own(Progress),
       own(TestResult),
       own(Mistake, "-fsrs"),

@@ -8,6 +8,7 @@ import DueChip from "../components/DueChip";
 import TodayPlan from "../components/TodayPlan";
 import TopicsLink from "../components/TopicsLink";
 import MistakesPanel from "../components/MistakesPanel";
+import CourseByline from "../components/CourseByline";
 import { Badge, Button, Card, EmptyState, Illustration, Progress, Skeleton, SkeletonGroup } from "../components/ui";
 
 const welcomeKey = "catalyst-welcome-seen";
@@ -88,7 +89,7 @@ export default function Courses() {
     </Card>}
     {isStudent && !loading && !error && <TodayPlan />}
     {isStudent && !loading && !error && <DueChip />}
-    {isStudent && !loading && !error && <MistakesPanel from="/courses" />}
+    {isStudent && !loading && !error && <MistakesPanel from="/home" />}
     {isStudent && !loading && !error && <TopicsLink />}
     {isStudent && showWelcome && <Welcome onDone={dismissWelcome} />}
     {!loading && !error && !courses.length && <EmptyState illustration={<Illustration name="empty" />} title="No courses yet" description="Check back soon." />}
@@ -98,6 +99,7 @@ export default function Courses() {
         {courses.map((course) => <Card as={Link} className="home-course" to={`/courses/${course._id}`} key={course._id} {...nearToPrefetch(() => prefetchCourse(course._id))}>
           <span className="home-course-code">{course.code}</span>
           <strong className="home-course-title">{course.title}</strong>
+          <CourseByline course={course} />
           {course.description && <span className="muted home-course-desc">{course.description}</span>}
           {course.progress && <Progress value={percent(course)} label={`${course.code} progress`} />}
         </Card>)}

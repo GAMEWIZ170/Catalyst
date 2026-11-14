@@ -121,7 +121,7 @@ export default function Exam() {
       <p className="exam-correct">{result.correct} of {result.total} correct.</p>
       <p className="muted">Best score {result.bestScore}% · Attempts {result.attempts}</p>
       <div className="button-row button-row--stack">
-        <Button as={Link} variant="primary" to="/courses">Back to home</Button>
+        <Button as={Link} variant="primary" to="/home">Back to home</Button>
       </div>
       <div className="exam-missed">
         <h2>Review</h2>
@@ -145,7 +145,7 @@ export default function Exam() {
   const lowTime = remaining !== null && remaining <= 5 * 60 * 1000;
   return <div className="exam exam--mock">
     <header className="exam-top">
-      <Link className="exam-close" to="/courses" aria-label="Leave exam (the timer keeps running)"><ArrowLeft size={20} aria-hidden="true" /></Link>
+      <Link className="exam-close" to="/home" aria-label="Leave exam (the timer keeps running)"><ArrowLeft size={20} aria-hidden="true" /></Link>
       <p className="exam-count" aria-live="off">{index + 1} / {questions.length}</p>
       <p className={`exam-timer ${lowTime ? "exam-timer--low" : ""}`} role="timer" aria-label="Time left">{remaining === null ? "" : clock(remaining)}</p>
     </header>

@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Notification = require("../models/notification.models");
 const User = require("../models/user.models");
+const { dayKey } = require("../utils/day");
 const Lesson = require("../models/lesson.models");
 const { dueCards } = require("./review.controller");
 const { visibleMistakes, isDue } = require("./mistake.controller");
@@ -8,10 +9,10 @@ const { visibleMistakes, isDue } = require("./mistake.controller");
 const LIST_SIZE = 20;
 const publicNotification = (n) => ({ id: n._id, type: n.type, title: n.title, body: n.body, link: n.link, read: Boolean(n.readAt), createdAt: n.createdAt });
 
-// A student with cards or mistakes due gets one message per UTC day. Made when the bell loads, so there is
+// A student with cards or mistakes due gets one message per day. Made when the bell loads, so there is
 // no background job. The key is checked first, so on most loads this costs one indexed lookup.
-const ensureDueNotification = async (userId) => {
-  const key = `review:${new Date().toISOString().slice(0, 10)}`;
+const ensureDueNotification = async (userId, timeZone) => {
+  const key = `review:${dayKey(timeZone)}`;
   if (await Notification.exists({ user: userId, key })) return;
   const [cards, mistakes] = await Promise.all([dueCards(userId), visibleMistakes(userId)]);
   const dueMistakes = mistakes.filter(isDue).length;
@@ -36,7 +37,7 @@ const notifyLessonPublished = async (lessonId) => {
     const unit = lesson && lesson.unit;
     const course = unit && unit.course;
     if (!unit || unit.deletedAt || !course || !course.isPublished || course.deletedAt) return;
-    const students = await User.find({ role: "student", isActive: { $ne: false }, deletedAt: null }).select("_id").lean();
+    const students = await User.find({ role: "student", isActive: { $ne: false }, deletedAt: null, "notify.lesson": { $ne: false } }).select("_id").lean();
     if (!students.length) return;
     const docs = students.map((s) => ({
       user: s._id, type: "lesson", key: `lesson:${lesson._id}`, title: "New lesson", body: `${lesson.title} is now in ${course.title}.`, link: `/lessons/${lesson._id}`
@@ -51,7 +52,7 @@ const notifyLessonPublished = async (lessonId) => {
 // STUDENT: the bell. Unread count plus the newest messages.
 const list = async (req, res, next) => {
   try {
-    if (req.user.role === "student") await ensureDueNotification(req.user.id);
+    if (req.user.role === "student" && req.user.notify?.review !== false) await ensureDueNotification(req.user.id, req.user.timeZone);
     const [unread, items] = await Promise.all([
       Notification.countDocuments({ user: req.user.id, readAt: null }),
       Notification.find({ user: req.user.id }).sort({ createdAt: -1 }).limit(LIST_SIZE).lean()

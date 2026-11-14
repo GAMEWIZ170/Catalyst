@@ -15,6 +15,8 @@ const Material = require("../src/models/material.models");
 const Progress = require("../src/models/progress.models");
 const TestResult = require("../src/models/testresult.models");
 const FlashcardProgress = require("../src/models/flashcardprogress.models");
+const Category = require("../src/models/category.models");
+const Author = require("../src/models/author.models");
 
 const COURSE_CODE = "DEMO113";
 const VIDEO_ID = "FSyAehMdpyI";
@@ -272,8 +274,18 @@ const seed = async () => {
   const student = await ensureUser("Demo student", "DEMO_STUDENT_EMAIL", "DEMO_STUDENT_PASSWORD", "Demo Student", "student");
   await ensureUser("Demo admin", "DEMO_ADMIN_EMAIL", "DEMO_ADMIN_PASSWORD", "Demo Admin", "admin");
 
+  // A category and an author so the demo course shows both. Left alone by reset, since an admin may use them for real courses.
+  const category = await Category.findOneAndUpdate({ slug: "chemistry" }, { $setOnInsert: { name: "Chemistry", order: 1 } }, { upsert: true, returnDocument: "after" });
+  let author = await Author.findOne({ displayName: "Catalyst Team" });
+  if (!author) author = await Author.create({ displayName: "Catalyst Team", bio: "The people who write and check Catalyst lessons." });
+
   let course = await Course.findOne({ code: COURSE_CODE });
   if (course) {
+    if (!course.category || !course.authors.length) {
+      course.category = course.category || category._id;
+      if (!course.authors.length) course.authors = [author._id];
+      await course.save();
+    }
     console.log(`Course ${COURSE_CODE}: already exists, content left unchanged`);
   } else {
     course = await Course.create({
@@ -281,6 +293,8 @@ const seed = async () => {
       title: "Demo: General Chemistry I",
       description: "Sample CHEM113 content: atomic structure and chemical bonding.",
       isPublished: true,
+      category: category._id,
+      authors: [author._id],
     });
     for (const [ui, u] of units.entries()) {
       const unit = await Unit.create({ course: course._id, title: u.title, order: ui + 1 });

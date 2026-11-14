@@ -6,8 +6,8 @@ const masterySchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   lesson: { type: mongoose.Schema.Types.ObjectId, ref: "Lesson", required: true },
   level: { type: Number, min: 1, max: 4, default: 1 },
-  proficientDay: { type: String, default: null }, // UTC day the lesson first reached Proficient
-  lastDropDay: { type: String, default: null } // UTC day of the last drop (at most one drop a day)
+  proficientDay: { type: String, default: null }, // day (student's time zone) the lesson first reached Proficient
+  lastDropDay: { type: String, default: null } // day (in the student's time zone) of the last drop (at most one drop a day)
 }, { timestamps: true });
 
 masterySchema.index({ user: 1, lesson: 1 }, { unique: true });

@@ -24,7 +24,7 @@ export default function VerifyEmail({ change = false }) {
     return () => { live = false; };
   }, [token]);
 
-  const home = user ? "/courses" : "/login";
+  const home = user ? "/home" : "/login";
   const homeLabel = user ? "Go to courses" : "Log in";
 
   if (state === "working") return <AuthLayout title={change ? "Confirming your new email" : "Verifying your email"} subtitle="One moment."><span className="spinner" aria-label="Loading" /></AuthLayout>;

@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const ExamAttempt = require("../models/examattempt.models");
 const Question = require("../models/question.models");
+const User = require("../models/user.models");
 const { findVisibleTest } = require("../utils/visibility");
 const { studentQuestion } = require("../utils/serializers");
 const { grade, correctAnswerOf } = require("../utils/grading");
@@ -50,10 +51,13 @@ const finish = async (attempt, test, questions, answers) => {
     };
   });
   const total = questions.length;
+  // An auto-submit has no request, so the student's day comes from their account.
+  const owner = await User.findById(attempt.user).select("timeZone").lean();
+  const timeZone = owner?.timeZone;
   const score = Math.round((correct / total) * 100);
-  const { result, passPercent, passed } = await recordResult(attempt.user, test, score);
+  const { result, passPercent, passed } = await recordResult(attempt.user, test, score, timeZone);
   // Wrong answers join the mistakes queue and right ones count toward leaving it, as with any answered question.
-  await Promise.all(questions.map((question, index) => recordAnswer(attempt.user, question._id, review[index].isCorrect)));
+  await Promise.all(questions.map((question, index) => recordAnswer(attempt.user, question._id, review[index].isCorrect, timeZone)));
   await Promise.all(questions.map((question, index) => recordStat(question, answers[question._id.toString()], review[index].isCorrect)));
   return { score, correct, total, bestScore: result.bestScore, attempts: result.attempts, passPercent, passed, review };
 };

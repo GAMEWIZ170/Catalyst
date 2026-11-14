@@ -1,7 +1,7 @@
 const Mastery = require("../models/mastery.models");
 
 const LABELS = ["Not started", "Attempted", "Familiar", "Proficient", "Mastered"];
-const todayKey = () => new Date().toISOString().slice(0, 10);
+const { dayKey } = require("./day");
 
 // Updates one student's mastery of one lesson after something happened. Events:
 //   { type: "attempt" }          any activity on the lesson: Attempted
@@ -11,8 +11,8 @@ const todayKey = () => new Date().toISOString().slice(0, 10);
 //                                Confident. On a later day than Proficient was reached, this makes it Mastered
 //   { type: "wrong" }            a wrong answer on a lesson question drops one level, at most once a day
 // Levels only go up through the events above. A failed lesson test never lowers a level by itself.
-const record = async (userId, lessonId, event) => {
-  const today = todayKey();
+const record = async (userId, lessonId, event, timeZone) => {
+  const today = dayKey(timeZone);
   const found = await Mastery.findOne({ user: userId, lesson: lessonId });
   const row = found || new Mastery({ user: userId, lesson: lessonId, level: 1 });
   const before = found ? row.level : 0;

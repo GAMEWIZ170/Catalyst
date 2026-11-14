@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { logEvent } = require("../utils/events");
 const Lesson = require("../models/lesson.models");
 const Unit = require("../models/unit.models");
 const Test = require("../models/test.models");
@@ -83,6 +84,7 @@ const getLessonByID = async (req, res, next) => {
   try {
     const data = await loadLesson(req.params.id, req.user.id, false);
     if (!data) return res.status(404).json({ message: `Lesson with ID ${req.params.id} not found` });
+    if (req.user.role === "student") logEvent(req.user.id, "lesson_opened", { lesson: req.params.id });
     return res.status(200).json({ data });
   } catch (error) {
     next(error);
@@ -95,6 +97,7 @@ const getLessonHub = async (req, res, next) => {
   try {
     const data = await loadLesson(req.params.id, req.user.id, true);
     if (!data) return res.status(404).json({ message: `Lesson with ID ${req.params.id} not found` });
+    if (req.user.role === "student") logEvent(req.user.id, "lesson_opened", { lesson: req.params.id });
     return res.status(200).json({ data });
   } catch (error) {
     next(error);

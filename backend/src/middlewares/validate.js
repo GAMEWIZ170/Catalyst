@@ -1,5 +1,8 @@
 const Joi = require("joi");
 const avatarKeys = require("../config/avatars");
+const { isValidTimeZone } = require("../utils/day");
+
+const timeZoneRule = Joi.string().max(64).custom((value, helpers) => (isValidTimeZone(value) ? value : helpers.message("Unknown time zone")));
 
 const objectId = Joi.string().hex().length(24);
 const imageSchema = Joi.object({
@@ -78,8 +81,15 @@ const validatePreferences = validateWith(Joi.object({
   onboarded: Joi.boolean(),
   examDate: Joi.date().iso().allow(null),
   goalKind: Joi.string().valid("none", "minutes", "lesson"),
-  goalMinutes: Joi.number().integer().min(5).max(240)
+  goalMinutes: Joi.number().integer().min(5).max(240),
+  timeZone: timeZoneRule,
+  notify: Joi.object({ review: Joi.boolean(), lesson: Joi.boolean() }).min(1)
 }).min(1));
+
+const validateEvent = validateWith(Joi.object({
+  type: Joi.string().valid("video_started", "focus_session_completed").required(),
+  props: Joi.object({ lesson: objectId, minutes: Joi.number().integer().min(1).max(240) }).default({})
+}));
 
 const validateStudyTime = validateWith(Joi.object({ seconds: Joi.number().integer().min(1).max(120).required() }));
 
@@ -89,7 +99,8 @@ const validateNote = validateWith(Joi.object({ text: Joi.string().trim().allow("
 const validateRegister = validateWith(Joi.object({
   name: Joi.string().trim().min(2).max(60).required(),
   email: Joi.string().trim().lowercase().email().max(254).required(),
-  password: Joi.string().min(8).max(72).required()
+  password: Joi.string().min(8).max(72).required(),
+  timeZone: timeZoneRule
 }));
 const validateLogin = validateWith(Joi.object({
   email: Joi.string().trim().lowercase().email().required(),
@@ -117,14 +128,23 @@ const courseFields = {
   code: Joi.string().trim(),
   title: Joi.string().trim(),
   description: Joi.string().trim().max(200),
-  isPublished: Joi.boolean()
+  isPublished: Joi.boolean(),
+  category: objectId.allow(null),
+  authors: Joi.array().items(objectId).max(10).unique()
 };
 const validateCourse = validateWith(Joi.object({
   code: courseFields.code.required(),
   title: courseFields.title.required(),
   description: courseFields.description.required(),
-  isPublished: courseFields.isPublished.default(false)
+  isPublished: courseFields.isPublished.default(false),
+  category: courseFields.category.default(null),
+  authors: courseFields.authors.default([])
 }));
+const validateCategory = validateWith(Joi.object({ name: Joi.string().trim().min(2).max(60).required(), order: Joi.number().integer().min(0).max(1000) }));
+const validateCategoryUpdate = validateWith(Joi.object({ name: Joi.string().trim().min(2).max(60), order: Joi.number().integer().min(0).max(1000) }).min(1));
+const authorFields = { displayName: Joi.string().trim().min(2).max(80), bio: Joi.string().trim().allow("").max(300), avatar: optionalImage };
+const validateAuthor = validateWith(Joi.object({ displayName: authorFields.displayName.required(), bio: authorFields.bio.default(""), avatar: authorFields.avatar.default(null) }));
+const validateAuthorUpdate = validateWith(Joi.object(authorFields).min(1));
 const validateCourseUpdate = validateWith(Joi.object(courseFields).min(1));
 
 const unitFields = { course: objectId, title: Joi.string().trim(), order: Joi.number().integer().min(1) };
@@ -403,10 +423,15 @@ module.exports = {
   validatePosition,
   validatePreferences,
   validateStudyTime,
+  validateEvent,
   validateBookmark,
   validateNote,
   validateCourse,
   validateCourseUpdate,
+  validateCategory,
+  validateCategoryUpdate,
+  validateAuthor,
+  validateAuthorUpdate,
   validateUnit,
   validateUnitUpdate,
   validateLesson,

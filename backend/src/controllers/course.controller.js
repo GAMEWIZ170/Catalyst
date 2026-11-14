@@ -9,6 +9,16 @@ const { buildCourseOutline } = require("../utils/courseOutline");
 const Question = require("../models/question.models");
 const Flashcard = require("../models/flashcard.models");
 const Material = require("../models/material.models");
+const Category = require("../models/category.models");
+const Author = require("../models/author.models");
+const { attachMeta } = require("../utils/courseMeta");
+
+// The category and authors an admin picked must exist. Returns a message, or null when all is well.
+const checkMeta = async ({ category, authors }) => {
+  if (category && !(await Category.exists({ _id: category }))) return "Category not found";
+  if (authors && authors.length && (await Author.countDocuments({ _id: { $in: authors } })) !== authors.length) return "Author not found";
+  return null;
+};
 
 // Course codes are unique ignoring upper and lower case, and a code in the Trash is still taken.
 const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -24,6 +34,8 @@ const createCourse = async (req, res, next) => {
   try {
     const clash = await findCodeClash(req.body.code);
     if (clash) return res.status(409).json({ message: codeClashMessage(clash) });
+    const metaProblem = await checkMeta(req.body);
+    if (metaProblem) return res.status(400).json({ message: metaProblem });
     const course = new Course(req.body);
     await course.save();
 
@@ -61,13 +73,19 @@ const getCourseByID = async (req, res, next) => {
 
 const getAllCourses = async (req, res, next) => {
   try {
-    const courses = await Course.find({
-      isPublished: true,
-      deletedAt: null
-    })
-      .select("code title description")
+    const filter = { isPublished: true, deletedAt: null };
+    // ?category=<slug> shows one category. "general" also takes courses with no category.
+    if (typeof req.query.category === "string" && req.query.category) {
+      const slug = req.query.category.toLowerCase();
+      const found = slug === "general" ? null : await Category.findOne({ slug }).select("_id").lean();
+      if (slug === "general") filter.$or = [{ category: null }, { category: { $nin: await Category.distinct("_id") } }];
+      else filter.category = found ? found._id : null;
+      if (slug !== "general" && !found) return res.status(200).json({ count: 0, data: [] });
+    }
+    const courses = await attachMeta(await Course.find(filter)
+      .select("code title description category authors")
       .sort({ code: 1 })
-      .lean();
+      .lean());
 
     return res.status(200).json({ count: courses.length, data: courses });
   } catch (error) {
@@ -84,6 +102,8 @@ const updateCourse = async (req, res, next) => {
       const clash = await findCodeClash(req.body.code, req.params.id);
       if (clash) return res.status(409).json({ message: codeClashMessage(clash) });
     }
+    const metaProblem = await checkMeta(req.body);
+    if (metaProblem) return res.status(400).json({ message: metaProblem });
     const updatedCourse = await Course.findOneAndUpdate(
       { _id: req.params.id, deletedAt: null },
       req.body,
@@ -138,7 +158,7 @@ const deleteCourse = async (req, res, next) => {
 const getAllCoursesForAdmin = async (req, res, next) => {
   try {
     const courses = await Course.find({ deletedAt: null })
-      .select("code title description isPublished")
+      .select("code title description isPublished category authors")
       .sort({ code: 1 })
       .lean();
     const courseIds = courses.map((course) => course._id);
@@ -191,7 +211,7 @@ const getCourseForAdmin = async (req, res, next) => {
   }
   try {
     const course = await Course.findOne({ _id: req.params.id, deletedAt: null })
-      .select("_id code title description isPublished")
+      .select("_id code title description isPublished category authors")
       .lean();
     if (!course) return res.status(404).json({ message: "Course not found" });
 

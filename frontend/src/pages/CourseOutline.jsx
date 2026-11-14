@@ -7,6 +7,7 @@ import MistakesPanel from "../components/MistakesPanel";
 import { Button, Card, EmptyState, Progress } from "../components/ui";
 import { rememberCourse } from "../utils/courseCache";
 import { ErrorState, Loading } from "./Courses";
+import CourseByline from "../components/CourseByline";
 
 const MASTERY = ["Not started", "Attempted", "Familiar", "Proficient", "Mastered"];
 const plural = (count, word) => `${count} ${word}${count === 1 ? "" : "s"}`;
@@ -97,6 +98,8 @@ export default function CourseOutline() {
     <header className="ol-header">
       <p className="ol-code">{course.code}</p>
       <h1>{course.title}</h1>
+      <CourseByline course={course} className="ol-byline" />
+      {course.authors?.some((author) => author.bio) && <ul className="ol-authors muted">{course.authors.filter((author) => author.bio).map((author) => <li key={author._id}><strong>{author.displayName}</strong>: {author.bio}</li>)}</ul>}
       <p className="muted">{completed} of {total} lessons complete</p>
       <Progress value={percent} label="Course progress" />
       {nextLesson && <div className="button-row button-row--stack">

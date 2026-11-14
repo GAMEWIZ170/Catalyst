@@ -51,7 +51,7 @@ export default function Test() {
   const [hintFor, setHintFor] = useState(null); // id of the question whose hint is open
   const feedbackHeading = useRef(null);
   const missedRef = useRef(null);
-  const backTo = location.state?.from || (preview ? `/admin/tests/${id}` : "/courses");
+  const backTo = location.state?.from || (preview ? `/admin/tests/${id}` : "/home");
   const backState = location.state?.courseFrom ? { from: location.state.courseFrom } : undefined;
   const backLabel = preview ? "Back to editor" : isMistakes || isTopic ? "Back" : `Back to ${backTo.startsWith("/lessons/") ? "lesson" : "course"}`;
   const dirty = !preview && phase === "question" && answers.length > 0;

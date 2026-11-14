@@ -39,7 +39,7 @@ export default function Progress() {
       <Stat label="Lessons completed" value={completed.length} />
       <Stat label="Average score" value={average === null ? "No scores yet" : `${average}%`} />
     </div>
-    {trees.length === 0 && <EmptyState title="No courses to show yet" description="Your progress will appear here once a course is open." action={<Button as={Link} variant="secondary" to="/courses">Back to home</Button>} />}
+    {trees.length === 0 && <EmptyState title="No courses to show yet" description="Your progress will appear here once a course is open." action={<Button as={Link} variant="secondary" to="/home">Back to home</Button>} />}
     {trees.map((tree) => <Card key={tree._id} aria-labelledby={`progress-${tree._id}`}>
       <h2 id={`progress-${tree._id}`}>{tree.code} · {tree.title}</h2>
       <div className="progress-units">

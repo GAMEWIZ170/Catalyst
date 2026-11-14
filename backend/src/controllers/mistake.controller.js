@@ -8,13 +8,14 @@ const { testIsVisible } = require("../utils/visibility");
 const { studentQuestion } = require("../utils/serializers");
 const { schedule, Rating } = require("../utils/scheduler");
 
-const todayKey = () => new Date().toISOString().slice(0, 10);
+const { dayKey } = require("../utils/day");
 const PRACTICE_SIZE = 20;
 const isDue = (row) => !row.mistake.due || row.mistake.due <= new Date();
 
 // Called after every graded answer. A wrong answer adds the question to the queue (or bumps it).
-// A right answer counts toward leaving the queue, but only once per UTC day.
-const recordAnswer = async (userId, questionId, isCorrect) => {
+// A right answer counts toward leaving the queue, but only once per day.
+const recordAnswer = async (userId, questionId, isCorrect, timeZone) => {
+  const todayKey = () => dayKey(timeZone);
   const existing = await Mistake.findOne({ user: userId, question: questionId }).select("fsrs").lean();
   if (!isCorrect) {
     const next = schedule(existing?.fsrs, Rating.Again);

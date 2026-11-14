@@ -142,7 +142,7 @@ All routes start with `/api/v1`. Successful responses use `{ "data": ... }` wher
 
 | Method | Path | Access | Purpose |
 | --- | --- | --- | --- |
-| POST | `/auth/register` | Public | Create a student and set the cookie |
+| POST | `/auth/register` | Public | Create a student and set the cookie. Optional `timeZone` (an IANA name such as `Africa/Accra`, sent by the browser) |
 | POST | `/auth/login` | Public | Log in |
 | POST | `/auth/logout` | Public | Clear the cookie |
 | POST | `/auth/forgot-password` | Public | Body `{ email }`. Always answers 200 with the same message, whether or not the email has an account. If it does, a reset link (valid 30 minutes) goes to `sendEmail` |
@@ -156,7 +156,7 @@ All routes start with `/api/v1`. Successful responses use `{ "data": ... }` wher
 | PUT | `/auth/me/password` | Student | Body `{ currentPassword, newPassword }` (8 to 72 characters). 401 when the current password is wrong, 400 when the new one is the same. Logs out every other device and sets a fresh cookie on this one |
 | GET | `/auth/me/export` | Student | The student's own data as JSON: profile, progress, test results, mistakes, flashcard progress, mastery, notes, bookmarks, positions, study time and exam answers. No password hash, no correct answers, no marked exam results. 3 per 15 minutes |
 | DELETE | `/auth/me` | Student | Body `{ password, confirm: "DELETE" }`. Permanent, see below. 409 for the only remaining admin |
-| PUT | `/auth/me/preferences` | Student | Any of `{ onboarded, examDate (ISO date or null), goalKind: "none"|"minutes"|"lesson", goalMinutes (5 to 240) }`. `/auth/me` and login return `onboarded`, `examDate` and `dailyGoal`. New accounts start with `onboarded: false`; older accounts count as done |
+| PUT | `/auth/me/preferences` | Student | Any of `{ onboarded, examDate (ISO date or null), goalKind: "none"|"minutes"|"lesson", goalMinutes (5 to 240), timeZone (IANA name), notify: { review, lesson } (booleans) }`. `/auth/me` and login return `onboarded`, `examDate`, `dailyGoal`, `timeZone` (null until the browser reports it) and `notify`. New accounts start with `onboarded: false`; older accounts count as done |
 
 Example avatar response:
 
@@ -184,8 +184,10 @@ All routes need login. Messages are in-app only (no email).
 
 | Method | Path | Access | Purpose |
 | --- | --- | --- | --- |
-| GET | `/courses` | Student | Published courses |
-| GET | `/home` | Student | Every published course with this student's progress and the next lesson to open |
+| GET | `/courses` | Student | Published courses, each with `category` (`{ _id, name, slug }`, General when none) and `authors` (`displayName`, `bio`, `avatar`). `?category=<slug>` filters; `general` also matches courses with no category |
+| GET | `/courses/categories` | Student | Categories that have a published course (General included when some course has none), for the filter |
+| POST | `/events` | Student | Body `{ type: "video_started" | "focus_session_completed", props? }`. Answers 204. Only things the server cannot see itself. Ignored for admins |
+| GET | `/home` | Student | Every published course (with `category` and `authors`) with this student's progress and the next lesson to open |
 | GET | `/courses/:id` | Student | Course outline, tests and lesson progress |
 | GET | `/lessons/:id` | Student | Visible lesson summary |
 | GET | `/lessons/:id/hub` | Student | The lesson screen in one call: the lesson summary plus `completed` and the `materials` list |
@@ -343,8 +345,16 @@ Create routes require an available parent. Delete routes are soft deletes.
 | --- | --- | --- |
 | GET | `/admin/courses` | List all non-deleted courses |
 | GET | `/admin/courses/:id` | Full editor tree with drafts, tests and lesson counts |
-| POST | `/admin/courses` | Create a course |
-| PUT | `/admin/courses/:id` | Update a course |
+| POST | `/admin/courses` | Create a course. Optional `category` (id or null) and `authors` (up to 10 ids); 400 when one does not exist |
+| PUT | `/admin/courses/:id` | Update a course (same optional `category` and `authors`) |
+| GET | `/admin/categories` | Every category, by order then name |
+| POST | `/admin/categories` | Body `{ name, order? }`. The slug is made from the name. "General" is reserved. 409 on a clash |
+| PUT | `/admin/categories/:id` | Rename or reorder |
+| DELETE | `/admin/categories/:id` | Delete. Its courses fall back to General |
+| GET | `/admin/authors` | Every author |
+| POST | `/admin/authors` | Body `{ displayName, bio?, avatar? }` (avatar is an uploaded image like other images) |
+| PUT | `/admin/authors/:id` | Update an author |
+| DELETE | `/admin/authors/:id` | Delete. The author is removed from every course |
 | DELETE | `/admin/courses/:id` | Soft-delete a course |
 | POST | `/admin/units` | Create a unit |
 | POST | `/admin/units/:id/summary-pdf` | Body `{ lesson }` (optional: one of the unit's lessons, else the first). Makes a PDF of the unit's published lessons and saves it as an unpublished PDF material on that lesson. 409 when the unit has no published lessons. 30 per 15 minutes (upload limit) |
@@ -440,7 +450,7 @@ Each student has a level per lesson (`Mastery`): none (Not started), 1 Attempted
 
 - Any lesson test submit, flashcard rating or Mark as done: Attempted.
 - Lesson test score of 70% or more: Familiar. 100%: Proficient.
-- Mastered: from Proficient, 100% on the lesson test again, a right answer on a lesson question that was in the mistakes queue, or a flashcard marked Confident, each on a later UTC day than the day Proficient was reached.
+- Mastered: from Proficient, 100% on the lesson test again, a right answer on a lesson question that was in the mistakes queue, or a flashcard marked Confident, each on a later day (the student's own) than the day Proficient was reached.
 - A wrong answer on a lesson question drops one level, at most once a day, never below Attempted. A low test score by itself never lowers a level.
 - Unit and course tests do not change lesson mastery, by design: they stay tied to their unit or course, and their questions are not linked to lessons. Unit-level and course-level mastery, built from those tests, is the planned next step.
 
@@ -450,11 +460,15 @@ The `ts-fsrs` package schedules reviews at `request_retention` 0.9 with short-te
 
 ### Mistakes queue
 
-Every graded answer through `POST /questions/:id/answer` updates the student's queue (`Mistake`: wrong count, last wrong date, correct streak). A wrong answer adds the question and resets its streak. A right answer counts once per UTC day, and the question leaves the queue after two right answers on different days. Questions whose test is unpublished or deleted are left out of both mistakes routes. Practice answers are graded by the same answer route and never submitted, so they do not change test scores.
+Every graded answer through `POST /questions/:id/answer` updates the student's queue (`Mistake`: wrong count, last wrong date, correct streak). A wrong answer adds the question and resets its streak. A right answer counts once per day (the student's own), and the question leaves the queue after two right answers on different days. Questions whose test is unpublished or deleted are left out of both mistakes routes. Practice answers are graded by the same answer route and never submitted, so they do not change test scores.
+
+### Event log
+
+Every key action writes one row to `events` (`{ user, type, ts, props }`, indexed on `ts`, on `user` and `ts`, and on `type` and `ts`), for XP, achievements, leaderboards and the admin dashboard to be built from later. Types: signup, login, lesson_opened, lesson_completed, question_answered, test_submitted, review_done, flashcard_rated, focus_session_completed, video_started, set_created, set_studied, challenge_sent, challenge_played (the last four, and focus sessions, are not logged yet because those features are not built). Logging is fire and forget (utils/events.js): nothing waits for it and a failure only prints to the log. `props` keeps ids, numbers, booleans and short words only (never a name, email or free text). `lesson_completed` is written each time a test pass, a finished deck or Mark as done completes a lesson, so a dashboard counts distinct users and lessons. `review_done` is a due card rated or a mistake answered.
 
 ### Streaks
 
-The streak is calculated from distinct UTC `YYYY-MM-DD` dates in lesson progress, test results and `FlashcardProgress.reviewedDays`. Consecutive activity ending today or yesterday is counted.
+A "day" is the student's own calendar day, from `User.timeZone` (utils/day.js; UTC when none is set or the name is unknown). Day keys saved before time zones existed were UTC days and stay as they are. The streak is calculated from distinct `YYYY-MM-DD` dates in lesson progress, test results and `FlashcardProgress.reviewedDays`. Consecutive activity ending today or yesterday is counted.
 
 ### Speed
 
@@ -581,7 +595,7 @@ Emailed links carry a random 32-byte token. Only its SHA-256 hash is stored in `
 
 ### Notifications
 
-`Notification` rows hold one message for one student. A unique `key` per user stops repeats: `lesson:<lessonId>` (one per lesson) and `review:<UTC date>` (one per day). Two things create messages. (1) An admin saves a lesson with `isPublished: true` when it was hidden: every active student gets "New lesson" (only if the unit and course are visible; editing an already published lesson, or re-publishing after hiding, sends nothing new). This runs in the background after the save answers, so it can take a moment on a large student list. (2) The first `GET /notifications` of a UTC day creates "Review is ready" when flashcards or mistakes are due. Messages delete themselves after 60 days (TTL index) and are removed when the account is deleted. A "report answered" message is not built because Catalyst has no reporting feature yet.
+`Notification` rows hold one message for one student. A unique `key` per user stops repeats: `lesson:<lessonId>` (one per lesson) and `review:<date in the student's time zone>` (one per day). Two things create messages. (1) An admin saves a lesson with `isPublished: true` when it was hidden: every active student gets "New lesson" (only if the unit and course are visible; editing an already published lesson, or re-publishing after hiding, sends nothing new). This runs in the background after the save answers, so it can take a moment on a large student list. (2) The first `GET /notifications` of the student's day creates "Review is ready" when flashcards or mistakes are due. A student can switch off either kind with `notify.review` and `notify.lesson` (`PUT /auth/me/preferences`); both default to on. Messages delete themselves after 60 days (TTL index) and are removed when the account is deleted. A "report answered" message is not built because Catalyst has no reporting feature yet.
 
 ### Formulas drawn on save
 

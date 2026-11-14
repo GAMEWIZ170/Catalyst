@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import AdminLayout from "../components/admin/AdminLayout";
-import { Button, Card, TextArea, TextField } from "../components/ui";
+import { Button, Card, Checkbox, SelectField, TextArea, TextField } from "../components/ui";
 import { ErrorState, Loading } from "./Courses";
 import Breadcrumbs from "../components/admin/Breadcrumbs";
 import ConfirmDialog from "../components/admin/ConfirmDialog";
@@ -23,11 +23,17 @@ function idOf(item) {
   return item._id || item.id;
 }
 
+// The editable part of a course, in the shape the form keeps. A course with no category has "".
+function detailsOf(course) {
+  return { code: course.code || "", title: course.title || "", description: course.description || "", category: course.category || "", authors: course.authors || [] };
+}
+
 export default function AdminCourseEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [course, setCourse] = useState(null);
   const [details, setDetails] = useState(null);
+  const [catalog, setCatalog] = useState({ categories: [], authors: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -41,7 +47,7 @@ export default function AdminCourseEditor() {
   const [focusTarget, setFocusTarget] = useState(null);
   const unitButtonRefs = useRef({});
   const lessonButtonRefs = useRef({});
-  const dirty = Boolean(details && JSON.stringify(details) !== JSON.stringify({ code: course.code, title: course.title, description: course.description }));
+  const dirty = Boolean(details && JSON.stringify(details) !== JSON.stringify(detailsOf(course)));
   const blocker = useUnsavedChanges(dirty);
 
   async function load() {
@@ -50,7 +56,7 @@ export default function AdminCourseEditor() {
     try {
       const next = dataOf(await api.getAdminCourse(id));
       setCourse(next);
-      setDetails({ code: next.code || "", title: next.title || "", description: next.description || "" });
+      setDetails(detailsOf(next));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -59,6 +65,12 @@ export default function AdminCourseEditor() {
   }
 
   useEffect(() => { load(); }, [id]);
+
+  useEffect(() => {
+    Promise.all([api.getAdminCategories(), api.getAdminAuthors()])
+      .then(([categories, authors]) => setCatalog({ categories: categories.data || [], authors: authors.data || [] }))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!focusTarget) return;
@@ -73,7 +85,7 @@ export default function AdminCourseEditor() {
     setSaving(true);
     setError("");
     try {
-      await api.updateCourse(id, details);
+      await api.updateCourse(id, { ...details, category: details.category || null });
       setMessage("Saved");
       await load();
     } catch (err) {
@@ -206,7 +218,18 @@ export default function AdminCourseEditor() {
         <TextField label="Code" required value={details.code} onChange={(event) => setDetails({ ...details, code: event.target.value })} />
         <TextField label="Title" required value={details.title} onChange={(event) => setDetails({ ...details, title: event.target.value })} />
         <TextArea label="Description" required maxLength="200" value={details.description} onChange={(event) => setDetails({ ...details, description: event.target.value })} />
-        <div className="editor-actions"><span className="muted">{dirty ? "Unsaved changes" : ""}</span><Button variant="secondary" type="button" disabled={!dirty} onClick={() => setDetails({ code: course.code, title: course.title, description: course.description })}>Discard changes</Button><Button variant="primary" type="submit" disabled={!dirty || saving}>Save changes</Button></div>
+        <SelectField label="Category" value={details.category} onChange={(event) => setDetails({ ...details, category: event.target.value })}>
+          <option value="">General</option>
+          {catalog.categories.map((item) => <option key={item._id} value={item._id}>{item.name}</option>)}
+        </SelectField>
+        <fieldset className="author-picker">
+          <legend>Authors</legend>
+          {catalog.authors.length === 0 && <p className="muted">No authors yet.</p>}
+          {catalog.authors.map((author) => <Checkbox key={author._id} label={author.displayName} checked={details.authors.includes(author._id)}
+            onChange={(event) => setDetails({ ...details, authors: event.target.checked ? [...details.authors, author._id] : details.authors.filter((value) => value !== author._id) })} />)}
+          <Link to="/admin/catalog">Manage categories and authors</Link>
+        </fieldset>
+        <div className="editor-actions"><span className="muted">{dirty ? "Unsaved changes" : ""}</span><Button variant="secondary" type="button" disabled={!dirty} onClick={() => setDetails(detailsOf(course))}>Discard changes</Button><Button variant="primary" type="submit" disabled={!dirty || saving}>Save changes</Button></div>
       </form>
     </section>
     <section className="admin-editor-section">

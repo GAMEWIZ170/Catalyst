@@ -65,6 +65,17 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: null
     },
+    // IANA time zone such as "Africa/Accra", detected from the browser. Streaks and daily goals use the student's own day.
+    // Null until the browser reports it (older accounts), and counts as UTC until then.
+    timeZone: {
+        type: String,
+        default: null
+    },
+    // Which in-app messages the student wants. Report replies always arrive. Missing values count as on.
+    notify: {
+        review: { type: Boolean, default: true },
+        lesson: { type: Boolean, default: true }
+    },
     examDate: {
         type: Date,
         default: null

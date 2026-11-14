@@ -22,7 +22,7 @@ export default function Login() {
     setBusy(true);
     try {
       await login(form);
-      navigate(location.state?.from || "/courses", { replace: true });
+      navigate(location.state?.from || "/home", { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {

@@ -28,7 +28,7 @@ export default function Onboarding() {
   }
   useEffect(load, []);
 
-  if (!leaving.current && user && (user.role !== "student" || user.onboarded !== false)) return <Navigate to="/courses" replace />;
+  if (!leaving.current && user && (user.role !== "student" || user.onboarded !== false)) return <Navigate to="/home" replace />;
 
   async function finish(skipAll) {
     setBusy(true);
@@ -45,7 +45,7 @@ export default function Onboarding() {
         const first = outline.units?.flatMap((unit) => unit.lessons || [])[0];
         navigate(first ? `/lessons/${first._id}` : `/courses/${courseId}`, { replace: true, state: { from: `/courses/${courseId}` } });
       } else {
-        navigate("/courses", { replace: true });
+        navigate("/home", { replace: true });
       }
     } catch (err) {
       leaving.current = false;

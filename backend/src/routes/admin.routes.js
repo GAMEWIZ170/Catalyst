@@ -4,7 +4,7 @@ const router = express.Router();
 const authenticate = require("../middlewares/authenticate");
 const authorizeRole = require("../middlewares/authorizeRole");
 const {
-  validateCourse, validateCourseUpdate,
+  validateCourse, validateCourseUpdate, validateCategory, validateCategoryUpdate, validateAuthor, validateAuthorUpdate,
   validateUnit, validateUnitUpdate,
   validateLesson, validateLessonUpdate,
   validateQuestion, validateQuestionUpdate,
@@ -17,6 +17,7 @@ const {
 } = require("../middlewares/validate");
 
 const course = require("../controllers/course.controller");
+const catalog = require("../controllers/catalog.controller");
 const unit = require("../controllers/unit.controller");
 const lesson = require("../controllers/lesson.controller");
 const question = require("../controllers/question.controller");
@@ -52,6 +53,16 @@ router.get("/courses/:id", course.getCourseForAdmin);
 router.post("/courses", validateCourse, course.createCourse);
 router.put("/courses/:id", validateCourseUpdate, course.updateCourse);
 router.delete("/courses/:id", course.deleteCourse);
+
+// Categories and authors for courses
+router.get("/categories", catalog.listCategories);
+router.post("/categories", validateCategory, catalog.createCategory);
+router.put("/categories/:id", validateCategoryUpdate, catalog.updateCategory);
+router.delete("/categories/:id", catalog.deleteCategory);
+router.get("/authors", catalog.listAuthors);
+router.post("/authors", validateAuthor, catalog.createAuthor);
+router.put("/authors/:id", validateAuthorUpdate, catalog.updateAuthor);
+router.delete("/authors/:id", catalog.deleteAuthor);
 
 // Units
 router.put("/units/reorder", validateReorderUnits, reorder({

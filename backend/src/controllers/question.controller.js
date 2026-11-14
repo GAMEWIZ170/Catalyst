@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { logEvent } = require("../utils/events");
 const Question = require("../models/question.models");
 const Test = require("../models/test.models");
 const { findVisibleTest } = require("../utils/visibility");
@@ -57,12 +58,14 @@ const checkAnswer = async (req, res, next) => {
     }
     const { isCorrect, unitWrong } = grade(question, answer);
     const correctAnswer = correctAnswerOf(question);
-    const wasMistake = await recordAnswer(req.user.id, question._id, isCorrect);
+    const wasMistake = await recordAnswer(req.user.id, question._id, isCorrect, req.user.timeZone);
     await recordStat(question, answer, isCorrect);
+    logEvent(req.user.id, "question_answered", { question: question._id, correct: isCorrect });
+    if (wasMistake) logEvent(req.user.id, "review_done", { kind: "mistake", correct: isCorrect });
     // Lesson mastery follows questions from lesson tests. A right answer only counts as review when it was a mistake before.
     if (test.scope === "lesson") {
-      if (!isCorrect) await mastery.record(req.user.id, test.lesson._id, { type: "wrong" });
-      else if (wasMistake) await mastery.record(req.user.id, test.lesson._id, { type: "review" });
+      if (!isCorrect) await mastery.record(req.user.id, test.lesson._id, { type: "wrong" }, req.user.timeZone);
+      else if (wasMistake) await mastery.record(req.user.id, test.lesson._id, { type: "review" }, req.user.timeZone);
     }
     return res.status(200).json({
       data: { isCorrect, ...(unitWrong ? { unitWrong: true } : {}), correctAnswer, explanation: question.explanation, explanationImage: question.explanationImage, workedSolution: question.workedSolution || [] }

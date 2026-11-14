@@ -3,9 +3,11 @@ const router = express.Router();
 
 const authenticate = require("../middlewares/authenticate");
 const { getAllCourses, getCourseByID } = require("../controllers/course.controller");
+const { listCategories } = require("../controllers/catalog.controller");
 
 router.use(authenticate);
 
+router.get("/categories", listCategories);
 router.get("/", getAllCourses);
 router.get("/:id", getCourseByID);
 

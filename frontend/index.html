@@ -20,7 +20,10 @@
         document.documentElement.dataset.palette = validPalettes.includes(savedPalette) ? savedPalette : "lagoon";
         const savedText = localStorage.getItem("catalyst-text");
         if (savedText === "large" || savedText === "xlarge") document.documentElement.dataset.text = savedText;
-        if (localStorage.getItem("catalyst-lowdata") === "1") document.documentElement.dataset.lowdata = "1";
+        // Low-data mode: the student's own choice wins. With no choice yet, follow the browser's Save-Data setting.
+        const savedLowData = localStorage.getItem("catalyst-lowdata");
+        const saveData = navigator.connection && navigator.connection.saveData === true;
+        if (savedLowData === "1" || (savedLowData === null && saveData)) document.documentElement.dataset.lowdata = "1";
       } catch {
         document.documentElement.dataset.theme = "light";
         document.documentElement.dataset.palette = "lagoon";
