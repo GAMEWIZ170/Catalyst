@@ -95,6 +95,8 @@ const validateFriendSettings = validateWith(Joi.object({
   hideActivity: Joi.boolean()
 }).min(1));
 
+const validateChallenge = validateWith(Joi.object({ test: objectId.required() }));
+
 const validateEvent = validateWith(Joi.object({
   type: Joi.string().valid("video_started", "focus_session_completed").required(),
   props: Joi.object({ lesson: objectId, minutes: Joi.number().integer().min(1).max(180) }).default({})
@@ -445,6 +447,7 @@ const validateUserUpdate = validateWith(Joi.object({
 
 module.exports = {
   objectId,
+  validateChallenge,
   validateFriendRequest,
   validateFriendSettings,
   validateUserUpdate,

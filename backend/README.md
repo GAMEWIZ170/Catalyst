@@ -535,6 +535,21 @@ A friendship is a `Friendship` row (`requester`, `recipient`, `status` pending o
 | DELETE | `/friends/:id` | Either side | Removes a friend, declines a request or cancels one |
 | PUT | `/friends/settings` | Student | `{ displayName, hideActivity }` (at least one). Display names are 2 to 30 letters, numbers, spaces and `. _ ' -`. An empty string clears it |
 
+### Friend challenges (Phase X5.5)
+
+A `Challenge` is up to 10 questions picked at random from one test the creator can see (a lesson, unit or course test, or the creator's own set quiz). Each of the two players plays it once, one after the other: the creator first, then a friend, within 48 hours of the creator making it. Only questions are used: flashcards are self-rated, so there is no score to compare. Answers are graded on the server by the same `grade()` as tests, and no answer, explanation or correct option is ever sent, before or after.
+
+Who may open one: the creator, and an accepted friend of the creator. The first friend to submit takes the place (`opponent`), set in the same atomic update as the result, so two friends or a double submit cannot both get in. Anyone else gets 404. A friend who opens it before the creator has played gets 409. After 48 hours a player who has not played gets 410. Playing gives `challenge` XP (10, once per challenge) and writes the `challenge_sent` and `challenge_played` events. The creator gets a notification when a friend has played. Challenges never touch the mistakes queue, mastery or question statistics.
+
+| Method | Path | Access | Notes |
+|---|---|---|---|
+| POST | `/challenges` | Student | Body `{ test }`. 404 when the test is not visible, 409 when it has no questions. Returns `{ id, title, count, expiresAt }` |
+| GET | `/challenges` | Student | The 30 newest the student made or played, with `status` (your_turn, waiting, done, expired) and the comparison when done |
+| GET | `/challenges/:id` | Creator or friend | The questions (student shape, no answers), or `result` and `comparison` if this student already played |
+| POST | `/challenges/:id/submit` | Creator or friend | Body is the same as a test submission. Returns `{ result: { correct, total }, comparison }`. 60 per 15 minutes (the submit limiter) |
+
+`comparison` is `{ you, them: { name, correct, total }, outcome: "won" | "lost" | "tie" }` and is null until both have played.
+
 ### Study sets (the Study Lab)
 
 A `StudySet` belongs to one student and is private (`visibility` also allows `link` and `community`, which Phase X7 will use; nothing sets them yet). It holds:

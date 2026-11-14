@@ -41,6 +41,7 @@ const examDateRoutes = require("./routes/examdate.routes");
 const hallRoutes = require("./routes/hall.routes");
 const studySetRoutes = require("./routes/studyset.routes");
 const xpRoutes = require("./routes/xp.routes");
+const challengeRoutes = require("./routes/challenge.routes");
 const friendRoutes = require("./routes/friend.routes");
 const achievementRoutes = require("./routes/achievement.routes");
 
@@ -71,6 +72,7 @@ app.use("/api/v1/my-exams", examDateRoutes);
 app.use("/api/v1/hall", hallRoutes);
 app.use("/api/v1/study-sets", studySetRoutes);
 app.use("/api/v1/xp", xpRoutes);
+app.use("/api/v1/challenges", challengeRoutes);
 app.use("/api/v1/friends", friendRoutes);
 app.use("/api/v1/achievements", achievementRoutes);
 app.use("/api/v1", examRoutes);

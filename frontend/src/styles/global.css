@@ -3950,3 +3950,4 @@ ol.set-card-list { list-style: none; }
 @media (min-width: 640px) {
   .paste-rows li { grid-template-columns: 1fr 1fr auto; }
 }
+.share-row { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-3); }
