@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "../api/client";
-import { Button, Dialog, Progress } from "./ui";
+import { Button, Dialog, Progress, useToast } from "./ui";
 import { t } from "../i18n";
 
 // Fills {name} gaps in a UI text.
@@ -21,6 +21,17 @@ export function useXp(enabled, pathname) {
     api.markXpSeen().catch(() => {});
   }, []);
   return { xp, dismiss };
+}
+
+// A small message for each new achievement, then it is marked as seen so it is not shown again.
+export function useAchievementToasts(xp) {
+  const { toast } = useToast();
+  const list = xp?.newAchievements;
+  useEffect(() => {
+    if (!list?.length) return;
+    list.forEach((item) => toast({ tone: "success", message: t("achievements.toast").replace("{title}", item.title) }));
+    api.markAchievementsSeen().catch(() => {});
+  }, [list, toast]);
 }
 
 // A short, quiet moment: one small panel, one button.

@@ -68,7 +68,8 @@ const getMyProgress = async (req, res, next) => {
   }
 };
 
-const loadStreak = async (userId, timeZone) => {
+// Every day the student did something (finished a lesson or test, or rated a card). Repeats are kept.
+const loadActiveDays = async (userId) => {
   const [progress, results, flashcardProgress] = await Promise.all([
     Progress.find({ user: userId }).select("completedDays").lean(),
     TestResult.find({ user: userId }).select("completedDays").lean(),
@@ -76,7 +77,11 @@ const loadStreak = async (userId, timeZone) => {
   ]);
   const days = [...progress, ...results].flatMap((record) => record.completedDays || []);
   const reviewedDays = flashcardProgress.flatMap((record) => record.reviewedDays || []);
-  const activeDays = [...days, ...reviewedDays];
+  return [...days, ...reviewedDays];
+};
+
+const loadStreak = async (userId, timeZone) => {
+  const activeDays = await loadActiveDays(userId);
   return { streak: calculateStreak(activeDays, timeZone), completedToday: activeDays.includes(dayKey(timeZone)) };
 };
 
@@ -134,4 +139,4 @@ const addStudyTime = async (req, res, next) => {
   }
 };
 
-module.exports = { markLessonDone, getMyProgress, getStreak, getOverview, loadStreak, savePosition, addStudyTime };
+module.exports = { markLessonDone, getMyProgress, getStreak, getOverview, loadStreak, loadActiveDays, savePosition, addStudyTime };

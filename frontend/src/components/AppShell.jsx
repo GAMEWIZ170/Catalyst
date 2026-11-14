@@ -5,7 +5,7 @@ import Avatar from "./Avatar";
 import { Bell, BookOpen, Shield, FlaskConical, House, Layers, PanelLeftClose, PanelLeftOpen, Search, Settings, UserRound, Zap } from "lucide-react";
 import ShortcutHelp from "./ShortcutHelp";
 import NotificationPanel, { useNotifications } from "./NotificationPanel";
-import { LevelUpDialog, useXp } from "./XpBits";
+import { LevelUpDialog, useAchievementToasts, useXp } from "./XpBits";
 import QuickSettings from "./QuickSettings";
 import { TimerAnnouncer, TimerButton, TimerPanel } from "./TimerMenu";
 import { useTimer } from "../context/TimerContext";
@@ -52,6 +52,7 @@ export default function AppShell({ children }) {
   useStudyTimer(Boolean(user) && (user?.dailyGoal?.kind === "minutes" || Boolean(timer && !timer.done && timer.phase === "work")));
   const notifications = useNotifications(Boolean(user));
   const { xp, dismiss: dismissLevelUp } = useXp(Boolean(user), pathname);
+  useAchievementToasts(xp);
   const online = useOnline();
   // Only one top bar popover is open at a time: "notifications", "quick", "profile" or none.
   const [open, setOpen] = useState(null);

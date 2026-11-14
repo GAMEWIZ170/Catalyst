@@ -93,6 +93,11 @@ const userSchema = new mongoose.Schema({
         default: 0,
         min: 0
     },
+    // When achievements were last worked out, so the check runs at most once a minute.
+    achievementsCheckedAt: {
+        type: Date,
+        default: null
+    },
     // The highest level whose level-up panel the student has seen.
     xpLevelSeen: {
         type: Number,
