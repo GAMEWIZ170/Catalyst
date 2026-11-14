@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { logEvent } = require("../utils/events");
+const { awardXp } = require("../utils/xp");
 const Flashcard = require("../models/flashcard.models");
 const FlashcardProgress = require("../models/flashcardprogress.models");
 const Progress = require("../models/progress.models");
@@ -75,6 +76,7 @@ const rateFlashcard = async (req, res, next) => {
     const progressByCard = new Map(progressRecords.map((item) => [item.flashcard.toString(), item.confidence]));
     if (!inSet && cards.length && cards.every((item) => progressByCard.has(item._id.toString()))) {
       logEvent(req.user.id, "lesson_completed", { lesson: card.lesson, how: "flashcards" });
+      await awardXp(req.user.id, "lesson", { timeZone: req.user.timeZone, key: String(card.lesson) });
       await Progress.findOneAndUpdate(
         { user: req.user.id, lesson: card.lesson },
         { $set: { completed: true }, $setOnInsert: { completedAt: new Date() }, $addToSet: { completedDays: dayKey(req.user.timeZone) } },
@@ -83,6 +85,7 @@ const rateFlashcard = async (req, res, next) => {
     }
     logEvent(req.user.id, "flashcard_rated", { card: card._id, rating: req.body.confidence });
     if (wasDue) logEvent(req.user.id, "review_done", { kind: "card" });
+    if (wasDue && !inSet) await awardXp(req.user.id, "review", { timeZone: req.user.timeZone, key: `${card._id}:${dayKey(req.user.timeZone)}` });
     if (inSet) logEvent(req.user.id, "set_studied", { set: card.set });
     if (!inSet) await mastery.record(req.user.id, card.lesson, { type: "attempt" }, req.user.timeZone);
     if (!inSet && req.body.confidence === "confident") await mastery.record(req.user.id, card.lesson, { type: "review" }, req.user.timeZone);

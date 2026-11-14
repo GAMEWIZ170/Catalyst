@@ -23,6 +23,10 @@ const SetMaterial = require("../models/setmaterial.models");
 const cloudinary = require("../config/cloudinary");
 const ExamDate = require("../models/examdate.models");
 const HallPresence = require("../models/hallpresence.models");
+const Friendship = require("../models/friendship.models");
+const Challenge = require("../models/challenge.models");
+const AchievementUnlock = require("../models/achievement.models");
+const XpEntry = require("../models/xp.models");
 const hashPassword = require("../utils/bcrypt");
 const authCache = require("../utils/authCache");
 const sendEmail = require("../utils/sendEmail");
@@ -77,8 +81,8 @@ const exportData = async (req, res, next) => {
   try {
     const user = req.user.id;
     const own = (Model, select) => Model.find({ user }).select(`-_id -user -__v ${select || ""}`).lean();
-    const [profile, progress, testResults, mistakes, flashcards, mastery, notes, bookmarks, positions, studyTime, examAttempts, reports, studySets, myExams] = await Promise.all([
-      User.findById(user).select("name email role avatar emailVerified onboarded examDate dailyGoal timeZone notify subscriptionEndsAt createdAt -_id").lean(),
+    const [profile, progress, testResults, mistakes, flashcards, mastery, notes, bookmarks, positions, studyTime, examAttempts, reports, studySets, myExams, achievements, challenges, friendCount] = await Promise.all([
+      User.findById(user).select("name displayName email role avatar emailVerified onboarded examDate dailyGoal weeklyGoal hideActivity xp timeZone notify subscriptionEndsAt createdAt -_id").lean(),
       own(Progress),
       own(TestResult),
       own(Mistake, "-fsrs"),
@@ -92,13 +96,19 @@ const exportData = async (req, res, next) => {
       own(ExamAttempt, "-result"),
       own(Report, "-test -target -link -resolvedBy"),
       exportStudySets(user),
-      own(ExamDate)
+      own(ExamDate),
+      own(AchievementUnlock, "-seen"),
+      Challenge.find({ $or: [{ creator: user }, { "results.user": user }] }).select("-_id title createdAt results").lean(),
+      Friendship.countDocuments({ status: "accepted", $or: [{ requester: user }, { recipient: user }] })
     ]);
     if (!profile) return res.status(404).json({ message: "User not found" });
     res.setHeader("Content-Disposition", 'attachment; filename="catalyst-my-data.json"');
     return res.status(200).json({
       exportedAt: new Date().toISOString(),
-      profile, progress, testResults, mistakes, flashcards, mastery, notes, bookmarks, positions, studyTime, examAttempts, reports, studySets, myExams
+      profile, progress, testResults, mistakes, flashcards, mastery, notes, bookmarks, positions, studyTime, examAttempts, reports, studySets, myExams,
+      achievements, friends: friendCount,
+      // Only this student's own score in each challenge, never the friend's.
+      challenges: challenges.map((item) => ({ title: item.title, createdAt: item.createdAt, myResult: item.results.find((row) => String(row.user) === String(user)) ? (({ correct, total, finishedAt }) => ({ correct, total, finishedAt }))(item.results.find((row) => String(row.user) === String(user))) : null }))
     });
   } catch (error) {
     next(error);
@@ -131,6 +141,8 @@ const deleteAccount = async (req, res, next) => {
         email: `deleted-${id}@deleted.invalid`,
         password: deadPassword,
         avatar: null,
+        displayName: null,
+        xp: 0,
         examDate: null,
         enrolledCourses: [],
         isActive: false,
@@ -149,6 +161,11 @@ const deleteAccount = async (req, res, next) => {
       Report.deleteMany({ user: id }),
       ExamDate.deleteMany({ user: id }),
       HallPresence.deleteMany({ user: id }),
+      Friendship.deleteMany({ $or: [{ requester: id }, { recipient: id }] }),
+      Challenge.deleteMany({ $or: [{ creator: id }, { opponent: id }] }),
+      AchievementUnlock.deleteMany({ user: id }),
+      XpEntry.deleteMany({ user: id }),
+      User.updateOne({ _id: id }, { $unset: { friendCode: 1 } }),
       deleteStudySets(id),
       AuthToken.deleteMany({ user: id })
     ]);

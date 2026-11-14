@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const { logEvent } = require("../utils/events");
+const Event = require("../models/event.models");
+const { awardXp } = require("../utils/xp");
 const Question = require("../models/question.models");
 const Test = require("../models/test.models");
 const { findVisibleTest } = require("../utils/visibility");
@@ -8,6 +10,7 @@ const { recordAnswer } = require("./mistake.controller");
 const mastery = require("../utils/mastery");
 const { grade, correctAnswerOf } = require("../utils/grading");
 const { recordStat } = require("../utils/questionStats");
+const { dayKey } = require("../utils/day");
 
 const HAS_OPTIONS = ["mcq", "multi_select"];
 const has = (body, key) => Object.prototype.hasOwnProperty.call(body, key);
@@ -61,6 +64,12 @@ const checkAnswer = async (req, res, next) => {
     const correctAnswer = correctAnswerOf(question);
     const wasMistake = inSet ? false : await recordAnswer(req.user.id, question._id, isCorrect, req.user.timeZone);
     if (!inSet) await recordStat(question, answer, isCorrect);
+    // XP is for official content only (a student's own quiz could be farmed). First try = never answered before.
+    if (!inSet && isCorrect) {
+      const answeredBefore = await Event.exists({ user: req.user.id, type: "question_answered", "props.question": String(question._id) });
+      await awardXp(req.user.id, "answer", { timeZone: req.user.timeZone, key: `${question._id}:${dayKey(req.user.timeZone)}`, amount: answeredBefore ? 2 : 3 });
+    }
+    if (wasMistake && isCorrect) await awardXp(req.user.id, "review", { timeZone: req.user.timeZone, key: `${question._id}:${dayKey(req.user.timeZone)}` });
     logEvent(req.user.id, "question_answered", { question: question._id, correct: isCorrect });
     if (wasMistake) logEvent(req.user.id, "review_done", { kind: "mistake", correct: isCorrect });
     // Lesson mastery follows questions from lesson tests. A right answer only counts as review when it was a mistake before.

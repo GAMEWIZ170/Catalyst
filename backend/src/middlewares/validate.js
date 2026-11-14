@@ -83,10 +83,19 @@ const validatePreferences = validateWith(Joi.object({
   examDate: Joi.date().iso().allow(null),
   goalKind: Joi.string().valid("none", "minutes", "lesson"),
   goalMinutes: Joi.number().integer().min(5).max(240),
+  weeklyDays: Joi.number().integer().min(0).max(6),
   timeZone: timeZoneRule,
   notify: Joi.object({ review: Joi.boolean(), lesson: Joi.boolean() }).min(1),
   extraTime: Joi.number().valid(0, 25, 50, 100)
 }).min(1));
+
+const validateFriendRequest = validateWith(Joi.object({ code: Joi.string().trim().uppercase().alphanum().min(6).max(12).required() }));
+const validateFriendSettings = validateWith(Joi.object({
+  displayName: Joi.string().trim().allow("").min(2).max(30).pattern(/^[\p{L}\p{N} ._'-]+$/u).messages({ "string.pattern.base": "A display name can use letters, numbers, spaces and . _ ' -" }),
+  hideActivity: Joi.boolean()
+}).min(1));
+
+const validateChallenge = validateWith(Joi.object({ test: objectId.required() }));
 
 const validateEvent = validateWith(Joi.object({
   type: Joi.string().valid("video_started", "focus_session_completed").required(),
@@ -438,6 +447,9 @@ const validateUserUpdate = validateWith(Joi.object({
 
 module.exports = {
   objectId,
+  validateChallenge,
+  validateFriendRequest,
+  validateFriendSettings,
   validateUserUpdate,
   imageSchema,
   optionalImage,

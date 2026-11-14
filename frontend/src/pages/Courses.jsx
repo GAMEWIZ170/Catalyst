@@ -35,13 +35,14 @@ export default function Courses() {
   const streak = user?.streak ?? null;
   const [loading, setLoading] = useState(true);
   const [goal, setGoal] = useState(null);
+  const [weekly, setWeekly] = useState(null);
   const [error, setError] = useState("");
   const [showWelcome, setShowWelcome] = useState(() => !welcomeSeen());
 
   function load() {
     setLoading(true);
     setError("");
-    api.getHome().then(({ data, goal: today }) => { setCourses(data || []); setGoal(today || null); })
+    api.getHome().then(({ data, goal: today, weekly: week }) => { setCourses(data || []); setGoal(today || null); setWeekly(week || null); })
       .catch((err) => setError(err.message)).finally(() => setLoading(false));
   }
 
@@ -78,6 +79,10 @@ export default function Courses() {
     {!loading && !error && goal && goal.kind !== "none" && <div className="home-goal">
       <Progress value={Math.round((Math.min(goal.done, goal.target) / goal.target) * 100)} label="Today's goal" />
       <p className="muted home-goal-text">{goal.kind === "minutes" ? `Today: ${goal.done} of ${goal.target} minutes` : `Today: ${goal.done} of 1 lesson`}{goal.met ? ". Goal met." : ""}</p>
+    </div>}
+    {!loading && !error && weekly && <div className="home-goal">
+      <Progress value={Math.round((Math.min(weekly.done, weekly.target) / weekly.target) * 100)} label="This week" />
+      <p className="muted home-goal-text">{`This week: ${weekly.done} of ${weekly.target} study days`}{weekly.met ? ". Weekly goal met. Enjoy your rest days." : ""}</p>
     </div>}
     {isStudent && user.hasAccess === false && <p className="notice" role="status">Your access has ended. You can still look around, but lessons, tests and flashcards are locked until your subscription is renewed.</p>}
     {loading && <Loading />}

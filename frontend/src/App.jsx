@@ -41,6 +41,9 @@ const Exams = lazy(() => import("./pages/Exams"));
 const LabSet = lazy(() => import("./pages/LabSet"));
 const LabQuiz = lazy(() => import("./pages/LabQuiz"));
 const Hall = lazy(() => import("./pages/Hall"));
+const Friends = lazy(() => import("./pages/Friends"));
+const Challenges = lazy(() => import("./pages/Challenges"));
+const Challenge = lazy(() => import("./pages/Challenge"));
 const AdminCatalog = lazy(() => import("./pages/AdminCatalog"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 import AdminLayout from "./components/admin/AdminLayout";
@@ -109,6 +112,9 @@ export default function App() {
     <Route path="/me" element={<ProtectedPage><Me /></ProtectedPage>} />
     <Route path="/exams" element={<ProtectedPage><Exams /></ProtectedPage>} />
     <Route path="/hall" element={<ProtectedPage><Hall /></ProtectedPage>} />
+    <Route path="/friends" element={<ProtectedPage><Friends /></ProtectedPage>} />
+    <Route path="/challenges" element={<ProtectedPage><Challenges /></ProtectedPage>} />
+    <Route path="/challenge/:id" element={<ProtectedPage><Challenge /></ProtectedPage>} />
     <Route path="/lab" element={<ProtectedPage><Lab /></ProtectedPage>} />
     <Route path="/lab/quizzes/:testId" element={<ProtectedPage><LabQuiz /></ProtectedPage>} />
     <Route path="/lab/:id" element={<ProtectedPage><LabSet /></ProtectedPage>} />

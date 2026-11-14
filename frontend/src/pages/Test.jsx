@@ -13,6 +13,7 @@ import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import ResponsiveImage from "../components/ResponsiveImage";
 import { ErrorState, Loading } from "./Courses";
+import { t } from "../i18n";
 
 const dataOf = (payload) => payload.data || payload;
 
@@ -47,6 +48,7 @@ export default function Test() {
   const [missed, setMissed] = useState([]);
   const [showMissed, setShowMissed] = useState(false);
   const [result, setResult] = useState(null);
+  const [challengeProblem, setChallengeProblem] = useState("");
   const [error, setError] = useState("");
   const [blocking, setBlocking] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -225,6 +227,16 @@ export default function Test() {
     </Card>
   </div>;
 
+  async function challengeFriend() {
+    setChallengeProblem("");
+    try {
+      const { data: made } = await api.createChallenge(id);
+      navigate(`/challenge/${made.id}`);
+    } catch (error) {
+      setChallengeProblem(error.message);
+    }
+  }
+
   if (phase === "results") {
     const passed = needsPass && result.passed;
     return <div className="exam exam--page">
@@ -238,9 +250,11 @@ export default function Test() {
           {result.passed ? <CheckCircle2 size={16} aria-hidden="true" /> : <TriangleAlert size={16} aria-hidden="true" />}
           {result.passed ? "Passed. This lesson is complete." : `Not yet. You need ${result.passPercent}% to pass.`}
         </p>}
+        {challengeProblem && <p className="settings-status" role="alert">{challengeProblem}</p>}
         <div className="button-row button-row--stack">
           {missed.length > 0 && !practice && <Button variant="secondary" onClick={practiseMissed}>Practise the ones I missed</Button>}
           {missed.length > 0 && !showMissed && <Button variant="secondary" onClick={reviewMistakes}>Review mistakes</Button>}
+          {!practice && !result.practice && <Button variant="secondary" onClick={challengeFriend}>{t("challenges.create")}</Button>}
           <Button variant={passed || missed.length === 0 ? "secondary" : "tertiary"} onClick={tryAgain}>Try again</Button>
           <Button as={Link} variant={passed || !needsPass ? "primary" : "secondary"} to={backTo} state={backState}>{backLabel}</Button>
         </div>

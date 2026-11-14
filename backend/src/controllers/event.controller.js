@@ -2,6 +2,7 @@ const Event = require("../models/event.models");
 const StudyTime = require("../models/studytime.models");
 const { logEvent } = require("../utils/events");
 const { dayKey } = require("../utils/day");
+const { awardXp } = require("../utils/xp");
 
 // The browser can report only things the server cannot see by itself.
 const CLIENT_TYPES = ["video_started", "focus_session_completed"];
@@ -28,6 +29,7 @@ const addEvent = async (req, res, next) => {
     if (req.body.type === "focus_session_completed") {
       const minutes = await countedFocusMinutes(req.user.id, req.user.timeZone, req.body.props.minutes || 0);
       logEvent(req.user.id, "focus_session_completed", { minutes, day: dayKey(req.user.timeZone) });
+      if (minutes > 0) await awardXp(req.user.id, "focus", { timeZone: req.user.timeZone, amount: minutes });
       return res.status(200).json({ data: { counted: minutes } });
     }
     logEvent(req.user.id, req.body.type, req.body.props);

@@ -490,6 +490,79 @@ Every graded answer through `POST /questions/:id/answer` updates the student's q
 
 Every key action writes one row to `events` (`{ user, type, ts, props }`, indexed on `ts`, on `user` and `ts`, and on `type` and `ts`), for XP, achievements, leaderboards and the admin dashboard to be built from later. Types: signup, login, lesson_opened, lesson_completed, question_answered, test_submitted, review_done, flashcard_rated, focus_session_completed, video_started, set_created, set_studied, challenge_sent, challenge_played (the last four, and focus sessions, are not logged yet because those features are not built). Logging is fire and forget (utils/events.js): nothing waits for it and a failure only prints to the log. `props` keeps ids, numbers, booleans and short words only (never a name, email or free text). `lesson_completed` is written each time a test pass, a finished deck or Mark as done completes a lesson, so a dashboard counts distinct users and lessons. `review_done` is a due card rated or a mistake answered.
 
+### XP and levels (Phase X5.1)
+
+`utils/xp.js` holds the table. `awardXp(userId, source, { timeZone, key, amount })` writes one row to `xpentries` (the ledger) and adds to `User.xp`. It checks two rules first: a `key` makes an award happen once (unique index on user, source, key), and each source has a daily cap counted in the student's own day. It never throws, so a problem can never break the request that earned the XP. Levels are worked out from total XP and never go down: going from level N to N+1 costs `100 + 25 * (N - 1)` XP.
+
+| Source | XP | Daily cap | Once per |
+|---|---|---|---|
+| `answer` | 2, or 3 on a first try | 100 | question per day (official tests only, not a student's own quiz) |
+| `review` | 3 | 90 | card or mistake per day (due only) |
+| `lesson` | 20 | 100 | lesson, ever |
+| `mastery` | 15 | 60 | lesson and level, ever (Familiar and above) |
+| `daily_goal` | 25 | 25 | day (given when Home loads with the goal met) |
+| `focus` | 1 per counted minute | 30 | not keyed |
+
+Not built yet because the features do not exist: weekly goals (X5.3), finishing a video (needs a player event), study sets used by others (needs community sets), and challenges (X5.5).
+
+| Method | Path | Access | Notes |
+|---|---|---|---|
+| GET | `/xp/me` | Student | `{ xp, level, into, next, pendingLevelUp }`. `pendingLevelUp` is the level to celebrate, or null |
+| POST | `/xp/seen` | Student | Marks the current level as seen (204) |
+
+### Achievements (Phase X5.2)
+
+`utils/achievements.js` holds the list: 28 learning milestones (3 of them hidden surprises). None rewards hours spent and none is about losing a streak. Earned ones are rows in `achievementunlocks` (unique on user and key, `seen` false until the student has been shown the message). The check works out the student's numbers from the events and progress collections and saves anything new. It never throws and is safe to repeat.
+
+It runs when `GET /achievements` is called, and from `GET /xp/me` at most once a minute per student (`User.achievementsCheckedAt`), because the app shell calls `/xp/me` on every page change.
+
+| Method | Path | Access | Notes |
+|---|---|---|---|
+| GET | `/achievements` | Student | Every achievement with `unlockedAt` (or null), `earned` and `total`. An unearned hidden one shows only "Hidden achievement" |
+| POST | `/achievements/seen` | Student | Marks the new ones as shown (204) |
+
+`GET /xp/me` also returns `newAchievements: [{ key, title }]` for the toast. "Your set helped others" counts `set_studied` events from other students, so it cannot be earned until community sets exist. The friend and challenge achievements count rows in the `Friendship` and `Challenge` collections once those exist.
+
+### Friends (Phase X5.4)
+
+A friendship is a `Friendship` row (`requester`, `recipient`, `status` pending or accepted; unique per pair). Both sides must agree: the recipient accepts. Students find each other only by a **friend code** (8 characters from a clear alphabet, made on first use, `User.friendCode`, unique). There is no search by name or email. Other students see only a display name (`User.displayName`, or the first word of the name) and an avatar. A friend's level is shown only to accepted friends, and not at all when that student turns on `hideActivity`.
+
+| Method | Path | Access | Notes |
+|---|---|---|---|
+| GET | `/friends` | Student | `{ me: { code, displayName, defaultName, hideActivity }, friends, incoming, outgoing }`. Each person is `{ id, name, avatar }` (friends also `level`, null when hidden). `id` is the friendship id |
+| POST | `/friends/requests` | Student | Body `{ code }`. 404 for an unknown code or your own (same answer). 409 when already friends or already asked. Asking someone who already asked you accepts. 20 per 15 minutes per student. Sends the other student a notification |
+| POST | `/friends/requests/:id/accept` | Recipient | 404 for anyone else |
+| DELETE | `/friends/:id` | Either side | Removes a friend, declines a request or cancels one |
+| PUT | `/friends/settings` | Student | `{ displayName, hideActivity }` (at least one). Display names are 2 to 30 letters, numbers, spaces and `. _ ' -`. An empty string clears it |
+
+### Friend challenges (Phase X5.5)
+
+A `Challenge` is up to 10 questions picked at random from one test the creator can see (a lesson, unit or course test, or the creator's own set quiz). Each of the two players plays it once, one after the other: the creator first, then a friend, within 48 hours of the creator making it. Only questions are used: flashcards are self-rated, so there is no score to compare. Answers are graded on the server by the same `grade()` as tests, and no answer, explanation or correct option is ever sent, before or after.
+
+Who may open one: the creator, and an accepted friend of the creator. The first friend to submit takes the place (`opponent`), set in the same atomic update as the result, so two friends or a double submit cannot both get in. Anyone else gets 404. A friend who opens it before the creator has played gets 409. After 48 hours a player who has not played gets 410. Playing gives `challenge` XP (10, once per challenge) and writes the `challenge_sent` and `challenge_played` events. The creator gets a notification when a friend has played. Challenges never touch the mistakes queue, mastery or question statistics.
+
+| Method | Path | Access | Notes |
+|---|---|---|---|
+| POST | `/challenges` | Student | Body `{ test }`. 404 when the test is not visible, 409 when it has no questions. Returns `{ id, title, count, expiresAt }` |
+| GET | `/challenges` | Student | The 30 newest the student made or played, with `status` (your_turn, waiting, done, expired) and the comparison when done |
+| GET | `/challenges/:id` | Creator or friend | The questions (student shape, no answers), or `result` and `comparison` if this student already played |
+| POST | `/challenges/:id/submit` | Creator or friend | Body is the same as a test submission. Returns `{ result: { correct, total }, comparison }`. 60 per 15 minutes (the submit limiter) |
+
+`comparison` is `{ you, them: { name, correct, total }, outcome: "won" | "lost" | "tie" }` and is null until both have played.
+
+### Share links with previews (Phase X5.7)
+
+The app is a single-page app, so WhatsApp and other chat apps cannot read its page titles. `GET /s/...` (public, no sign-in, mounted outside `/api/v1`) answers with a tiny HTML page that has the preview tags (`og:title`, `og:description`, `og:image`, `og:url`) and a `meta refresh` into the app at `CLIENT_URL`. Everything inserted into the page is HTML-escaped, ids and codes are checked before use, and the redirect target is built only from fixed paths, so it cannot be turned into an open redirect.
+
+| Path | Goes to | Preview shows |
+|---|---|---|
+| `/s/c/:challengeId` | `/challenge/:id` | A generic "A friend challenged you" line. No name, test or score |
+| `/s/i/:friendCode` | `/friends?code=CODE` | "Study with me on Catalyst". The Friends page fills the code in |
+| `/s/l/:lessonId` | `/lessons/:id` | The lesson title, only when the lesson is published and its unit and course are visible. Anything else shows "Sign in to view this." |
+| `/s/s/:setId` | `/lab` | Always "Sign in to view this." (study sets are private) |
+
+A bad id or code is a 404. The page is cacheable for 5 minutes. The image is `/icons/icon-512.png` on the app's address. In development Vite proxies `/s` to the backend (`frontend/vite.config.js`). **In production, `/s/*` on the app's address must be routed to the backend** (the same rule as `/api`), or the links will land on the single-page app without previews.
+
 ### Study sets (the Study Lab)
 
 A `StudySet` belongs to one student and is private (`visibility` also allows `link` and `community`, which Phase X7 will use; nothing sets them yet). It holds:
@@ -517,9 +590,13 @@ Everything is checked against the owner (`utils/ownSet.js`), so another student'
 - `/my-exams` exams move to "past" once their day (in the student's time zone) has passed. `GET /plan` counts down to the nearest upcoming exam and returns `examCourse`; with none, it uses the exam date from Settings. `GET /notifications` makes a `type: "exam"` message at 14, 7, 3 and 1 days (one per exam per milestone; opened late, it makes the next milestone once with the real days left).
 - Study Hall rows (`HallPresence`) delete themselves an hour after the last heartbeat.
 
+### Weekly goal with rest days (Phase X5.3)
+
+`PUT /auth/me/preferences` accepts `weeklyDays` (0 to 6; 0 is no goal; the account carries `weeklyGoal: { days }`). The most is 6, so every week has at least one rest day. A week runs Monday to Sunday in the student's own time zone (`weekStart` in `utils/day.js`). `GET /home` returns `weekly: { target, done, met }` (null with no goal), where `done` is the number of different days this week with study activity (the same days the streak uses). Progress only goes up during the week, so a missed day never takes anything away, and the wording on screen never mentions missed days. When `met` is true the `weekly_goal` XP (75, once per week, keyed by the Monday) is given. A single rest day also keeps the streak alive (see Streaks).
+
 ### Streaks
 
-A "day" is the student's own calendar day, from `User.timeZone` (utils/day.js; UTC when none is set or the name is unknown). Day keys saved before time zones existed were UTC days and stay as they are. The streak is calculated from distinct `YYYY-MM-DD` dates in lesson progress, test results and `FlashcardProgress.reviewedDays`. Consecutive activity ending today or yesterday is counted.
+A "day" is the student's own calendar day, from `User.timeZone` (utils/day.js; UTC when none is set or the name is unknown). Day keys saved before time zones existed were UTC days and stay as they are. The streak is calculated from distinct `YYYY-MM-DD` dates in lesson progress, test results and `FlashcardProgress.reviewedDays`. Consecutive activity ending today or yesterday is counted, and one rest day never breaks it: a single day with no activity between two active days is skipped and adds nothing to the count (`utils/streak.js`). Two missed days in a row end the streak.
 
 ### Speed
 

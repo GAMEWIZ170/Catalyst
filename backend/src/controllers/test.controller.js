@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { logEvent } = require("../utils/events");
+const { awardXp } = require("../utils/xp");
 const Test = require("../models/test.models");
 const Question = require("../models/question.models");
 const TestResult = require("../models/testresult.models");
@@ -65,7 +66,10 @@ const recordResult = async (userId, test, score, timeZone) => {
     );
   }
   logEvent(userId, "test_submitted", { test: test._id, scope: test.scope, score, passed });
-  if (test.scope === "lesson" && passed) logEvent(userId, "lesson_completed", { lesson: test.lesson._id, how: "test" });
+  if (test.scope === "lesson" && passed) {
+    logEvent(userId, "lesson_completed", { lesson: test.lesson._id, how: "test" });
+    await awardXp(userId, "lesson", { timeZone, key: String(test.lesson._id) });
+  }
   if (test.scope === "lesson") {
     await mastery.record(userId, test.lesson._id, { type: "attempt" }, timeZone);
     await mastery.record(userId, test.lesson._id, { type: "score", score }, timeZone);

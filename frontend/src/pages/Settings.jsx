@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { GOALS, goalKeyOf } from "../utils/goals";
+
+const WEEK_GOALS = [{ days: 0, label: "No weekly goal" }, { days: 3, label: "3 days a week" }, { days: 4, label: "4 days a week" }, { days: 5, label: "5 days a week" }, { days: 6, label: "6 days a week" }];
 import { Button, Checkbox, SelectField, Tabs, TextField } from "../components/ui";
 import { isLowData, setLowData } from "../utils/lowData";
 import { useInstall } from "../utils/offline";
@@ -188,6 +190,8 @@ function StudyTab() {
 
   const [goal, setGoal] = useState(() => goalKeyOf(user?.dailyGoal));
   const [goalStatus, setGoalStatus] = useState("");
+  const [weekDays, setWeekDays] = useState(user?.weeklyGoal?.days || 0);
+  const [weekStatus, setWeekStatus] = useState("");
   const [examDate, setExamDate] = useState(() => (user?.examDate ? String(user.examDate).slice(0, 10) : ""));
   const [examStatus, setExamStatus] = useState("");
 
@@ -199,6 +203,19 @@ function StudyTab() {
       setExamStatus(examDate ? "Saved. Today's plan is on Home." : "Exam date cleared");
     } catch (error) {
       setExamStatus(error.message);
+    }
+  }
+
+  async function selectWeek(days) {
+    const before = weekDays;
+    setWeekDays(days);
+    setWeekStatus("");
+    try {
+      await updatePreferences({ weeklyDays: days });
+      setWeekStatus("Saved");
+    } catch (error) {
+      setWeekDays(before);
+      setWeekStatus(error.message);
     }
   }
 
@@ -234,8 +251,19 @@ function StudyTab() {
           <span>{item.label}</span>
         </label>)}
       </div>
-      <p className="muted settings-help">Your streak counts any study day, with or without a goal.</p>
+      <p className="muted settings-help">Your streak counts any study day, with or without a goal. One rest day never breaks it.</p>
       <p className="settings-status" aria-live="polite">{goalStatus}</p>
+    </section>
+    <section className="settings-section" aria-labelledby="week-heading">
+      <h2 id="week-heading">Weekly goal</h2>
+      <div className="settings-radio-grid" role="radiogroup" aria-label="Weekly goal">
+        {WEEK_GOALS.map((item) => <label className="palette-card text-size-card" key={item.days}>
+          <input type="radio" name="weekly-goal" value={item.days} checked={weekDays === item.days} onChange={() => selectWeek(item.days)} />
+          <span>{item.label}</span>
+        </label>)}
+      </div>
+      <p className="muted settings-help">Pick how many days a week you want to study. The other days are rest days. A missed day never takes progress away.</p>
+      <p className="settings-status" aria-live="polite">{weekStatus}</p>
     </section>
     <section className="settings-section" aria-labelledby="myexams-heading">
       <h2 id="myexams-heading">My exams</h2>

@@ -27,4 +27,10 @@ const shiftDay = (key, days) => {
   return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
 };
 
-module.exports = { dayKey, shiftDay, isValidTimeZone };
+// The Monday of the week a day key falls in. Weeks run Monday to Sunday.
+const weekStart = (key) => {
+  const weekday = new Date(`${key}T00:00:00Z`).getUTCDay(); // 0 = Sunday
+  return shiftDay(key, -((weekday + 6) % 7));
+};
+
+module.exports = { dayKey, shiftDay, weekStart, isValidTimeZone };

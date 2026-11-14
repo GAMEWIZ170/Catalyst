@@ -2,6 +2,7 @@ const Mastery = require("../models/mastery.models");
 
 const LABELS = ["Not started", "Attempted", "Familiar", "Proficient", "Mastered"];
 const { dayKey } = require("./day");
+const { awardXp } = require("./xp");
 
 // Updates one student's mastery of one lesson after something happened. Events:
 //   { type: "attempt" }          any activity on the lesson: Attempted
@@ -35,6 +36,9 @@ const record = async (userId, lessonId, event, timeZone) => {
   if (found && level === before && row.lastDropDay === found.lastDropDay && row.proficientDay === found.proficientDay) return before;
   row.level = level;
   await row.save();
+  // A level reached is worth XP once per lesson and level, so dropping and regaining a level cannot be farmed.
+  // Attempted (level 1) is just starting, so only Familiar and above count.
+  if (level > before && level >= 2) await awardXp(userId, "mastery", { timeZone, key: `${lessonId}:${level}` });
   return level;
 };
 

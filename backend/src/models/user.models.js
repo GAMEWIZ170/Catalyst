@@ -87,6 +87,44 @@ const userSchema = new mongoose.Schema({
         default: null
     },
     // Optional daily goal. "minutes" counts study time, "lesson" counts a lesson finished today.
+    // What other students see instead of the full name (friends, challenges). Empty means the first name only.
+    displayName: {
+        type: String,
+        trim: true,
+        minlength: 2,
+        maxlength: 30,
+        default: null
+    },
+    // A short code a student gives to a friend so the friend can send a request. Made the first time it is needed.
+    friendCode: {
+        type: String,
+        default: undefined
+    },
+    // True hides this student's level from friends. Friends then see a name and avatar only.
+    hideActivity: {
+        type: Boolean,
+        default: false
+    },
+    // Total XP earned. Only goes up. The level is worked out from it (see utils/xp.js).
+    xp: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    // When achievements were last worked out, so the check runs at most once a minute.
+    achievementsCheckedAt: {
+        type: Date,
+        default: null
+    },
+    // The highest level whose level-up panel the student has seen.
+    xpLevelSeen: {
+        type: Number,
+        default: 1
+    },
+    // Optional weekly goal: study on this many days a week (1 to 6, so there is always a rest day). 0 means no goal.
+    weeklyGoal: {
+        days: { type: Number, min: 0, max: 6, default: 0 }
+    },
     dailyGoal: {
         kind: { type: String, enum: ["none", "minutes", "lesson"], default: "none" },
         minutes: { type: Number, min: 5, max: 240, default: 10 }
@@ -94,6 +132,8 @@ const userSchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
+
+userSchema.index({ friendCode: 1 }, { unique: true, partialFilterExpression: { friendCode: { $type: "string" } } });
 
 const User = mongoose.model('User', userSchema);
 
