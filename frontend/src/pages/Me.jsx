@@ -3,6 +3,7 @@ import { Bookmark, CalendarDays, ChevronRight, BarChart3, Settings, Users } from
 import { useAuth } from "../context/AuthContext";
 import Avatar from "../components/Avatar";
 import { Card } from "../components/ui";
+import { LevelCard, useXp } from "../components/XpBits";
 import { t } from "../i18n";
 
 const LINKS = [
@@ -16,6 +17,7 @@ const LINKS = [
 // The home for everything about the student: progress, saved items, profile and account settings.
 export default function Me() {
   const { user } = useAuth();
+  const { xp } = useXp(Boolean(user), "me");
   return <div className="content student-page me-page">
     <header className="me-header">
       <Avatar avatar={user?.avatar} name={user?.name} size={64} />
@@ -24,6 +26,7 @@ export default function Me() {
         <p className="muted">{user?.name}</p>
       </div>
     </header>
+    <LevelCard xp={xp} />
     <nav className="me-links" aria-label={t("me.title")}>
       {LINKS.map(({ to, label, icon: Icon }) => <Card as={Link} className="me-link" to={to} key={to}>
         <Icon size={22} aria-hidden="true" />

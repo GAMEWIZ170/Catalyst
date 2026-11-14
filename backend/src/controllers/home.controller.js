@@ -7,6 +7,7 @@ const StudyTime = require("../models/studytime.models");
 const User = require("../models/user.models");
 const { dayKey } = require("../utils/day");
 const { attachMeta } = require("../utils/courseMeta");
+const { awardXp } = require("../utils/xp");
 
 // STUDENT: the home screen in one call. Every published course with this student's progress and the
 // next lesson to open, so the screen does not fetch each course tree one after another.
@@ -70,6 +71,8 @@ const getHome = async (req, res, next) => {
     const target = kind === "minutes" ? goalUser?.dailyGoal?.minutes || 10 : 1;
     const doneSoFar = kind === "minutes" ? Math.floor((studied?.seconds || 0) / 60) : lessonsToday;
     const goal = { kind, target, done: doneSoFar, met: kind !== "none" && doneSoFar >= target };
+    // The goal bar is where a met goal is first seen, so the XP for it is given here. Once per day.
+    if (goal.met) await awardXp(req.user.id, "daily_goal", { timeZone: req.user.timeZone, key: dayKey(req.user.timeZone) });
     return res.status(200).json({ count: data.length, data, goal });
   } catch (error) {
     next(error);

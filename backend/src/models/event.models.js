@@ -17,6 +17,7 @@ const eventSchema = new mongoose.Schema({
 eventSchema.index({ ts: 1 });
 eventSchema.index({ user: 1, ts: -1 });
 eventSchema.index({ type: 1, ts: -1 });
+eventSchema.index({ user: 1, type: 1, "props.question": 1 }); // "was this question answered before?" for the first-try bonus
 
 const Event = mongoose.model("Event", eventSchema);
 Event.TYPES = TYPES;

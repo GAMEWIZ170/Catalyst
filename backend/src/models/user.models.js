@@ -87,6 +87,17 @@ const userSchema = new mongoose.Schema({
         default: null
     },
     // Optional daily goal. "minutes" counts study time, "lesson" counts a lesson finished today.
+    // Total XP earned. Only goes up. The level is worked out from it (see utils/xp.js).
+    xp: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    // The highest level whose level-up panel the student has seen.
+    xpLevelSeen: {
+        type: Number,
+        default: 1
+    },
     dailyGoal: {
         kind: { type: String, enum: ["none", "minutes", "lesson"], default: "none" },
         minutes: { type: Number, min: 5, max: 240, default: 10 }

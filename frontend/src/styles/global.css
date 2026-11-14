@@ -3856,6 +3856,9 @@ textarea {
 .me-header { align-items: center; display: flex; gap: var(--space-4); margin-bottom: var(--space-5); }
 .me-header h1, .me-header p { margin: 0; }
 .me-links { display: grid; gap: var(--space-3); max-width: 32rem; }
+.level-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-panel); display: grid; gap: var(--space-2); margin-bottom: var(--space-5); padding: var(--space-4); }
+.level-card-head { align-items: baseline; display: flex; gap: var(--space-3); justify-content: space-between; }
+.profile-level { color: var(--accent); font-weight: var(--weight-strong); }
 .ui-card.me-link { align-items: center; color: inherit; display: flex; gap: var(--space-3); min-height: 56px; text-decoration: none; }
 .ui-card.me-link span { flex: 1; font-weight: var(--weight-strong); }
 .catalog-list { display: grid; gap: var(--space-2); list-style: none; margin: var(--space-3) 0; padding: 0; }

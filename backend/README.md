@@ -490,6 +490,26 @@ Every graded answer through `POST /questions/:id/answer` updates the student's q
 
 Every key action writes one row to `events` (`{ user, type, ts, props }`, indexed on `ts`, on `user` and `ts`, and on `type` and `ts`), for XP, achievements, leaderboards and the admin dashboard to be built from later. Types: signup, login, lesson_opened, lesson_completed, question_answered, test_submitted, review_done, flashcard_rated, focus_session_completed, video_started, set_created, set_studied, challenge_sent, challenge_played (the last four, and focus sessions, are not logged yet because those features are not built). Logging is fire and forget (utils/events.js): nothing waits for it and a failure only prints to the log. `props` keeps ids, numbers, booleans and short words only (never a name, email or free text). `lesson_completed` is written each time a test pass, a finished deck or Mark as done completes a lesson, so a dashboard counts distinct users and lessons. `review_done` is a due card rated or a mistake answered.
 
+### XP and levels (Phase X5.1)
+
+`utils/xp.js` holds the table. `awardXp(userId, source, { timeZone, key, amount })` writes one row to `xpentries` (the ledger) and adds to `User.xp`. It checks two rules first: a `key` makes an award happen once (unique index on user, source, key), and each source has a daily cap counted in the student's own day. It never throws, so a problem can never break the request that earned the XP. Levels are worked out from total XP and never go down: going from level N to N+1 costs `100 + 25 * (N - 1)` XP.
+
+| Source | XP | Daily cap | Once per |
+|---|---|---|---|
+| `answer` | 2, or 3 on a first try | 100 | question per day (official tests only, not a student's own quiz) |
+| `review` | 3 | 90 | card or mistake per day (due only) |
+| `lesson` | 20 | 100 | lesson, ever |
+| `mastery` | 15 | 60 | lesson and level, ever (Familiar and above) |
+| `daily_goal` | 25 | 25 | day (given when Home loads with the goal met) |
+| `focus` | 1 per counted minute | 30 | not keyed |
+
+Not built yet because the features do not exist: weekly goals (X5.3), finishing a video (needs a player event), study sets used by others (needs community sets), and challenges (X5.5).
+
+| Method | Path | Access | Notes |
+|---|---|---|---|
+| GET | `/xp/me` | Student | `{ xp, level, into, next, pendingLevelUp }`. `pendingLevelUp` is the level to celebrate, or null |
+| POST | `/xp/seen` | Student | Marks the current level as seen (204) |
+
 ### Study sets (the Study Lab)
 
 A `StudySet` belongs to one student and is private (`visibility` also allows `link` and `community`, which Phase X7 will use; nothing sets them yet). It holds:

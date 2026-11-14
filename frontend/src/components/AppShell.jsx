@@ -5,6 +5,7 @@ import Avatar from "./Avatar";
 import { Bell, BookOpen, Shield, FlaskConical, House, Layers, PanelLeftClose, PanelLeftOpen, Search, Settings, UserRound, Zap } from "lucide-react";
 import ShortcutHelp from "./ShortcutHelp";
 import NotificationPanel, { useNotifications } from "./NotificationPanel";
+import { LevelUpDialog, useXp } from "./XpBits";
 import QuickSettings from "./QuickSettings";
 import { TimerAnnouncer, TimerButton, TimerPanel } from "./TimerMenu";
 import { useTimer } from "../context/TimerContext";
@@ -50,6 +51,7 @@ export default function AppShell({ children }) {
   // Study time is counted for a minutes goal, and while a focus session runs (the server needs it to count focus minutes).
   useStudyTimer(Boolean(user) && (user?.dailyGoal?.kind === "minutes" || Boolean(timer && !timer.done && timer.phase === "work")));
   const notifications = useNotifications(Boolean(user));
+  const { xp, dismiss: dismissLevelUp } = useXp(Boolean(user), pathname);
   const online = useOnline();
   // Only one top bar popover is open at a time: "notifications", "quick", "profile" or none.
   const [open, setOpen] = useState(null);
@@ -181,6 +183,7 @@ export default function AppShell({ children }) {
               <div className="profile-header">
                 <strong>{user?.name}</strong>
                 <span>{user?.email}</span>
+                {xp && <span className="profile-level">{t("xp.level").replace("{level}", xp.level)}</span>}
               </div>
               <Link role="menuitem" tabIndex="-1" to="/settings" onClick={() => setOpen(null)}>{t("me.settings")}</Link>
               <Link role="menuitem" tabIndex="-1" to="/progress" onClick={() => setOpen(null)}>{t("me.progress")}</Link>
@@ -204,6 +207,7 @@ export default function AppShell({ children }) {
         <div className="shell-main">
           <main className="page-wrap" id="main" tabIndex="-1">{children}</main>
           <ShortcutHelp />
+          <LevelUpDialog xp={xp} onClose={dismissLevelUp} />
           <footer className="footer">Keep learning with momentum. <span className="footer-links"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link></span></footer>
         </div>
       </div>

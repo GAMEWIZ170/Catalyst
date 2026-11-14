@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { logEvent } = require("../utils/events");
+const { awardXp } = require("../utils/xp");
 const Progress = require("../models/progress.models");
 const TestResult = require("../models/testresult.models");
 const FlashcardProgress = require("../models/flashcardprogress.models");
@@ -44,6 +45,7 @@ const markLessonDone = async (req, res, next) => {
     );
     await mastery.record(req.user.id, lesson._id, { type: "attempt" }, req.user.timeZone);
     logEvent(req.user.id, "lesson_completed", { lesson: lesson._id, how: "marked" });
+    await awardXp(req.user.id, "lesson", { timeZone: req.user.timeZone, key: String(lesson._id) });
     return res.status(200).json({
       message: "Lesson completed",
       data: {
