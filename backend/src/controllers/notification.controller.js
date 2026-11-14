@@ -70,8 +70,8 @@ const notifyLessonPublished = async (lessonId) => {
 // STUDENT: the bell. Unread count plus the newest messages.
 const list = async (req, res, next) => {
   try {
-    if (req.user.role === "student" && req.user.notify?.review !== false) await ensureDueNotification(req.user.id, req.user.timeZone);
-    if (req.user.role === "student") await ensureExamNotifications(req.user.id, req.user.timeZone).catch((error) => console.error("Exam notification failed:", error.message));
+    if (req.user.notify?.review !== false) await ensureDueNotification(req.user.id, req.user.timeZone);
+    await ensureExamNotifications(req.user.id, req.user.timeZone).catch((error) => console.error("Exam notification failed:", error.message));
     const [unread, items] = await Promise.all([
       Notification.countDocuments({ user: req.user.id, readAt: null }),
       Notification.find({ user: req.user.id }).sort({ createdAt: -1 }).limit(LIST_SIZE).lean()

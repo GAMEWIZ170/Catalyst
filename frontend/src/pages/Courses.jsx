@@ -88,11 +88,11 @@ export default function Courses() {
       <Progress value={percent(resume)} label={`${resume.code} progress`} showLabel />
       <div className="button-row button-row--stack"><Button as={Link} variant="primary" to={nextHref} state={nextState} {...nearToPrefetch(() => prefetchLesson(next.lessonId))}>{midDeck ? "Resume flashcards" : `Resume: Lesson ${next.label}`}</Button></div>
     </Card>}
-    {isStudent && !loading && !error && <ExamCountdown />}
-    {isStudent && !loading && !error && <TodayPlan />}
-    {isStudent && !loading && !error && <DueChip />}
-    {isStudent && !loading && !error && <MistakesPanel from="/home" />}
-    {isStudent && !loading && !error && <TopicsLink />}
+    {user && !loading && !error && <ExamCountdown />}
+    {user && !loading && !error && <TodayPlan />}
+    {user && !loading && !error && <DueChip />}
+    {user && !loading && !error && <MistakesPanel from="/home" />}
+    {user && !loading && !error && <TopicsLink />}
     {isStudent && showWelcome && <Welcome onDone={dismissWelcome} />}
     {!loading && !error && !courses.length && <EmptyState illustration={<Illustration name="empty" />} title="No courses yet" description="Check back soon." />}
     {!loading && !error && courses.length > 0 && <section aria-labelledby="courses-title">

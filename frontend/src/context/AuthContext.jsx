@@ -26,7 +26,7 @@ export function AuthProvider({ children }) {
 
   // Accounts made before time zones existed have none. Report the browser's once, so streaks follow the student's own day.
   useEffect(() => {
-    if (!user || user.role !== "student" || user.timeZone) return;
+    if (!user || user.timeZone) return;
     const timeZone = detectTimeZone();
     api.updatePreferences({ timeZone })
       .then(() => { setUser((current) => (current ? { ...current, timeZone } : current)); refreshStreak(); })

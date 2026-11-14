@@ -14,7 +14,6 @@ export default function QuickSettings({ panelRef, onNavigate }) {
   const [textSize, setTextSize] = useState(currentTextSize);
   const [lowData, setLowDataState] = useState(isLowData);
   const [problem, setProblem] = useState("");
-  const isStudent = user?.role === "student";
 
   async function toggleNotify(key, value) {
     setProblem("");
@@ -35,10 +34,10 @@ export default function QuickSettings({ panelRef, onNavigate }) {
       {textSizes.map((item) => <option key={item.key} value={item.key}>{item.name}</option>)}
     </SelectField>
     <Checkbox label={t("quick.lowdata")} checked={lowData} onChange={(event) => { setLowDataState(event.target.checked); setLowData(event.target.checked); }} />
-    {isStudent && <>
+    <>
       <Checkbox label={t("quick.notifyReview")} checked={user.notify?.review !== false} onChange={(event) => toggleNotify("review", event.target.checked)} />
       <Checkbox label={t("quick.notifyLesson")} checked={user.notify?.lesson !== false} onChange={(event) => toggleNotify("lesson", event.target.checked)} />
-    </>}
+    </>
     {problem && <p className="settings-status" role="alert">{problem}</p>}
     <Link className="quick-all" to="/settings" onClick={onNavigate}>{t("quick.all")}</Link>
   </div>;
