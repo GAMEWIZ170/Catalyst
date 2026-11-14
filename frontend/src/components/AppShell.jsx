@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useMatch, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "./Avatar";
-import { Bookmark, BarChart3, House, Mail, Search, UserRound, Zap } from "lucide-react";
+import { Bookmark, BarChart3, House, Layers, Mail, Search, UserRound, Zap } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import ShortcutHelp from "./ShortcutHelp";
 import useStudyTimer from "../utils/useStudyTimer";
@@ -10,6 +10,7 @@ import useStudyTimer from "../utils/useStudyTimer";
 // Phones get a bottom tab bar for the places a student goes most. Laptops keep the top bar only.
 const TABS = [
   { to: "/courses", label: "Home", icon: House },
+  { to: "/review", label: "Review", icon: Layers },
   { to: "/search", label: "Search", icon: Search },
   { to: "/saved", label: "Saved", icon: Bookmark },
   { to: "/progress", label: "Progress", icon: BarChart3 },
@@ -75,10 +76,11 @@ export default function AppShell({ children }) {
     }
   }
 
-  if (focusMode) return <div className="app-shell app-shell--focus"><main className="page-wrap">{children}</main><ShortcutHelp /></div>;
+  if (focusMode) return <div className="app-shell app-shell--focus"><a className="skip-link" href="#main">Skip to content</a><main className="page-wrap" id="main" tabIndex="-1">{children}</main><ShortcutHelp /></div>;
 
   return (
     <div className="app-shell">
+      <a className="skip-link" href="#main">Skip to content</a>
       <header className="topbar">
         <Link className="brand" to="/courses" aria-label="Catalyst home">
           <span className="brand-mark">C</span>
@@ -137,7 +139,7 @@ export default function AppShell({ children }) {
           </div>
         </div>
       </header>
-      <main className="page-wrap">{children}</main>
+      <main className="page-wrap" id="main" tabIndex="-1">{children}</main>
       <ShortcutHelp />
       <footer className="footer">Keep learning with momentum.</footer>
       {user?.role === "student" && <nav className="tabbar" aria-label="Main">

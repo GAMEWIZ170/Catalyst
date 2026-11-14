@@ -13,6 +13,8 @@ html {
   font-size: var(--text-md);
   font-synthesis: none;
   line-height: var(--leading-body);
+  /* Keep focused controls clear of the sticky top bar (64 px). */
+  scroll-padding-top: calc(64px + var(--space-4));
   -webkit-text-size-adjust: 100%;
 }
 
@@ -117,7 +119,7 @@ h3 {
   align-items: center;
   background: var(--accent);
   border-radius: var(--radius-control);
-  color: var(--surface);
+  color: var(--on-accent);
   display: inline-flex;
   height: 32px;
   justify-content: center;
@@ -1903,15 +1905,34 @@ h3 {
   }
 }
 
+/* Motion is opt-in: the flashcard flip, progress fill, spinner, feedback and
+   toast animate only under no-preference. With reduce, the state change still
+   shows at once (face swaps, bar jumps, spinner stays as a static icon with
+   aria-busy). Only the small colour transitions are shortened here. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
     scroll-behavior: auto;
     transition-duration: 0.01ms;
   }
+}
+
+.skip-link {
+  background: var(--surface);
+  border: 2px solid var(--accent);
+  border-radius: var(--radius-control);
+  color: var(--ink);
+  left: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  position: fixed;
+  top: var(--space-2);
+  transform: translateY(-200%);
+  z-index: 10;
+}
+
+.skip-link:focus {
+  transform: none;
 }
 
 @media (max-width: 359px) {
@@ -2950,7 +2971,7 @@ textarea {
 }
 
 .exam-score {
-  font-size: 4rem;
+  font-size: var(--text-display);
   font-variant-numeric: tabular-nums;
   font-weight: var(--weight-strong);
   line-height: 1;
@@ -3559,6 +3580,8 @@ textarea {
   }
   .tabbar-link[aria-current="page"] { color: var(--accent); font-weight: var(--weight-strong); }
   .app-shell { padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
+  /* Keep focused controls clear of the fixed tab bar. */
+  html { scroll-padding-bottom: calc(56px + env(safe-area-inset-bottom) + var(--space-4)); }
 }
 
 .shortcut-list { display: grid; gap: var(--space-3); margin: 0 0 var(--space-4); }
