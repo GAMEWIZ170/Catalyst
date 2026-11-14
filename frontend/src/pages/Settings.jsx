@@ -61,14 +61,14 @@ function AccountTab() {
       </div>
       <p className="settings-status" aria-live="polite">{status}</p>
     </section>
-    {user?.role === "student" && <section className="settings-section" aria-labelledby="zone-heading">
+    <section className="settings-section" aria-labelledby="zone-heading">
       <h2 id="zone-heading">Time zone</h2>
       <SelectField label="Your time zone" value={zone} onChange={(event) => saveZone(event.target.value)}>
         {timeZoneList(zone).map((name) => <option key={name} value={name}>{name.replace(/_/g, " ")}</option>)}
       </SelectField>
       <p className="muted settings-help">Your streak and daily goal change over at midnight in this time zone. Catalyst picked it from your browser.</p>
       <p className="settings-status" aria-live="polite">{zoneStatus}</p>
-    </section>}
+    </section>
     <AccountSection />
   </>;
 }
@@ -135,7 +135,6 @@ function NotificationsTab() {
     }
   }
 
-  if (user?.role !== "student") return <p className="muted settings-help">Notification settings are for student accounts.</p>;
   return <section className="settings-section" aria-labelledby="notify-heading">
     <h2 id="notify-heading">In-app messages</h2>
     <Checkbox label="Review reminders" hint="A message when flashcards or mistakes are due." checked={user.notify?.review !== false} onChange={(event) => toggle("review", event.target.checked)} />
@@ -217,7 +216,6 @@ function StudyTab() {
     }
   }
 
-  if (user?.role !== "student") return <p className="muted settings-help">Study settings are for student accounts.</p>;
   return <>
     <TimerLengths />
     <section className="settings-section" aria-labelledby="extra-heading">

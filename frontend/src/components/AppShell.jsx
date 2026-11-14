@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useMatch, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "./Avatar";
-import { Bell, BookOpen, FlaskConical, House, Layers, PanelLeftClose, PanelLeftOpen, Search, Settings, UserRound, Zap } from "lucide-react";
+import { Bell, BookOpen, Shield, FlaskConical, House, Layers, PanelLeftClose, PanelLeftOpen, Search, Settings, UserRound, Zap } from "lucide-react";
 import ShortcutHelp from "./ShortcutHelp";
 import NotificationPanel, { useNotifications } from "./NotificationPanel";
 import QuickSettings from "./QuickSettings";
@@ -22,12 +22,14 @@ const PLACES = [
   { to: "/me", label: "nav.me", icon: UserRound, also: ["/progress", "/settings", "/saved", "/achievements", "/exams", "/hall"] }
 ];
 
+const ADMIN_PLACE = { to: "/admin", label: "nav.admin", icon: Shield };
+
 const sidebarKey = "catalyst-sidebar";
 const readCollapsed = () => { try { return window.localStorage.getItem(sidebarKey) === "collapsed"; } catch { return false; } };
 
 function PlaceLink({ place, pathname, collapsed }) {
   const Icon = place.icon;
-  const inside = place.also?.some((prefix) => pathname.startsWith(prefix));
+  const inside = place.also?.some((prefix) => pathname.startsWith(prefix)) || (place.to === "/admin" && pathname.startsWith("/admin"));
   const body = <><Icon size={22} aria-hidden="true" /><span className="place-label">{t(place.label)}</span></>;
   const title = collapsed ? t(place.label) : undefined;
   // NavLink would overwrite aria-current on a page inside this place, so those use a plain Link.
@@ -46,7 +48,7 @@ export default function AppShell({ children }) {
   const streak = user?.streak ?? null;
   const { timer } = useTimer();
   // Study time is counted for a minutes goal, and while a focus session runs (the server needs it to count focus minutes).
-  useStudyTimer(user?.role === "student" && (user?.dailyGoal?.kind === "minutes" || Boolean(timer && !timer.done && timer.phase === "work")));
+  useStudyTimer(Boolean(user) && (user?.dailyGoal?.kind === "minutes" || Boolean(timer && !timer.done && timer.phase === "work")));
   const notifications = useNotifications(Boolean(user));
   const online = useOnline();
   // Only one top bar popover is open at a time: "notifications", "quick", "profile" or none.
@@ -55,7 +57,8 @@ export default function AppShell({ children }) {
   const buttons = useRef({});
   const quickRef = useRef(null);
   const profileMenuRef = useRef(null);
-  const isStudent = user?.role === "student";
+  const isAdmin = user?.role === "admin";
+  const places = isAdmin ? [...PLACES, ADMIN_PLACE] : PLACES;
 
   const toggle = (name) => setOpen((current) => (current === name ? null : name));
 
@@ -110,11 +113,11 @@ export default function AppShell({ children }) {
   if (focusMode) return <div className="app-shell app-shell--focus"><a className="skip-link" href="#main">Skip to content</a><main className="page-wrap" id="main" tabIndex="-1">{children}</main><ShortcutHelp /></div>;
 
   return (
-    <div className={`app-shell${isStudent ? " has-nav" : ""}${isStudent && collapsed ? " nav-collapsed" : ""}`}>
+    <div className={`app-shell${" has-nav"}${collapsed ? " nav-collapsed" : ""}`}>
       <a className="skip-link" href="#main">Skip to content</a>
-      {isStudent && <TimerAnnouncer />}
+      <TimerAnnouncer />
       <header className="topbar">
-        <Link className="brand" to={isStudent ? "/home" : "/admin"} aria-label="Catalyst home">
+        <Link className="brand" to="/home" aria-label="Catalyst home">
           <span className="brand-mark">C</span>
           <span className="brand-name">Catalyst</span>
         </Link>
@@ -122,10 +125,10 @@ export default function AppShell({ children }) {
           <Link className="icon-button" to="/search" aria-label={t("tools.search")} title={t("tools.search")}>
             <Search size={20} aria-hidden="true" />
           </Link>
-          {isStudent && <div className="timer-menu popover-host">
+          <div className="timer-menu popover-host">
             <TimerButton buttonRef={(node) => { buttons.current.timer = node; }} open={open === "timer"} onClick={() => toggle("timer")} />
             {open === "timer" && <TimerPanel onNavigate={() => setOpen(null)} />}
-          </div>}
+          </div>
           <div className="notification-menu popover-host">
             <button
               ref={(node) => { buttons.current.notifications = node; }}
@@ -189,24 +192,24 @@ export default function AppShell({ children }) {
       </header>
       {!online && <div className="offline-banner" role="status">You are offline. Lessons you opened before are still here. Answers need a connection.</div>}
       <div className="shell-body">
-        {isStudent && <aside className="sidebar">
+        <aside className="sidebar">
           <nav aria-label={t("nav.main")}>
-            {PLACES.map((place) => <PlaceLink key={place.to} place={place} pathname={pathname} collapsed={collapsed} />)}
+            {places.map((place) => <PlaceLink key={place.to} place={place} pathname={pathname} collapsed={collapsed} />)}
           </nav>
           <button className="sidebar-toggle" type="button" aria-expanded={!collapsed} onClick={toggleSidebar} title={collapsed ? t("nav.expand") : t("nav.collapse")}>
             {collapsed ? <PanelLeftOpen size={20} aria-hidden="true" /> : <PanelLeftClose size={20} aria-hidden="true" />}
             <span className="place-label">{collapsed ? t("nav.expand") : t("nav.collapse")}</span>
           </button>
-        </aside>}
+        </aside>
         <div className="shell-main">
           <main className="page-wrap" id="main" tabIndex="-1">{children}</main>
           <ShortcutHelp />
           <footer className="footer">Keep learning with momentum. <span className="footer-links"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link></span></footer>
         </div>
       </div>
-      {isStudent && <nav className="tabbar" aria-label={t("nav.main")}>
-        {PLACES.map((place) => <PlaceLink key={place.to} place={place} pathname={pathname} collapsed={false} />)}
-      </nav>}
+      <nav className="tabbar" aria-label={t("nav.main")}>
+        {places.map((place) => <PlaceLink key={place.to} place={place} pathname={pathname} collapsed={false} />)}
+      </nav>
     </div>
   );
 }

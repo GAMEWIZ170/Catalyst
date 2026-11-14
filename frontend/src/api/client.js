@@ -98,6 +98,7 @@ export const api = {
   getProgress: () => request("/progress"),
   getStreak: () => cached("streak", () => request("/progress/streak")),
   getProgressOverview: () => cached("progress-overview", () => request("/progress/overview")),
+  getDashboard: () => request("/admin/dashboard"),
   getAdminCategories: () => request("/admin/categories"),
   createCategory: (body) => request("/admin/categories", { method: "POST", body: JSON.stringify(body) }),
   updateCategory: (id, body) => request(`/admin/categories/${id}`, { method: "PUT", body: JSON.stringify(body) }),

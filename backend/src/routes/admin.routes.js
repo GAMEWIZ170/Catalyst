@@ -33,6 +33,7 @@ const { uploadMaterial } = require("../middlewares/materialUpload");
 const reorder = require("../controllers/reorder.controller");
 const preview = require("../controllers/preview.controller");
 const analytics = require("../controllers/analytics.controller");
+const dashboard = require("../controllers/dashboard.controller");
 const reports = require("../controllers/report.controller");
 const importer = require("../controllers/import.controller");
 const summary = require("../controllers/summary.controller");
@@ -151,6 +152,9 @@ router.post("/uploads", uploadLimiter, uploadImage, upload.uploadImage);
 router.get("/preview/lessons/:id", preview.previewLesson);
 router.get("/preview/tests/:id", preview.previewTest);
 router.post("/preview/questions/:id/answer", validateAnswer, preview.previewAnswer);
+
+// Dashboard numbers (worked out nightly by scripts/compute-stats.js)
+router.get("/dashboard", dashboard.getDashboard);
 
 // Question analytics and the report inbox
 router.get("/analytics/questions", analytics.questionAnalytics);

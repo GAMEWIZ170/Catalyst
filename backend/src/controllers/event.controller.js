@@ -25,8 +25,6 @@ const countedFocusMinutes = async (userId, timeZone, minutes) => {
 
 const addEvent = async (req, res, next) => {
   try {
-    // Admins preview lessons as students. Those views are not student activity.
-    if (req.user.role !== "student") return res.status(204).end();
     if (req.body.type === "focus_session_completed") {
       const minutes = await countedFocusMinutes(req.user.id, req.user.timeZone, req.body.props.minutes || 0);
       logEvent(req.user.id, "focus_session_completed", { minutes, day: dayKey(req.user.timeZone) });

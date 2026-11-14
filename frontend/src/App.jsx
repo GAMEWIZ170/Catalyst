@@ -40,6 +40,7 @@ const Lab = lazy(() => import("./pages/Lab"));
 const Exams = lazy(() => import("./pages/Exams"));
 const Hall = lazy(() => import("./pages/Hall"));
 const AdminCatalog = lazy(() => import("./pages/AdminCatalog"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 import AdminLayout from "./components/admin/AdminLayout";
 import { Skeleton, SkeletonGroup } from "./components/ui";
 
@@ -111,6 +112,7 @@ export default function App() {
     <Route path="/admin/courses/:id" element={<AdminPage><AdminCourseEditor /></AdminPage>} />
     <Route path="/admin/tests/:id" element={<AdminPage><AdminTestEditor /></AdminPage>} />
     <Route path="/admin/lessons/:id" element={<AdminPage><AdminLessonEditor /></AdminPage>} />
+    <Route path="/admin/dashboard" element={<AdminPage><AdminDashboard /></AdminPage>} />
     <Route path="/admin/catalog" element={<AdminPage><AdminCatalog /></AdminPage>} />
     <Route path="/admin/users" element={<AdminPage><AdminUsers /></AdminPage>} />
     <Route path="/admin/trash" element={<AdminPage><AdminTrash /></AdminPage>} />
