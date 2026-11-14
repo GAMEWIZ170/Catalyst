@@ -550,6 +550,10 @@ Everything is checked against the owner (`utils/ownSet.js`), so another student'
 - `/my-exams` exams move to "past" once their day (in the student's time zone) has passed. `GET /plan` counts down to the nearest upcoming exam and returns `examCourse`; with none, it uses the exam date from Settings. `GET /notifications` makes a `type: "exam"` message at 14, 7, 3 and 1 days (one per exam per milestone; opened late, it makes the next milestone once with the real days left).
 - Study Hall rows (`HallPresence`) delete themselves an hour after the last heartbeat.
 
+### Weekly goal with rest days (Phase X5.3)
+
+`PUT /auth/me/preferences` accepts `weeklyDays` (0 to 6; 0 is no goal; the account carries `weeklyGoal: { days }`). The most is 6, so every week has at least one rest day. A week runs Monday to Sunday in the student's own time zone (`weekStart` in `utils/day.js`). `GET /home` returns `weekly: { target, done, met }` (null with no goal), where `done` is the number of different days this week with study activity (the same days the streak uses). Progress only goes up during the week, so a missed day never takes anything away, and the wording on screen never mentions missed days. When `met` is true the `weekly_goal` XP (75, once per week, keyed by the Monday) is given. The streak itself still counts consecutive days; whether a rest day should keep a streak alive is an open owner decision.
+
 ### Streaks
 
 A "day" is the student's own calendar day, from `User.timeZone` (utils/day.js; UTC when none is set or the name is unknown). Day keys saved before time zones existed were UTC days and stay as they are. The streak is calculated from distinct `YYYY-MM-DD` dates in lesson progress, test results and `FlashcardProgress.reviewedDays`. Consecutive activity ending today or yesterday is counted.

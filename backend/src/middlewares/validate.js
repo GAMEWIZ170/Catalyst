@@ -83,6 +83,7 @@ const validatePreferences = validateWith(Joi.object({
   examDate: Joi.date().iso().allow(null),
   goalKind: Joi.string().valid("none", "minutes", "lesson"),
   goalMinutes: Joi.number().integer().min(5).max(240),
+  weeklyDays: Joi.number().integer().min(0).max(6),
   timeZone: timeZoneRule,
   notify: Joi.object({ review: Joi.boolean(), lesson: Joi.boolean() }).min(1),
   extraTime: Joi.number().valid(0, 25, 50, 100)

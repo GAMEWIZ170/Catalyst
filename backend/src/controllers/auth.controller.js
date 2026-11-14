@@ -26,7 +26,8 @@ const preferencesOf = (user) => ({
   timeZone: user.timeZone || null,
   extraTime: user.extraTime || 0,
   notify: { review: user.notify?.review !== false, lesson: user.notify?.lesson !== false },
-  dailyGoal: { kind: user.dailyGoal?.kind || "none", minutes: user.dailyGoal?.minutes || 10 }
+  dailyGoal: { kind: user.dailyGoal?.kind || "none", minutes: user.dailyGoal?.minutes || 10 },
+  weeklyGoal: { days: user.weeklyGoal?.days || 0 }
 });
 
 const linkTo = (path, token) => `${process.env.CLIENT_URL}${path}?token=${token}`;
@@ -166,7 +167,7 @@ const getMe = async (req, res, next) => {
   try {
     // The streak rides along, so the top bar has it without a second request on every page load.
     const [user, streak] = await Promise.all([
-      User.findById(req.user.id).select("name email role avatar subscriptionEndsAt onboarded emailVerified examDate dailyGoal timeZone notify extraTime"),
+      User.findById(req.user.id).select("name email role avatar subscriptionEndsAt onboarded emailVerified examDate dailyGoal weeklyGoal timeZone notify extraTime"),
       loadStreak(req.user.id, req.user.timeZone)
     ]);
 
@@ -197,7 +198,7 @@ const updateAvatar = async (req, res, next) => {
 
 const updatePreferences = async (req, res, next) => {
   try {
-    const { onboarded, examDate, goalKind, goalMinutes, timeZone, notify, extraTime } = req.body;
+    const { onboarded, examDate, goalKind, goalMinutes, weeklyDays, timeZone, notify, extraTime } = req.body;
     const set = {};
     if (onboarded !== undefined) set.onboarded = onboarded;
     if (examDate !== undefined) set.examDate = examDate;
@@ -207,7 +208,8 @@ const updatePreferences = async (req, res, next) => {
     if (notify?.lesson !== undefined) set["notify.lesson"] = notify.lesson;
     if (goalKind !== undefined) set["dailyGoal.kind"] = goalKind;
     if (goalMinutes !== undefined) set["dailyGoal.minutes"] = goalMinutes;
-    const user = await User.findByIdAndUpdate(req.user.id, { $set: set }, { returnDocument: "after", runValidators: true }).select("onboarded examDate dailyGoal timeZone notify extraTime");
+    if (weeklyDays !== undefined) set["weeklyGoal.days"] = weeklyDays;
+    const user = await User.findByIdAndUpdate(req.user.id, { $set: set }, { returnDocument: "after", runValidators: true }).select("onboarded examDate dailyGoal weeklyGoal timeZone notify extraTime");
     authCache.forget(req.user.id);
     if (!user) return res.status(404).json({ message: "User not found" });
     return res.status(200).json({ data: preferencesOf(user) });

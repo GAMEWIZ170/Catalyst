@@ -103,6 +103,10 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 1
     },
+    // Optional weekly goal: study on this many days a week (1 to 6, so there is always a rest day). 0 means no goal.
+    weeklyGoal: {
+        days: { type: Number, min: 0, max: 6, default: 0 }
+    },
     dailyGoal: {
         kind: { type: String, enum: ["none", "minutes", "lesson"], default: "none" },
         minutes: { type: Number, min: 5, max: 240, default: 10 }

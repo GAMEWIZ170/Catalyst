@@ -11,6 +11,7 @@ const RULES = {
   lesson: { xp: 20, cap: 100 },      // a lesson completed. Once per lesson, ever.
   mastery: { xp: 15, cap: 60 },      // a mastery level reached. Once per lesson and level, ever.
   daily_goal: { xp: 25, cap: 25 },   // the daily goal met
+  weekly_goal: { xp: 75, cap: 75 },  // the weekly goal met. Once per week.
   focus: { xp: 1, cap: 30 }          // counted focus minutes, 1 XP each
 };
 
