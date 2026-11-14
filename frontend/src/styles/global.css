@@ -3554,3 +3554,9 @@ textarea {
   .tabbar-link[aria-current="page"] { color: var(--accent); font-weight: var(--weight-strong); }
   .app-shell { padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
 }
+
+.shortcut-list { display: grid; gap: var(--space-3); margin: 0 0 var(--space-4); }
+.shortcut-list div { align-items: baseline; display: flex; gap: var(--space-3); }
+.shortcut-list dt { flex: 0 0 6rem; }
+.shortcut-list dd { margin: 0; }
+.shortcut-list kbd { background: var(--sunken); border: 1px solid var(--control-line); border-radius: var(--radius-control); font: inherit; font-size: var(--text-sm); padding: 2px var(--space-2); }

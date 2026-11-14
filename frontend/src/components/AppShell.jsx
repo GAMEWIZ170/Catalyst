@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import Avatar from "./Avatar";
 import { BarChart3, House, Mail, UserRound, Zap } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import ShortcutHelp from "./ShortcutHelp";
 
 // Phones get a bottom tab bar for the places a student goes most. Laptops keep the top bar only.
 const TABS = [
@@ -68,7 +69,7 @@ export default function AppShell({ children }) {
     }
   }
 
-  if (focusMode) return <div className="app-shell app-shell--focus"><main className="page-wrap">{children}</main></div>;
+  if (focusMode) return <div className="app-shell app-shell--focus"><main className="page-wrap">{children}</main><ShortcutHelp /></div>;
 
   return (
     <div className="app-shell">
@@ -131,6 +132,7 @@ export default function AppShell({ children }) {
         </div>
       </header>
       <main className="page-wrap">{children}</main>
+      <ShortcutHelp />
       <footer className="footer">Keep learning with momentum.</footer>
       {user?.role === "student" && <nav className="tabbar" aria-label="Main">
         {TABS.map(({ to, label, icon: Icon }) => <NavLink key={to} to={to} className="tabbar-link">

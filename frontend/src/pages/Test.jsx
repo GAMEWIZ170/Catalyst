@@ -52,14 +52,24 @@ export default function Test() {
   }, [blocker.state]);
   useEffect(() => { if (feedback) feedbackHeading.current?.focus(); }, [feedback]);
 
-  // Keys 1 to 4 pick an answer. True is 1, False is 2.
+  // Keys 1 to 4 pick an answer. True is 1, False is 2. Enter checks the answer, then moves on.
+  const enterAction = useRef(null);
+  enterAction.current = feedback ? continueQuestion : checkAnswer;
   useEffect(() => {
-    if (phase !== "question" || feedback || !test) return undefined;
+    if (phase !== "question" || !test) return undefined;
     const question = test.questions[index];
     const values = question.type === "mcq" ? question.options.map((option) => option._id) : ["true", "false"];
     function onKey(event) {
       if (event.ctrlKey || event.metaKey || event.altKey) return;
       if (event.target.closest?.("input, textarea, select")) return;
+      if (event.key === "Enter") {
+        // On a focused button or link, Enter already activates it; do not do it twice.
+        if ((event.target.closest?.("button, a") && !event.target.closest?.(".exam-option")) || event.repeat) return;
+        event.preventDefault();
+        enterAction.current?.();
+        return;
+      }
+      if (feedback) return;
       const position = Number(event.key) - 1;
       if (Number.isInteger(position) && position >= 0 && position < values.length) setChosen(values[position]);
     }
