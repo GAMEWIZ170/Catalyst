@@ -1507,8 +1507,14 @@ h3 {
   background: var(--surface);
   border-radius: 50%;
   height: 18px;
-  transition: transform 160ms ease;
   width: 18px;
+}
+
+/* The thumb still moves between states; it only skips the slide when motion is reduced. */
+@media (prefers-reduced-motion: no-preference) {
+  .switch-thumb {
+    transition: transform 160ms ease;
+  }
 }
 
 .switch--on .switch-track {
@@ -1682,6 +1688,7 @@ h3 {
 }
 
 .palette-preview-accent {
+  /* --preview-accent is set only by [data-palette-preview] in tokens.css; use inside a preview. */
   background: var(--preview-accent);
   grid-row: span 2;
 }
@@ -1952,12 +1959,10 @@ h3 {
    toast animate only under no-preference. With reduce, the state change still
    shows at once (face swaps, bar jumps, spinner stays as a static icon with
    aria-busy). Only the small colour transitions are shortened here. */
+/* Motion is opt-in: every transition and animation sits inside a no-preference block. */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  :root {
     scroll-behavior: auto;
-    transition-duration: 0.01ms;
   }
 }
 
@@ -2789,7 +2794,7 @@ textarea {
 }
 
 .exam-progress {
-  background: linear-gradient(to right, var(--accent) var(--progress), var(--line) var(--progress));
+  background: linear-gradient(to right, var(--accent) var(--progress, 0%), var(--line) var(--progress, 0%));
   border-radius: var(--radius-pill);
   flex: 1;
   height: 0.375rem;
@@ -3649,7 +3654,7 @@ textarea {
 
 /* Notification bell (phase 4.3) */
 .icon-button { position: relative; }
-.notification-badge { align-items: center; background: var(--accent); border-radius: 999px; color: var(--on-accent); display: inline-flex; font-size: 0.6875rem; font-weight: var(--weight-strong); height: 18px; justify-content: center; min-width: 18px; padding: 0 4px; position: absolute; right: -6px; top: -6px; }
+.notification-badge { align-items: center; background: var(--accent); border-radius: 999px; color: var(--on-accent); display: inline-flex; font-size: var(--text-xs); font-weight: var(--weight-strong); height: 18px; justify-content: center; min-width: 18px; padding: 0 4px; position: absolute; right: -6px; top: -6px; }
 .notification-panel { gap: var(--space-2); max-height: min(70dvh, 28rem); overflow-y: auto; width: min(340px, calc(100vw - 2rem)); }
 .notification-head { align-items: center; display: flex; gap: var(--space-3); justify-content: space-between; }
 .notification-readall { background: none; border: 0; color: var(--accent); cursor: pointer; font: inherit; font-size: var(--text-sm); font-weight: var(--weight-strong); min-height: 44px; padding: 0 var(--space-2); }
@@ -3893,7 +3898,7 @@ textarea {
 .trend { display: block; height: auto; max-width: 100%; width: 100%; }
 .trend-axis { stroke: var(--control-line); }
 .trend-grid { stroke: var(--line); stroke-dasharray: 3 3; }
-.trend-text, .trend-label { fill: var(--muted); font-size: 11px; }
+.trend-text, .trend-label { fill: var(--muted); font-size: var(--text-xs); }
 .trend-label { font-weight: 600; }
 .trend-line { stroke-linejoin: round; stroke-width: 2; }
 .trend-line--dau { stroke: var(--accent); stroke-width: 3; }
