@@ -11,6 +11,7 @@ import Courses from "./pages/Courses";
 // file would cost one more round trip on a slow connection, more than the few KB it saves.
 import CourseOutline from "./pages/CourseOutline";
 import Lesson from "./pages/Lesson";
+const Exam = lazy(() => import("./pages/Exam"));
 const Topics = lazy(() => import("./pages/Topics"));
 const Review = lazy(() => import("./pages/Review"));
 const Test = lazy(() => import("./pages/Test"));
@@ -72,6 +73,7 @@ export default function App() {
     <Route path="/courses/:id" element={<ProtectedPage warm="course"><CourseOutline /></ProtectedPage>} />
     <Route path="/lessons/:id" element={<ProtectedPage warm="lesson"><Lesson /></ProtectedPage>} />
     <Route path="/tests/:id" element={<ProtectedPage warm="test"><Test /></ProtectedPage>} />
+    <Route path="/tests/:id/exam" element={<ProtectedPage><Exam /></ProtectedPage>} />
     <Route path="/topics" element={<ProtectedPage><Topics /></ProtectedPage>} />
     <Route path="/practice/topic" element={<ProtectedPage><Test /></ProtectedPage>} />
     <Route path="/review" element={<ProtectedPage><Review /></ProtectedPage>} />

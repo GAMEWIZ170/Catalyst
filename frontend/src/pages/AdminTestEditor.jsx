@@ -54,6 +54,7 @@ export default function AdminTestEditor() {
   const [message, setMessage] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [passDraft, setPassDraft] = useState("");
+  const [timeDraft, setTimeDraft] = useState("");
   const dirty = Boolean(question && originalQuestion && JSON.stringify(question) !== JSON.stringify(originalQuestion));
   const blocker = useUnsavedChanges(dirty);
 
@@ -87,6 +88,25 @@ export default function AdminTestEditor() {
   }
 
   useEffect(() => { setPassDraft(test?.passPercent ?? ""); }, [test?.passPercent]);
+  useEffect(() => { setTimeDraft(test?.timeLimitMinutes ?? ""); }, [test?.timeLimitMinutes]);
+
+  // A time limit turns the test into a timed mock exam. Empty makes it an ordinary test again.
+  async function saveTimeLimit(event) {
+    event.preventDefault();
+    const value = String(timeDraft).trim();
+    const timeLimitMinutes = value === "" ? null : Number(value);
+    if (timeLimitMinutes !== null && (!Number.isInteger(timeLimitMinutes) || timeLimitMinutes < 1 || timeLimitMinutes > 360)) {
+      setMessage("");
+      setError("Time limit must be a whole number of minutes from 1 to 360");
+      return;
+    }
+    try {
+      const next = dataOf(await api.updateTest(id, { timeLimitMinutes }));
+      setTest((current) => ({ ...current, ...next }));
+      setError("");
+      setMessage(timeLimitMinutes === null ? "Time limit cleared" : "Time limit saved");
+    } catch (err) { setError(err.message); }
+  }
 
   async function savePassPercent(event) {
     event.preventDefault();
@@ -217,6 +237,12 @@ export default function AdminTestEditor() {
         <Button variant="secondary" type="submit" disabled={String(passDraft) === String(test.passPercent ?? "")}>Save</Button>
       </div>
     </form>}
+    <form className="pass-percent" onSubmit={saveTimeLimit}>
+      <div className="pass-percent-row">
+        <TextField label="Time limit (minutes)" id="time-limit" type="number" inputMode="numeric" min="1" max="360" step="1" placeholder="None" value={timeDraft} onChange={(event) => setTimeDraft(event.target.value)} hint="Set a limit to make this a timed mock exam: no feedback until the end, and handed in automatically when time runs out. Leave it empty for an ordinary test." />
+        <Button variant="secondary" type="submit" disabled={String(timeDraft) === String(test.timeLimitMinutes ?? "")}>Save</Button>
+      </div>
+    </form>
     <StatusMessage message={error || message} error={Boolean(error)} />
     {!questions.length && <p className="notice">A test with no questions gives no credit and stays hidden from students until it has at least one.</p>}
     <section className="admin-editor-section">

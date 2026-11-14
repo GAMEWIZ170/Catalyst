@@ -658,3 +658,62 @@
   margin: var(--space-1) 0 0;
   padding-left: var(--space-5);
 }
+
+/* Timed mock exam (Phase 3.7) */
+.exam-timer {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-bold);
+  margin: 0;
+}
+
+.exam-timer--low {
+  color: var(--error);
+}
+
+.exam-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-3) auto;
+  max-width: 40rem;
+  padding-inline: var(--space-4);
+}
+
+.exam-grid-cell {
+  background: var(--surface);
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-control);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+}
+
+.exam-grid-cell.is-answered {
+  background: var(--accent-soft);
+}
+
+.exam-grid-cell.is-flagged {
+  border-color: var(--warning);
+  border-width: 2px;
+  box-shadow: inset 0 -4px 0 var(--warning);
+}
+
+.exam-grid-cell.is-current {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.exam-bar--split {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+}
+
+.exam-bar--split > .button {
+  flex: 1 1 0;
+  margin-inline: 0;
+  max-width: 12rem;
+}

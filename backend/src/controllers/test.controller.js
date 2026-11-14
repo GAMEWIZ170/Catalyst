@@ -16,6 +16,13 @@ const getTest = async (req, res, next) => {
   try {
     const test = await findVisibleTest(req.params.id);
     if (!test) return res.status(404).json({ message: "Test not found" });
+    if (test.timeLimitMinutes) {
+      // A timed mock exam is only taken through /tests/:id/exam/start, so no questions are sent here.
+      const questionCount = await Question.countDocuments({ test: test._id, deletedAt: null });
+      return res.status(200).json({
+        data: { _id: test._id, title: test.title, scope: test.scope, order: test.order, passPercent: test.passPercent ?? null, timed: true, timeLimitMinutes: test.timeLimitMinutes, questionCount, questions: [] }
+      });
+    }
     const questions = await Question.find({ test: test._id, deletedAt: null })
       .select("_id type text image options order hint numeric pairs items equation")
       .sort({ order: 1 })
@@ -26,6 +33,41 @@ const getTest = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+};
+
+// Records one finished attempt: the test result, lesson completion and mastery. Shared by normal tests and timed mock exams.
+const recordResult = async (userId, test, score) => {
+  const result = await TestResult.findOneAndUpdate(
+    { user: userId, test: test._id },
+    {
+      $max: { bestScore: score },
+      $set: { lastScore: score },
+      $inc: { attempts: 1 },
+      $setOnInsert: { completedAt: new Date() },
+      $addToSet: { completedDays: todayKey() }
+    },
+    { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
+  );
+  // No pass percent means any attempt counts (tests made before this setting existed).
+  const passPercent = test.passPercent ?? null;
+  const passed = passPercent === null || score >= passPercent;
+  if (test.scope === "lesson" && passed) {
+    await Progress.findOneAndUpdate(
+      { user: userId, lesson: test.lesson._id },
+      {
+        $max: { score },
+        $set: { completed: true },
+        $setOnInsert: { completedAt: new Date() },
+        $addToSet: { completedDays: todayKey() }
+      },
+      { upsert: true, setDefaultsOnInsert: true }
+    );
+  }
+  if (test.scope === "lesson") {
+    await mastery.record(userId, test.lesson._id, { type: "attempt" });
+    await mastery.record(userId, test.lesson._id, { type: "score", score });
+  }
+  return { result, passPercent, passed };
 };
 
 const submitTest = async (req, res, next) => {
@@ -47,36 +89,7 @@ const submitTest = async (req, res, next) => {
     }
     const total = questions.length;
     const score = total === 0 ? 100 : Math.round((correct / total) * 100);
-    const result = await TestResult.findOneAndUpdate(
-      { user: req.user.id, test: test._id },
-      {
-        $max: { bestScore: score },
-        $set: { lastScore: score },
-        $inc: { attempts: 1 },
-        $setOnInsert: { completedAt: new Date() },
-        $addToSet: { completedDays: todayKey() }
-      },
-      { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
-    );
-    // No pass percent means any attempt counts (tests made before this setting existed).
-    const passPercent = test.passPercent ?? null;
-    const passed = passPercent === null || score >= passPercent;
-    if (test.scope === "lesson" && passed) {
-      await Progress.findOneAndUpdate(
-        { user: req.user.id, lesson: test.lesson._id },
-        {
-          $max: { score },
-          $set: { completed: true },
-          $setOnInsert: { completedAt: new Date() },
-          $addToSet: { completedDays: todayKey() }
-        },
-        { upsert: true, setDefaultsOnInsert: true }
-      );
-    }
-    if (test.scope === "lesson") {
-      await mastery.record(req.user.id, test.lesson._id, { type: "attempt" });
-      await mastery.record(req.user.id, test.lesson._id, { type: "score", score });
-    }
+    const { result, passPercent, passed } = await recordResult(req.user.id, test, score);
     return res.status(200).json({ data: { score, correct, total, bestScore: result.bestScore, attempts: result.attempts, passPercent, passed } });
   } catch (error) {
     next(error);
@@ -135,4 +148,4 @@ const deleteTest = async (req, res, next) => {
   }
 };
 
-module.exports = { getTest, submitTest, createTest, getTestForAdmin, updateTest, deleteTest, studentQuestion, questionForAdmin };
+module.exports = { recordResult, getTest, submitTest, createTest, getTestForAdmin, updateTest, deleteTest, studentQuestion, questionForAdmin };

@@ -4,7 +4,7 @@ import { ArrowLeft, Bookmark, Check, CheckCircle2, TriangleAlert, X } from "luci
 import ConfirmDialog from "../components/admin/ConfirmDialog";
 import RichText from "../components/RichText";
 import WorkedSolution from "../components/WorkedSolution";
-import { CorrectAnswer, CorrectEquation, QuestionInput } from "../components/QuestionInputs";
+import { Correct, QuestionInput } from "../components/QuestionInputs";
 import { Button, Card, EmptyState, Illustration } from "../components/ui";
 import useUnsavedChanges from "../hooks/useUnsavedChanges";
 import { api } from "../api/client";
@@ -13,12 +13,6 @@ import { ErrorState, Loading } from "./Courses";
 
 const dataOf = (payload) => payload.data || payload;
 
-// The right answer for any question type.
-function Correct({ question, correct }) {
-  return question.type === "balancing"
-    ? <CorrectEquation question={question} coefficients={correct} />
-    : <CorrectAnswer type={question.type} correct={correct} />;
-}
 
 function scoreMessage(score) {
   if (score === 100) return "Every answer was right.";
@@ -194,6 +188,16 @@ export default function Test() {
   // Only lesson tests can complete a lesson, so only they show a pass percent.
   const needsPass = !practice && test.scope === "lesson" && test.passPercent != null;
 
+  if (test.timed) return <div className="exam exam--page">
+    <Link className="back-link" to={backTo} state={backState}><ArrowLeft size={16} aria-hidden="true" />{backLabel}</Link>
+    <Card className="exam-intro">
+      <h1>{test.title}</h1>
+      <p>A timed mock exam: {test.questionCount} {test.questionCount === 1 ? "question" : "questions"} in {test.timeLimitMinutes} {test.timeLimitMinutes === 1 ? "minute" : "minutes"}.</p>
+      <p className="muted">There is no feedback until you hand it in. You can flag questions and jump between them. The timer is kept by the server and keeps running if you leave. When it reaches zero, your answers are handed in for you.</p>
+      {needsPass && <p className="muted">You need at least {test.passPercent}% to complete the lesson.</p>}
+      <div><Button as={Link} to={`/tests/${test._id}/exam`} state={location.state}>Start exam</Button></div>
+    </Card>
+  </div>;
   if (isTopic && test.questions.length === 0) return <div className="exam exam--page">
     <Link className="back-link" to={backTo} state={backState}><ArrowLeft size={16} aria-hidden="true" />{backLabel}</Link>
     <EmptyState illustration={<Illustration name="done" />} title="No questions for this choice" description="Try another topic, source or year." action={<Button as={Link} variant="secondary" to={backTo} state={backState}>{backLabel}</Button>} />

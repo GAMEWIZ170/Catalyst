@@ -10,6 +10,8 @@ const testSchema = new mongoose.Schema({
   isPublished: { type: Boolean, default: false },
   // Score (0 to 100) a student needs for a lesson test to complete the lesson. null means no requirement.
   passPercent: { type: Number, min: 0, max: 100, default: null },
+  // Set it to make this a timed mock exam (minutes). null is an ordinary test.
+  timeLimitMinutes: { type: Number, min: 1, max: 360, default: null },
   deletedAt: { type: Date, default: null }
 }, { timestamps: true });
 

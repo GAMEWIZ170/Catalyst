@@ -190,6 +190,9 @@ Example outline lesson:
 | GET | `/review/session` | Student | Up to 20 due flashcards (`_id`, `front`, `back`, `lessonId`), soonest due first. Rate each with `POST /flashcards/:id/rate` |
 | GET | `/topics` | Student | `{ data: { topics, sources, years } }`, each a list of `{ value, count }` for tagged questions the student may see |
 | GET | `/topics/practice` | Student | Up to 20 answer-free questions across lessons, random order. Query `topic`, `source`, `year` (at least one; a bad year or no filter returns 400) |
+| POST | `/tests/:id/exam/start` | Student | Start a timed mock exam (a test with `timeLimitMinutes`), or resume the open one. Returns `attemptId`, `endsAt`, `serverNow`, saved `answers` and `flags`, and answer-free `questions`. If the time ran out while the student was away it marks the saved answers and returns `{ finished: true, result }` |
+| PUT | `/exam-attempts/:attemptId` | Student | Save `answers` (`{ questionId: answer }`) and `flags` (question ids). `409` after submit or after the deadline |
+| POST | `/exam-attempts/:attemptId/submit` | Student | Hand in the exam. Returns `score`, `correct`, `total`, `bestScore`, `attempts`, `passPercent`, `passed` and a `review` of every question with the right answer, explanation and worked solution. Repeating it returns the same result |
 | GET | `/mistakes/practice` | Student | Up to 20 answer-free questions to practise, most-missed first. Optional `course` and `unit` query ids (invalid id returns 400) |
 | POST | `/admin/tests` | Admin | Create a lesson-, unit- or course-scope test |
 | GET | `/admin/tests/:id` | Admin | Full test and questions |
@@ -382,6 +385,10 @@ The shuffle for matching and ordering is seeded by the question id, so the serve
 
 Student serializers omit correct answers. Scores are calculated on the server. An empty test cannot be submitted for credit. Unit tests and course tests record a result but never complete a lesson. Mark as done returns `409` for any lesson with a test that has questions or a published flashcard.
 
+### Timed mock exams
+
+An admin sets `timeLimitMinutes` (1 to 360) on a test with `PUT /admin/tests/:id`; `null` makes it ordinary again. For a timed test, `GET /tests/:id` returns `timed: true`, `timeLimitMinutes`, `questionCount` and no questions, so the exam is only taken through `/tests/:id/exam/start`. The server sets `endsAt` when the exam starts and the browser counts down to it. A submit that arrives within 30 seconds after `endsAt` uses the browser's final answers; a later one uses only the answers saved before the deadline. The first submit claims the attempt, so two submits cannot record two results. The result counts like a normal test (best score, attempts, lesson completion for a passed lesson test, mastery), and every question is passed to the mistakes queue. Feedback is only in the submit result. Known limit: a student who knows a question id can still call `POST /questions/:id/answer` during the exam, which only hurts their own mark.
+
 ### Question tags
 
 Questions can carry optional `topic` and `source` (up to 60 characters each) and `year` (1900 to 2100, or `null`). They only matter for `GET /topics` and `GET /topics/practice`, which leave out questions whose test is unpublished or deleted.
@@ -430,6 +437,7 @@ Joi validators trim strings, strip unknown fields and reject malformed IDs. Imag
 | Strict, per IP | Register and login failures | 200/IP/15 minutes (`RATE_LIMIT_AUTH_IP`) |
 | Answer | `POST /questions/:id/answer` | 100/user/15 minutes |
 | Submit | `POST /tests/:id/submit` | 60/user/15 minutes |
+| Mock exam | Exam start, save and submit | 600/user/15 minutes |
 | Mark done | `POST /lessons/:id/mark-done` | 60/user/15 minutes |
 | Upload | Admin image and PDF uploads | 30/user/15 minutes |
 | Flashcard rate | `POST /flashcards/:id/rate` | 300/user/15 minutes |

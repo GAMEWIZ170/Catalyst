@@ -117,6 +117,28 @@ function BalancingInput({ question, onAnswer, disabled, enter }) {
   </fieldset>;
 }
 
+// Multiple choice and true or false without any feedback, for timed exams. `initial` is only used to show a restored answer.
+export function ChoiceInput({ question, onAnswer, initial = null }) {
+  const [chosen, setChosen] = useState(initial);
+  const options = question.type === "mcq"
+    ? question.options.map((option) => ({ value: option._id, content: <><RichText>{option.text}</RichText>{option.image?.url && <ResponsiveImage image={option.image} sizes="(max-width: 600px) 80vw, 300px" />}</> }))
+    : [{ value: "true", content: "True" }, { value: "false", content: "False" }];
+  function pick(value) { setChosen(value); onAnswer(value); }
+  return <fieldset className="exam-options"><legend>Choose an answer.</legend>
+    {options.map((option, position) => <button className={`exam-option ${chosen === option.value ? "exam-option--selected" : ""}`} type="button" aria-pressed={chosen === option.value} key={option.value} onClick={() => pick(option.value)}>
+      <span className="exam-key" aria-hidden="true">{position + 1}</span>
+      <span className="exam-option-text">{option.content}</span>
+    </button>)}
+  </fieldset>;
+}
+
+// The right answer for any question type.
+export function Correct({ question, correct }) {
+  return question.type === "balancing"
+    ? <CorrectEquation question={question} coefficients={correct} />
+    : <CorrectAnswer type={question.type} correct={correct} />;
+}
+
 // The right answer, shown after a wrong answer. `correct` is correctAnswer from the answer response.
 export function CorrectAnswer({ type, correct }) {
   switch (type) {

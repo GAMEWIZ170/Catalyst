@@ -147,7 +147,8 @@ const testFields = {
   title: Joi.string().trim().max(80),
   order: Joi.number().integer().min(1),
   isPublished: Joi.boolean(),
-  passPercent: Joi.number().integer().min(0).max(100).allow(null)
+  passPercent: Joi.number().integer().min(0).max(100).allow(null),
+  timeLimitMinutes: Joi.number().integer().min(1).max(360).allow(null)
 };
 const validateTest = validateWith(Joi.object({
   scope: testFields.scope.required(),
@@ -157,7 +158,8 @@ const validateTest = validateWith(Joi.object({
   title: testFields.title,
   order: testFields.order,
   isPublished: testFields.isPublished.default(false),
-  passPercent: testFields.passPercent.default(50)
+  passPercent: testFields.passPercent.default(50),
+  timeLimitMinutes: testFields.timeLimitMinutes
 }).custom((value, helpers) => {
   const parent = value[value.scope];
   if (!parent || Object.keys(value).filter((key) => ["lesson", "unit", "course"].includes(key) && value[key]).length !== 1) {
@@ -169,7 +171,8 @@ const validateTestUpdate = validateWith(Joi.object({
   title: testFields.title,
   order: testFields.order,
   isPublished: testFields.isPublished,
-  passPercent: testFields.passPercent
+  passPercent: testFields.passPercent,
+  timeLimitMinutes: testFields.timeLimitMinutes
 }).min(1));
 
 const optionFields = Joi.object({
@@ -263,6 +266,10 @@ const validateQuestionUpdate = validateWith(Joi.object({
   return value;
 }).messages({ "any.invalid": "{{#message}}" }));
 
+const validateExamSave = validateWith(Joi.object({
+  answers: Joi.object().pattern(objectId, Joi.string().allow("").max(1000)).max(200),
+  flags: Joi.array().items(objectId).max(200)
+}));
 const validateAnswer = validateWith(Joi.object({ answer: Joi.string().trim().min(1).max(1000).required() }));
 const validateTestSubmission = validateWith(Joi.object({
   answers: Joi.array().items(Joi.object({
@@ -378,6 +385,7 @@ module.exports = {
   validateQuestion,
   validateQuestionUpdate,
   validateAnswer,
+  validateExamSave,
   validateTestSubmission,
   validateFlashcard,
   validateFlashcardUpdate,
