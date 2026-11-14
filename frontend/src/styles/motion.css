@@ -1,0 +1,165 @@
+/*
+  Motion layer. One file owns how Catalyst moves, so the rest of the CSS stays about layout and colour.
+  Rules: only transform, opacity and colour change; entering things use --ease-out; nothing starts from scale(0);
+  hover effects only on devices that hover; everything sits in a no-preference block (motion is opt-in).
+*/
+
+/* Feel (applies with or without motion): no grey tap flash, no double-tap zoom delay, crisper text. */
+:root {
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+button, a, summary, [role="tab"], [role="menuitem"], input, select, textarea, label { touch-action: manipulation; }
+h1, h2, h3 { text-wrap: balance; }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Press and hover feedback. Named properties only, never "all". */
+  .button,
+  .icon-button,
+  .profile-button,
+  .place-link,
+  .sidebar-toggle,
+  .ui-tab,
+  .admin-nav a,
+  .admin-nav .admin-more > button,
+  .profile-panel a,
+  .profile-panel button {
+    transition:
+      background-color var(--dur-hover) var(--ease-out),
+      border-color var(--dur-hover) var(--ease-out),
+      color var(--dur-hover) var(--ease-out),
+      transform var(--dur-press) var(--ease-out);
+  }
+
+  .button:active:not(:disabled),
+  .icon-button:active,
+  .profile-button:active,
+  .sidebar-toggle:active,
+  .tabbar .place-link:active {
+    transform: scale(0.97);
+  }
+
+  .ui-card.home-course,
+  .course-card {
+    transition: border-color var(--dur-hover) var(--ease-out), transform var(--dur-press) var(--ease-out);
+  }
+
+  .switch-track { transition: background-color var(--dur-hover) var(--ease-out); }
+  .progress-track span { transition: width 300ms var(--ease-out); }
+  .switch-thumb { transition: transform var(--dur-pop) var(--ease-out); }
+  .flashcard-face { transition: transform 400ms var(--ease-in-out); }
+
+  /* Popovers grow out of the button that opened them, never from the centre. */
+  .notification-panel,
+  .profile-panel,
+  .quick-panel,
+  .admin-more-panel {
+    animation: pop-in var(--dur-pop) var(--ease-out);
+    transform-origin: top right;
+  }
+  .admin-more-panel { transform-origin: top left; }
+
+  @media (max-width: 640px) {
+    .topbar-tools .quick-panel,
+    .topbar-tools .notification-panel { transform-origin: top center; }
+  }
+
+  /* Tab panels and pages fade in. Exit is instant: the user already chose, so respond at once. */
+  .ui-tabpanel:not([hidden]) { animation: rise-in var(--dur-page) var(--ease-out); }
+  .page-wrap > * { animation: rise-in var(--dur-page) var(--ease-out); }
+  .app-shell--focus .page-wrap > * { animation: none; }
+
+  /* Dialog: scales from 0.96 and fades in and out. Modals stay centred. */
+  .ui-dialog,
+  .confirm-dialog {
+    opacity: 0;
+    transform: scale(0.96);
+    transition:
+      opacity var(--dur-modal) var(--ease-out),
+      transform var(--dur-modal) var(--ease-out),
+      overlay var(--dur-modal) allow-discrete,
+      display var(--dur-modal) allow-discrete;
+  }
+  .ui-dialog[open],
+  .confirm-dialog[open] { opacity: 1; transform: none; }
+  .ui-dialog::backdrop,
+  .confirm-dialog::backdrop {
+    opacity: 0;
+    transition: opacity var(--dur-modal) var(--ease-out), overlay var(--dur-modal) allow-discrete, display var(--dur-modal) allow-discrete;
+  }
+  .ui-dialog[open]::backdrop,
+  .confirm-dialog[open]::backdrop { opacity: 1; }
+  @starting-style {
+    .ui-dialog[open],
+    .confirm-dialog[open] { opacity: 0; transform: scale(0.96); }
+    .ui-dialog[open]::backdrop,
+    .confirm-dialog[open]::backdrop { opacity: 0; }
+  }
+
+  .ui-toast { animation-duration: var(--dur-pop); animation-timing-function: var(--ease-out); }
+  .exam-feedback { animation-timing-function: var(--ease-out); }
+
+  .admin-more .more-chevron { transition: transform var(--dur-pop) var(--ease-out); }
+  .admin-more button[aria-expanded="true"] .more-chevron { transform: rotate(180deg); }
+}
+
+/* Hover only where a pointer really hovers; touch screens fire hover on tap. */
+@media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+  .ui-card.home-course:hover { transform: translateY(-1px); }
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.96) translateY(-4px); }
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+/* Admin "More" menu: rarely used sections live behind one button. */
+.admin-more { position: relative; }
+.admin-nav .admin-more > button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-weight: 600;
+  gap: var(--space-1);
+  margin-bottom: -1px;
+  min-height: var(--control-height);
+  padding: 0 var(--space-4);
+}
+.admin-nav .admin-more > button:hover,
+.admin-nav .admin-more > button.is-current { color: var(--ink); }
+.admin-nav .admin-more > button.is-current { border-bottom-color: var(--accent); }
+.admin-more-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  box-shadow: var(--shadow-md);
+  display: grid;
+  left: 0;
+  min-width: 12rem;
+  padding: var(--space-2);
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  z-index: 4;
+}
+@media (max-width: 479px) {
+  /* Three sections and "More" fit on one row of a phone. */
+  .admin-nav { gap: 0; }
+  .admin-more-panel { left: auto; right: 0; transform-origin: top right; }
+  .admin-nav a,
+  .admin-nav .admin-more > button { padding-inline: calc(var(--space-2) - 2px); }
+}
+.admin-nav .admin-more-panel a {
+  border-bottom: 0;
+  border-radius: var(--radius-control);
+  margin-bottom: 0;
+}
+.admin-nav .admin-more-panel a:hover { background: var(--paper); }
+.admin-nav .admin-more-panel a.is-current { background: var(--accent-soft); color: var(--accent); }
