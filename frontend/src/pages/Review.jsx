@@ -67,7 +67,7 @@ export default function Review() {
   if (!card) return <div className="content fc-page">
     {back}
     {position === 0 && mistakes === 0
-      ? <EmptyState icon={Layers} title="Nothing due today" description="Cards and mistakes come back here when it is time to review them." action={<Button as={Link} variant="secondary" to="/home">Back to home</Button>} />
+      ? <EmptyState as="h1" icon={Layers} title="Nothing due today" description="Cards and mistakes come back here when it is time to review them." action={<Button as={Link} variant="secondary" to="/home">Back to home</Button>} />
       : <section className="fc-finished">
         <h1>{position > 0 ? "Cards done" : "No cards due"}</h1>
         {position > 0 && <p className="fc-finished-line">You reviewed {plural(position, "card")}.</p>}
