@@ -1,61 +1,60 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Download, KeyRound, Mail, Trash2 } from "lucide-react";
+import { Banner } from "@astryxdesign/core/Banner";
+import { Button } from "@astryxdesign/core/Button";
+import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
+import { MoreMenu } from "@astryxdesign/core/MoreMenu";
+import { HStack, VStack } from "@astryxdesign/core/Stack";
+import { Text } from "@astryxdesign/core/Text";
+import { TextInput } from "@astryxdesign/core/TextInput";
 import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
-import { Button, Dialog, TextField } from "./ui";
+import SettingRow from "./astryx/SettingRow";
 
-// Account tools on the Settings page: change email, change password, download my data, delete account.
+const icon = (Icon) => <Icon size={18} aria-hidden="true" />;
+
+// Account tools on the Settings page: email, password, download my data, delete account. Each opens a small dialog;
+// nothing is open on the page. Delete is in a ⋯ menu and asks for the password and the word DELETE.
 export default function AccountSection() {
   const { user, deleteAccount } = useAuth();
   const navigate = useNavigate();
-  const [pw, setPw] = useState({ current: "", next: "", repeat: "" });
-  const [pwStatus, setPwStatus] = useState({ text: "", failed: false });
-  const [pwBusy, setPwBusy] = useState(false);
+  const [dialog, setDialog] = useState(null);   // "email", "password" or "delete"
+  const [message, setMessage] = useState("");
+  const [problem, setProblem] = useState("");
+  const [busy, setBusy] = useState(false);
   const [mail, setMail] = useState({ email: "", password: "" });
-  const [mailStatus, setMailStatus] = useState({ text: "", failed: false });
-  const [mailBusy, setMailBusy] = useState(false);
-  const [dataStatus, setDataStatus] = useState({ text: "", failed: false });
-  const [dataBusy, setDataBusy] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [pw, setPw] = useState({ current: "", next: "", repeat: "" });
   const [del, setDel] = useState({ password: "", confirm: "" });
-  const [delError, setDelError] = useState("");
-  const [delBusy, setDelBusy] = useState(false);
 
-  async function changePassword(event) {
-    event.preventDefault();
-    setPwStatus({ text: "", failed: false });
-    if (pw.next.length < 8) return setPwStatus({ text: "Use at least 8 characters for the new password.", failed: true });
-    if (pw.next !== pw.repeat) return setPwStatus({ text: "The two new passwords do not match.", failed: true });
-    setPwBusy(true);
+  function open(name) { setDialog(name); setProblem(""); setMail({ email: "", password: "" }); setPw({ current: "", next: "", repeat: "" }); setDel({ password: "", confirm: "" }); }
+  const close = (isOpen) => { if (!isOpen && !busy) setDialog(null); };
+
+  async function submit(action, done) {
+    setBusy(true);
+    setProblem("");
     try {
-      const { message } = await api.changePassword({ currentPassword: pw.current, newPassword: pw.next });
-      setPw({ current: "", next: "", repeat: "" });
-      setPwStatus({ text: message, failed: false });
+      const result = await action();
+      done?.(result);
+      return true;
     } catch (err) {
-      setPwStatus({ text: err.message, failed: true });
+      setProblem(err.message);
+      return false;
     } finally {
-      setPwBusy(false);
+      setBusy(false);
     }
   }
 
-  async function changeEmail(event) {
-    event.preventDefault();
-    setMailStatus({ text: "", failed: false });
-    setMailBusy(true);
-    try {
-      const { message } = await api.requestEmailChange(mail);
-      setMail({ email: "", password: "" });
-      setMailStatus({ text: message, failed: false });
-    } catch (err) {
-      setMailStatus({ text: err.message, failed: true });
-    } finally {
-      setMailBusy(false);
-    }
-  }
+  const changeEmail = () => submit(() => api.requestEmailChange(mail), ({ message: text }) => { setMessage(text); setDialog(null); });
+  const changePassword = () => {
+    if (pw.next.length < 8) return setProblem("Use at least 8 characters for the new password.");
+    if (pw.next !== pw.repeat) return setProblem("The two new passwords do not match.");
+    return submit(() => api.changePassword({ currentPassword: pw.current, newPassword: pw.next }), ({ message: text }) => { setMessage(text); setDialog(null); });
+  };
+  const confirmDelete = () => submit(() => deleteAccount(del), () => navigate("/login", { replace: true }));
 
   async function downloadData() {
-    setDataStatus({ text: "", failed: false });
-    setDataBusy(true);
+    setMessage("");
     try {
       const data = await api.exportMyData();
       const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
@@ -64,85 +63,55 @@ export default function AccountSection() {
       link.download = "catalyst-my-data.json";
       link.click();
       URL.revokeObjectURL(url);
-      setDataStatus({ text: "Your file was downloaded.", failed: false });
+      setMessage("Your file was downloaded.");
     } catch (err) {
-      setDataStatus({ text: err.message, failed: true });
-    } finally {
-      setDataBusy(false);
+      setMessage(err.message);
     }
   }
 
-  function closeDelete() {
-    if (delBusy) return;
-    setDeleteOpen(false);
-    setDel({ password: "", confirm: "" });
-    setDelError("");
-  }
+  const actions = (cancel, label, onClick, disabled, variant = "primary") => <HStack gap={2} justify="end">
+    <Button label="Cancel" variant="ghost" onClick={() => setDialog(null)} />
+    <Button label={label} variant={variant} isDisabled={disabled} isLoading={busy} onClick={onClick} />
+  </HStack>;
 
-  async function confirmDelete(event) {
-    event.preventDefault();
-    setDelError("");
-    setDelBusy(true);
-    try {
-      await deleteAccount(del);
-      navigate("/login", { replace: true });
-    } catch (err) {
-      setDelError(err.message);
-      setDelBusy(false);
-    }
-  }
+  return <VStack gap={0}>
+    {message && <Banner status="info" title={message} container="section" isDismissable onDismiss={() => setMessage("")} />}
+    <SettingRow label="Email" help={user?.email}><Button label="Change" variant="secondary" icon={icon(Mail)} onClick={() => open("email")} /></SettingRow>
+    <SettingRow label="Password" help="Changing it logs you out on your other devices."><Button label="Change" variant="secondary" icon={icon(KeyRound)} onClick={() => open("password")} /></SettingRow>
+    <SettingRow label="Download my data" help="A JSON file with your profile, progress, notes and saved items."><Button label="Download" variant="secondary" icon={icon(Download)} onClick={downloadData} /></SettingRow>
+    <SettingRow label="Delete my account" help="Permanent. Nobody can restore it.">
+      <MoreMenu label="Account danger options" alignment="end" items={[{ label: "Delete my account…", icon: icon(Trash2), variant: "destructive", onClick: () => open("delete") }]} />
+    </SettingRow>
 
-  return <>
-    <section className="settings-section" aria-labelledby="email-heading">
-      <h2 id="email-heading">Change email</h2>
-      <p className="muted settings-help">Your email is {user?.email}. We send a link to the new address, and the change happens when you open it.</p>
-      <form className="auth-form" onSubmit={changeEmail}>
-        <TextField label="New email" type="email" required autoComplete="email" value={mail.email}
-          onChange={(e) => setMail({ ...mail, email: e.target.value })} />
-        <TextField label="Current password" type="password" required autoComplete="current-password" value={mail.password}
-          onChange={(e) => setMail({ ...mail, password: e.target.value })} />
-        <Button type="submit" loading={mailBusy}>Send confirmation link</Button>
-      </form>
-      <p className={mailStatus.failed ? "form-error" : "settings-status"} role={mailStatus.failed ? "alert" : undefined} aria-live="polite">{mailStatus.text}</p>
-    </section>
-    <section className="settings-section" aria-labelledby="password-heading">
-      <h2 id="password-heading">Change password</h2>
-      <form className="auth-form" onSubmit={changePassword}>
-        <TextField label="Current password" type="password" required autoComplete="current-password" value={pw.current}
-          onChange={(e) => setPw({ ...pw, current: e.target.value })} />
-        <TextField label="New password" type="password" required minLength="8" maxLength="72" autoComplete="new-password" hint="At least 8 characters." value={pw.next}
-          onChange={(e) => setPw({ ...pw, next: e.target.value })} />
-        <TextField label="Repeat new password" type="password" required minLength="8" maxLength="72" autoComplete="new-password" value={pw.repeat}
-          onChange={(e) => setPw({ ...pw, repeat: e.target.value })} />
-        <Button type="submit" loading={pwBusy}>Change password</Button>
-      </form>
-      <p className={pwStatus.failed ? "form-error" : "settings-status"} role={pwStatus.failed ? "alert" : undefined} aria-live="polite">{pwStatus.text}</p>
-      <p className="muted settings-help">Changing your password logs you out on your other devices.</p>
-    </section>
-    <section className="settings-section" aria-labelledby="data-heading">
-      <h2 id="data-heading">Download my data</h2>
-      <p className="muted settings-help">Get a JSON file with your profile, progress, test scores, mistakes, notes and saved items.</p>
-      <Button variant="secondary" onClick={downloadData} loading={dataBusy}>Download my data</Button>
-      <p className={dataStatus.failed ? "form-error" : "settings-status"} role={dataStatus.failed ? "alert" : undefined} aria-live="polite">{dataStatus.text}</p>
-    </section>
-    <section className="settings-section" aria-labelledby="delete-heading">
-      <h2 id="delete-heading">Delete my account</h2>
-      <p className="muted settings-help">This is permanent. Your name, email, notes, saved items and exam answers are removed, and nobody can restore the account.</p>
-      <Button variant="danger" onClick={() => setDeleteOpen(true)}>Delete my account</Button>
-    </section>
-    <Dialog open={deleteOpen} onClose={closeDelete} title="Delete your account?">
-      <form className="auth-form" onSubmit={confirmDelete}>
-        <p>This cannot be undone. Enter your password and type DELETE to confirm.</p>
-        <TextField label="Password" type="password" required autoComplete="current-password" value={del.password}
-          onChange={(e) => setDel({ ...del, password: e.target.value })} />
-        <TextField label="Type DELETE" type="text" required autoComplete="off" value={del.confirm}
-          onChange={(e) => setDel({ ...del, confirm: e.target.value })} />
-        {delError && <p className="form-error" role="alert">{delError}</p>}
-        <div className="dialog-actions">
-          <Button variant="secondary" type="button" onClick={closeDelete}>Cancel</Button>
-          <Button variant="danger" type="submit" loading={delBusy} disabled={del.confirm !== "DELETE" || !del.password}>Delete forever</Button>
-        </div>
-      </form>
+    <Dialog isOpen={dialog === "email"} onOpenChange={close} purpose="form" width={440}>
+      <DialogHeader title="Change email" subtitle="We send a link to the new address. The change happens when you open it." onOpenChange={close} />
+      <VStack gap={3} padding={4}>
+        {problem && <Banner status="error" title={problem} container="section" />}
+        <TextInput label="New email" type="email" value={mail.email} onChange={(email) => setMail({ ...mail, email })} autoComplete="email" hasAutoFocus />
+        <TextInput label="Current password" type="password" value={mail.password} onChange={(password) => setMail({ ...mail, password })} autoComplete="current-password" />
+        {actions(null, "Send link", changeEmail, !mail.email || !mail.password)}
+      </VStack>
     </Dialog>
-  </>;
+
+    <Dialog isOpen={dialog === "password"} onOpenChange={close} purpose="form" width={440}>
+      <DialogHeader title="Change password" onOpenChange={close} />
+      <VStack gap={3} padding={4}>
+        {problem && <Banner status="error" title={problem} container="section" />}
+        <TextInput label="Current password" type="password" value={pw.current} onChange={(current) => setPw({ ...pw, current })} autoComplete="current-password" hasAutoFocus />
+        <TextInput label="New password" type="password" description="At least 8 characters." value={pw.next} onChange={(next) => setPw({ ...pw, next })} autoComplete="new-password" />
+        <TextInput label="Repeat new password" type="password" value={pw.repeat} onChange={(repeat) => setPw({ ...pw, repeat })} autoComplete="new-password" />
+        {actions(null, "Change password", changePassword, !pw.current || !pw.next || !pw.repeat)}
+      </VStack>
+    </Dialog>
+
+    <Dialog isOpen={dialog === "delete"} onOpenChange={close} purpose="form" width={440}>
+      <DialogHeader title="Delete your account?" subtitle="This cannot be undone. Enter your password and type DELETE." onOpenChange={close} />
+      <VStack gap={3} padding={4}>
+        {problem && <Banner status="error" title={problem} container="section" />}
+        <TextInput label="Password" type="password" value={del.password} onChange={(password) => setDel({ ...del, password })} autoComplete="current-password" hasAutoFocus />
+        <TextInput label="Type DELETE" value={del.confirm} onChange={(confirm) => setDel({ ...del, confirm })} autoComplete="off" />
+        {actions(null, "Delete forever", confirmDelete, del.confirm !== "DELETE" || !del.password, "destructive")}
+      </VStack>
+    </Dialog>
+  </VStack>;
 }

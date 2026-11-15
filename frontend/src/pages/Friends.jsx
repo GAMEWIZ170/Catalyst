@@ -1,32 +1,49 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
+import { Copy, Share2, UserMinus, UserPlus } from "lucide-react";
+import { Banner } from "@astryxdesign/core/Banner";
+import { Button } from "@astryxdesign/core/Button";
+import { Heading } from "@astryxdesign/core/Heading";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { List, ListItem } from "@astryxdesign/core/List";
+import { MoreMenu } from "@astryxdesign/core/MoreMenu";
+import { Popover } from "@astryxdesign/core/Popover";
+import { HStack, VStack } from "@astryxdesign/core/Stack";
+import { Switch } from "@astryxdesign/core/Switch";
+import { Text } from "@astryxdesign/core/Text";
+import { TextInput } from "@astryxdesign/core/TextInput";
 import { api } from "../api/client";
 import Avatar from "../components/Avatar";
-import ShareButton from "../components/ShareButton";
-import { Button, Checkbox, TextField, useToast } from "../components/ui";
+import AstryxTheme from "../components/astryx/AstryxTheme";
+import ClickToEdit from "../components/astryx/ClickToEdit";
+import SettingRow from "../components/astryx/SettingRow";
+import { useToast } from "../components/ui";
 import { ErrorState, Loading } from "./Courses";
 import { t } from "../i18n";
+import "../styles/settings-astryx.css";
 
-// Friends: a code to give out, a place to type a friend's code, requests, the friend list and privacy choices.
+const icon = (Icon) => <Icon size={18} aria-hidden="true" />;
+
+// Friends: your code as a chip with copy and share, "Add friend" in a small popover, and the friends list first.
 // Other students only ever see a display name and an avatar. Nobody can look students up by name.
 export default function Friends() {
   const { toast } = useToast();
   const [state, setState] = useState({ loading: true, error: "", data: null });
   const [params] = useSearchParams();
   const [code, setCode] = useState(() => (params.get("code") || "").replace(/[^A-Za-z0-9]/g, "").slice(0, 12).toUpperCase()); // from an invite link
-  const [name, setName] = useState("");
+  const [adding, setAdding] = useState(Boolean(params.get("code")));
   const [problem, setProblem] = useState("");
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(() => {
     setState((s) => ({ ...s, loading: true, error: "" }));
     api.getFriends()
-      .then(({ data }) => { setState({ loading: false, error: "", data }); setName(data.me.displayName); })
+      .then(({ data }) => setState({ loading: false, error: "", data }))
       .catch((error) => setState({ loading: false, error: error.message, data: null }));
   }, []);
   useEffect(load, [load]);
 
-  // Runs one change, then reloads the lists. A failure is shown next to the form that caused it.
+  // Runs one change, then reloads the lists. A failure is shown at the top of the page.
   async function run(action, success) {
     setBusy(true);
     setProblem("");
@@ -43,9 +60,8 @@ export default function Friends() {
     }
   }
 
-  async function addFriend(event) {
-    event.preventDefault();
-    if (await run(() => api.sendFriendRequest(code.trim()), t("friends.sent"))) setCode("");
+  async function addFriend() {
+    if (await run(() => api.sendFriendRequest(code.trim()), t("friends.sent"))) { setCode(""); setAdding(false); }
   }
 
   async function copyCode() {
@@ -57,77 +73,87 @@ export default function Friends() {
     }
   }
 
+  async function shareInvite() {
+    const url = `${window.location.origin}/s/i/${state.data.me.code}`;
+    try {
+      if (navigator.share) await navigator.share({ title: t("friends.inviteTitle"), text: t("friends.inviteText"), url });
+      else { await navigator.clipboard.writeText(url); toast({ tone: "success", message: "Invite link copied" }); }
+    } catch (error) {
+      if (error?.name !== "AbortError") toast({ tone: "warning", message: t("friends.copyFailed") });
+    }
+  }
+
   if (state.loading && !state.data) return <div className="content student-page"><Loading /></div>;
   if (state.error && !state.data) return <div className="content student-page"><ErrorState message={state.error} onRetry={load} /></div>;
   const { me, friends, incoming, outgoing } = state.data;
+  const person = (item) => <Avatar avatar={item.avatar} name={item.name} size={36} />;
 
-  return <div className="content student-page friends-page">
-    <h1>{t("friends.title")}</h1>
-    <p className="muted">{t("friends.intro")}</p>
+  return <AstryxTheme>
+    <div className="content student-page friends-astryx">
+      <VStack gap={5}>
+        <HStack justify="between" align="center" wrap="wrap" gap={3}>
+          <VStack gap={1}>
+            <Heading level={1}>{t("friends.title")}</Heading>
+            <Text color="secondary">{t("friends.intro")}</Text>
+          </VStack>
+          <Popover isOpen={adding} onOpenChange={setAdding} alignment="end" dialogLabel="Add friend" content={
+            <VStack gap={3} padding={4} style={{ width: 280 }}>
+              <TextInput label={t("friends.theirCode")} value={code} onChange={(value) => setCode(value.toUpperCase())} autoCapitalize="characters" autoComplete="off" maxLength={12}
+                hasAutoFocus onEnter={() => { if (code.trim().length >= 6 && !busy) addFriend(); }} />
+              <Button label={t("friends.send")} variant="primary" isDisabled={busy || code.trim().length < 6} onClick={addFriend} />
+            </VStack>}>
+            <Button label="Add friend" variant="primary" icon={icon(UserPlus)} />
+          </Popover>
+        </HStack>
 
-    <section className="settings-section" aria-labelledby="code-heading">
-      <h2 id="code-heading">{t("friends.yourCode")}</h2>
-      <p className="friend-code" aria-label={t("friends.yourCode")}>{me.code}</p>
-      <div className="share-row">
-        <Button variant="secondary" onClick={copyCode}>{t("friends.copy")}</Button>
-        <ShareButton url={`${window.location.origin}/s/i/${me.code}`} title={t("friends.inviteTitle")} text={t("friends.inviteText")} />
-      </div>
-    </section>
+        {problem && <Banner status="error" title={problem} container="section" isDismissable onDismiss={() => setProblem("")} />}
 
-    <section className="settings-section" aria-labelledby="add-heading">
-      <h2 id="add-heading">{t("friends.add")}</h2>
-      <form className="settings-exam" onSubmit={addFriend}>
-        <TextField label={t("friends.theirCode")} value={code} onChange={(event) => setCode(event.target.value)} autoCapitalize="characters" autoComplete="off" maxLength={12} required />
-        <Button type="submit" disabled={busy || code.trim().length < 6}>{t("friends.send")}</Button>
-      </form>
-      <p className="settings-status" role="alert">{problem}</p>
-    </section>
+        <HStack gap={2} align="center" wrap="wrap">
+          <Text type="supporting" color="secondary">{t("friends.yourCode")}</Text>
+          <span className="friend-chip" aria-label={t("friends.yourCode")}>{me.code}</span>
+          <IconButton label={t("friends.copy")} tooltip={t("friends.copy")} variant="ghost" icon={icon(Copy)} onClick={copyCode} />
+          <IconButton label="Share invite link" tooltip="Share invite link" variant="ghost" icon={icon(Share2)} onClick={shareInvite} />
+        </HStack>
 
-    {incoming.length > 0 && <section className="settings-section" aria-labelledby="in-heading">
-      <h2 id="in-heading">{t("friends.requests")}</h2>
-      <ul className="friend-list">
-        {incoming.map((item) => <li key={item.id} className="friend-row">
-          <Avatar avatar={item.avatar} name={item.name} size={40} />
-          <span className="friend-name">{item.name}</span>
-          <Button disabled={busy} onClick={() => run(() => api.acceptFriend(item.id), t("friends.accepted"))}>{t("friends.accept")}</Button>
-          <Button variant="secondary" disabled={busy} onClick={() => run(() => api.removeFriend(item.id))} aria-label={`${t("friends.decline")} ${item.name}`}>{t("friends.decline")}</Button>
-        </li>)}
-      </ul>
-    </section>}
+        {incoming.length > 0 && <VStack gap={2}>
+          <Heading level={2}>{t("friends.requests")}</Heading>
+          <List hasDividers>
+            {incoming.map((item) => <ListItem key={item.id} label={item.name} startContent={person(item)} endContent={<HStack gap={2}>
+              <Button label={t("friends.accept")} size="sm" variant="primary" isDisabled={busy} onClick={() => run(() => api.acceptFriend(item.id), t("friends.accepted"))} />
+              <Button label={t("friends.decline")} size="sm" variant="ghost" isDisabled={busy} tooltip={`${t("friends.decline")} ${item.name}`} onClick={() => run(() => api.removeFriend(item.id))} />
+            </HStack>} />)}
+          </List>
+        </VStack>}
 
-    {outgoing.length > 0 && <section className="settings-section" aria-labelledby="out-heading">
-      <h2 id="out-heading">{t("friends.waiting")}</h2>
-      <ul className="friend-list">
-        {outgoing.map((item) => <li key={item.id} className="friend-row">
-          <Avatar avatar={item.avatar} name={item.name} size={40} />
-          <span className="friend-name">{item.name}</span>
-          <Button variant="secondary" disabled={busy} onClick={() => run(() => api.removeFriend(item.id))} aria-label={`${t("friends.cancel")} ${item.name}`}>{t("friends.cancel")}</Button>
-        </li>)}
-      </ul>
-    </section>}
+        <VStack gap={2}>
+          <Heading level={2}>{t("friends.list")}</Heading>
+          {friends.length === 0
+            ? <Text color="secondary">{t("friends.empty")}</Text>
+            : <List hasDividers>
+              {friends.map((item) => <ListItem key={item.id} label={item.name} description={item.level ? t("xp.level").replace("{level}", item.level) : undefined} startContent={person(item)}
+                endContent={<MoreMenu label={`Options for ${item.name}`} alignment="end" items={[{ label: t("friends.remove"), icon: icon(UserMinus), variant: "destructive", onClick: () => run(() => api.removeFriend(item.id), t("friends.removed")) }]} />} />)}
+            </List>}
+          <HStack gap={2}><Button label={t("challenges.title")} variant="ghost" size="sm" href="/challenges" /><Button label={t("circles.title")} variant="ghost" size="sm" href="/circles" /></HStack>
+        </VStack>
 
-    <section className="settings-section" aria-labelledby="list-heading">
-      <h2 id="list-heading">{t("friends.list")}</h2>
-      {friends.length === 0
-        ? <p className="muted">{t("friends.empty")}</p>
-        : <ul className="friend-list">
-          {friends.map((item) => <li key={item.id} className="friend-row">
-            <Avatar avatar={item.avatar} name={item.name} size={40} />
-            <span className="friend-name">{item.name}{item.level ? <span className="muted"> · {t("xp.level").replace("{level}", item.level)}</span> : null}</span>
-            <Button variant="secondary" disabled={busy} onClick={() => run(() => api.removeFriend(item.id), t("friends.removed"))} aria-label={`${t("friends.remove")} ${item.name}`}>{t("friends.remove")}</Button>
-          </li>)}
-        </ul>}
-      <p className="muted"><Link to="/challenges">{t("challenges.title")}</Link> · <Link to="/circles">{t("circles.title")}</Link></p>
-    </section>
+        {outgoing.length > 0 && <VStack gap={2}>
+          <Heading level={2}>{t("friends.waiting")}</Heading>
+          <List hasDividers>
+            {outgoing.map((item) => <ListItem key={item.id} label={item.name} startContent={person(item)}
+              endContent={<Button label={t("friends.cancel")} size="sm" variant="ghost" isDisabled={busy} tooltip={`${t("friends.cancel")} ${item.name}`} onClick={() => run(() => api.removeFriend(item.id))} />} />)}
+          </List>
+        </VStack>}
 
-    <section className="settings-section" aria-labelledby="privacy-heading">
-      <h2 id="privacy-heading">{t("friends.privacy")}</h2>
-      <form className="settings-exam" onSubmit={(event) => { event.preventDefault(); run(() => api.updateFriendSettings({ displayName: name.trim() }), t("friends.saved")); }}>
-        <TextField label={t("friends.displayName")} hint={t("friends.displayHint").replace("{name}", me.defaultName)} value={name} onChange={(event) => setName(event.target.value)} maxLength={30} />
-        <Button variant="secondary" type="submit" disabled={busy}>{t("friends.save")}</Button>
-      </form>
-      <Checkbox label={t("friends.hide")} hint={t("friends.hideHint")} checked={me.hideActivity} disabled={busy}
-        onChange={(event) => run(() => api.updateFriendSettings({ hideActivity: event.target.checked }), t("friends.saved"))} />
-    </section>
-  </div>;
+        <VStack gap={0}>
+          <Heading level={2}>{t("friends.privacy")}</Heading>
+          <SettingRow label={t("friends.displayName")} help={t("friends.displayHint").replace("{name}", me.defaultName)}>
+            <ClickToEdit label="Display name" value={me.displayName} placeholder={me.defaultName} allowEmpty onSave={(name) => run(() => api.updateFriendSettings({ displayName: name }), t("friends.saved"))} />
+          </SettingRow>
+          <SettingRow label={t("friends.hide")} help={t("friends.hideHint")}>
+            <Switch label={t("friends.hide")} isLabelHidden value={me.hideActivity} isDisabled={busy} onChange={(on) => run(() => api.updateFriendSettings({ hideActivity: on }), t("friends.saved"))} />
+          </SettingRow>
+        </VStack>
+      </VStack>
+    </div>
+  </AstryxTheme>;
 }

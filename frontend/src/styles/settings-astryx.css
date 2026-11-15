@@ -1,0 +1,16 @@
+/* Settings, Friends, Exams and Me read like documents: capped width, centred (interaction rule 6). */
+.settings-astryx,
+.friends-astryx,
+.exams-astryx,
+.me-astryx { margin-inline: auto; max-width: 760px; width: 100%; }
+
+.friend-chip {
+  background: var(--sunken);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: var(--text-md);
+  font-weight: var(--weight-strong);
+  letter-spacing: 0.12em;
+  padding: var(--space-1) var(--space-3);
+}
