@@ -84,6 +84,21 @@ When asked to verify against the real backend:
 
 Short report: commits (hash and message), files changed, CHECK lines, what is `NOT RUN`, and anything the owner must decide. No long recaps.
 
+## Interaction rules (UI polish, from UI_polish/UI_POLISH_BRIEF.md)
+
+1. Minimize forms, maximize interactive UI. Never leave a form open on a page.
+2. Create first, edit in place. A "New X" button creates X with defaults at once, with its title already in edit mode. Autosave everywhere. No Save buttons, except in dialogs that need confirmation.
+3. Choose, don't type. A fixed set of options uses chips, segmented controls, icon cards, switches, steppers or pickers. Never a native select or a bare text box.
+4. Type only for real writing (notes, card text, AI prompts), and edit it inline.
+5. Destructive actions live in a "⋯" menu, with an undo toast or a confirmation dialog.
+6. Cap content width at about 760 to 900 px, centred. Inputs never stretch across the screen.
+7. No big bordered card around every section. Use spacing and headings. Cards are for clickable items.
+8. At most one short line of helper text per section. Hints go in tooltips.
+9. Motion: dialogs and popovers scale and fade from their trigger (150 to 200 ms, ease-out), tabs get a sliding underline, skeletons crossfade into content, and reduced motion is respected.
+10. No stray scrollbar arrows beside tab bars. Tabs never overflow at 390 or 1280 px.
+
+Study Hall is cut. Do not rebuild it. Use Astryx components wherever Astryx has one. Astryx uses our font (Atkinson), not Figtree.
+
 ## Documentation duties
 
 - One README per area (backend `README.md`, frontend `README.md`). Do not split into many files.
