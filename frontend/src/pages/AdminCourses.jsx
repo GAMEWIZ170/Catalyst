@@ -30,10 +30,17 @@ export default function AdminCourses() {
   const [query, setQuery] = useState("");
   const [createError, setCreateError] = useState("");
 
+  const [category, setCategory] = useState("");   // "" = all, "__general" = courses with no category
+  const categories = useMemo(() => [...new Set(courses.map((course) => (typeof course.category === "string" ? course.category.trim() : "")).filter(Boolean))].sort((a, b) => a.localeCompare(b)), [courses]);
+  const hasGeneral = courses.some((course) => !(typeof course.category === "string" && course.category.trim()));
+
   const visible = useMemo(() => {
     const term = query.trim().toLowerCase();
-    return term ? courses.filter((course) => `${course.code} ${course.title}`.toLowerCase().includes(term)) : courses;
-  }, [courses, query]);
+    const named = (course) => (typeof course.category === "string" ? course.category.trim() : "");
+    return courses
+      .filter((course) => !category || (category === "__general" ? !named(course) : named(course) === category))
+      .filter((course) => !term || `${course.code} ${course.title}`.toLowerCase().includes(term));
+  }, [courses, query, category]);
 
   async function load() {
     setLoading(true);
@@ -117,10 +124,15 @@ export default function AdminCourses() {
     </dl>}
     <StatusMessage message={message} error={Boolean(error)} />
     {!loading && !error && courses.length > 4 && <TextField className="course-search" label="Search courses" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Code or title" />}
+    {!loading && !error && categories.length > 0 && <div className="chip-row" role="group" aria-label="Filter by category">
+      <button type="button" className="chip" aria-pressed={!category} onClick={() => setCategory("")}>All</button>
+      {categories.map((name) => <button type="button" className="chip" key={name} aria-pressed={category === name} onClick={() => setCategory(name)}>{name}</button>)}
+      {hasGeneral && <button type="button" className="chip" aria-pressed={category === "__general"} onClick={() => setCategory("__general")}>General</button>}
+    </div>}
     {error && <ErrorState message={error} onRetry={load} />}
     {loading && <Loading />}
     {!loading && !error && courses.length === 0 && <EmptyState icon={BookOpen} title="No courses yet" description="Create the first course to start adding units and lessons." action={<Button onClick={openCreate}>New course</Button>} />}
-    {!loading && !error && courses.length > 0 && visible.length === 0 && <p className="muted">No course matches "{query}".</p>}
+    {!loading && !error && courses.length > 0 && visible.length === 0 && <p className="muted">No course matches{query ? ` "${query}"` : " this filter"}.</p>}
     {!loading && !error && visible.length > 0 && <div className="admin-course-list">
       {visible.map((course) => {
         const id = course._id || course.id;
