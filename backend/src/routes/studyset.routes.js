@@ -4,7 +4,7 @@ const router = express.Router();
 const authenticate = require("../middlewares/authenticate");
 const {
   validateSet, validateSetUpdate, validateSetNote, validateSetCard, validateSetCardUpdate, validateSetCards, validateSetQuiz, validateSetText,
-  validateQuestion, validateQuestionUpdate, validateGenerate
+  validateQuestion, validateQuestionUpdate, validateGenerate, validateVisibility
 } = require("../middlewares/validate");
 const sets = require("../controllers/studyset.controller");
 const materials = require("../controllers/setmaterial.controller");
@@ -12,6 +12,7 @@ const { uploadMaterial } = require("../middlewares/materialUpload");
 const uploadLimiter = require("../middlewares/uploadLimiter");
 const aiLimiter = require("../middlewares/aiLimiter");
 const { generate } = require("../controllers/aigenerate.controller");
+const { setVisibility } = require("../controllers/community.controller");
 const { createQuestion, updateQuestion, deleteQuestion } = require("../controllers/question.controller");
 
 // Every route needs a login. Every set, card, note and quiz is checked against its owner, so nobody sees another student's work.
@@ -34,6 +35,7 @@ router.delete("/questions/:id", sets.ownQuestion, deleteQuestion);
 router.get("/:id", sets.getSet);
 router.put("/:id", validateSetUpdate, sets.updateSet);
 router.delete("/:id", sets.deleteSet);
+router.put("/:id/visibility", validateVisibility, setVisibility);
 router.get("/:id/notes", sets.getNotes);
 router.put("/:id/notes", validateSetNote, sets.saveNotes);
 router.get("/:id/cards", sets.listCards);

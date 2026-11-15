@@ -127,6 +127,13 @@ const validateAiFlag = validateWith(Joi.object({
   note: Joi.string().trim().allow("").max(500)
 }));
 
+const validateVisibility = validateWith(Joi.object({
+  visibility: Joi.string().valid("private", "link", "community").required(),
+  declaration: Joi.boolean()
+}));
+const validateRejectSet = validateWith(Joi.object({ note: Joi.string().trim().allow("").max(300) }));
+const validateTakedown = validateWith(Joi.object({ reason: Joi.string().trim().allow("").max(300) }));
+
 const validateChallenge = validateWith(Joi.object({ test: objectId.required() }));
 
 const validateEvent = validateWith(Joi.object({
@@ -380,7 +387,7 @@ const validateExamSave = validateWith(Joi.object({
 }));
 const validateAnswer = validateWith(Joi.object({ answer: Joi.string().trim().min(1).max(1000).required() }));
 const validateReport = validateWith(Joi.object({
-  kind: Joi.string().valid("question", "lesson").required(),
+  kind: Joi.string().valid("question", "lesson", "set").required(),
   target: objectId.required(),
   category: Joi.string().valid("wrong_answer", "typo", "unclear", "other").required(),
   note: Joi.string().trim().allow("").max(500)
@@ -479,6 +486,9 @@ const validateUserUpdate = validateWith(Joi.object({
 
 module.exports = {
   objectId,
+  validateVisibility,
+  validateRejectSet,
+  validateTakedown,
   validateAiChat,
   validateAiFlag,
   validateGenerate,

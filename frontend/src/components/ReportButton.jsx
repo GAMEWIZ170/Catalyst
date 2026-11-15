@@ -45,7 +45,7 @@ export default function ReportButton({ kind, target }) {
   return <div className="report-box">
     <Button variant="tertiary" icon={Flag} onClick={() => { setError(""); setOpen(true); }}>Report a problem</Button>
     <span className="muted report-status" role="status">{sentFor === target ? "Report sent. Thank you." : ""}</span>
-    <Dialog open={open} onClose={close} title={kind === "lesson" ? "Report a problem with this lesson" : "Report a problem with this question"}>
+    <Dialog open={open} onClose={close} title={kind === "lesson" ? "Report a problem with this lesson" : kind === "set" ? "Report this study set" : "Report a problem with this question"}>
       <form className="form-stack" onSubmit={submit}>
         <SelectField label="What is wrong?" value={category} onChange={(event) => setCategory(event.target.value)}>
           {CATEGORIES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}

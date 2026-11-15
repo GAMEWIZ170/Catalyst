@@ -10,6 +10,7 @@ const MAIN = [
 ];
 const MORE = [
   { label: "Reports", to: "/admin/reports" },
+  { label: "Community", to: "/admin/community" },
   { label: "Analytics", to: "/admin/analytics" },
   { label: "Users", to: "/admin/users" },
   { label: "Trash", to: "/admin/trash" }

@@ -19,7 +19,7 @@ const PLACES = [
   { to: "/home", label: "nav.home", icon: House, end: true },
   { to: "/courses", label: "nav.courses", icon: BookOpen },
   { to: "/review", label: "nav.review", icon: Layers },
-  { to: "/lab", label: "nav.lab", icon: FlaskConical },
+  { to: "/lab", label: "nav.lab", icon: FlaskConical, also: ["/community"] },
   { to: "/me", label: "nav.me", icon: UserRound, also: ["/progress", "/settings", "/saved", "/achievements", "/exams", "/hall"] }
 ];
 

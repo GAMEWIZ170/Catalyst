@@ -3,6 +3,7 @@ const Report = require("../models/report.models");
 const Question = require("../models/question.models");
 const Notification = require("../models/notification.models");
 const { findVisibleLesson, findVisibleTest } = require("../utils/visibility");
+const { findSharedSet } = require("../utils/sharedSet");
 
 const badId = (id) => !mongoose.isObjectIdOrHexString(id);
 const PAGE = 30;
@@ -20,6 +21,12 @@ const createReport = async (req, res, next) => {
       if (!lesson) return res.status(404).json({ message: "Lesson not found" });
       title = lesson.title;
       link = `/lessons/${lesson._id}`;
+    } else if (kind === "set") {
+      const set = await findSharedSet(target, req.user.id);
+      if (!set) return res.status(404).json({ message: "Study set not found" });
+      if (String(set.owner) === String(req.user.id)) return res.status(400).json({ message: "This is your own set. You can delete it or make it private any time." });
+      title = `Set "${set.title}"`.slice(0, 200);
+      link = `/community/${set._id}`;
     } else {
       const question = await Question.findOne({ _id: target, deletedAt: null }).select("text test").lean();
       const visibleTest = question && question.test ? await findVisibleTest(question.test) : null;

@@ -39,7 +39,8 @@ export default function Exam() {
   async function load() {
     setError("");
     try {
-      const data = (await api.startExam(id, new URLSearchParams(window.location.search).get("timed") === "1")).data;
+      const query = new URLSearchParams(window.location.search);
+      const data = (await api.startExam(id, query.get("timed") === "1", query.get("board") === "1")).data;
       if (data.finished) { setResult(data.result); return; }
       offset.current = new Date(data.serverNow).getTime() - Date.now();
       setAttempt(data);

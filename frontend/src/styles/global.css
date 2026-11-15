@@ -3957,6 +3957,22 @@ ol.set-card-list { list-style: none; }
 @media (min-width: 640px) {
   .paste-rows li { grid-template-columns: 1fr 1fr auto; }
 }
+.set-sharing { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-panel); display: grid; gap: var(--space-3); margin: var(--space-4) 0; padding: var(--space-4); }
+.set-sharing h2, .set-sharing p { margin: 0; }
+.set-sharing-form { align-items: end; display: grid; gap: var(--space-3); max-width: 28rem; }
+.community-filters { align-items: end; display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); }
+.community-list { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr)); list-style: none; margin: 0; padding: 0; }
+.community-card { color: inherit; display: grid; gap: var(--space-2); height: 100%; text-decoration: none; }
+.community-desc { overflow-wrap: anywhere; }
+.community-set-head h1, .community-set-head p { margin: 0; }
+.community-set-head { display: grid; gap: var(--space-2); }
+.community-cards { display: grid; gap: var(--space-3); list-style: none; margin: 0; padding: 0; }
+.community-flash { background: var(--sunken); border-radius: var(--radius-control); padding: var(--space-3); }
+.community-flash p, .community-notes { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.board { display: grid; gap: var(--space-3); }
+.board h3, .board p { margin: 0; }
+.board-head { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-3); justify-content: space-between; }
+.board-you { background: var(--accent-soft); }
 .companion { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-panel); display: grid; gap: var(--space-3); margin-top: var(--space-5); padding: var(--space-4); }
 .companion--closed { background: none; border: 0; padding: 0; }
 .companion-head { align-items: center; display: flex; justify-content: space-between; }
@@ -3983,3 +3999,9 @@ ol.set-card-list { list-style: none; }
 .ai-option { align-items: end; display: grid; gap: var(--space-3); grid-template-columns: auto minmax(0, 1fr); }
 .ai-option input[type="radio"] { accent-color: var(--accent); height: 1.25rem; margin-bottom: var(--space-3); width: 1.25rem; }
 .share-row { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.community-more { display: grid; gap: var(--space-3); }
+.community-more summary { cursor: pointer; font-weight: var(--weight-strong); min-height: 2.75rem; padding-block: var(--space-2); }
+.community-more[open] summary { margin-bottom: var(--space-2); }
+/* Long words with no spaces (a pasted link, a long title) wrap instead of stretching the page. */
+.home-course-title, .home-course-desc, .home-course .muted, .community-card, .report-row p, .report-row .muted { overflow-wrap: anywhere; }
+.report-row, .community-card { min-width: 0; }

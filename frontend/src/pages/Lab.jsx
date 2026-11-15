@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FlaskConical, Plus } from "lucide-react";
+import { FlaskConical, Plus, Users } from "lucide-react";
 import { api } from "../api/client";
 import { Button, Card, Dialog, EmptyState, SelectField, TextArea, TextField } from "../components/ui";
 import { ErrorState, Loading } from "./Courses";
@@ -49,6 +49,7 @@ export default function Lab() {
   return <div className="content student-page lab-page">
     <header className="lab-header">
       <h1>{t("lab.title")}</h1>
+      <Button as={Link} variant="secondary" icon={Users} to="/community">Community sets</Button>
       <Button icon={Plus} onClick={() => { setForm({ title: "", topic: "", description: "", course: "" }); setFormError(""); setSaving(false); setCreating(true); }}>New set</Button>
     </header>
     <p className="muted">Your own notes, flashcards and quizzes. Only you can see them.</p>

@@ -617,6 +617,27 @@ The response is `{ kind, drafts, part, parts, cached }`: up to 10 `cards` (`{ fr
 
 Add these to `.env` only if you want other limits: `AI_DAILY_MESSAGES`, `AI_DAILY_GENERATIONS`, `AI_GLOBAL_DAILY`.
 
+### Community sets and leaderboards (Phase X7)
+
+**Sharing.** A study set's owner chooses `visibility` with `PUT /study-sets/:id/visibility` (`{ visibility: "private" | "link" | "community", declaration }`). `link`: any signed-in student with the link can read it and play its quizzes. `community`: the public shelf, which needs the **originality declaration** (`declaration: true`, stored as `declaredAt`) and at least 3 cards or quiz questions, then waits for an admin (`communityStatus`: `none` → `pending` → `approved` or `rejected`; an admin takedown makes it `removed` for good). While pending it is reachable by link only. Going back to `private` or `link` takes it off the shelf. **Source material (PDFs and pasted text) is never shared**, and the shared detail never contains it. Community content is separate from official courses: nothing joins a set to a course tree, lesson or official test.
+
+**Student routes** (`/community`, login and access required, all read only for other people's sets, 404 for anything private or removed):
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/community` | The shelf. `?q=` (title, topic, description), `?category=`, `?course=`, `?topic=`, `?sort=new\|studied\|saved`, `?saved=1` (my saved), `?page=` (20 per page). Each item: `{ id, title, description, topic, course, author, studied, saved }`. The author is a display name, never a full name or email |
+| GET | `/community/filters` | Categories, courses and topics that have at least one approved set |
+| GET | `/community/:id` | A shared set: `cards`, `notesText` (plain text), `quizzes` (with 1 or more questions), author, counts, `isSaved`, `onShelf`, `mine` |
+| POST / DELETE | `/community/:id/save` | Save or unsave (not your own set). Counted once per student |
+| POST | `/community/:id/copy` | A private copy in the student's Lab: cards, notes and quizzes (with the right correct option), not material. Counts toward the 100 set limit. The copy remembers `copiedFrom` |
+| POST | `/community/:id/studied` | "I am studying this" (204). Counts once per student per set per UTC day, never for the owner and never before approval. It adds to `studiedCount`, writes a `set_studied` event, and gives the owner 5 XP (`set_used`, once per student per set, 50 a day) |
+| GET | `/community/quizzes/:testId/leaderboard?period=week\|month` | The board of one quiz: top 10, then you and the people just above and below you |
+| GET | `/community/boards?period=week\|month` | "Most studied sets" and "top creators" |
+
+**Boards.** A student opts in when starting a timed attempt (`POST /tests/:id/exam/start` with `{ timed: true, leaderboard: true }`; the attempt stores `leaderboard`). The flag is ignored unless the quiz belongs to an approved community set and the student is not its owner. When the attempt is handed in, `LeaderboardEntry` rows are written for this week and this month, but only if the student has none yet for that quiz and period (unique index): **only the first timed attempt of a period counts**. Ranking is score, then time taken, then who finished first. Weeks run Monday to Sunday and months are calendar months, both in UTC. A board "resets" because its key changes; old rows are kept and never shown. Boards show display names only, and a removed or withdrawn set's board is a 404. "Top sets" and "top creators" count different students who studied (one per student per set per day) in the period, and a creator's number adds up their approved sets. Extra-time students can join boards (their deadline is longer; the time column shows what they took). There is no board that ranks every student.
+
+**Safety.** Every shared set has a Report button (`POST /reports` with `kind: "set"`; not for your own set; one open report per student per set). Admins have `GET /admin/community?view=pending|reported|live` and `POST /admin/community/:id/approve | reject { note } | takedown { reason }`. Takedown sets the set to `removed` and private, resolves every open report on it (the reporters and the author are notified) and the author keeps the set in their Lab. The author can also make it private or delete it at any time. Deleting an account removes the student's saves, study rows and board scores, and their sets.
+
 ### Study sets (the Study Lab)
 
 A `StudySet` belongs to one student and is private (`visibility` also allows `link` and `community`, which Phase X7 will use; nothing sets them yet). It holds:
