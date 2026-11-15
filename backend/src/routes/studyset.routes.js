@@ -4,7 +4,7 @@ const router = express.Router();
 const authenticate = require("../middlewares/authenticate");
 const {
   validateSet, validateSetUpdate, validateSetNote, validateSetCard, validateSetCardUpdate, validateSetCards, validateSetQuiz, validateSetText,
-  validateQuestion, validateQuestionUpdate, validateGenerate, validateVisibility, validateBuildText
+  validateQuestion, validateQuestionUpdate, validateGenerate, validateVisibility, validateBuildText, validateCardOrder
 } = require("../middlewares/validate");
 const sets = require("../controllers/studyset.controller");
 const materials = require("../controllers/setmaterial.controller");
@@ -45,6 +45,7 @@ router.get("/:id/notes", sets.getNotes);
 router.put("/:id/notes", validateSetNote, sets.saveNotes);
 router.get("/:id/cards", sets.listCards);
 router.post("/:id/cards", validateSetCard, sets.createCard);
+router.put("/:id/cards/order", validateCardOrder, sets.reorderCards);
 router.post("/:id/cards/bulk", validateSetCards, sets.createCards);
 router.get("/:id/materials", materials.listMaterials);
 router.post("/:id/materials/text", validateSetText, materials.addText);

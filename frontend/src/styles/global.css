@@ -3943,12 +3943,13 @@ ol.set-card-list { list-style: none; }
 .option-row { align-items: end; display: grid; gap: var(--space-2); grid-template-columns: auto 1fr auto; }
 .option-row input[type="radio"] { height: 24px; margin-bottom: var(--space-3); width: 24px; }
 .question-form-card { margin-top: var(--space-4); }
-.note-wrap { display: grid; gap: var(--space-2); }
-.note-toolbar { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-control); display: flex; flex-wrap: wrap; gap: var(--space-1); padding: var(--space-1); position: sticky; top: 64px; z-index: 2; }
-.note-tool { align-items: center; background: transparent; border: 0; border-radius: var(--radius-control); color: var(--ink); cursor: pointer; display: inline-flex; height: 44px; justify-content: center; width: 44px; }
+.note-wrap { display: grid; gap: 0; }
+.note-toolbar { background: var(--surface); border: 1px solid var(--control-line); border-bottom-color: var(--line); border-radius: var(--radius-control) var(--radius-control) 0 0; display: flex; flex-wrap: wrap; gap: var(--space-1); padding: var(--space-1); position: sticky; top: 64px; z-index: 2; }
+.note-tool { align-items: center; background: transparent; border: 0; border-radius: var(--radius-control); color: var(--ink); cursor: pointer; display: inline-flex; height: 36px; justify-content: center; width: 36px; }
 .note-tool:hover { background: var(--sunken); }
 .note-tool.is-active { background: var(--accent-soft); color: var(--accent); }
-.note-editor { background: var(--surface); border: 1px solid var(--control-line); border-radius: var(--radius-control); min-height: 16rem; padding: var(--space-4); }
+.note-editor { background: var(--surface); border: 1px solid var(--control-line); border-top: 0; border-radius: 0 0 var(--radius-control) var(--radius-control); min-height: 16rem; padding: var(--space-4); }
+.note-status { color: var(--muted); font-size: var(--text-sm); margin: var(--space-1) 0 0; }
 .note-editor:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .note-editor > :first-child { margin-top: 0; }
 .note-editor blockquote { border-left: 3px solid var(--line); margin-inline: 0; padding-left: var(--space-3); }
@@ -4030,3 +4031,12 @@ ol.set-card-list { list-style: none; }
 .home-page .welcome ol { margin: 0 0 var(--space-3); padding-left: var(--space-5); }
 .home-page .welcome li { margin: 0 0 var(--space-1); }
 .lab-header { margin-bottom: var(--space-4); }
+
+/* Floating study companion button (set page). Above the phone tab bar. */
+.companion-fab { bottom: calc(var(--space-5) + env(safe-area-inset-bottom)); position: fixed; right: var(--space-5); z-index: 5; }
+@media (max-width: 767px) {
+  .companion-fab { bottom: calc(76px + var(--space-3) + env(safe-area-inset-bottom)); right: var(--space-4); }
+}
+
+/* Set page and quiz editor read like documents: capped width, centred (interaction rule 6). */
+.lab-set, .lab-quiz { margin-inline: auto; max-width: 900px; width: 100%; }

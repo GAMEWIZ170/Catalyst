@@ -1,73 +1,89 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { ListChecks } from "lucide-react";
+import { ListChecks, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
+import { Button } from "@astryxdesign/core/Button";
+import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
+import { EmptyState } from "@astryxdesign/core/EmptyState";
+import { List, ListItem } from "@astryxdesign/core/List";
+import { MoreMenu } from "@astryxdesign/core/MoreMenu";
+import { HStack, VStack } from "@astryxdesign/core/Stack";
+import { Text } from "@astryxdesign/core/Text";
+import { TextInput } from "@astryxdesign/core/TextInput";
 import { api } from "../../api/client";
-import ConfirmDialog from "../admin/ConfirmDialog";
-import { Button, EmptyState, TextField } from "../ui";
 import { Loading } from "../../pages/Courses";
+import GenerateMore from "./GenerateMore";
 
-// The Quizzes tab of a study set. A quiz is edited on its own page and played in the normal test screen.
+const icon = (Icon) => <Icon size={18} aria-hidden="true" />;
+
+// The Quizzes tab. "New quiz" makes "Untitled quiz" at once with its name open for typing; the name saves when you leave it.
+// A quiz is edited on its own page and played in the normal test screen.
 export default function SetQuizzes({ setId }) {
   const [quizzes, setQuizzes] = useState(null);
-  const [title, setTitle] = useState("");
-  const [status, setStatus] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [naming, setNaming] = useState(null);   // { id, title }
   const [removing, setRemoving] = useState(null);
+  const [generating, setGenerating] = useState(false);
 
   async function load() {
-    try {
-      setQuizzes((await api.getSetQuizzes(setId)).data);
-    } catch (err) {
-      setStatus(err.message);
-    }
+    try { setQuizzes((await api.getSetQuizzes(setId)).data); } catch (err) { setError(err.message); }
   }
   useEffect(() => { load(); }, [setId]);
 
-  async function create(event) {
-    event.preventDefault();
-    setBusy(true);
-    setStatus("");
+  async function create() {
     try {
-      await api.createSetQuiz(setId, title.trim());
-      setTitle("");
+      const { data } = await api.createSetQuiz(setId, "Untitled quiz");
       await load();
-    } catch (err) {
-      setStatus(err.message);
-    } finally {
-      setBusy(false);
-    }
+      setNaming({ id: data.id, title: data.title || "Untitled quiz" });
+    } catch (err) { setError(err.message); }
+  }
+
+  async function commitName() {
+    const current = naming;
+    setNaming(null);
+    const title = current.title.trim();
+    if (!title || title === quizzes.find((quiz) => quiz.id === current.id)?.title) return;
+    try { await api.renameSetQuiz(current.id, title); await load(); } catch (err) { setError(err.message); }
   }
 
   async function remove() {
     const target = removing;
     setRemoving(null);
-    try {
-      await api.deleteSetQuiz(target.id);
-      setStatus("Quiz deleted");
-      await load();
-    } catch (err) {
-      setStatus(err.message);
-    }
+    try { await api.deleteSetQuiz(target.id); await load(); } catch (err) { setError(err.message); }
   }
 
-  if (!quizzes) return status ? <p className="form-error" role="alert">{status}</p> : <Loading />;
-  return <div className="set-quizzes">
-    <p className="muted settings-help">Add past-style questions of your own, then take the quiz untimed or timed.</p>
-    <form className="set-card-form" onSubmit={create}>
-      <TextField label="New quiz name" required maxLength="80" value={title} onChange={(event) => setTitle(event.target.value)} />
-      <Button type="submit" variant="secondary" loading={busy}>Add quiz</Button>
-    </form>
-    <p className="settings-status" role="status">{status}</p>
+  if (!quizzes) return error ? <Text color="secondary" role="alert">{error}</Text> : <Loading />;
+  return <VStack gap={4}>
+    <HStack gap={2} justify="between" align="center" wrap="wrap">
+      <Text type="supporting" color="secondary">{quizzes.length} {quizzes.length === 1 ? "quiz" : "quizzes"}. Take a quiz untimed or timed.</Text>
+      <HStack gap={2} wrap="wrap">
+        <Button label="Generate more" variant="secondary" icon={icon(Sparkles)} onClick={() => setGenerating(true)} />
+        <Button label="New quiz" variant="primary" icon={icon(Plus)} onClick={create} />
+      </HStack>
+    </HStack>
+    {error && <Text color="secondary" role="alert">{error}</Text>}
     {quizzes.length === 0
-      ? <EmptyState icon={ListChecks} title="No quizzes yet" description="Make a quiz, then add questions to it." />
-      : <ul className="set-card-list">{quizzes.map((quiz) => <li key={quiz.id}>
-        <span className="set-card-text"><strong>{quiz.title}</strong><span className="muted">{quiz.questionCount} {quiz.questionCount === 1 ? "question" : "questions"}</span></span>
-        <span className="catalog-actions">
-          {quiz.questionCount > 0 && <Button as={Link} to={`/tests/${quiz.id}`} state={{ from: `/lab/${setId}?tab=quizzes` }}>Take quiz</Button>}
-          <Button as={Link} variant="secondary" to={`/lab/quizzes/${quiz.id}`}>Edit questions</Button>
-          <Button variant="secondary" type="button" onClick={() => setRemoving(quiz)} aria-label={`Delete quiz ${quiz.title}`}>Delete</Button>
-        </span>
-      </li>)}</ul>}
-    <ConfirmDialog open={Boolean(removing)} title="Delete this quiz?" description="Its questions are deleted too." confirmLabel="Delete" onConfirm={remove} onCancel={() => setRemoving(null)} />
-  </div>;
+      ? <EmptyState isCompact icon={<ListChecks size={28} aria-hidden="true" />} title="No quizzes yet" description="Make a quiz and add questions, or let the AI draft some." />
+      : <List hasDividers>
+        {quizzes.map((quiz) => naming?.id === quiz.id
+          ? <ListItem key={quiz.id} label={<div onBlur={commitName}><TextInput label="Quiz name" isLabelHidden value={naming.title} maxLength={80} hasAutoFocus onEnter={commitName}
+            onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); setNaming(null); } }} onChange={(title) => setNaming({ ...naming, title })} /></div>} />
+          : <ListItem key={quiz.id} label={quiz.title} description={`${quiz.questionCount} ${quiz.questionCount === 1 ? "question" : "questions"}`} href={`/lab/quizzes/${quiz.id}`}
+            endContent={<HStack gap={1} align="center">
+              {quiz.questionCount > 0 && <Button label="Take quiz" size="sm" variant="secondary" href={`/tests/${quiz.id}`} />}
+              <MoreMenu label={`Options for ${quiz.title}`} alignment="end" items={[
+                { label: "Rename", icon: icon(Pencil), onClick: () => setNaming({ id: quiz.id, title: quiz.title }) },
+                { type: "divider" },
+                { label: "Delete quiz", icon: icon(Trash2), variant: "destructive", onClick: () => setRemoving(quiz) }
+              ]} />
+            </HStack>} />)}
+      </List>}
+
+    <Dialog isOpen={Boolean(removing)} onOpenChange={(open) => { if (!open) setRemoving(null); }} width={400}>
+      <DialogHeader title="Delete this quiz?" onOpenChange={(open) => { if (!open) setRemoving(null); }} />
+      <VStack gap={4} padding={4}>
+        <Text>Its questions are deleted too.</Text>
+        <HStack gap={2} justify="end"><Button label="Cancel" variant="ghost" onClick={() => setRemoving(null)} /><Button label="Delete" variant="destructive" onClick={remove} /></HStack>
+      </VStack>
+    </Dialog>
+    <GenerateMore isOpen={generating} onOpenChange={setGenerating} setId={setId} kind="questions" onSaved={load} />
+  </VStack>;
 }

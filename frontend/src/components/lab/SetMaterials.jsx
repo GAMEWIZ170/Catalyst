@@ -1,112 +1,102 @@
-import { useEffect, useRef, useState } from "react";
-import { FileText } from "lucide-react";
+import { useEffect, useState } from "react";
+import { FileText, Plus, Trash2 } from "lucide-react";
+import { Button } from "@astryxdesign/core/Button";
+import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
+import { FileInput } from "@astryxdesign/core/FileInput";
+import { Heading } from "@astryxdesign/core/Heading";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { HStack, VStack } from "@astryxdesign/core/Stack";
+import { Text } from "@astryxdesign/core/Text";
+import { TextArea } from "@astryxdesign/core/TextArea";
+import { TextInput } from "@astryxdesign/core/TextInput";
 import { api } from "../../api/client";
-import ConfirmDialog from "../admin/ConfirmDialog";
-import { Button, Checkbox, Dialog, TextArea, TextField } from "../ui";
 
 const megabytes = (bytes) => `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+const MAX_PDF = 10 * 1024 * 1024;
 
-// Source material for a set: a PDF or pasted text. It is private to the student and will feed AI drafts later.
+// Sources for a set: a PDF or pasted text. Private to the student, and the AI drafts are made from them.
+// "Add source" opens one dialog with a drop zone; there is no always-open form.
 export default function SetMaterials({ setId }) {
   const [data, setData] = useState(null);
-  const [status, setStatus] = useState("");
-  const [rights, setRights] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [textOpen, setTextOpen] = useState(false);
+  const [error, setError] = useState("");
+  const [open, setOpen] = useState(false);
+  const [pasting, setPasting] = useState(false);
+  const [file, setFile] = useState(null);
   const [text, setText] = useState({ title: "", text: "" });
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState("");
   const [removing, setRemoving] = useState(null);
-  const fileRef = useRef(null);
 
   async function load() {
-    try {
-      setData((await api.getSetMaterials(setId)).data);
-    } catch (err) {
-      setStatus(err.message);
-    }
+    try { setData((await api.getSetMaterials(setId)).data); } catch (err) { setError(err.message); }
   }
   useEffect(() => { load(); }, [setId]);
 
-  async function uploadPdf(event) {
-    event.preventDefault();
-    const file = fileRef.current?.files?.[0];
-    if (!file) { setStatus("Choose a PDF first."); return; }
-    if (file.size > 10 * 1024 * 1024) { setStatus("A PDF must be 10 MB or smaller."); return; }
-    setBusy(true);
-    setStatus("");
-    try {
-      await api.uploadSetPdf(setId, file);
-      fileRef.current.value = "";
-      setRights(false);
-      setStatus("PDF added. Its text was read and saved.");
-      await load();
-    } catch (err) {
-      setStatus(err.message);
-    } finally {
-      setBusy(false);
-    }
-  }
+  function close() { setOpen(false); setPasting(false); setFile(null); setText({ title: "", text: "" }); setProblem(""); }
 
-  async function addText(event) {
-    event.preventDefault();
+  async function add() {
     setBusy(true);
-    setStatus("");
+    setProblem("");
     try {
-      await api.addSetText(setId, { title: text.title.trim(), text: text.text.trim() });
-      setTextOpen(false);
-      setText({ title: "", text: "" });
-      setStatus("Text added");
+      if (pasting) await api.addSetText(setId, { title: text.title.trim() || text.text.trim().slice(0, 60), text: text.text.trim() });
+      else await api.uploadSetPdf(setId, file);
+      close();
       await load();
-    } catch (err) {
-      setStatus(err.message);
-    } finally {
-      setBusy(false);
-    }
+    } catch (err) { setProblem(err.message); } finally { setBusy(false); }
   }
 
   async function remove() {
     const target = removing;
     setRemoving(null);
-    try {
-      await api.deleteSetMaterial(target.id);
-      setStatus("Material deleted");
-      await load();
-    } catch (err) {
-      setStatus(err.message);
-    }
+    try { await api.deleteSetMaterial(target.id); await load(); } catch (err) { setError(err.message); }
   }
 
-  return <section className="settings-section set-materials" aria-labelledby="materials-heading">
-    <h2 id="materials-heading">Source material</h2>
-    <p className="muted settings-help">Attach a PDF or paste text from your own study material. Only you can see it. Later it can be turned into draft notes, cards and questions.</p>
-    <form className="set-material-upload" onSubmit={uploadPdf}>
-      <div className="ui-field">
-        <label className="ui-label" htmlFor="material-file">PDF file (up to 10 MB)</label>
-        <input className="ui-control" id="material-file" type="file" accept="application/pdf" ref={fileRef} />
-      </div>
-      <Checkbox label="I have the right to use this material" hint="Only upload things you wrote or are allowed to copy for your own study." checked={rights} onChange={(event) => setRights(event.target.checked)} />
-      <div className="button-row">
-        <Button type="submit" variant="secondary" loading={busy} disabled={!rights}>Upload PDF</Button>
-        <Button type="button" variant="secondary" onClick={() => setTextOpen(true)}>Paste text instead</Button>
-      </div>
-    </form>
-    <p className="settings-status" role="status">{status}</p>
-    {data && data.items.length > 0 && <>
-      <ul className="set-card-list">{data.items.map((item) => <li key={item.id}>
-        <span className="set-card-text"><strong><FileText size={16} aria-hidden="true" /> {item.title}</strong>
-          <span className="muted">{item.kind === "pdf" ? `PDF, ${item.pages} ${item.pages === 1 ? "page" : "pages"}, ${megabytes(item.bytes)}` : "Pasted text"} · {item.characters.toLocaleString()} characters</span></span>
-        <Button variant="secondary" type="button" onClick={() => setRemoving(item)} aria-label={`Delete ${item.title}`}>Delete</Button>
-      </li>)}</ul>
-      <p className="muted settings-help">Upload space used: {megabytes(data.usedBytes)} of {megabytes(data.limitBytes)}.</p>
-    </>}
-    <Dialog open={textOpen} onClose={() => setTextOpen(false)} title="Paste text" actions={<>
-      <Button variant="secondary" type="button" onClick={() => setTextOpen(false)}>Cancel</Button>
-      <Button type="submit" form="material-text-form" loading={busy}>Save text</Button>
-    </>}>
-      <form id="material-text-form" className="form-stack" onSubmit={addText}>
-        <TextField label="Title" required maxLength="120" value={text.title} onChange={(event) => setText({ ...text, title: event.target.value })} />
-        <TextArea label="Text" required minLength="20" rows="8" maxLength="100000" value={text.text} onChange={(event) => setText({ ...text, text: event.target.value })} hint="Only paste material you have the right to use." />
-      </form>
+  const ready = pasting ? text.text.trim().length >= 20 : Boolean(file);
+  return <VStack gap={3}>
+    <HStack justify="between" align="center" wrap="wrap" gap={2}>
+      <Heading level={2}>Sources</Heading>
+      <Button label="Add source" variant="secondary" icon={<Plus size={18} aria-hidden="true" />} onClick={() => setOpen(true)} />
+    </HStack>
+    {error && <Text color="secondary" role="alert">{error}</Text>}
+    {data && data.items.length === 0 && <Text color="secondary">Add a PDF or some text. The AI drafts notes, cards and questions from your sources.</Text>}
+    {data && data.items.map((item) => <HStack key={item.id} gap={2} align="center" justify="between">
+      <HStack gap={2} align="center">
+        <FileText size={18} aria-hidden="true" />
+        <VStack gap={0}>
+          <Text weight="semibold">{item.title}</Text>
+          <Text type="supporting" color="secondary">{item.kind === "pdf" ? `PDF, ${item.pages} ${item.pages === 1 ? "page" : "pages"}, ${megabytes(item.bytes)}` : "Pasted text"} · {item.characters.toLocaleString()} characters</Text>
+        </VStack>
+      </HStack>
+      <IconButton label={`Delete ${item.title}`} tooltip="Delete source" variant="ghost" icon={<Trash2 size={18} aria-hidden="true" />} onClick={() => setRemoving(item)} />
+    </HStack>)}
+
+    <Dialog isOpen={open} onOpenChange={(next) => { if (!next) close(); }} purpose="form" width={520}>
+      <DialogHeader title="Add source" onOpenChange={(next) => { if (!next) close(); }} />
+      <VStack gap={4} padding={4}>
+        {problem && <Text color="secondary" role="alert">{problem}</Text>}
+        {!pasting && <FileInput label="Upload a PDF" isLabelHidden mode="dropzone" accept="application/pdf" maxSize={MAX_PDF} value={file}
+          onChange={(next) => setFile(Array.isArray(next) ? next[0] || null : next)} placeholder="Drop a PDF here, or click to choose one (up to 10 MB)" />}
+        {pasting && <>
+          <TextInput label="Name" isLabelHidden placeholder="Name (optional)" value={text.title} maxLength={120} onChange={(title) => setText({ ...text, title })} />
+          <TextArea label="Text" isLabelHidden placeholder="Paste your text here" rows={8} value={text.text} onChange={(value) => setText({ ...text, text: value })} hasAutoFocus />
+        </>}
+        <Text type="supporting" color="secondary">Only add things you may copy for your own study. Only you can see your sources.</Text>
+        <HStack gap={2} justify="between" align="center" wrap="wrap">
+          <Button label={pasting ? "Upload a PDF instead" : "Paste text instead"} variant="ghost" onClick={() => { setPasting(!pasting); setProblem(""); }} />
+          <HStack gap={2}>
+            <Button label="Cancel" variant="ghost" onClick={close} />
+            <Button label="Add" variant="primary" isDisabled={!ready} isLoading={busy} onClick={add} />
+          </HStack>
+        </HStack>
+      </VStack>
     </Dialog>
-    <ConfirmDialog open={Boolean(removing)} title="Delete this material?" description="Its saved text and file are removed." confirmLabel="Delete" onConfirm={remove} onCancel={() => setRemoving(null)} />
-  </section>;
+
+    <Dialog isOpen={Boolean(removing)} onOpenChange={(next) => { if (!next) setRemoving(null); }} width={400}>
+      <DialogHeader title="Delete this source?" onOpenChange={(next) => { if (!next) setRemoving(null); }} />
+      <VStack gap={4} padding={4}>
+        <Text>Its saved text and file are removed.</Text>
+        <HStack gap={2} justify="end"><Button label="Cancel" variant="ghost" onClick={() => setRemoving(null)} /><Button label="Delete" variant="destructive" onClick={remove} /></HStack>
+      </VStack>
+    </Dialog>
+  </VStack>;
 }

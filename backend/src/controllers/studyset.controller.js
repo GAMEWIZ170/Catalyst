@@ -176,6 +176,21 @@ const createCards = async (req, res, next) => {
   }
 };
 
+// STUDENT: puts the set's cards in a new order. The list must hold every card of the set exactly once.
+const reorderCards = async (req, res, next) => {
+  try {
+    const set = await findOwnSet(req.params.id, req.user.id);
+    if (!set) return notFound(res);
+    const cards = await Flashcard.find({ set: set._id, deletedAt: null }).select("_id").lean();
+    const have = new Set(cards.map((card) => String(card._id)));
+    if (req.body.ids.length !== have.size || !req.body.ids.every((id) => have.has(String(id)))) return res.status(400).json({ message: "The list must contain every card of this set once" });
+    await Flashcard.bulkWrite(req.body.ids.map((id, at) => ({ updateOne: { filter: { _id: id }, update: { $set: { order: at + 1 } } } })));
+    return res.status(200).json({ message: "Cards reordered" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const ownCard = async (req) => {
   if (badId(req.params.cardId)) return null;
   const card = await Flashcard.findOne({ _id: req.params.cardId, set: { $ne: null }, deletedAt: null });
@@ -331,6 +346,6 @@ const ownQuestion = async (req, res, next) => {
 
 module.exports = {
   listSets, createSet, getSet, updateSet, deleteSet, getNotes, saveNotes,
-  listCards, createCard, createCards, updateCard, deleteCard, studyCards,
+  listCards, createCard, createCards, reorderCards, updateCard, deleteCard, studyCards,
   listQuizzes, createQuiz, updateQuiz, deleteQuiz, getQuiz, ownQuizInBody, ownQuestion, ownQuiz
 };

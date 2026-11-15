@@ -165,6 +165,7 @@ const validateSetNote = validateWith(Joi.object({
 const cardSide = Joi.string().trim().min(1).max(500);
 const validateSetCard = validateWith(Joi.object({ front: cardSide.required(), back: cardSide.required() }));
 const validateSetCardUpdate = validateWith(Joi.object({ front: cardSide, back: cardSide }).min(1));
+const validateCardOrder = validateWith(Joi.object({ ids: Joi.array().items(objectId.required()).min(1).max(500).unique().required() }));
 const validateSetCards = validateWith(Joi.object({ cards: Joi.array().items(Joi.object({ front: cardSide.required(), back: cardSide.required() })).min(1).max(200).required() }));
 const validateSetText = validateWith(Joi.object({ title: Joi.string().trim().min(1).max(120).required(), text: Joi.string().trim().min(20).max(100000).required() }));
 const validateBuildText = validateWith(Joi.object({ text: Joi.string().trim().min(40).max(100000).required() }));
@@ -525,6 +526,7 @@ module.exports = {
   validateSetQuiz,
   validateSetText,
   validateBuildText,
+  validateCardOrder,
   validateExamDate,
   validateHallGoal,
   validateBookmark,

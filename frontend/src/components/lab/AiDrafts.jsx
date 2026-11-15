@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Sparkles } from "lucide-react";
+import { Selector } from "@astryxdesign/core/Selector";
 import { api } from "../../api/client";
 import { Button, SelectField, TextArea, TextField, useToast } from "../ui";
 import { appendToDoc, draftToNodes, notesToDraft } from "../../utils/draftToDoc";
@@ -13,9 +14,9 @@ const NEW_QUIZ = "new";
 
 // "AI drafts" tab of a study set. The AI makes DRAFTS from the student's own material, notes or pasted text. Nothing is
 // saved until the student has read and edited the drafts and chosen to save them. The free model can make mistakes.
-export default function AiDrafts({ setId }) {
+export default function AiDrafts({ setId, kind: fixedKind = null, onSaved = null }) {
   const { toast } = useToast();
-  const [kind, setKind] = useState("cards");
+  const [kind, setKind] = useState(fixedKind || "cards");
   const [source, setSource] = useState("notes");   // "notes", "paste" or a material id
   const [pasted, setPasted] = useState("");
   const [part, setPart] = useState(0);
@@ -80,6 +81,7 @@ export default function AiDrafts({ setId }) {
         toast({ tone: "success", message: "Added to the end of your notes" });
       }
       setResult(null);
+      if (onSaved) onSaved();
     } catch (error) {
       setProblem(error.message);
     } finally {
@@ -89,17 +91,14 @@ export default function AiDrafts({ setId }) {
 
   const canGenerate = !busy && (source !== "paste" || pasted.trim().length >= 40);
   return <section className="ai-drafts" aria-labelledby="ai-heading">
-    <h2 id="ai-heading">Make drafts with AI</h2>
-    <p className="muted">Free beta, fair-use limits apply. The AI reads the text you choose and writes drafts for you to edit. It can make mistakes, so check each one against your material before you save.</p>
+    {!fixedKind && <h2 id="ai-heading">Make drafts with AI</h2>}
+    <p className="muted">The AI reads the text you choose and writes drafts for you to edit. It can make mistakes, so check each one before you save. Free beta, fair-use limits apply.</p>
     <div className="ai-form">
-      <SelectField label="Make" value={kind} onChange={(event) => { setKind(event.target.value); setResult(null); }}>
+      {!fixedKind && <SelectField label="Make" value={kind} onChange={(event) => { setKind(event.target.value); setResult(null); }}>
         {KINDS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-      </SelectField>
-      <SelectField label="From" value={source} onChange={(event) => { setSource(event.target.value); setPart(0); setResult(null); }}>
-        <option value="notes">My notes in this set</option>
-        {materials.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
-        <option value="paste">Text I paste here</option>
-      </SelectField>
+      </SelectField>}
+      <Selector label="From" value={source} onChange={(value) => { setSource(value); setPart(0); setResult(null); }}
+        options={[{ value: "notes", label: "My notes in this set" }, ...materials.map((item) => ({ value: item.id, label: item.title })), { value: "paste", label: "Text I paste here" }]} />
       {source === "paste" && <TextArea label="Paste your text (at least 40 characters)" rows={6} value={pasted} onChange={(event) => { setPasted(event.target.value); setPart(0); }} />}
       <Button onClick={() => generate(source === "paste" || result ? part : 0)} disabled={!canGenerate} icon={Sparkles}>{busy && !result ? "Working…" : "Make drafts"}</Button>
     </div>

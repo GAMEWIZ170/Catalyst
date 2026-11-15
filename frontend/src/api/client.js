@@ -106,6 +106,7 @@ export const api = {
   getSetCards: (id) => request(`/study-sets/${id}/cards`),
   addSetCard: (id, body) => request(`/study-sets/${id}/cards`, { method: "POST", body: JSON.stringify(body) }),
   addSetCards: (id, cards) => request(`/study-sets/${id}/cards/bulk`, { method: "POST", body: JSON.stringify({ cards }) }),
+  reorderSetCards: (id, ids) => request(`/study-sets/${id}/cards/order`, { method: "PUT", body: JSON.stringify({ ids }) }),
   updateSetCard: (cardId, body) => request(`/study-sets/cards/${cardId}`, { method: "PUT", body: JSON.stringify(body) }),
   deleteSetCard: (cardId) => request(`/study-sets/cards/${cardId}`, { method: "DELETE" }),
   getSetMaterials: (id) => request(`/study-sets/${id}/materials`),

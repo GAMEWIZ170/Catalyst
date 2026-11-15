@@ -1,14 +1,14 @@
 const AiUsage = require("../models/aiusage.models");
 
 // Fair use while the AI is a free beta with low limits (Phase X6.4).
-//   per student, per UTC day: AI_DAILY_MESSAGES (default 20) companion messages and AI_DAILY_GENERATIONS (default 3) drafts
+//   per student, per UTC day: AI_DAILY_MESSAGES (default 20) companion messages and AI_DAILY_GENERATIONS (default 9) drafts
 //   whole platform, per UTC day: AI_GLOBAL_DAILY (default 300) requests, and a "resting" flag the moment the provider
 //   says its free allowance is used up. Both end with "AI is resting until tomorrow".
 // Days are UTC so one clock covers everyone, and "tomorrow" is the same for all.
 const int = (value, fallback) => (Number.isInteger(Number(value)) && Number(value) > 0 ? Number(value) : fallback);
 const limits = () => ({
   messages: int(process.env.AI_DAILY_MESSAGES, 20),
-  generations: int(process.env.AI_DAILY_GENERATIONS, 3),
+  generations: int(process.env.AI_DAILY_GENERATIONS, 9),
   global: int(process.env.AI_GLOBAL_DAILY, 300)
 });
 

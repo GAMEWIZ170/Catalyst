@@ -1,23 +1,22 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Pencil, Share2, Sparkles, Trash2 } from "lucide-react";
+import { ArrowLeft, Share2, Sparkles, Trash2 } from "lucide-react";
 import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
 import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
-import { Heading } from "@astryxdesign/core/Heading";
 import { MoreMenu } from "@astryxdesign/core/MoreMenu";
 import { HStack, VStack } from "@astryxdesign/core/Stack";
 import { Tab, TabList } from "@astryxdesign/core/TabList";
 import { Text } from "@astryxdesign/core/Text";
-import { TextInput } from "@astryxdesign/core/TextInput";
 import { api } from "../api/client";
 import AstryxTheme from "../components/astryx/AstryxTheme";
+import ClickToEdit from "../components/astryx/ClickToEdit";
 import { ErrorState, Loading } from "./Courses";
 import SetCards from "../components/lab/SetCards";
 import SetQuizzes from "../components/lab/SetQuizzes";
 import SetMaterials from "../components/lab/SetMaterials";
-import AiDrafts from "../components/lab/AiDrafts";
-import Companion from "../components/Companion";
+import GenerateMore from "../components/lab/GenerateMore";
+import CompanionDrawer from "../components/lab/CompanionDrawer";
 import SetSharing from "../components/lab/SetSharing";
 
 // The rich note editor is a big file, so it is only downloaded when a student opens the Notes tab.
@@ -27,18 +26,19 @@ const TAB_IDS = ["notes", "cards", "quizzes"];
 const icon = (Icon) => <Icon size={18} aria-hidden="true" />;
 
 // One study set. Built with Astryx (UI library trial, branch feature/astryx-trial).
-// The AI panel is opened by "Ask AI" (or by ?ai=1 right after a set is created). Tabs are Notes, Flashcards and Quizzes.
+// Tabs are Notes, Flashcards and Quizzes. Each tab shows its content first, with "Generate more" and "Add" that work in place.
+// The study companion is a floating chat button that opens a side panel. Click the title to rename; Delete is in the ⋯ menu.
 export default function LabSet() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const [set, setSet] = useState(null);
   const [error, setError] = useState("");
-  const [dialog, setDialog] = useState(null);   // "rename", "share" or "delete"
-  const [draftTitle, setDraftTitle] = useState("");
+  const [dialog, setDialog] = useState(null);   // "share" or "delete"
+  const [generating, setGenerating] = useState(false);
+  const [notesKey, setNotesKey] = useState(0);
   const asked = params.get("tab");
   const tab = TAB_IDS.includes(asked) ? asked : "notes";
-  const aiOpen = params.get("ai") === "1";
 
   function load() {
     setError("");
@@ -46,17 +46,7 @@ export default function LabSet() {
   }
   useEffect(load, [id]);
 
-  const update = (patch) => setParams((current) => {
-    const next = new URLSearchParams(current);
-    for (const [key, value] of Object.entries(patch)) { if (value) next.set(key, value); else next.delete(key); }
-    return next;
-  }, { replace: true });
-
-  async function rename(event) {
-    event.preventDefault();
-    const title = draftTitle.trim();
-    if (!title) return;
-    setDialog(null);
+  async function rename(title) {
     try {
       const { data } = await api.updateSet(id, { title });
       setSet(data);
@@ -78,11 +68,6 @@ export default function LabSet() {
   if (error && !set) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
   if (!set) return <Loading />;
 
-  const panels = {
-    notes: <><Suspense fallback={<Loading />}><SetNotes setId={id} /></Suspense><SetMaterials setId={id} /></>,
-    cards: <SetCards setId={id} />,
-    quizzes: <SetQuizzes setId={id} />
-  };
   const details = [set.course && `${set.course.code}: ${set.course.title}`, set.topic].filter(Boolean).join(" · ");
   const close = (open) => { if (!open) setDialog(null); };
 
@@ -92,42 +77,34 @@ export default function LabSet() {
         <div><Button label="Study Lab" variant="ghost" size="sm" icon={icon(ArrowLeft)} href="/lab" /></div>
         <HStack gap={3} justify="between" align="center" wrap="wrap">
           <VStack gap={1}>
-            <Heading level={1}>{set.title}</Heading>
+            <ClickToEdit heading label="Title" value={set.title} placeholder="Untitled set" onSave={rename} />
             {details && <Text color="secondary">{details}</Text>}
-            {set.description && <Text color="secondary">{set.description}</Text>}
           </VStack>
-          <HStack gap={2} align="center">
-            <Button label="Ask AI" variant={aiOpen ? "secondary" : "primary"} icon={icon(Sparkles)} onClick={() => update({ ai: aiOpen ? "" : "1" })} />
-            <MoreMenu label="Set actions" alignment="end" items={[
-              { label: "Rename", icon: icon(Pencil), onClick: () => { setDraftTitle(set.title); setDialog("rename"); } },
-              { label: "Share", icon: icon(Share2), onClick: () => setDialog("share") },
-              { type: "divider" },
-              { label: "Delete set", icon: icon(Trash2), variant: "destructive", onClick: () => setDialog("delete") }
-            ]} />
-          </HStack>
+          <MoreMenu label="Set actions" alignment="end" items={[
+            { label: "Share", icon: icon(Share2), onClick: () => setDialog("share") },
+            { type: "divider" },
+            { label: "Delete set", icon: icon(Trash2), variant: "destructive", onClick: () => setDialog("delete") }
+          ]} />
         </HStack>
         {error && <Banner status="error" title={error} container="section" />}
-        {aiOpen && <div><Companion kind="set" id={id} defaultOpen /><AiDrafts setId={id} /></div>}
-        <TabList role="tablist" value={tab} onChange={(next) => update({ tab: next })} hasDivider aria-label="Study set sections">
+        <TabList role="tablist" value={tab} onChange={(next) => setParams({ tab: next }, { replace: true })} hasDivider>
           <Tab value="notes" label="Notes" panelId="set-panel" />
           <Tab value="cards" label="Flashcards" panelId="set-panel" />
           <Tab value="quizzes" label="Quizzes" panelId="set-panel" />
         </TabList>
-        <div id="set-panel" role="tabpanel">{panels[tab]}</div>
+        <div id="set-panel" role="tabpanel">
+          {tab === "notes" && <VStack gap={5}>
+            <HStack justify="end"><Button label="Generate more" variant="secondary" icon={icon(Sparkles)} onClick={() => setGenerating(true)} /></HStack>
+            <Suspense fallback={<Loading />}><SetNotes key={notesKey} setId={id} /></Suspense>
+            <SetMaterials setId={id} />
+          </VStack>}
+          {tab === "cards" && <SetCards setId={id} />}
+          {tab === "quizzes" && <SetQuizzes setId={id} />}
+        </div>
       </VStack>
 
-      <Dialog isOpen={dialog === "rename"} onOpenChange={close} purpose="form" width={420}>
-        <DialogHeader title="Rename set" onOpenChange={close} />
-        <form onSubmit={rename}>
-          <VStack gap={4} padding={4}>
-            <TextInput label="Title" value={draftTitle} onChange={setDraftTitle} hasAutoFocus isRequired />
-            <HStack gap={2} justify="end">
-              <Button label="Cancel" variant="ghost" onClick={() => setDialog(null)} />
-              <Button label="Save" variant="primary" type="submit" />
-            </HStack>
-          </VStack>
-        </form>
-      </Dialog>
+      <GenerateMore isOpen={generating} onOpenChange={setGenerating} setId={id} kind="notes" onSaved={() => setNotesKey((key) => key + 1)} />
+      <CompanionDrawer kind="set" id={id} />
 
       <Dialog isOpen={dialog === "share"} onOpenChange={close} width={480}>
         <DialogHeader title="Share set" onOpenChange={close} />

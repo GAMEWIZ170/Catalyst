@@ -40,7 +40,7 @@ function Editor({ setId, initial }) {
     const editor = editorRef.current;
     if (!editor || !dirty.current) return;
     dirty.current = false;
-    setStatus("Saving...");
+    setStatus("Saving…");
     try {
       await api.saveSetNotes(setId, editor.getJSON());
       setStatus(dirty.current ? "Unsaved changes" : "Saved");
@@ -103,11 +103,10 @@ function Editor({ setId, initial }) {
       <ToolButton label="Bulleted list" active={is("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()}><List size={18} aria-hidden="true" /></ToolButton>
       <ToolButton label="Numbered list" active={is("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()}><ListOrdered size={18} aria-hidden="true" /></ToolButton>
       <ToolButton label="Quote" active={is("blockquote")} onClick={() => editor.chain().focus().toggleBlockquote().run()}><Quote size={18} aria-hidden="true" /></ToolButton>
-      <ToolButton label="Insert formula" onClick={() => setFormula({ latex: "", pos: null })}><Sigma size={18} aria-hidden="true" /></ToolButton>
+      <ToolButton label={"Insert formula. Click a formula to change it. Examples: x^2 + 1 or \\ce{H2O}"} onClick={() => setFormula({ latex: "", pos: null })}><Sigma size={18} aria-hidden="true" /></ToolButton>
     </div>
     <EditorContent editor={editor} />
-    <p className="settings-status" role="status">{status}</p>
-    <p className="muted settings-help">Click a formula to change it. Chemistry works too, for example <code>{"\\ce{H2O}"}</code> or <code>{"\\ce{2H2 + O2 -> 2H2O}"}</code>.</p>
+    <p className="note-status" role="status">{status}</p>
     <Dialog open={Boolean(formula)} onClose={() => setFormula(null)} title={formula?.pos == null ? "Insert a formula" : "Change the formula"} actions={<>
       <Button variant="secondary" type="button" onClick={() => setFormula(null)}>Cancel</Button>
       <Button type="submit" form="formula-form">{formula?.pos == null ? "Insert" : "Save"}</Button>

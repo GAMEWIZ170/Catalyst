@@ -11,9 +11,9 @@ const CATEGORIES = [["wrong_answer", "It is wrong"], ["unclear", "It is unclear"
 // shows where each answer came from, and never gives the final answer to a test item. Nothing is kept on the server:
 // the last few turns are sent with each message. It is not placed on test or exam screens, and the server refuses it
 // while a timed quiz or exam is running.
-export default function Companion({ kind, id, defaultOpen = false }) {
+export default function Companion({ kind, id, defaultOpen = false, embedded = false }) {
   const { toast } = useToast();
-  const [open, setOpen] = useState(defaultOpen);
+  const [open, setOpen] = useState(defaultOpen || embedded);
   const [status, setStatus] = useState(null);
   const [turns, setTurns] = useState([]);          // { role, content, sources?, flagged? }
   const [text, setText] = useState("");
@@ -75,7 +75,7 @@ export default function Companion({ kind, id, defaultOpen = false }) {
   return <section className="companion" aria-labelledby={`companion-${id}`}>
     <header className="companion-head">
       <h2 id={`companion-${id}`}>Study companion</h2>
-      <Button variant="tertiary" onClick={() => setOpen(false)}>Close</Button>
+      {!embedded && <Button variant="tertiary" onClick={() => setOpen(false)}>Close</Button>}
     </header>
     <p className="muted">Free beta, fair-use limits apply.{status && !resting ? ` ${status.messagesLeft} of ${status.limits.messages} messages left today.` : ""} It reads only this {kind === "lesson" ? "lesson" : "set"}, asks what you tried, and gives hints, not final answers.</p>
     <div className="companion-log" role="log" aria-live="polite" aria-label="Conversation" ref={logRef} tabIndex={0}>

@@ -13,28 +13,13 @@ import { TextArea } from "@astryxdesign/core/TextArea";
 import { TextInput } from "@astryxdesign/core/TextInput";
 import { api } from "../api/client";
 import AstryxTheme from "../components/astryx/AstryxTheme";
+import ClickToEdit from "../components/astryx/ClickToEdit";
 import { ErrorState, Loading } from "./Courses";
 import { appendToDoc, draftToNodes, notesToDraft } from "../utils/draftToDoc";
 
 const icon = (Icon) => <Icon size={18} aria-hidden="true" />;
 let keyCounter = 0;
 const withKey = (item) => ({ ...item, key: `d${keyCounter++}` });
-
-// Click a title (or topic) to edit it. Enter or leaving the field saves it, Esc cancels.
-function ClickToEdit({ value, onSave, label, placeholder, heading }) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(value);
-  function commit() {
-    setEditing(false);
-    const next = draft.trim();
-    if (next !== value && (next || !heading)) onSave(next);
-  }
-  if (editing) {
-    return <div onBlur={commit}><TextInput label={label} isLabelHidden value={draft} onChange={setDraft} hasAutoFocus placeholder={placeholder}
-      onEnter={commit} onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); setEditing(false); } }} /></div>;
-  }
-  return <Button label={value || placeholder} tooltip={`Change ${label.toLowerCase()}`} variant="ghost" size={heading ? "lg" : "sm"} onClick={() => { setDraft(value); setEditing(true); }} />;
-}
 
 // Review what the AI drafted: edit or delete each item, then save. Nothing is saved to the set until the student says so.
 export default function LabReview() {
