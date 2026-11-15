@@ -1,0 +1,6 @@
+/* Astryx follows our font. Its theme names Figtree (loaded from Google Fonts); we do not load that. */
+[data-astryx-theme],
+html[data-astryx-theme] {
+  --font-family-body: var(--font);
+  --font-family-heading: var(--font);
+}
