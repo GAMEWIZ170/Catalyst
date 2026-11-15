@@ -1,0 +1,105 @@
+/* Top bar polish (UI polish step 4): quiet borderless icon buttons, a timer pill, and the focus timer popover.
+   Selectors start with .topbar so they win over the older .icon-button rules. Colours come from tokens.css only. */
+.topbar .icon-button,
+.topbar .profile-button {
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+  color: var(--muted);
+  height: 38px;
+  min-height: 38px;
+  min-width: 38px;
+  transition: background-color 150ms ease-out, color 150ms ease-out;
+  width: 38px;
+}
+
+.topbar .icon-button:hover,
+.topbar .profile-button:hover,
+.topbar .icon-button[aria-expanded="true"],
+.topbar .profile-button[aria-expanded="true"] {
+  background: var(--sunken);
+  color: var(--ink);
+}
+
+.topbar .icon-button svg { height: 18px; width: 18px; }
+.topbar .profile-button { padding: 3px; }
+
+/* Timer: icon when idle, a pill with the time left while it runs. */
+.topbar .timer-button { gap: var(--space-1); min-width: 38px; padding-inline: 0; width: 38px; }
+.topbar .timer-button--running {
+  background: var(--accent-soft);
+  border-radius: var(--radius-pill);
+  color: var(--accent);
+  padding-inline: var(--space-3);
+  width: auto;
+}
+.topbar .timer-button--running:hover { background: var(--accent-soft); color: var(--accent); }
+.topbar .timer-clock { font-size: var(--text-sm); font-variant-numeric: tabular-nums; font-weight: var(--weight-strong); }
+
+/* Popover */
+.timer-panel { gap: var(--space-3); justify-items: stretch; text-align: center; }
+.timer-head { align-items: center; display: flex; justify-content: space-between; }
+.timer-head .quick-title { font-size: var(--text-sm); font-weight: var(--weight-strong); }
+.topbar .timer-gear { height: 32px; width: 32px; }
+.timer-panel .timer-big {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 3rem;
+  font-weight: var(--weight-regular);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.timer-phase { color: var(--muted); margin: 0; }
+.timer-done { margin: 0; }
+.timer-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: center; }
+.timer-chip {
+  background: transparent;
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--text-sm);
+  min-height: 36px;
+  min-width: 44px;
+  padding: 0 var(--space-3);
+  transition: background-color 150ms ease-out, border-color 150ms ease-out;
+}
+.timer-chip:hover { background: var(--sunken); }
+.timer-chip.is-on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: var(--weight-strong); }
+.timer-stepper { align-items: center; display: flex; gap: var(--space-3); justify-content: center; }
+.timer-step {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--control-line);
+  border-radius: 50%;
+  color: var(--ink);
+  cursor: pointer;
+  display: inline-flex;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+.timer-step:hover { background: var(--sunken); }
+.timer-minutes { font-variant-numeric: tabular-nums; font-weight: var(--weight-strong); min-width: 5rem; }
+.timer-start {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-control);
+  color: var(--ink);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-weight: var(--weight-strong);
+  gap: var(--space-2);
+  justify-content: center;
+  min-height: 44px;
+}
+.timer-start--primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.timer-start--primary:hover { background: var(--accent-hover); }
+.timer-break { background: transparent; border: 0; color: var(--muted); cursor: pointer; font: inherit; font-size: var(--text-sm); min-height: 36px; }
+.timer-break:hover { color: var(--ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  .topbar .icon-button, .topbar .profile-button, .timer-chip { transition: none; }
+}

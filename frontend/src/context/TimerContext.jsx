@@ -104,14 +104,14 @@ export function TimerProvider({ children }) {
   // A session that ended while the page was closed is finished the moment the page opens.
   useEffect(() => { finish(); }, [finish]);
 
-  const start = useCallback((phase) => {
+  const start = useCallback((phase, chosenMinutes) => {
     // The permission prompt appears only when the student starts a timer, never before.
     try {
       if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
     } catch {
       // Not every browser supports it.
     }
-    const minutes = lengths[phase];
+    const minutes = clampMinutes(chosenMinutes, lengths[phase], phase === "work" ? 180 : 60);
     const next = { phase, minutes, endsAt: Date.now() + minutes * 60 * 1000, done: false };
     write(TIMER_KEY, next);
     setAnnouncement("");

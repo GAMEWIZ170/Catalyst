@@ -22,7 +22,6 @@ const Question = require("../models/question.models");
 const SetMaterial = require("../models/setmaterial.models");
 const cloudinary = require("../config/cloudinary");
 const ExamDate = require("../models/examdate.models");
-const HallPresence = require("../models/hallpresence.models");
 const Friendship = require("../models/friendship.models");
 const Challenge = require("../models/challenge.models");
 const Circle = require("../models/circle.models");
@@ -178,7 +177,6 @@ const deleteAccount = async (req, res, next) => {
       Notification.deleteMany({ user: id }),
       Report.deleteMany({ user: id }),
       ExamDate.deleteMany({ user: id }),
-      HallPresence.deleteMany({ user: id }),
       Friendship.deleteMany({ $or: [{ requester: id }, { recipient: id }] }),
       Challenge.deleteMany({ $or: [{ creator: id }, { opponent: id }] }),
       AchievementUnlock.deleteMany({ user: id }),

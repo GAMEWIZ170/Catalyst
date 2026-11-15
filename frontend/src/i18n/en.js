@@ -146,8 +146,6 @@ const en = {
   "timer.workDone": "Focus session complete",
   "timer.breakDone": "Break is over",
   "timer.lengths": "Timer lengths",
-  "hall.title": "Study Hall",
-  "hall.intro": "Study quietly together. Set a goal, start the focus timer, and see how many others are focusing right now. No chat and no ranking.",
   "lab.title": "Study Lab",
   "lab.soon": "Your own study sets, with notes, flashcards and quizzes, are coming soon."
 };

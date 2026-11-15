@@ -3898,9 +3898,6 @@ textarea {
 .friend-list { display: grid; gap: var(--space-2); list-style: none; margin: 0 0 var(--space-3); padding: 0; }
 .friend-row { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-3); }
 .friend-name { flex: 1; min-width: 8rem; }
-.hall-count { font-size: var(--text-xl); font-weight: var(--weight-strong); }
-.hall-form { max-width: 28rem; }
-.hall-in { display: grid; gap: var(--space-3); justify-items: start; }
 @media (max-width: 640px) {
   .topbar-tools .timer-menu .quick-panel { left: var(--space-4); position: fixed; right: var(--space-4); top: 68px; width: auto; }
   .topbar-tools { gap: var(--space-1); }

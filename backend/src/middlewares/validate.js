@@ -146,7 +146,6 @@ const validateExamDate = validateWith(Joi.object({
   startsAt: Joi.date().iso().required(),
   type: Joi.string().valid("mid_semester", "end_semester", "quiz").required()
 }));
-const validateHallGoal = validateWith(Joi.object({ goal: Joi.string().trim().allow("").max(80).default("") }));
 
 const setFields = {
   title: Joi.string().trim().min(1).max(80),
@@ -528,7 +527,6 @@ module.exports = {
   validateBuildText,
   validateCardOrder,
   validateExamDate,
-  validateHallGoal,
   validateBookmark,
   validateNote,
   validateCourse,

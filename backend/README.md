@@ -242,9 +242,6 @@ Example outline lesson:
 | GET | `/my-exams` | Student | The student's own exams: `{ upcoming, past }`. Each has `id`, `course` (`id`, `code`, `title`), `startsAt`, `type` and `daysLeft` (calendar days in the student's time zone). Upcoming is nearest first |
 | POST | `/my-exams` | Student | Body `{ course, startsAt (ISO), type: "mid_semester" | "end_semester" | "quiz" }`. Up to 20 per student. 404 for an unpublished course |
 | DELETE | `/my-exams/:id` | Student | Delete one of your exams |
-| GET | `/hall` | Student | Study Hall: `{ focusing, joined, goal }`. `focusing` counts students with a heartbeat in the last 90 seconds. Never names anyone |
-| POST | `/hall/heartbeat` | Student | Body `{ goal? }` (80 characters). Joins the hall or keeps the place. Send every 30 seconds |
-| DELETE | `/hall` | Student | Leave the hall |
 | POST | `/tests/:id/exam/start` | Student | Start a timed exam, or resume the open one. A test with `timeLimitMinutes` is always timed. Any other test is timed only when the body is `{ timed: true }` (one minute a question). The student's `extraTime` percentage (0, 25, 50 or 100, set with `PUT /auth/me/preferences`) is added when the attempt is created. Returns `attemptId`, `endsAt`, `serverNow`, saved `answers` and `flags`, and answer-free `questions`. If the time ran out while the student was away it marks the saved answers and returns `{ finished: true, result }` |
 | PUT | `/exam-attempts/:attemptId` | Student | Save `answers` (`{ questionId: answer }`) and `flags` (question ids). `409` after submit or after the deadline |
 | POST | `/exam-attempts/:attemptId/submit` | Student | Hand in the exam. Returns `score`, `correct`, `total`, `bestScore`, `attempts`, `passPercent`, `passed` and a `review` of every question with the right answer, explanation and worked solution. Repeating it returns the same result |
@@ -666,11 +663,10 @@ Everything is checked against the owner (`utils/ownSet.js`), so another student'
 - **Lessons (last 30 days, each student counted once per lesson):** "most completed" ranks by students who completed; "drop off" lists lessons opened by 3 or more students, ordered by the share who did not complete.
 - Study set, challenge and achievement counts are 0 until those features exist (achievements are not tracked at all yet).
 
-### Focus timer, exam countdown and Study Hall
+### Focus timer and exam countdown
 
 - `POST /events` with `focus_session_completed` and `props.minutes` answers `{ counted }`. The server counts only minutes the student was really active (their `StudyTime` for the day, reported by the page while a focus session runs), never more than 90 a day. The event stores the counted minutes and the day (`props.day`).
 - `/my-exams` exams move to "past" once their day (in the student's time zone) has passed. `GET /plan` counts down to the nearest upcoming exam and returns `examCourse`; with none, it uses the exam date from Settings. `GET /notifications` makes a `type: "exam"` message at 14, 7, 3 and 1 days (one per exam per milestone; opened late, it makes the next milestone once with the real days left).
-- Study Hall rows (`HallPresence`) delete themselves an hour after the last heartbeat.
 
 ### Weekly goal with rest days (Phase X5.3)
 

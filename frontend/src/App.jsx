@@ -41,7 +41,6 @@ const Exams = lazy(() => import("./pages/Exams"));
 const LabSet = lazy(() => import("./pages/LabSet"));
 const LabReview = lazy(() => import("./pages/LabReview"));
 const LabQuiz = lazy(() => import("./pages/LabQuiz"));
-const Hall = lazy(() => import("./pages/Hall"));
 const Friends = lazy(() => import("./pages/Friends"));
 const Circles = lazy(() => import("./pages/Circles"));
 const Challenges = lazy(() => import("./pages/Challenges"));
@@ -117,7 +116,6 @@ export default function App() {
     <Route path="/progress" element={<ProtectedPage warm="progress"><Progress /></ProtectedPage>} />
     <Route path="/me" element={<ProtectedPage><Me /></ProtectedPage>} />
     <Route path="/exams" element={<ProtectedPage><Exams /></ProtectedPage>} />
-    <Route path="/hall" element={<ProtectedPage><Hall /></ProtectedPage>} />
     <Route path="/friends" element={<ProtectedPage><Friends /></ProtectedPage>} />
     <Route path="/circles" element={<ProtectedPage><Circles /></ProtectedPage>} />
     <Route path="/challenges" element={<ProtectedPage><Challenges /></ProtectedPage>} />

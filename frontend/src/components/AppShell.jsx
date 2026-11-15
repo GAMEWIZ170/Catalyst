@@ -13,6 +13,7 @@ import useStudyTimer from "../utils/useStudyTimer";
 import { useOnline } from "../utils/offline";
 import { t } from "../i18n";
 import HeaderSearch from "./HeaderSearch";
+import "../styles/topbar.css";
 
 // The places a student goes. Laptops show them in a sidebar, phones in a bar along the bottom (never both).
 // "Me" also covers the pages inside it, so it stays highlighted on Progress, Saved and Settings.
@@ -21,7 +22,7 @@ const PLACES = [
   { to: "/courses", label: "nav.courses", icon: BookOpen },
   { to: "/review", label: "nav.review", icon: Layers },
   { to: "/lab", label: "nav.lab", icon: FlaskConical, also: ["/community"] },
-  { to: "/me", label: "nav.me", icon: UserRound, also: ["/progress", "/settings", "/saved", "/achievements", "/exams", "/hall"] }
+  { to: "/me", label: "nav.me", icon: UserRound, also: ["/progress", "/settings", "/saved", "/achievements", "/exams"] }
 ];
 
 const ADMIN_PLACE = { to: "/admin", label: "nav.admin", icon: Shield };
@@ -177,7 +178,7 @@ export default function AppShell({ children }) {
               aria-expanded={open === "profile"}
               onClick={() => toggle("profile")}
             >
-              <Avatar avatar={user?.avatar} name={user?.name} size={40} />
+              <Avatar avatar={user?.avatar} name={user?.name} size={32} />
             </button>
             {open === "profile" && <div className="profile-panel" ref={profileMenuRef} role="menu" onKeyDown={moveProfileFocus}>
               <div className="profile-header">

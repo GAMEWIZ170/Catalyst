@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from "react-router-dom";
-import { Bookmark, CalendarDays, ChevronRight, BarChart3, Settings, UserPlus, Users } from "lucide-react";
+import { Bookmark, CalendarDays, ChevronRight, BarChart3, Settings, UserPlus } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "../components/Avatar";
 import AchievementsPanel from "../components/AchievementsPanel";
@@ -11,7 +11,6 @@ const LINKS = [
   { to: "/progress", label: "me.progress", icon: BarChart3 },
   { to: "/exams", label: "me.exams", icon: CalendarDays },
   { to: "/friends", label: "me.friends", icon: UserPlus },
-  { to: "/hall", label: "hall.title", icon: Users },
   { to: "/saved", label: "me.saved", icon: Bookmark },
   { to: "/settings", label: "me.settings", icon: Settings }
 ];
