@@ -7,6 +7,7 @@ import DeckSummary from "../components/DeckSummary";
 import RichText from "../components/RichText";
 import ReadAloud from "../components/ReadAloud";
 import ReportButton from "../components/ReportButton";
+import Companion from "../components/Companion";
 import ShareButton from "../components/ShareButton";
 import { PreviewBanner, PreviewCards } from "../components/PreviewBits";
 import { Badge, Button, SelectField, Skeleton, SkeletonGroup, TextArea } from "../components/ui";
@@ -217,6 +218,7 @@ export default function Lesson() {
         {lesson.flashcards.total > 0 && <section className="lesson-section"><h2>Flashcards</h2>{preview ? <PreviewCards cards={lesson.cards} /> : <DeckSummary summary={lesson.flashcards} />}{!preview && <div className="button-row button-row--stack"><Button as={Link} variant={nextStep === "deck" ? "primary" : "secondary"} to={`/lessons/${id}/flashcards`} state={{ courseFrom: from }}>Study all cards</Button>{lesson.flashcards.unsure + lesson.flashcards.unknown + lesson.flashcards.unrated > 0 && <Button as={Link} variant="secondary" to={`/lessons/${id}/flashcards?filter=review`} state={{ courseFrom: from }}>Review cards I'm not sure about</Button>}</div>}</section>}
         {lesson.materialCount > 0 && <section className="lesson-section"><h2>Materials</h2><div className="material-list">{(lesson.materials || []).map((material) => <div className="material-row" key={material._id}>{material.kind === "file" ? <FileText size={20} aria-hidden="true" /> : <Link2 size={20} aria-hidden="true" />}<span><strong>{material.title}</strong><span className="muted">{material.description}{material.bytes ? ` · ${formatBytes(material.bytes)}` : ""}</span></span><a href={material.url} target="_blank" rel="noopener noreferrer" aria-label={`Open ${material.title}${material.kind === "file" ? " (PDF)" : ""}`}>Open<ExternalLink size={16} aria-hidden="true" /></a></div>)}</div></section>}
         {!preview && <NoteBox key={id} lessonId={id} initial={lesson.note} />}
+        {!preview && <Companion key={`companion-${id}`} kind="lesson" id={id} />}
         {!preview && <ReportButton key={`report-${id}`} kind="lesson" target={id} />}
         <section className="lesson-end" aria-label="Next steps">
           {nextStep === "test" && <Button as={Link} to={`/tests/${mainTest._id}`} state={state}>{primaryLabel}</Button>}

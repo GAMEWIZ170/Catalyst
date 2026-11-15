@@ -111,6 +111,22 @@ const validateGenerate = validateWith(Joi.object({
   part: Joi.number().integer().min(0).max(30).default(0)
 }));
 
+const aiContext = Joi.object({ kind: Joi.string().valid("lesson", "set").required(), id: objectId.required() }).required();
+const validateAiChat = validateWith(Joi.object({
+  context: aiContext,
+  messages: Joi.array().items(Joi.object({
+    role: Joi.string().valid("user", "assistant").required(),
+    content: Joi.string().trim().min(1).max(1000).required()
+  })).min(1).max(12).required().custom((value, helpers) => (value[value.length - 1].role === "user" ? value : helpers.message("The last message must be from the student")))
+}));
+const validateAiFlag = validateWith(Joi.object({
+  context: aiContext,
+  question: Joi.string().trim().min(1).max(1000).required(),
+  answer: Joi.string().trim().min(1).max(2000).required(),
+  category: Joi.string().valid("wrong_answer", "unclear", "other").required(),
+  note: Joi.string().trim().allow("").max(500)
+}));
+
 const validateChallenge = validateWith(Joi.object({ test: objectId.required() }));
 
 const validateEvent = validateWith(Joi.object({
@@ -463,6 +479,8 @@ const validateUserUpdate = validateWith(Joi.object({
 
 module.exports = {
   objectId,
+  validateAiChat,
+  validateAiFlag,
   validateGenerate,
   validateCircle,
   validateCircleInvite,

@@ -38,7 +38,7 @@ const createReport = async (req, res, next) => {
   }
 };
 
-const editorLink = (report) => (report.kind === "lesson" ? `/admin/lessons/${report.target}` : report.test ? `/admin/tests/${report.test}` : null);
+const editorLink = (report) => (report.kind === "lesson" || (report.kind === "ai" && String(report.link).startsWith("/lessons/")) ? `/admin/lessons/${report.target}` : report.test ? `/admin/tests/${report.test}` : null);
 
 // ADMIN: the inbox. ?status=open|resolved (default open), ?page=1.
 const listReports = async (req, res, next) => {
@@ -56,7 +56,7 @@ const listReports = async (req, res, next) => {
       data: {
         counts: { open, resolved }, page, pages: Math.max(1, Math.ceil(total / PAGE)),
         items: items.map((r) => ({
-          id: r._id, kind: r.kind, category: r.category, note: r.note, title: r.title, status: r.status, reply: r.reply,
+          id: r._id, kind: r.kind, category: r.category, note: r.note, aiQuestion: r.aiQuestion || "", aiAnswer: r.aiAnswer || "", title: r.title, status: r.status, reply: r.reply,
           createdAt: r.createdAt, resolvedAt: r.resolvedAt, student: r.user ? r.user.name : "Deleted user", editorLink: editorLink(r)
         }))
       }

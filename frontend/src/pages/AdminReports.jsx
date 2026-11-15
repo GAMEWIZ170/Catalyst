@@ -28,12 +28,16 @@ function ReportRow({ report, onResolved, onError }) {
 
   return <li className="report-row">
     <div className="report-head">
-      <Badge>{report.kind === "lesson" ? "Lesson" : "Question"}</Badge>
+      <Badge>{report.kind === "lesson" ? "Lesson" : report.kind === "ai" ? "AI answer" : "Question"}</Badge>
       <Badge>{CATEGORY_LABELS[report.category]}</Badge>
       <span className="muted">{report.student} · {formatDate(report.createdAt)}</span>
     </div>
     <p className="report-title"><strong>{report.title}</strong></p>
     {report.note && <p className="report-note">{report.note}</p>}
+    {report.kind === "ai" && <div className="report-ai">
+      <p><strong>Student asked:</strong> {report.aiQuestion}</p>
+      <p><strong>AI answered:</strong> {report.aiAnswer}</p>
+    </div>}
     {report.editorLink && <p><Link to={report.editorLink}>Open in the editor</Link></p>}
     {report.status === "open"
       ? <form className="form-stack" onSubmit={resolve}>

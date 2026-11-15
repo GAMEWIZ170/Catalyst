@@ -4,11 +4,14 @@ const mongoose = require("mongoose");
 // and the answer reaches the student as a notification.
 const reportSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  kind: { type: String, enum: ["question", "lesson"], required: true },
+  kind: { type: String, enum: ["question", "lesson", "ai"], required: true },
   target: { type: mongoose.Schema.Types.ObjectId, required: true }, // the question or lesson id
   test: { type: mongoose.Schema.Types.ObjectId, default: null },    // for a question: its test, so the inbox can open the editor
   category: { type: String, enum: ["wrong_answer", "typo", "unclear", "other"], required: true },
   note: { type: String, default: "", trim: true, maxlength: 500 },
+  // For kind "ai": what the student asked and what the study companion answered (it keeps no history of its own).
+  aiQuestion: { type: String, default: "", trim: true, maxlength: 1000 },
+  aiAnswer: { type: String, default: "", trim: true, maxlength: 2000 },
   title: { type: String, default: "", trim: true, maxlength: 200 },  // what it was about, kept in case the content changes
   link: { type: String, default: "" },                              // where the student's notification goes
   status: { type: String, enum: ["open", "resolved"], default: "open" },
