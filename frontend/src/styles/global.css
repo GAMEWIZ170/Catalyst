@@ -3887,7 +3887,7 @@ textarea {
 .timer-button { gap: var(--space-1); width: auto; min-width: var(--control-height); padding-inline: var(--space-2); }
 .timer-clock { font-size: var(--text-sm); font-variant-numeric: tabular-nums; font-weight: var(--weight-strong); }
 .timer-button--running { border-color: var(--accent); color: var(--accent); }
-.timer-big { font-size: var(--text-3xl); font-variant-numeric: tabular-nums; font-weight: var(--weight-bold); margin: 0; }
+.timer-big { font-size: var(--text-3xl); font-variant-numeric: tabular-nums; font-weight: var(--weight-strong); margin: 0; }
 .exam-countdown { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-4); }
 .exam-countdown p { flex: 1; margin: 0; }
 .exam-countdown a { color: var(--accent); display: inline-flex; font-weight: var(--weight-strong); min-height: 44px; align-items: center; }
@@ -4005,3 +4005,28 @@ ol.set-card-list { list-style: none; }
 /* Long words with no spaces (a pasted link, a long title) wrap instead of stretching the page. */
 .home-course-title, .home-course-desc, .home-course .muted, .community-card, .report-row p, .report-row .muted { overflow-wrap: anywhere; }
 .report-row, .community-card { min-width: 0; }
+
+/* Visual audit pass (unslop): quiet top bar, grouped page actions, one lesson tool row, bigger progress figures. */
+.topbar .icon-button {
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+  transition: background-color var(--dur-hover) var(--ease-out), color var(--dur-hover) var(--ease-out);
+}
+.topbar .icon-button:hover { background: var(--sunken); color: var(--ink); }
+.topbar .icon-button:focus-visible { box-shadow: var(--focus); }
+
+.lab-header { align-items: flex-start; }
+.lab-heading p { margin: var(--space-2) 0 0; }
+.lab-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+
+.lesson-tools { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-4); }
+.lesson-tools .share-row, .lesson-tools .read-aloud { margin: 0; }
+
+.progress-stat strong { font-size: var(--text-3xl); }
+
+.home-page .welcome { background: transparent; border: 0; color: var(--muted); font-size: var(--text-sm); max-width: 40rem; padding: 0; }
+.home-page .welcome h2 { color: var(--ink); font-size: var(--text-md); margin: 0 0 var(--space-2); }
+.home-page .welcome ol { margin: 0 0 var(--space-3); padding-left: var(--space-5); }
+.home-page .welcome li { margin: 0 0 var(--space-1); }
+.lab-header { margin-bottom: var(--space-4); }

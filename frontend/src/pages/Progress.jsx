@@ -40,7 +40,7 @@ export default function Progress() {
       <Stat label="Average score" value={average === null ? "No scores yet" : `${average}%`} />
     </div>
     {trees.length === 0 && <EmptyState title="No courses to show yet" description="Your progress will appear here once a course is open." action={<Button as={Link} variant="secondary" to="/home">Back to home</Button>} />}
-    {trees.map((tree) => <Card key={tree._id} aria-labelledby={`progress-${tree._id}`}>
+    {trees.filter(isStarted).map((tree) => <Card key={tree._id} aria-labelledby={`progress-${tree._id}`}>
       <h2 id={`progress-${tree._id}`}>{tree.code} · {tree.title}</h2>
       <div className="progress-units">
         {tree.units.map((unit, index) => {
@@ -53,6 +53,10 @@ export default function Progress() {
         })}
       </div>
     </Card>)}
+    {trees.some((tree) => !isStarted(tree)) && <Card aria-labelledby="not-started-title">
+      <h2 id="not-started-title">Not started</h2>
+      <ul className="score-list">{trees.filter((tree) => !isStarted(tree)).map((tree) => <li key={tree._id}><span>{tree.code} · {tree.title}</span><span className="muted progress-num">0 of {tree.units.reduce((sum, unit) => sum + unit.lessons.length, 0)}</span></li>)}</ul>
+    </Card>}
     <Card aria-labelledby="scores-title">
       <h2 id="scores-title">Test scores</h2>
       {scores.length ? <ul className="score-list">{scores.map((item) => <li key={item.id}><span>{item.title}</span><strong className="progress-num">{item.score}%</strong></li>)}</ul>
@@ -61,6 +65,8 @@ export default function Progress() {
     <div className="button-row"><Button as={Link} variant="secondary" to="/courses">Go to your courses</Button></div>
   </div>;
 }
+
+const isStarted = (tree) => tree.units.some((unit) => unit.lessons.some((lesson) => lesson.completed));
 
 function Stat({ label, value, detail, icon }) {
   return <section className="stat-card progress-stat"><span>{icon}{label}</span><strong>{value}</strong>{detail && <small>{detail}</small>}</section>;

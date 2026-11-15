@@ -200,13 +200,15 @@ export default function Lesson() {
       <div className="lesson-main">
         <article className="reading-column">
           <h1>{lesson.title}</h1>
-          {!preview && <ShareButton url={`${window.location.origin}/s/l/${id}`} title={lesson.title} text={`${lesson.title} on Catalyst.`} />}
-          {!preview && <Button variant="tertiary" icon={Bookmark} aria-pressed={savedLesson} onClick={toggleSaved}>{savedLesson ? "Saved" : "Save"}</Button>}
           {(unit || completed) && <p className="lesson-meta">
             {unit && <span>{unit.title}</span>}
             {completed && <Badge tone="success" icon={CheckCircle2}>Completed</Badge>}
           </p>}
-          <ReadAloud text={lesson.explanation} />
+          <div className="lesson-tools">
+            {!preview && <ShareButton url={`${window.location.origin}/s/l/${id}`} title={lesson.title} text={`${lesson.title} on Catalyst.`} />}
+            {!preview && <Button variant="tertiary" icon={Bookmark} aria-pressed={savedLesson} onClick={toggleSaved}>{savedLesson ? "Saved" : "Save"}</Button>}
+            <ReadAloud text={lesson.explanation} />
+          </div>
           <div className="lesson-explanation"><RichText math={lesson.explanationMath}>{lesson.explanation}</RichText></div>
           {lesson.explanationImage?.url && <figure className="lesson-figure">
             <ResponsiveImage image={lesson.explanationImage} loading="lazy" />

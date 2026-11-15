@@ -3,19 +3,20 @@ import { Link, Navigate } from "react-router-dom";
 import { api, ACCESS_ENDED } from "../api/client";
 import { nearToPrefetch, prefetchCourse, prefetchLesson } from "../api/prefetch";
 import { useAuth } from "../context/AuthContext";
-import { Zap } from "lucide-react";
 import DueChip from "../components/DueChip";
 import TodayPlan from "../components/TodayPlan";
 import ExamCountdown from "../components/ExamCountdown";
 import TopicsLink from "../components/TopicsLink";
 import MistakesPanel from "../components/MistakesPanel";
 import CourseByline from "../components/CourseByline";
-import { Badge, Button, Card, EmptyState, Illustration, Progress, Skeleton, SkeletonGroup } from "../components/ui";
+import { Button, Card, EmptyState, Illustration, Progress, Skeleton, SkeletonGroup } from "../components/ui";
 
 const welcomeKey = "catalyst-welcome-seen";
 const welcomeSeen = () => { try { return window.localStorage.getItem(welcomeKey) === "1"; } catch { return false; } };
 
 // Shown once to a student, so the first visit explains the path through a course.
+const HOME_COURSES = 6;
+
 function Welcome({ onDone }) {
   return <section className="welcome" aria-labelledby="welcome-title">
     <h2 id="welcome-title">How Catalyst works</h2>
@@ -32,7 +33,6 @@ export default function Courses() {
   const { user } = useAuth();
   // Each course arrives with its progress and the next lesson to open ({ lessonId, label, title }).
   const [courses, setCourses] = useState([]);
-  const streak = user?.streak ?? null;
   const [loading, setLoading] = useState(true);
   const [goal, setGoal] = useState(null);
   const [weekly, setWeekly] = useState(null);
@@ -56,7 +56,6 @@ export default function Courses() {
   const isStudent = user && user.role === "student";
   // A brand-new student sees the three welcome steps first.
   if (isStudent && user.onboarded === false) return <Navigate to="/welcome" replace />;
-  const firstName = (user?.name || "").trim().split(/\s+/)[0];
   // Continue where the student last was (most recent first). A lesson already finished moves on to the next one;
   // a flashcard deck part-way through resumes at its card. With nothing saved, use a started course, then any with lessons left.
   const open = courses.filter((course) => course.next);
@@ -73,8 +72,7 @@ export default function Courses() {
 
   return <div className="content student-page home-page">
     <header className="home-header">
-      <h1>{firstName ? `Hello, ${firstName}` : "Courses"}</h1>
-      {streak !== null && <Badge tone="accent" icon={Zap}>{streak} {streak === 1 ? "day" : "days"} streak</Badge>}
+      <h1>Home</h1>
     </header>
     {!loading && !error && goal && goal.kind !== "none" && <div className="home-goal">
       <Progress value={Math.round((Math.min(goal.done, goal.target) / goal.target) * 100)} label="Today's goal" />
@@ -103,14 +101,15 @@ export default function Courses() {
     {!loading && !error && courses.length > 0 && <section aria-labelledby="courses-title">
       <h2 id="courses-title">Your courses</h2>
       <div className="home-courses">
-        {courses.map((course) => <Card as={Link} className="home-course" to={`/courses/${course._id}`} key={course._id} {...nearToPrefetch(() => prefetchCourse(course._id))}>
+        {courses.slice(0, HOME_COURSES).map((course) => <Card as={Link} className="home-course" to={`/courses/${course._id}`} key={course._id} {...nearToPrefetch(() => prefetchCourse(course._id))}>
           <span className="home-course-code">{course.code}{course.isFree && <span className="count-chip"> Free</span>}</span>
           <strong className="home-course-title">{course.title}</strong>
           <CourseByline course={course} />
           {course.description && <span className="muted home-course-desc">{course.description}</span>}
-          {course.progress && <Progress value={percent(course)} label={`${course.code} progress`} />}
+          {course.progress?.completedLessons > 0 && <Progress value={percent(course)} label={`${course.code} progress`} />}
         </Card>)}
       </div>
+      {courses.length > HOME_COURSES && <p className="home-soon"><Link to="/courses">All {courses.length} courses</Link></p>}
       {courses.length <= 1 && <p className="muted home-soon">More subjects coming soon.</p>}
     </section>}
   </div>;

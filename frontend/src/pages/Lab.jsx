@@ -48,17 +48,21 @@ export default function Lab() {
 
   return <div className="content student-page lab-page">
     <header className="lab-header">
-      <h1>{t("lab.title")}</h1>
-      <Button as={Link} variant="secondary" icon={Users} to="/community">Community sets</Button>
-      <Button icon={Plus} onClick={() => { setForm({ title: "", topic: "", description: "", course: "" }); setFormError(""); setSaving(false); setCreating(true); }}>New set</Button>
+      <div className="lab-heading">
+        <h1>{t("lab.title")}</h1>
+        <p className="muted">Your own notes, flashcards and quizzes. Only you can see them.</p>
+      </div>
+      <div className="lab-actions">
+        <Button as={Link} variant="secondary" icon={Users} to="/community">Community sets</Button>
+        <Button icon={Plus} onClick={() => { setForm({ title: "", topic: "", description: "", course: "" }); setFormError(""); setSaving(false); setCreating(true); }}>New set</Button>
+      </div>
     </header>
-    <p className="muted">Your own notes, flashcards and quizzes. Only you can see them.</p>
     <TextField label="Search my sets" type="search" value={query} onChange={(event) => setQuery(event.target.value)} />
     {error && !sets && <ErrorState message={error} onRetry={() => setQuery((q) => q + " ")} />}
     {!sets && !error && <Loading />}
     {sets && sets.length === 0 && (query
       ? <EmptyState icon={FlaskConical} title="No sets match" description="Try a different word." />
-      : <EmptyState icon={FlaskConical} title="Make your first set" description="A set is a place for your notes, flashcards and quizzes on one topic." action={<Button onClick={() => setCreating(true)}>New set</Button>} />)}
+      : <EmptyState icon={FlaskConical} title="Make your first set" description="A set is a place for your notes, flashcards and quizzes on one topic. Use New set above to start." />)}
     {sets && sets.length > 0 && <div className="home-courses lab-sets">
       {sets.map((set) => <Card as={Link} className="home-course" to={`/lab/${set.id}`} key={set.id}>
         <strong className="home-course-title">{set.title}</strong>

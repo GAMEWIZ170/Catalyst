@@ -209,7 +209,7 @@ export default function AppShell({ children }) {
           <main className="page-wrap" id="main" tabIndex="-1">{children}</main>
           <ShortcutHelp />
           <LevelUpDialog xp={xp} onClose={dismissLevelUp} />
-          <footer className="footer">Keep learning with momentum. <span className="footer-links"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link></span></footer>
+          <footer className="footer"><span className="footer-links"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link></span></footer>
         </div>
       </div>
       <nav className="tabbar" aria-label={t("nav.main")}>

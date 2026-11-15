@@ -30,7 +30,7 @@ export default function Login() {
     }
   }
 
-  return <AuthLayout title="Welcome back" subtitle="Log in to pick up where you left off.">
+  return <AuthLayout title="Log in" subtitle="Pick up where you left off">
     <form className="auth-form" onSubmit={submit}>
       <TextField label="Email" type="email" required autoComplete="email" value={form.email}
         onChange={(e) => setForm({ ...form, email: e.target.value })} />

@@ -669,7 +669,7 @@
 /* Timed mock exam (Phase 3.7) */
 .exam-timer {
   font-variant-numeric: tabular-nums;
-  font-weight: var(--weight-bold);
+  font-weight: var(--weight-strong);
   margin: 0;
 }
 
