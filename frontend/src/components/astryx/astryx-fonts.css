@@ -1,6 +1,16 @@
-/* Astryx follows our font. Its theme names Figtree (loaded from Google Fonts); we do not load that. */
+/* Astryx follows our font and our palette.
+   Font: its theme names Figtree (loaded from Google Fonts); we do not load that, we use --font.
+   Palette: our five palettes (lagoon, indigo, ember, orchid, graphite) only change the accent, and the accent lives in tokens.css
+   as --accent, --accent-soft and --on-accent. Astryx's accent tokens point at them, so Astryx buttons, links, focus and selected
+   states follow the palette and the light/dark mode with no per-page work. */
 [data-astryx-theme],
 html[data-astryx-theme] {
   --font-family-body: var(--font);
   --font-family-heading: var(--font);
+
+  --color-accent: var(--accent);
+  --color-accent-muted: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-text-accent: var(--accent);
+  --color-icon-accent: var(--accent);
 }
