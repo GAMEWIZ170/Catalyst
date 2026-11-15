@@ -22,6 +22,16 @@ const studySetSchema = new mongoose.Schema({
   savedCount: { type: Number, default: 0 },
   copyCount: { type: Number, default: 0 },
   copiedFrom: { type: mongoose.Schema.Types.ObjectId, ref: "StudySet", default: null },
+  lastStudiedAt: { type: Date, default: null },  // when the owner last opened the flashcard study
+  // "Drop in your notes" flow (UI polish step 2). The AI builds drafts in the background from the first material.
+  // none = nothing to review, processing = the AI is working, ready = drafts wait for the student, issue = the AI could not help.
+  // The drafts live here only until the student saves or discards them.
+  build: {
+    status: { type: String, enum: ["none", "processing", "ready", "issue"], default: "none" },
+    message: { type: String, default: "", maxlength: 300 },
+    startedAt: { type: Date, default: null },
+    drafts: { type: mongoose.Schema.Types.Mixed, default: null }
+  },
   deletedAt: { type: Date, default: null }
 }, { timestamps: true });
 

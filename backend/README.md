@@ -233,6 +233,10 @@ Example outline lesson:
 | GET | `/study-sets/:id/materials` | Owner | Source material (no text), plus `usedBytes` and `limitBytes` |
 | POST | `/study-sets/:id/materials/text` | Owner | Body `{ title, text }` (20 to 100,000 characters) |
 | POST | `/study-sets/:id/materials/pdf` | Owner | Multipart field `file`: a PDF up to 10 MB (checked by type and `%PDF-` bytes). 30 uploads per 15 minutes. 400 when the PDF has no readable text |
+| POST | `/study-sets/build` | Owner | "Drop in your notes". Multipart field `file` (a PDF, same checks as above) or JSON `{ text }` (40 to 100000 characters). Makes a set called "Untitled set", stores the material, and starts the AI in the background. Answers 202 with `{ id, title, build }`. 30 uploads and 10 AI requests per 15 minutes |
+| GET | `/study-sets/:id/build` | Owner | `{ status, message, title, topic, drafts }`. `status` is `none`, `processing`, `ready` or `issue`; `drafts` (`cards`, `questions`, `notes`) only when `ready` |
+| POST | `/study-sets/:id/build/retry` | Owner | After an `issue`: runs the AI again from the first material. 409 if there is nothing to retry |
+| POST | `/study-sets/:id/build/finish` | Owner | The student saved or discarded the drafts, or chose "Start empty". Clears the status and the drafts |
 | DELETE | `/study-sets/materials/:materialId` | Owner | Removes the row and the private file |
 | GET | `/my-exams` | Student | The student's own exams: `{ upcoming, past }`. Each has `id`, `course` (`id`, `code`, `title`), `startsAt`, `type` and `daysLeft` (calendar days in the student's time zone). Upcoming is nearest first |
 | POST | `/my-exams` | Student | Body `{ course, startsAt (ISO), type: "mid_semester" | "end_semester" | "quiz" }`. Up to 20 per student. 404 for an unpublished course |
@@ -593,6 +597,8 @@ The owner invites one of their accepted friends (by the friendship id from `GET 
 - Free beta: low daily limits apply. Per-student quotas and the global cap come in X6.4.
 
 ### AI drafts inside a study set (Phase X6.2)
+
+**Build flow (UI polish step 2).** `POST /study-sets/build` runs three AI steps in the background, one after another: flashcards (the same request also names the set and gives it a topic), quiz questions, then notes. Each step uses one of the student's daily generations (default 3, `AI_DAILY_GENERATIONS`), so at the default one upload uses a whole day. A repeat of the same text uses the draft cache and costs nothing. If some steps fail the set is `ready` with a message; if all fail it is `issue`. A build still `processing` after 5 minutes (for example after a restart) is reported as `issue`. The set's `build` field is returned by the set routes without the drafts; `lastStudiedAt` is set when the flashcard study loads.
 
 `POST /study-sets/:id/generate` (owner only, 10 per 15 minutes per student; the daily quotas arrive in X6.4) makes **drafts** and saves nothing. Body: `{ kind: "cards" | "questions" | "notes", source: { type: "material", id } | { type: "notes" } | { type: "text", text }, part }`. The text comes from one of the set's materials, the set's own notes (turned to plain text, formulas kept as `$...$`), or pasted text (40 to 100,000 characters). Long text is read in parts of about 7,000 characters; `part` picks one (0 first) and the answer says how many `parts` there are.
 

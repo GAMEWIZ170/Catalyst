@@ -97,4 +97,23 @@ const draftFrom = async (kind, text, names) => {
   return { drafts, usage: reply.usage, model: reply.model };
 };
 
-module.exports = { slicePart, draftFrom, hashOf, CHUNK, LIMITS, readJson, CHECK, SYSTEM, PROMPTS };
+// The "drop in your notes" flow makes the set's name in the same request as its first drafts, so naming costs no extra
+// generation. Returns { title, topic, drafts } where drafts are checked flashcards (the name may be null if the model gave none).
+const TITLED_PROMPT = (n) => `Give the source a short "title" (up to 60 characters, plain words, no quotes) and a "topic" (up to 40 characters, the subject). Then make up to ${n} flashcards from the source. Each has a short "front" (a question or term) and a clear "back" (the answer). Reply as: {"title":"...","topic":"...","cards":[{"front":"...","back":"..."}]}`;
+
+const draftTitledCards = async (text, names) => {
+  const reply = await complete({
+    messages: [
+      { role: "system", content: SYSTEM },
+      { role: "user", content: `<source>\n${text}\n</source>\n\n${TITLED_PROMPT(LIMITS.cards)}` }
+    ],
+    temperature: 0.2,
+    names
+  });
+  const data = readJson(reply.text);
+  const drafts = CHECK.cards(data);
+  if (!drafts.length) throw new AiError("bad_output", "The AI answer could not be used");
+  return { title: str(data?.title, 60), topic: str(data?.topic, 40) || "", drafts, usage: reply.usage, model: reply.model };
+};
+
+module.exports = { slicePart, draftFrom, draftTitledCards, hashOf, CHUNK, LIMITS, readJson, CHECK, SYSTEM, PROMPTS };

@@ -10,6 +10,7 @@ const { findOwnSet } = require("../utils/ownSet");
 const { logEvent } = require("../utils/events");
 const { questionForAdmin } = require("../utils/serializers");
 const getFlashcardSummary = require("../utils/flashcardSummary");
+const { buildOf } = require("./setbuild.controller");
 
 const MAX_SETS = 100;
 const MAX_CARDS = 500;
@@ -24,6 +25,7 @@ const publicSet = (set, extra = {}) => ({
   id: set._id, title: set.title, description: set.description, topic: set.topic, visibility: set.visibility,
   communityStatus: set.communityStatus || "none", reviewNote: set.reviewNote || "", studied: set.studiedCount || 0, saved: set.savedCount || 0, copied: set.copyCount || 0,
   course: set.course && set.course.code ? { id: set.course._id, code: set.course.code, title: set.course.title } : null,
+  build: buildOf(set), lastStudiedAt: set.lastStudiedAt || null,
   createdAt: set.createdAt, updatedAt: set.updatedAt, ...extra
 });
 
@@ -212,6 +214,7 @@ const studyCards = async (req, res, next) => {
   try {
     const set = await findOwnSet(req.params.id, req.user.id);
     if (!set) return notFound(res);
+    StudySet.updateOne({ _id: set._id }, { $set: { lastStudiedAt: new Date() } }, { timestamps: false }).catch(() => {});
     const cards = await Flashcard.find({ set: set._id, deletedAt: null }).sort({ order: 1 }).lean();
     const progress = await FlashcardProgress.find({ user: req.user.id, flashcard: { $in: cards.map((card) => card._id) } }).select("flashcard confidence").lean();
     const byCard = new Map(progress.map((row) => [String(row.flashcard), row.confidence]));
