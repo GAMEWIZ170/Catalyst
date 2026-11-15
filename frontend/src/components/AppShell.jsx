@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useMatch, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "./Avatar";
-import { Bell, BookOpen, Shield, FlaskConical, House, Layers, PanelLeftClose, PanelLeftOpen, Search, Settings, UserRound, Zap } from "lucide-react";
+import { Bell, BookOpen, Shield, FlaskConical, House, Layers, PanelLeftClose, PanelLeftOpen, Settings, UserRound, Zap } from "lucide-react";
 import ShortcutHelp from "./ShortcutHelp";
 import NotificationPanel, { useNotifications } from "./NotificationPanel";
 import { LevelUpDialog, useAchievementToasts, useXp } from "./XpBits";
@@ -12,6 +12,7 @@ import { useTimer } from "../context/TimerContext";
 import useStudyTimer from "../utils/useStudyTimer";
 import { useOnline } from "../utils/offline";
 import { t } from "../i18n";
+import HeaderSearch from "./HeaderSearch";
 
 // The places a student goes. Laptops show them in a sidebar, phones in a bar along the bottom (never both).
 // "Me" also covers the pages inside it, so it stays highlighted on Progress, Saved and Settings.
@@ -124,10 +125,8 @@ export default function AppShell({ children }) {
           <span className="brand-mark">C</span>
           <span className="brand-name">Catalyst</span>
         </Link>
+        <HeaderSearch />
         <div className="topbar-tools">
-          <Link className="icon-button" to="/search" aria-label={t("tools.search")} title={t("tools.search")}>
-            <Search size={20} aria-hidden="true" />
-          </Link>
           <div className="timer-menu popover-host">
             <TimerButton buttonRef={(node) => { buttons.current.timer = node; }} open={open === "timer"} onClick={() => toggle("timer")} />
             {open === "timer" && <TimerPanel onNavigate={() => setOpen(null)} />}
