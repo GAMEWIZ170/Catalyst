@@ -104,7 +104,7 @@ export default function Courses() {
       <h2 id="courses-title">Your courses</h2>
       <div className="home-courses">
         {courses.map((course) => <Card as={Link} className="home-course" to={`/courses/${course._id}`} key={course._id} {...nearToPrefetch(() => prefetchCourse(course._id))}>
-          <span className="home-course-code">{course.code}</span>
+          <span className="home-course-code">{course.code}{course.isFree && <span className="count-chip"> Free</span>}</span>
           <strong className="home-course-title">{course.title}</strong>
           <CourseByline course={course} />
           {course.description && <span className="muted home-course-desc">{course.description}</span>}

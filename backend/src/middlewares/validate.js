@@ -207,6 +207,7 @@ const courseFields = {
   title: Joi.string().trim(),
   description: Joi.string().trim().max(200),
   isPublished: Joi.boolean(),
+  isFree: Joi.boolean(),
   category: objectId.allow(null),
   authors: Joi.array().items(objectId).max(10).unique()
 };
@@ -215,6 +216,7 @@ const validateCourse = validateWith(Joi.object({
   title: courseFields.title.required(),
   description: courseFields.description.required(),
   isPublished: courseFields.isPublished.default(false),
+  isFree: courseFields.isFree.default(false),
   category: courseFields.category.default(null),
   authors: courseFields.authors.default([])
 }));

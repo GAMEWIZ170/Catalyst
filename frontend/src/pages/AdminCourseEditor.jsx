@@ -95,6 +95,17 @@ export default function AdminCourseEditor() {
     }
   }
 
+  async function setFree(value) {
+    setError("");
+    try {
+      await api.updateCourse(id, { isFree: value });
+      setMessage(value ? "Marked free" : "No longer free");
+      await load();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   async function publish(value) {
     setError("");
     try {
@@ -210,7 +221,7 @@ export default function AdminCourseEditor() {
   const courseTests = course.tests || course.courseTests || [];
   return <div className="admin-layout"><div className="admin-layout-inner">
     <Breadcrumbs items={[{ label: "Courses", to: "/admin" }, { label: course.code }]} />
-    <div className="admin-heading"><h1>{course.code}</h1><Switch checked={course.isPublished} onChange={publish} label={course.isPublished ? "Published" : "Publish"} /></div>
+    <div className="admin-heading"><h1>{course.code}</h1><Switch checked={course.isPublished} onChange={publish} label={course.isPublished ? "Published" : "Publish"} /><Switch checked={Boolean(course.isFree)} onChange={setFree} label={course.isFree ? "Free for everyone" : "Make free"} /></div>
     <StatusMessage message={error || message} error={Boolean(error)} />
     <section className="admin-editor-section">
       <h2>Course details</h2>

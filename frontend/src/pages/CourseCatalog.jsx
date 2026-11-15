@@ -39,7 +39,7 @@ export default function CourseCatalog() {
     {!loading && !error && !courses.length && <EmptyState illustration={<Illustration name="empty" />} title="No courses here yet" description="Check back soon." />}
     {!loading && !error && courses.length > 0 && <div className="home-courses">
       {courses.map((course) => <Card as={Link} className="home-course" to={`/courses/${course._id}`} key={course._id} {...nearToPrefetch(() => prefetchCourse(course._id))}>
-        <span className="home-course-code">{course.code}</span>
+        <span className="home-course-code">{course.code}{course.isFree && <span className="count-chip"> Free</span>}</span>
         <strong className="home-course-title">{course.title}</strong>
         <CourseByline course={course} />
         {course.description && <span className="muted home-course-desc">{course.description}</span>}
