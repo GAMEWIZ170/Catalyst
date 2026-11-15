@@ -1,21 +1,31 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { Inbox } from "lucide-react";
+import { Badge } from "@astryxdesign/core/Badge";
+import { Banner } from "@astryxdesign/core/Banner";
+import { Button } from "@astryxdesign/core/Button";
+import { Divider } from "@astryxdesign/core/Divider";
+import { EmptyState } from "@astryxdesign/core/EmptyState";
+import { Heading } from "@astryxdesign/core/Heading";
+import { HStack, VStack } from "@astryxdesign/core/Stack";
+import { Tab, TabList } from "@astryxdesign/core/TabList";
+import { Text } from "@astryxdesign/core/Text";
+import { TextArea } from "@astryxdesign/core/TextArea";
 import { api } from "../api/client";
 import AdminLayout from "../components/admin/AdminLayout";
-import StatusMessage from "../components/admin/StatusMessage";
-import { Badge, Button, EmptyState, TextArea } from "../components/ui";
+import AstryxTheme from "../components/astryx/AstryxTheme";
 import { formatDate } from "../utils/dates";
 import { Loading } from "./Courses";
+import "../styles/admin-polish.css";
 
 const CATEGORY_LABELS = { wrong_answer: "Answer looks wrong", typo: "Typing mistake", unclear: "Hard to understand", other: "Something else" };
+const KIND = { lesson: "Lesson", ai: "AI answer", set: "Study set", question: "Question" };
 
+// One report: what was found, who found it, and a reply box. Resolving sends the student a notification.
 function ReportRow({ report, onResolved, onError }) {
   const [reply, setReply] = useState("");
   const [busy, setBusy] = useState(false);
 
-  async function resolve(event) {
-    event.preventDefault();
+  async function resolve() {
     setBusy(true);
     try {
       await api.resolveReport(report.id, { reply: reply.trim() });
@@ -26,27 +36,29 @@ function ReportRow({ report, onResolved, onError }) {
     }
   }
 
-  return <li className="report-row">
-    <div className="report-head">
-      <Badge>{report.kind === "lesson" ? "Lesson" : report.kind === "ai" ? "AI answer" : report.kind === "set" ? "Study set" : "Question"}</Badge>
-      <Badge>{CATEGORY_LABELS[report.category]}</Badge>
-      <span className="muted">{report.student} · {formatDate(report.createdAt)}</span>
-    </div>
-    <p className="report-title"><strong>{report.title}</strong></p>
-    {report.note && <p className="report-note">{report.note}</p>}
-    {report.kind === "ai" && <div className="report-ai">
-      <p><strong>Student asked:</strong> {report.aiQuestion}</p>
-      <p><strong>AI answered:</strong> {report.aiAnswer}</p>
-    </div>}
-    {report.editorLink && <p><Link to={report.editorLink}>Open in the editor</Link></p>}
-    {report.kind === "set" && <p><Link to="/admin/community?view=reported">Review in Community sets</Link></p>}
+  return <VStack gap={2} paddingBlock={4}>
+    <HStack gap={2} align="center" wrap="wrap">
+      <Badge variant="neutral" label={KIND[report.kind] || "Question"} />
+      <Badge variant="warning" label={CATEGORY_LABELS[report.category] || report.category} />
+      <Text type="supporting" color="secondary">{report.student} · {formatDate(report.createdAt)}</Text>
+    </HStack>
+    <Text weight="semibold">{report.title}</Text>
+    {report.note && <Text>{report.note}</Text>}
+    {report.kind === "ai" && <VStack gap={1}>
+      <Text type="supporting"><strong>Student asked:</strong> {report.aiQuestion}</Text>
+      <Text type="supporting"><strong>AI answered:</strong> {report.aiAnswer}</Text>
+    </VStack>}
+    <HStack gap={2}>
+      {report.editorLink && <Button label="Open in the editor" size="sm" variant="ghost" href={report.editorLink} />}
+      {report.kind === "set" && <Button label="Review in Community sets" size="sm" variant="ghost" href="/admin/community?view=reported" />}
+    </HStack>
     {report.status === "open"
-      ? <form className="form-stack" onSubmit={resolve}>
-        <TextArea label="Reply to the student (optional)" hint="The student gets this as a notification. Leave it empty to send a short thank-you." maxLength={1000} rows={3} value={reply} onChange={(event) => setReply(event.target.value)} />
-        <div><Button type="submit" loading={busy}>Mark as resolved</Button></div>
-      </form>
-      : <p className="muted">Resolved {formatDate(report.resolvedAt)}. {report.reply ? `Reply: ${report.reply}` : "No reply was written."}</p>}
-  </li>;
+      ? <VStack gap={2}>
+        <TextArea label="Reply to the student" isLabelHidden placeholder="Reply to the student (optional). Empty sends a short thank-you." maxLength={1000} rows={2} value={reply} onChange={setReply} />
+        <div><Button label="Mark as resolved" variant="primary" isLoading={busy} onClick={resolve} /></div>
+      </VStack>
+      : <Text type="supporting" color="secondary">Resolved {formatDate(report.resolvedAt)}. {report.reply ? `Reply: ${report.reply}` : "No reply was written."}</Text>}
+  </VStack>;
 }
 
 export default function AdminReports() {
@@ -56,14 +68,6 @@ export default function AdminReports() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  async function load() {
-    setError("");
-    try {
-      setData((await api.getReports({ status, page })).data);
-    } catch (err) {
-      setError(err.message);
-    }
-  }
   // A slow answer for the tab or page you left must not replace the one you are on, so each run can be cancelled.
   useEffect(() => {
     let live = true;
@@ -75,43 +79,37 @@ export default function AdminReports() {
     return () => { live = false; };
   }, [status, page]);
 
-  function resolved(report) {
-    setMessage(`Resolved. The student was told.`);
-    setData((current) => current && ({
-      ...current,
-      counts: { open: Math.max(0, current.counts.open - 1), resolved: current.counts.resolved + 1 },
-      items: current.items.filter((item) => item.id !== report.id)
-    }));
-  }
-
-  function pick(next) {
-    setStatus(next);
-    setPage(1);
-    setMessage("");
-  }
+  const resolved = (report) => {
+    setMessage("Resolved. The student was told.");
+    setData((current) => current && ({ ...current, counts: { open: Math.max(0, current.counts.open - 1), resolved: current.counts.resolved + 1 }, items: current.items.filter((item) => item.id !== report.id) }));
+  };
 
   return <AdminLayout>
-    <div className="admin-heading">
-      <div>
-        <h1>Reports</h1>
-        <p className="muted">Problems students found in questions and lessons. Resolving a report sends the student a notification.</p>
+    <AstryxTheme>
+      <div className="admin-astryx">
+        <VStack gap={4}>
+          <VStack gap={1}>
+            <Heading level={1}>Reports</Heading>
+            <Text color="secondary">Problems students found. Resolving a report notifies the student.</Text>
+          </VStack>
+          <TabList role="tablist" value={status} onChange={(next) => { setStatus(next); setPage(1); setMessage(""); }} hasDivider>
+            <Tab value="open" label={`Open${data ? ` (${data.counts.open})` : ""}`} panelId="reports-panel" />
+            <Tab value="resolved" label={`Resolved${data ? ` (${data.counts.resolved})` : ""}`} panelId="reports-panel" />
+          </TabList>
+          <div id="reports-panel" role="tabpanel">
+            {message && !error && <Banner status="success" title={message} container="section" isDismissable onDismiss={() => setMessage("")} />}
+            {error && <Banner status="error" title={error} container="section" />}
+            {!data && !error && <Loading />}
+            {data && data.items.length === 0 && <EmptyState isCompact icon={<Inbox size={28} aria-hidden="true" />} title={status === "open" ? "No open reports" : "Nothing resolved yet"} description={status === "open" ? "When a student reports a problem it will appear here." : "Resolved reports are kept here."} />}
+            {data && data.items.map((report, index) => <div key={report.id}>{index > 0 && <Divider />}<ReportRow report={report} onResolved={resolved} onError={setError} /></div>)}
+            {data && data.pages > 1 && <HStack gap={3} align="center" justify="center" paddingBlock={3}>
+              <Button label="Previous" variant="secondary" isDisabled={page <= 1} onClick={() => setPage(page - 1)} />
+              <Text color="secondary">Page {data.page} of {data.pages}</Text>
+              <Button label="Next" variant="secondary" isDisabled={page >= data.pages} onClick={() => setPage(page + 1)} />
+            </HStack>}
+          </div>
+        </VStack>
       </div>
-    </div>
-    <div className="button-row" role="group" aria-label="Report status">
-      <Button variant={status === "open" ? "primary" : "secondary"} aria-pressed={status === "open"} onClick={() => pick("open")}>Open{data ? ` (${data.counts.open})` : ""}</Button>
-      <Button variant={status === "resolved" ? "primary" : "secondary"} aria-pressed={status === "resolved"} onClick={() => pick("resolved")}>Resolved{data ? ` (${data.counts.resolved})` : ""}</Button>
-    </div>
-    <StatusMessage message={error || message} error={Boolean(error)} />
-    {!data && !error && <Loading />}
-    {error && !data && <Button variant="secondary" onClick={load}>Retry</Button>}
-    {data && data.items.length === 0 && <EmptyState icon={Inbox} title={status === "open" ? "No open reports" : "Nothing resolved yet"} description={status === "open" ? "When a student reports a problem it will appear here." : "Resolved reports are kept here."} />}
-    {data && data.items.length > 0 && <ul className="report-list">
-      {data.items.map((report) => <ReportRow key={report.id} report={report} onResolved={resolved} onError={setError} />)}
-    </ul>}
-    {data && data.pages > 1 && <div className="button-row">
-      <Button variant="secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</Button>
-      <span className="muted">Page {data.page} of {data.pages}</span>
-      <Button variant="secondary" disabled={page >= data.pages} onClick={() => setPage(page + 1)}>Next</Button>
-    </div>}
+    </AstryxTheme>
   </AdminLayout>;
 }

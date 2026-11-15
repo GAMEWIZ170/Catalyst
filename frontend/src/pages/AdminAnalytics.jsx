@@ -4,7 +4,7 @@ import { BarChart3 } from "lucide-react";
 import { api } from "../api/client";
 import AdminLayout from "../components/admin/AdminLayout";
 import StatusMessage from "../components/admin/StatusMessage";
-import { Button, EmptyState, SelectField } from "../components/ui";
+import { Button, EmptyState } from "../components/ui";
 import { TYPE_LABELS } from "../components/admin/QuestionTypeFields";
 import { Loading } from "./Courses";
 
@@ -41,10 +41,8 @@ export default function AdminAnalytics() {
         <p className="muted">Questions students get wrong most often, lowest percent correct first. Counting started when this page was added, and includes practice runs and mock exams. Numbers are anonymous.</p>
       </div>
     </div>
-    <div className="analytics-filter">
-      <SelectField label="Only questions answered at least" value={minAttempts} onChange={(event) => setMinAttempts(event.target.value)}>
-        {["1", "5", "10", "20", "50"].map((value) => <option key={value} value={value}>{value} {value === "1" ? "time" : "times"}</option>)}
-      </SelectField>
+    <div className="chip-row" role="group" aria-label="Only questions answered at least this many times">
+      {["1", "5", "10", "20", "50"].map((value) => <button type="button" className="chip" key={value} aria-pressed={minAttempts === value} onClick={() => setMinAttempts(value)}>{value === "1" ? "Any" : `${value}+ times`}</button>)}
     </div>
     <StatusMessage message={error} error />
     {!data && !error && <Loading />}

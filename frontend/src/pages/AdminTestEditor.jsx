@@ -92,7 +92,7 @@ export default function AdminTestEditor() {
 
   // A time limit turns the test into a timed mock exam. Empty makes it an ordinary test again.
   async function saveTimeLimit(event) {
-    event.preventDefault();
+    event?.preventDefault?.();
     const value = String(timeDraft).trim();
     const timeLimitMinutes = value === "" ? null : Number(value);
     if (timeLimitMinutes !== null && (!Number.isInteger(timeLimitMinutes) || timeLimitMinutes < 1 || timeLimitMinutes > 360)) {
@@ -109,7 +109,7 @@ export default function AdminTestEditor() {
   }
 
   async function savePassPercent(event) {
-    event.preventDefault();
+    event?.preventDefault?.();
     const value = String(passDraft).trim();
     const passPercent = value === "" ? null : Number(value);
     if (passPercent !== null && (!Number.isInteger(passPercent) || passPercent < 0 || passPercent > 100)) {
@@ -239,14 +239,12 @@ export default function AdminTestEditor() {
     </div>
     {test.scope === "lesson" && <form className="pass-percent" onSubmit={savePassPercent}>
       <div className="pass-percent-row">
-        <TextField label="Pass percent" id="pass-percent" type="number" inputMode="numeric" min="0" max="100" step="1" placeholder="None" value={passDraft} onChange={(event) => setPassDraft(event.target.value)} hint="A student needs at least this score to complete the lesson. Leave it empty for no requirement." />
-        <Button variant="secondary" type="submit" disabled={String(passDraft) === String(test.passPercent ?? "")}>Save</Button>
+        <TextField label="Pass percent" id="pass-percent" type="number" inputMode="numeric" min="0" max="100" step="1" placeholder="None" value={passDraft} onChange={(event) => setPassDraft(event.target.value)} onBlur={() => { if (String(passDraft) !== String(test.passPercent ?? "")) savePassPercent(); }} hint="A student needs at least this score to complete the lesson. Leave it empty for no requirement." />
       </div>
     </form>}
     <form className="pass-percent" onSubmit={saveTimeLimit}>
       <div className="pass-percent-row">
-        <TextField label="Time limit (minutes)" id="time-limit" type="number" inputMode="numeric" min="1" max="360" step="1" placeholder="None" value={timeDraft} onChange={(event) => setTimeDraft(event.target.value)} hint="Set a limit to make this a timed mock exam: no feedback until the end, and handed in automatically when time runs out. Leave it empty for an ordinary test." />
-        <Button variant="secondary" type="submit" disabled={String(timeDraft) === String(test.timeLimitMinutes ?? "")}>Save</Button>
+        <TextField label="Time limit (minutes)" id="time-limit" type="number" inputMode="numeric" min="1" max="360" step="1" placeholder="None" value={timeDraft} onChange={(event) => setTimeDraft(event.target.value)} onBlur={() => { if (String(timeDraft) !== String(test.timeLimitMinutes ?? "")) saveTimeLimit(); }} hint="Set a limit to make this a timed mock exam: no feedback until the end, and handed in automatically when time runs out. Leave it empty for an ordinary test." />
       </div>
     </form>
     <StatusMessage message={error || message} error={Boolean(error)} />
@@ -262,7 +260,7 @@ export default function AdminTestEditor() {
     </section>
     {question && <aside className="question-editor admin-editor-section">
       <div className="section-heading"><h2>{question._id ? "Edit question" : "Add question"}</h2><Button variant="tertiary" type="button" onClick={() => { setQuestion(null); setOriginalQuestion(null); }}>Close</Button></div>
-      <fieldset className="ui-fieldset" disabled={Boolean(question._id)}><SelectField label="Type" value={question.type} onChange={(event) => setQuestion({ ...question, type: event.target.value, ...typeDefaults(event.target.value) })}>{Object.entries(TYPE_LABELS).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</SelectField>{question._id && <p className="muted">A question's type cannot be changed.</p>}</fieldset>
+      <fieldset className="ui-fieldset" disabled={Boolean(question._id)}><div className="field"><span className="ui-label">Question type</span><div className="chip-row" role="radiogroup" aria-label="Question type" style={{ margin: 0 }}>{Object.entries(TYPE_LABELS).map(([value, label]) => <button type="button" role="radio" aria-checked={question.type === value} className="chip" aria-pressed={question.type === value} key={value} onClick={() => setQuestion({ ...question, type: value, ...typeDefaults(value) })}>{label}</button>)}</div></div>{question._id && <p className="muted">A question's type cannot be changed.</p>}</fieldset>
       <TextArea label="Question text" maxLength="1500" rows="5" value={question.text} onChange={(event) => setQuestion({ ...question, text: event.target.value })} hint={`${question.text.length}/1500`} />
       <FormulaHelp /><div className="preview-box"><RichText>{question.text}</RichText></div>
       <ImageField label="Question image" value={question.image} onChange={(image) => setQuestion({ ...question, image })} />

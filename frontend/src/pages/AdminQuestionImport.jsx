@@ -1,9 +1,11 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import AdminLayout from "../components/admin/AdminLayout";
 import StatusMessage from "../components/admin/StatusMessage";
 import { Badge, Button } from "../components/ui";
+import { FileInput } from "@astryxdesign/core/FileInput";
+import AstryxTheme from "../components/astryx/AstryxTheme";
 import { TYPE_LABELS } from "../components/admin/QuestionTypeFields";
 
 const MAX_BYTES = 1024 * 1024;
@@ -26,7 +28,7 @@ export default function AdminQuestionImport() {
   const { id } = useParams();
   const location = useLocation();
   const back = location.state?.from || `/admin/tests/${id}`;
-  const input = useRef(null);
+  const [picked, setPicked] = useState(null);   // the File shown in the drop zone
   const [file, setFile] = useState(null);       // { name, text }
   const [report, setReport] = useState(null);   // the dry-run answer for the file currently chosen
   const [error, setError] = useState("");
@@ -48,8 +50,8 @@ export default function AdminQuestionImport() {
     }
   }
 
-  async function choose(event) {
-    const chosen = event.target.files?.[0];
+  async function choose(chosen) {
+    setPicked(chosen || null);
     setReport(null);
     setDone("");
     setError("");
@@ -81,7 +83,7 @@ export default function AdminQuestionImport() {
       setDone(response.message);
       setReport(null);
       setFile(null);
-      if (input.current) input.current.value = "";
+      setPicked(null);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -112,8 +114,7 @@ export default function AdminQuestionImport() {
     </section>
     <section className="admin-editor-section import-step">
       <h2>2. Choose your file and check it</h2>
-      <label className="ui-label" htmlFor="csv-file">CSV file</label>
-      <input className="ui-control" id="csv-file" ref={input} type="file" accept=".csv,text/csv" onChange={choose} />
+      <AstryxTheme><FileInput label="CSV file" isLabelHidden mode="dropzone" accept=".csv,text/csv" maxSize={MAX_BYTES} value={picked} onChange={(next) => choose(Array.isArray(next) ? next[0] : next)} placeholder="Drop a CSV file here, or click to choose one (up to 1 MB)" /></AstryxTheme>
       <div><Button disabled={!file} loading={busy === "check"} onClick={check}>Check the file</Button></div>
     </section>
     <StatusMessage message={error || done} error={Boolean(error)} />

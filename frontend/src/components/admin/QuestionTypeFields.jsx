@@ -1,4 +1,4 @@
-import { Button, Checkbox, SelectField, TextArea, TextField } from "../ui";
+import { Button, Checkbox, TextArea, TextField } from "../ui";
 import RichText from "../RichText";
 
 export const TYPE_LABELS = {
@@ -106,10 +106,7 @@ export default function QuestionTypeFields({ question, setQuestion }) {
     return <div className="option-editor"><h3>Numeric answer</h3>
       <TextField label="Correct value" inputMode="decimal" value={numeric.value} onChange={(event) => change({ value: event.target.value })} hint="A number such as 2.5 or 1.2e-3." />
       <TextField label="Tolerance" inputMode="decimal" value={numeric.tolerance} onChange={(event) => change({ tolerance: event.target.value })} hint="How far from the correct value still counts. 0 means exact." />
-      <SelectField label="Tolerance is" value={numeric.toleranceKind} onChange={(event) => change({ toleranceKind: event.target.value })}>
-        <option value="absolute">An amount (same units as the value)</option>
-        <option value="percent">A percent of the value</option>
-      </SelectField>
+      <div className="field"><span className="ui-label">Tolerance is</span><div className="chip-row" role="radiogroup" aria-label="Tolerance is" style={{ margin: 0 }}>{[["absolute","An amount"],["percent","A percent"]].map(([value, text]) => <button type="button" role="radio" aria-checked={numeric.toleranceKind === value} className="chip" aria-pressed={numeric.toleranceKind === value} key={value} onClick={() => change({ toleranceKind: value })}>{text}</button>)}</div></div>
       <TextField label="Unit (optional)" maxLength="30" value={numeric.unit} onChange={(event) => change({ unit: event.target.value })} hint="If set, students must type this unit too. Case and extra spaces are ignored. A right number with a wrong unit gets its own message." />
     </div>;
   }
@@ -151,10 +148,7 @@ export default function QuestionTypeFields({ question, setQuestion }) {
       <p className="muted">Write each formula the way you would inside \ce{"{}"}, for example H2O or Fe2O3. Give the lowest whole-number coefficients. Students fill in the numbers.</p>
       {species.map((item, index) => <div className="option-row" key={index}>
         <TextField label={`Formula ${index + 1}`} maxLength="40" value={item.formula} onChange={(event) => change(index, { formula: event.target.value })} />
-        <SelectField label="Side" value={item.side} onChange={(event) => change(index, { side: event.target.value })}>
-          <option value="reactant">Reactant</option>
-          <option value="product">Product</option>
-        </SelectField>
+        <div className="field"><span className="ui-label">Side</span><div className="chip-row" role="radiogroup" aria-label="Side" style={{ margin: 0 }}>{[["reactant","Reactant"],["product","Product"]].map(([value, text]) => <button type="button" role="radio" aria-checked={item.side === value} className="chip" aria-pressed={item.side === value} key={value} onClick={() => change(index, { side: value })}>{text}</button>)}</div></div>
         <TextField label="Coefficient" inputMode="numeric" maxLength="2" value={item.coefficient} onChange={(event) => change(index, { coefficient: event.target.value })} />
         <Button variant="tertiary" type="button" disabled={species.length <= 2} onClick={() => set({ equation: { species: species.filter((_, i) => i !== index) } })}>Remove</Button>
       </div>)}

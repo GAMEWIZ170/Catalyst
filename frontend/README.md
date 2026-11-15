@@ -152,15 +152,15 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 | `/admin/dashboard` | Admin | DAU, WAU, MAU, stickiness, new sign-ups, activation, open reports, a 30 day trend chart (with a table of the same numbers), retention by sign-up week, top and drop-off lessons, and activity totals. Shows "Not worked out yet" until `npm run stats` has run in the backend |
 | Notification bell | Authenticated | Top bar bell with an unread count. The panel lists new-lesson and review-due messages, each linking to its page, plus Mark all as read. On phones the panel spans the screen under the top bar |
 | `/admin` | Admin | One summary line (students, active, published and draft courses), category chips and a search, then the course list as rows: a publish switch and a ⋯ menu (Delete, with a confirmation). "New course" makes "Untitled course" with a temporary code at once and opens its editor |
-| `/admin/users` | Admin | Find users, change roles, deactivate accounts and manage subscriptions |
+| `/admin/users` | Admin | Find users, change roles, deactivate accounts and manage subscriptions Filters are chips (role, status) plus a search; each user is a row with a ⋯ menu; confirmations and the end-date picker are dialogs. UI polish step 8. |
 | `/admin/trash` | Admin | Deleted content, with a Restore button for each item |
-| `/admin/reports` | Admin | Report inbox with Open and Resolved tabs. Each open report has a reply box and Mark as resolved, which notifies the student |
-| `/admin/analytics` | Admin | Question analytics table, lowest percent correct first, with a link to each question's test editor |
+| `/admin/reports` | Admin | Report inbox with Open and Resolved tabs. Each open report has a reply box and Mark as resolved, which notifies the student Built with Astryx tabs (Open, Resolved); each report has a reply box and Mark as resolved. |
+| `/admin/analytics` | Admin | Question analytics table, lowest percent correct first, with a link to each question's test editor The minimum-answers filter is chips (Any, 5+, 10+, 20+, 50+). |
 | `/admin/tests/:id/import` | Admin | CSV import: template download, file check with a result per row, then Import |
 | `/admin/preview/lessons/:id`, `/admin/preview/tests/:id` | Admin | The lesson or test as a student sees it, drafts included. Opened with Preview as student in the editors. Nothing is saved |
 | `/admin/courses/:id` | Admin | Course editor (capped at 900 px, no bordered cards). Course details are rows that save by themselves: click the title, code, category or an author to change it; the description saves when you leave it; "Add author" opens a new row for typing. "Add unit" makes "Untitled unit" with its name open; "Add lesson" makes "Untitled lesson" and opens it. Units, lessons, unit and course tests below |
-| `/admin/lessons/:id` | Admin | Lesson editor: explanation, image, video, tests, flashcards, materials |
-| `/admin/tests/:id` | Admin | Test editor: questions and, for lesson tests, the pass percent needed to complete the lesson |
+| `/admin/lessons/:id` | Admin | Lesson editor: explanation, image, video, tests, flashcards, materials Details save by themselves when you leave a field (no Save button); the video host is a chip choice; "Add test" creates "Untitled test" and opens it (it used to fail with a missing scope). |
+| `/admin/tests/:id` | Admin | Test editor: questions and, for lesson tests, the pass percent needed to complete the lesson Pass percent and time limit save when you leave the field; the question type and numeric tolerance and equation side are chip choices. The CSV import page has a drop zone. |
 
 Unknown routes redirect to `/home` for signed-in users or `/login` for signed-out users.
 
