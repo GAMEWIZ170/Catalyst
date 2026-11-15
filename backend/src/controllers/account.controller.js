@@ -27,6 +27,9 @@ const Friendship = require("../models/friendship.models");
 const Challenge = require("../models/challenge.models");
 const Circle = require("../models/circle.models");
 const AiDraft = require("../models/aidraft.models");
+const SetSave = require("../models/setsave.models");
+const SetStudy = require("../models/setstudy.models");
+const LeaderboardEntry = require("../models/leaderboard.models");
 const AchievementUnlock = require("../models/achievement.models");
 const XpEntry = require("../models/xp.models");
 const hashPassword = require("../utils/bcrypt");
@@ -181,6 +184,9 @@ const deleteAccount = async (req, res, next) => {
       AchievementUnlock.deleteMany({ user: id }),
       XpEntry.deleteMany({ user: id }),
       AiDraft.deleteMany({ owner: id }),
+      SetSave.deleteMany({ user: id }),
+      SetStudy.deleteMany({ $or: [{ user: id }, { owner: id }] }),
+      LeaderboardEntry.deleteMany({ user: id }),
       User.updateOne({ _id: id }, { $unset: { friendCode: 1 } }),
       leaveAllCircles(id),
       deleteStudySets(id),

@@ -20,7 +20,12 @@ const lessonIsVisible = (lesson) => Boolean(
 // viewerId is only needed for a quiz in a study set, which only its owner may see.
 const testIsVisible = (test, viewerId) => {
   if (!test || !test.isPublished || test.deletedAt) return false;
-  if (test.scope === "set") return Boolean(viewerId && test.set && !test.set.deletedAt && String(test.set.owner) === String(viewerId));
+  if (test.scope === "set") {
+    if (!viewerId || !test.set || test.set.deletedAt) return false;
+    if (String(test.set.owner) === String(viewerId)) return true;
+    // Anyone signed in may play the quiz of a set its owner shared by link or with the community (unless it was taken down).
+    return ["link", "community"].includes(test.set.visibility) && test.set.communityStatus !== "removed";
+  }
   if (test.scope === "lesson") return lessonIsVisible(test.lesson);
   if (test.scope === "unit") return unitIsVisible(test.unit);
   if (test.scope === "course") return courseIsVisible(test.course);
@@ -39,7 +44,7 @@ const testPopulate = [
     populate: { path: "course", select: "isPublished deletedAt" }
   },
   { path: "course", select: "isPublished deletedAt" },
-  { path: "set", select: "owner deletedAt" }
+  { path: "set", select: "owner deletedAt visibility communityStatus" }
 ];
 
 const parentIsAvailable = async (scope, id) => {

@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const { findVisibleLesson } = require("../utils/visibility");
 const Lesson = require("../models/lesson.models");
+const StudySet = require("../models/studyset.models");
 
 // Short share links for WhatsApp and other chat apps: /s/c/<challenge>, /s/i/<friend code>, /s/l/<lesson>, /s/s/<set>.
 // The app is a single-page app, so a chat app cannot read its titles. This route answers with a tiny page that has the
@@ -69,10 +70,18 @@ const lessonLink = async (req, res, next) => {
   }
 };
 
-// Study sets are private, so the preview never says what is in one.
-const setLink = (req, res) => {
-  if (!isId(req.params.id)) return res.status(404).type("text").send("Not found");
-  return send(req, res, { ...SIGN_IN, to: "/lab" });
+// A study set's preview shows its title only when it is approved on the community shelf (a public listing anyway). A private
+// or link-only set, and a set waiting for approval, shows just "Sign in to view this.".
+const setLink = async (req, res, next) => {
+  try {
+    if (!isId(req.params.id)) return res.status(404).type("text").send("Not found");
+    const set = await StudySet.findOne({ _id: req.params.id, deletedAt: null, communityStatus: "approved", visibility: "community" }).select("title").lean();
+    return send(req, res, set
+      ? { title: `${set.title} on Catalyst`, description: "A study set shared with the community. Sign in to study it.", to: `/community/${req.params.id}` }
+      : { ...SIGN_IN, to: `/community/${req.params.id}` });
+  } catch (error) {
+    next(error);
+  }
 };
 
 module.exports = { challengeLink, inviteLink, lessonLink, setLink, escapeHtml };

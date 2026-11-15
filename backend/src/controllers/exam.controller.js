@@ -8,6 +8,7 @@ const { grade, correctAnswerOf } = require("../utils/grading");
 const { recordResult } = require("./test.controller");
 const { recordAnswer } = require("./mistake.controller");
 const { recordStat } = require("../utils/questionStats");
+const { recordBoards, eligible } = require("./leaderboard.controller");
 
 const badId = (id) => !mongoose.isObjectIdOrHexString(id);
 const GRACE_MS = 5 * 1000; // a submit that left just before the deadline may arrive a little after it
@@ -17,6 +18,7 @@ const studentView = (attempt, questions) => ({
   attemptId: attempt._id,
   serverNow: new Date(),
   endsAt: attempt.endsAt,
+  leaderboard: Boolean(attempt.leaderboard),
   answers: attempt.answers || {},
   flags: attempt.flags || [],
   questions: questions.map(studentQuestion)
@@ -58,7 +60,10 @@ const finish = async (attempt, test, questions, answers) => {
   const score = Math.round((correct / total) * 100);
   const { result, passPercent, passed } = await recordResult(attempt.user, test, score, timeZone);
   // Wrong answers join the mistakes queue and right ones count toward leaving it, as with any answered question.
-  if (test.scope === "set") return { score, correct, total, bestScore: result.bestScore, attempts: result.attempts, passPercent, passed, review }; // a student's own quiz stays out of the mistakes queue and the statistics
+  if (test.scope === "set") {
+    await recordBoards(attempt, test, { score, correct, total });
+    return { score, correct, total, bestScore: result.bestScore, attempts: result.attempts, passPercent, passed, review };
+  } // a student's own quiz stays out of the mistakes queue and the statistics
   await Promise.all(questions.map((question, index) => recordAnswer(attempt.user, question._id, review[index].isCorrect, timeZone)));
   await Promise.all(questions.map((question, index) => recordStat(question, answers[question._id.toString()], review[index].isCorrect)));
   return { score, correct, total, bestScore: result.bestScore, attempts: result.attempts, passPercent, passed, review };
@@ -101,7 +106,9 @@ const start = async (req, res, next) => {
     const now = new Date();
     // Extra time is the student's own setting (a percentage). The server works out the deadline once, here.
     const extra = 1 + (req.user.extraTime || 0) / 100;
-    const attempt = await ExamAttempt.create({ user: req.user.id, test: test._id, startedAt: now, endsAt: new Date(now.getTime() + Math.round(baseMinutes * extra * 60 * 1000)) });
+    // Only a community set's quiz has boards, only for students other than its owner, and only when the student chooses it.
+    const onBoard = req.body?.leaderboard === true && Boolean(await eligible(test, req.user.id));
+    const attempt = await ExamAttempt.create({ user: req.user.id, test: test._id, leaderboard: onBoard, startedAt: now, endsAt: new Date(now.getTime() + Math.round(baseMinutes * extra * 60 * 1000)) });
     return res.status(201).json({ data: studentView(attempt, questions) });
   } catch (error) {
     next(error);

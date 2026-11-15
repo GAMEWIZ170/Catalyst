@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 // and the answer reaches the student as a notification.
 const reportSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  kind: { type: String, enum: ["question", "lesson", "ai"], required: true },
+  kind: { type: String, enum: ["question", "lesson", "ai", "set"], required: true },
   target: { type: mongoose.Schema.Types.ObjectId, required: true }, // the question or lesson id
   test: { type: mongoose.Schema.Types.ObjectId, default: null },    // for a question: its test, so the inbox can open the editor
   category: { type: String, enum: ["wrong_answer", "typo", "unclear", "other"], required: true },

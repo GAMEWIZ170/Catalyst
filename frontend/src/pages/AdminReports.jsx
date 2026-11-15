@@ -28,7 +28,7 @@ function ReportRow({ report, onResolved, onError }) {
 
   return <li className="report-row">
     <div className="report-head">
-      <Badge>{report.kind === "lesson" ? "Lesson" : report.kind === "ai" ? "AI answer" : "Question"}</Badge>
+      <Badge>{report.kind === "lesson" ? "Lesson" : report.kind === "ai" ? "AI answer" : report.kind === "set" ? "Study set" : "Question"}</Badge>
       <Badge>{CATEGORY_LABELS[report.category]}</Badge>
       <span className="muted">{report.student} · {formatDate(report.createdAt)}</span>
     </div>
@@ -39,6 +39,7 @@ function ReportRow({ report, onResolved, onError }) {
       <p><strong>AI answered:</strong> {report.aiAnswer}</p>
     </div>}
     {report.editorLink && <p><Link to={report.editorLink}>Open in the editor</Link></p>}
+    {report.kind === "set" && <p><Link to="/admin/community?view=reported">Review in Community sets</Link></p>}
     {report.status === "open"
       ? <form className="form-stack" onSubmit={resolve}>
         <TextArea label="Reply to the student (optional)" hint="The student gets this as a notification. Leave it empty to send a short thank-you." maxLength={1000} rows={3} value={reply} onChange={(event) => setReply(event.target.value)} />

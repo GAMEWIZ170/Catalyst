@@ -10,6 +10,8 @@ const examAttemptSchema = new mongoose.Schema({
   // questionId -> the answer string, saved as the student goes so a reload or a closed tab loses nothing.
   answers: { type: mongoose.Schema.Types.Mixed, default: {} },
   flags: { type: [String], default: [] }, // question ids flagged for review
+  // The student chose to be on the weekly and monthly boards of a community set's quiz (Phase X7.3).
+  leaderboard: { type: Boolean, default: false },
   result: { type: mongoose.Schema.Types.Mixed, default: null } // the marked exam, stored when it is submitted
 }, { timestamps: true, minimize: false });
 

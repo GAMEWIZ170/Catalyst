@@ -22,6 +22,7 @@ const notFound = (res, what = "Study set") => res.status(404).json({ message: `$
 
 const publicSet = (set, extra = {}) => ({
   id: set._id, title: set.title, description: set.description, topic: set.topic, visibility: set.visibility,
+  communityStatus: set.communityStatus || "none", reviewNote: set.reviewNote || "", studied: set.studiedCount || 0, saved: set.savedCount || 0, copied: set.copyCount || 0,
   course: set.course && set.course.code ? { id: set.course._id, code: set.course.code, title: set.course.title } : null,
   createdAt: set.createdAt, updatedAt: set.updatedAt, ...extra
 });

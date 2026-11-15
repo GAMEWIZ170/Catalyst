@@ -13,7 +13,8 @@ const RULES = {
   daily_goal: { xp: 25, cap: 25 },   // the daily goal met
   weekly_goal: { xp: 75, cap: 75 },  // the weekly goal met. Once per week.
   focus: { xp: 1, cap: 30 },         // counted focus minutes, 1 XP each
-  challenge: { xp: 10, cap: 30 }     // a friend challenge played. Once per challenge.
+  challenge: { xp: 10, cap: 30 },    // a friend challenge played. Once per challenge.
+  set_used: { xp: 5, cap: 50 }       // another student studied your community set. Once per student per set.
 };
 
 // XP needed to go from level n to n+1.

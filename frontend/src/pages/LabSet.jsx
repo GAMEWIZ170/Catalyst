@@ -11,6 +11,7 @@ import SetQuizzes from "../components/lab/SetQuizzes";
 import SetMaterials from "../components/lab/SetMaterials";
 import AiDrafts from "../components/lab/AiDrafts";
 import Companion from "../components/Companion";
+import SetSharing from "../components/lab/SetSharing";
 
 // The rich note editor is a big file, so it is only downloaded when a student opens the Notes tab.
 const SetNotes = lazy(() => import("../components/lab/SetNotes"));
@@ -70,6 +71,7 @@ export default function LabSet() {
     {(set.course || set.topic) && <p className="muted">{[set.course && `${set.course.code}: ${set.course.title}`, set.topic].filter(Boolean).join(" · ")}</p>}
     {set.description && <p className="muted">{set.description}</p>}
     {error && <p className="form-error" role="alert">{error}</p>}
+    <SetSharing key={`${set.visibility}-${set.communityStatus}`} set={set} onChange={(patch) => setSet((current) => ({ ...current, ...patch }))} />
     <Tabs tabs={tabs} value={tab} onChange={(next) => setParams({ tab: next }, { replace: true })} label="Study set sections" />
     <ConfirmDialog open={confirming} title="Delete this set?" description="Its notes, cards and quizzes are deleted too, and its cards leave your review. This cannot be undone." confirmLabel="Delete" onConfirm={remove} onCancel={() => setConfirming(false)} />
   </div>;

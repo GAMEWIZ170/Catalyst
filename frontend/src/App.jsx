@@ -44,6 +44,10 @@ const Hall = lazy(() => import("./pages/Hall"));
 const Friends = lazy(() => import("./pages/Friends"));
 const Circles = lazy(() => import("./pages/Circles"));
 const Challenges = lazy(() => import("./pages/Challenges"));
+const Community = lazy(() => import("./pages/Community"));
+const CommunitySet = lazy(() => import("./pages/CommunitySet"));
+const CommunityBoards = lazy(() => import("./pages/CommunityBoards"));
+const AdminCommunity = lazy(() => import("./pages/AdminCommunity"));
 const Challenge = lazy(() => import("./pages/Challenge"));
 const AdminCatalog = lazy(() => import("./pages/AdminCatalog"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
@@ -116,6 +120,9 @@ export default function App() {
     <Route path="/friends" element={<ProtectedPage><Friends /></ProtectedPage>} />
     <Route path="/circles" element={<ProtectedPage><Circles /></ProtectedPage>} />
     <Route path="/challenges" element={<ProtectedPage><Challenges /></ProtectedPage>} />
+    <Route path="/community" element={<ProtectedPage><Community /></ProtectedPage>} />
+    <Route path="/community/boards" element={<ProtectedPage><CommunityBoards /></ProtectedPage>} />
+    <Route path="/community/:id" element={<ProtectedPage><CommunitySet /></ProtectedPage>} />
     <Route path="/challenge/:id" element={<ProtectedPage><Challenge /></ProtectedPage>} />
     <Route path="/lab" element={<ProtectedPage><Lab /></ProtectedPage>} />
     <Route path="/lab/quizzes/:testId" element={<ProtectedPage><LabQuiz /></ProtectedPage>} />
@@ -130,6 +137,7 @@ export default function App() {
     <Route path="/admin/users" element={<AdminPage><AdminUsers /></AdminPage>} />
     <Route path="/admin/trash" element={<AdminPage><AdminTrash /></AdminPage>} />
     <Route path="/admin/reports" element={<AdminPage><AdminReports /></AdminPage>} />
+    <Route path="/admin/community" element={<AdminPage><AdminCommunity /></AdminPage>} />
     <Route path="/admin/analytics" element={<AdminPage><AdminAnalytics /></AdminPage>} />
     <Route path="/admin/tests/:id/import" element={<AdminPage><AdminQuestionImport /></AdminPage>} />
     <Route path="/admin/preview/lessons/:id" element={<AdminPage><Lesson /></AdminPage>} />

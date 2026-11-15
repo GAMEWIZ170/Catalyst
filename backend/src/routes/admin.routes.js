@@ -13,7 +13,7 @@ const {
   , validateMaterial, validateMaterialUpdate,
   validateReorderUnits, validateReorderLessons, validateReorderTests,
   validateReorderQuestions, validateReorderFlashcards, validateReorderMaterials,
-  validateUserUpdate, validateAnswer, validateResolveReport, validateUnitSummary
+  validateUserUpdate, validateAnswer, validateResolveReport, validateUnitSummary, validateRejectSet, validateTakedown
 } = require("../middlewares/validate");
 
 const course = require("../controllers/course.controller");
@@ -34,6 +34,7 @@ const reorder = require("../controllers/reorder.controller");
 const preview = require("../controllers/preview.controller");
 const analytics = require("../controllers/analytics.controller");
 const dashboard = require("../controllers/dashboard.controller");
+const communityAdmin = require("../controllers/communityadmin.controller");
 const reports = require("../controllers/report.controller");
 const importer = require("../controllers/import.controller");
 const summary = require("../controllers/summary.controller");
@@ -160,6 +161,12 @@ router.get("/dashboard", dashboard.getDashboard);
 router.get("/analytics/questions", analytics.questionAnalytics);
 router.get("/reports", reports.listReports);
 router.put("/reports/:id/resolve", validateResolveReport, reports.resolveReport);
+
+// Community sets: approval queue, reported sets and takedowns
+router.get("/community", communityAdmin.list);
+router.post("/community/:id/approve", communityAdmin.approve);
+router.post("/community/:id/reject", validateRejectSet, communityAdmin.reject);
+router.post("/community/:id/takedown", validateTakedown, communityAdmin.takedown);
 
 // Users
 router.get("/users", admin.getAllUsers);
