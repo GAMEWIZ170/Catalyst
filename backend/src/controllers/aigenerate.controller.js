@@ -6,6 +6,7 @@ const { findOwnSet } = require("../utils/ownSet");
 const { AiError } = require("../utils/ai");
 const { slicePart, draftFrom, hashOf } = require("../utils/aiDrafts");
 const { logEvent } = require("../utils/events");
+const quota = require("../utils/aiQuota");
 
 // The plain text of a Tiptap notes document. A formula is kept as $...$ so the model can read it.
 const notesToText = (node) => {
@@ -29,6 +30,7 @@ const AI_PROBLEMS = {
 
 // STUDENT: makes DRAFT flashcards, quiz questions or notes from a material, the set's notes, or pasted text. Saves nothing.
 const generate = async (req, res, next) => {
+  let reserved = false;
   try {
     const set = await findOwnSet(req.params.id, req.user.id);
     if (!set) return res.status(404).json({ message: "Study set not found" });
@@ -55,14 +57,23 @@ const generate = async (req, res, next) => {
     const saved = await AiDraft.findOne({ owner: req.user.id, kind, hash }).select("result").lean();
     if (saved) return res.status(200).json({ data: { kind, drafts: saved.result, part, parts: piece.parts, cached: true } });
 
+    // A new draft uses one of the student's daily generations (a cached one never does).
+    const slot = await quota.reserve(req.user.id, "generation");
+    if (!slot.ok) {
+      return res.status(429).json({ message: slot.reason === "resting" ? "AI is resting until tomorrow. Please try again then." : "You have used today's AI drafts. They come back tomorrow.", code: slot.reason === "resting" ? "resting" : "daily_limit" });
+    }
+    reserved = true;
     const me = await User.findById(req.user.id).select("name displayName").lean();
     const out = await draftFrom(kind, piece.text, [me?.name, me?.displayName]);
+    await quota.addTokens(req.user.id, out.usage);
     await AiDraft.updateOne({ owner: req.user.id, kind, hash }, { $setOnInsert: { result: out.drafts, model: out.model, createdAt: new Date() } }, { upsert: true })
       .catch((error) => { if (error.code !== 11000) throw error; }); // two tabs asked at once: the other one saved it
     logEvent(req.user.id, "ai_generated", { kind, input: out.usage.inputTokens, output: out.usage.outputTokens });
     return res.status(200).json({ data: { kind, drafts: out.drafts, part, parts: piece.parts, cached: false } });
   } catch (error) {
+    if (reserved) await quota.release(req.user.id, "generation").catch(() => {});
     if (error instanceof AiError && AI_PROBLEMS[error.code]) {
+      if (error.code === "capacity") await quota.markResting().catch(() => {});
       const [status, message] = AI_PROBLEMS[error.code];
       return res.status(status).json({ message, code: error.code });
     }

@@ -113,6 +113,15 @@ export default function AdminDashboard() {
         </div>
       </section>
 
+      <section className="admin-editor-section" aria-labelledby="ai-heading">
+        <h2 id="ai-heading">AI use, last 14 days</h2>
+        <p className="muted">{`Each student: ${data.ai.limits.messages} companion messages and ${data.ai.limits.generations} drafts a day. Whole platform: ${data.ai.limits.global} requests a day, then "AI is resting until tomorrow". Days are UTC days.`}</p>
+        {data.ai.days.length === 0 ? <p className="muted">No AI use yet.</p> : <div className="table-scroll"><table className="stat-table">
+          <thead><tr><th scope="col">Day</th><th scope="col">Students</th><th scope="col">Messages</th><th scope="col">Drafts</th><th scope="col">Tokens in / out</th><th scope="col">Resting</th></tr></thead>
+          <tbody>{[...data.ai.days].reverse().map((row) => <tr key={row.day}><th scope="row">{row.day}</th><td>{row.students}</td><td>{row.messages}</td><td>{row.generations}</td><td>{row.inputTokens} / {row.outputTokens}</td><td>{row.resting || row.messages + row.generations >= data.ai.limits.global ? "Yes" : "No"}</td></tr>)}</tbody>
+        </table></div>}
+      </section>
+
       <section className="admin-editor-section" aria-labelledby="activity-heading">
         <h2 id="activity-heading">Activity</h2>
         <div className="table-scroll"><table className="stat-table">

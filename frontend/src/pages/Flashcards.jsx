@@ -111,9 +111,9 @@ export default function Flashcards({ setMode = false }) {
 
   if (error && !cards.length) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
   if (!cards.length && !nothingToReview && !loaded) return <Loading />;
-  if (!cards.length && !nothingToReview) return <div className="content fc-page"><EmptyState icon={Layers} title="No flashcards yet" description={setMode ? "Add cards to this set first." : "This lesson has no flashcards."} action={<Button as={Link} to={home} state={lessonState}>{homeLabel}</Button>} /></div>;
+  if (!cards.length && !nothingToReview) return <div className="content fc-page"><EmptyState as="h1" icon={Layers} title="No flashcards yet" description={setMode ? "Add cards to this set first." : "This lesson has no flashcards."} action={<Button as={Link} to={home} state={lessonState}>{homeLabel}</Button>} /></div>;
   const back = <Link className="back-link" to={home} state={lessonState}><ArrowLeft size={16} aria-hidden="true" />{homeLabel}</Link>;
-  if (nothingToReview) return <div className="content fc-page">{back}<EmptyState icon={Layers} title="No cards to review" description="You have rated every card as confident." action={<Button as={Link} to={home} state={lessonState}>{homeLabel}</Button>} /></div>;
+  if (nothingToReview) return <div className="content fc-page">{back}<EmptyState as="h1" icon={Layers} title="No cards to review" description="You have rated every card as confident." action={<Button as={Link} to={home} state={lessonState}>{homeLabel}</Button>} /></div>;
   if (finished) {
     const toRevisit = summary.total - summary.confident;
     return <div className="content fc-page">
