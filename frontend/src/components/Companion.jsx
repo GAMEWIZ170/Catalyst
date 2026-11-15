@@ -11,9 +11,9 @@ const CATEGORIES = [["wrong_answer", "It is wrong"], ["unclear", "It is unclear"
 // shows where each answer came from, and never gives the final answer to a test item. Nothing is kept on the server:
 // the last few turns are sent with each message. It is not placed on test or exam screens, and the server refuses it
 // while a timed quiz or exam is running.
-export default function Companion({ kind, id }) {
+export default function Companion({ kind, id, defaultOpen = false }) {
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [status, setStatus] = useState(null);
   const [turns, setTurns] = useState([]);          // { role, content, sources?, flagged? }
   const [text, setText] = useState("");

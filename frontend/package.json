@@ -9,6 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@astryxdesign/core": "^0.7.16",
+    "@astryxdesign/theme-neutral": "^0.7.16",
+    "@stylexjs/stylex": "^0.19.2",
     "@tiptap/extension-mathematics": "^3.34.0",
     "@tiptap/pm": "^3.34.0",
     "@tiptap/react": "^3.34.0",
