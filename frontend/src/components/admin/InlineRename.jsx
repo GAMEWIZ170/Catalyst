@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui";
 
-export default function InlineRename({ name, onSave, disabled = false, as: Title = "strong" }) {
-  const [editing, setEditing] = useState(false);
+export default function InlineRename({ name, onSave, disabled = false, as: Title = "strong", autoEdit = false }) {
+  const [editing, setEditing] = useState(autoEdit);
   const [value, setValue] = useState(name);
   const inputRef = useRef(null);
 

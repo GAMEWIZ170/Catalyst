@@ -1,49 +1,50 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { BookOpen } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { BookOpen, Plus, Trash2 } from "lucide-react";
+import { Banner } from "@astryxdesign/core/Banner";
+import { Button } from "@astryxdesign/core/Button";
+import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
+import { EmptyState } from "@astryxdesign/core/EmptyState";
+import { Heading } from "@astryxdesign/core/Heading";
+import { List, ListItem } from "@astryxdesign/core/List";
+import { MoreMenu } from "@astryxdesign/core/MoreMenu";
+import { HStack, VStack } from "@astryxdesign/core/Stack";
+import { Switch } from "@astryxdesign/core/Switch";
+import { Text } from "@astryxdesign/core/Text";
+import { TextInput } from "@astryxdesign/core/TextInput";
 import { api } from "../api/client";
 import AdminLayout from "../components/admin/AdminLayout";
-import ActionMenu from "../components/admin/ActionMenu";
-import ConfirmDialog from "../components/admin/ConfirmDialog";
-import StatusMessage from "../components/admin/StatusMessage";
-import Switch from "../components/admin/Switch";
-import { Button, Dialog, EmptyState, TextArea, TextField } from "../components/ui";
+import AstryxTheme from "../components/astryx/AstryxTheme";
 import { ErrorState, Loading } from "./Courses";
+import "../styles/admin-polish.css";
 
-const emptyCourse = { code: "", title: "", description: "", isPublished: false };
+const getCourses = (payload) => (Array.isArray(payload) ? payload : payload.data || []);
+const categoryOf = (course) => (typeof course.category === "string" ? course.category.trim() : "");
 
-function getCourses(payload) {
-  return Array.isArray(payload) ? payload : payload.data || [];
-}
-
+// The course list. "New course" makes a course at once ("Untitled course") and opens it, where its title is ready to change.
+// Filter by category with the chips, or search by code or title. Publishing is a switch; Delete is in each row's ⋯ menu.
 export default function AdminCourses() {
   const navigate = useNavigate();
-  const [createOpen, setCreateOpen] = useState(false);
   const [courses, setCourses] = useState([]);
-  const [form, setForm] = useState(emptyCourse);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
-  const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [stats, setStats] = useState(null);
   const [query, setQuery] = useState("");
-  const [createError, setCreateError] = useState("");
-
   const [category, setCategory] = useState("");   // "" = all, "__general" = courses with no category
-  const categories = useMemo(() => [...new Set(courses.map((course) => (typeof course.category === "string" ? course.category.trim() : "")).filter(Boolean))].sort((a, b) => a.localeCompare(b)), [courses]);
-  const hasGeneral = courses.some((course) => !(typeof course.category === "string" && course.category.trim()));
+  const [creating, setCreating] = useState(false);
 
+  const categories = useMemo(() => [...new Set(courses.map(categoryOf).filter(Boolean))].sort((a, b) => a.localeCompare(b)), [courses]);
+  const hasGeneral = courses.some((course) => !categoryOf(course));
   const visible = useMemo(() => {
     const term = query.trim().toLowerCase();
-    const named = (course) => (typeof course.category === "string" ? course.category.trim() : "");
     return courses
-      .filter((course) => !category || (category === "__general" ? !named(course) : named(course) === category))
+      .filter((course) => !category || (category === "__general" ? !categoryOf(course) : categoryOf(course) === category))
       .filter((course) => !term || `${course.code} ${course.title}`.toLowerCase().includes(term));
   }, [courses, query, category]);
 
-  async function load() {
-    setLoading(true);
+  async function load(silent = false) {
+    if (!silent) setLoading(true);
     setError("");
     // The overview is a nice extra: the course list must still work if it fails.
     api.getAdminStats().then(({ data }) => setStats(data)).catch(() => setStats(null));
@@ -55,116 +56,99 @@ export default function AdminCourses() {
       setLoading(false);
     }
   }
-
   useEffect(() => { load(); }, []);
 
-  function openCreate() {
-    setForm(emptyCourse);
-    setCreateError("");
-    setCreateOpen(true);
-  }
-
-  function closeCreate() {
-    setCreateOpen(false);
-  }
-
-  async function createCourse(event) {
-    event.preventDefault();
-    setSaving(true);
-    setCreateError("");
+  async function createCourse() {
+    setCreating(true);
+    setError("");
     try {
-      const payload = await api.createCourse(form);
+      // The code must be unique, so the new course gets a temporary one the admin changes in the editor.
+      const code = `NEW-${Date.now().toString(36).toUpperCase()}`;
+      const payload = await api.createCourse({ code, title: "Untitled course", description: "Add a short description." });
       const course = payload.data || payload;
-      closeCreate();
       navigate(`/admin/courses/${course._id || course.id}`);
     } catch (err) {
-      setCreateError(err.message);
-    } finally {
-      setSaving(false);
+      setError(err.message);
+      setCreating(false);
     }
   }
 
   async function publish(course, isPublished) {
-    setMessage("");
-    setError("");
+    setCourses((rows) => rows.map((row) => ((row._id || row.id) === (course._id || course.id) ? { ...row, isPublished } : row)));
     try {
       await api.updateCourse(course._id || course.id, { isPublished });
-      setMessage(isPublished ? "Published" : "Unpublished");
-      await load();
+      load(true);
     } catch (err) {
       setError(err.message);
+      load(true);
     }
   }
 
   async function deleteCourse() {
-    setError("");
+    const target = deleteTarget;
+    setDeleteTarget(null);
     try {
-      await api.deleteCourse(deleteTarget._id || deleteTarget.id);
-      setDeleteTarget(null);
-      setMessage("Course deleted");
-      await load();
+      await api.deleteCourse(target._id || target.id);
+      await load(true);
     } catch (err) {
       setError(err.message);
     }
   }
 
+  const newButton = <Button label="New course" variant="primary" icon={<Plus size={18} aria-hidden="true" />} isLoading={creating} onClick={createCourse} />;
   return <AdminLayout>
-    <div className="admin-heading">
-      <div>
-        <h1>Courses</h1>
-        <p className="muted">Manage courses and their learning content.</p>
+    <AstryxTheme>
+      <div className="admin-astryx">
+        <VStack gap={4}>
+          <HStack justify="between" align="center" wrap="wrap" gap={3}>
+            <VStack gap={1}>
+              <Heading level={1}>Courses</Heading>
+              {stats && <Text color="secondary">
+                {stats.students.total} students · {stats.students.activeLast7Days} active this week · {stats.courses.published} published, {stats.courses.draft} {stats.courses.draft === 1 ? "draft" : "drafts"}
+              </Text>}
+            </VStack>
+            {newButton}
+          </HStack>
+
+          {error && courses.length > 0 && <Banner status="error" title={error} container="section" isDismissable onDismiss={() => setError("")} />}
+          {loading && <Loading />}
+          {error && !loading && courses.length === 0 && <ErrorState message={error} onRetry={load} />}
+          {!loading && !error && courses.length === 0 && <EmptyState icon={<BookOpen size={32} aria-hidden="true" />} title="No courses yet" description="Create the first course to start adding units and lessons." actions={newButton} />}
+
+          {!loading && courses.length > 0 && <>
+            <HStack gap={3} wrap="wrap" align="center" justify="between">
+              {categories.length > 0
+                ? <div className="chip-row" role="group" aria-label="Filter by category" style={{ margin: 0 }}>
+                  <button type="button" className="chip" aria-pressed={!category} onClick={() => setCategory("")}>All</button>
+                  {categories.map((name) => <button type="button" className="chip" key={name} aria-pressed={category === name} onClick={() => setCategory(name)}>{name}</button>)}
+                  {hasGeneral && <button type="button" className="chip" aria-pressed={category === "__general"} onClick={() => setCategory("__general")}>General</button>}
+                </div>
+                : <span />}
+              {courses.length > 4 && <TextInput type="search" label="Search courses" isLabelHidden placeholder="Search by code or title" size="sm" width={240} value={query} onChange={setQuery} hasClear />}
+            </HStack>
+            {visible.length === 0
+              ? <Text color="secondary">No course matches{query ? ` "${query}"` : " this filter"}.</Text>
+              : <List hasDividers>
+                {visible.map((course) => {
+                  const id = course._id || course.id;
+                  return <ListItem key={id} label={course.title} description={[course.code, categoryOf(course)].filter(Boolean).join(" · ")} href={`/admin/courses/${id}`}
+                    endContent={<HStack gap={2} align="center">
+                      <Switch label={course.isPublished ? "Published" : "Publish"} value={Boolean(course.isPublished)} onChange={(value) => publish(course, value)} labelPosition="start" />
+                      <MoreMenu label={`Options for ${course.title}`} alignment="end" items={[{ label: "Delete course", icon: <Trash2 size={18} aria-hidden="true" />, variant: "destructive", onClick: () => setDeleteTarget(course) }]} />
+                    </HStack>} />;
+                })}
+              </List>}
+          </>}
+        </VStack>
+
+        <Dialog isOpen={Boolean(deleteTarget)} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }} width={440}>
+          <DialogHeader title="Delete course?" onOpenChange={(open) => { if (!open) setDeleteTarget(null); }} />
+          <VStack gap={4} padding={4}>
+            <Text>The course will disappear for students. Its content is kept, and you can restore the course later from the Trash.</Text>
+            <HStack gap={2} justify="end"><Button label="Cancel" variant="ghost" onClick={() => setDeleteTarget(null)} /><Button label="Delete course" variant="destructive" onClick={deleteCourse} /></HStack>
+          </VStack>
+        </Dialog>
       </div>
-      <Button onClick={openCreate}>New course</Button>
-    </div>
-    {stats && <dl className="admin-stats" aria-label="Overview">
-      <div><dt>Students</dt><dd>{stats.students.total}</dd><dd className="muted">{stats.students.joinedLast7Days} joined this week</dd></div>
-      <div><dt>Active this week</dt><dd>{stats.students.activeLast7Days}</dd><dd className="muted">{stats.testAttemptsLast7Days} test {stats.testAttemptsLast7Days === 1 ? "attempt" : "attempts"}</dd></div>
-      {stats.subscriptions.required && <div><dt>Subscribed</dt><dd>{stats.subscriptions.active}</dd><dd className="muted">of {stats.students.total} students</dd></div>}
-      <div><dt>Courses</dt><dd>{stats.courses.published}</dd><dd className="muted">published, {stats.courses.draft} {stats.courses.draft === 1 ? "draft" : "drafts"}</dd></div>
-    </dl>}
-    <StatusMessage message={message} error={Boolean(error)} />
-    {!loading && !error && courses.length > 4 && <TextField className="course-search" label="Search courses" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Code or title" />}
-    {!loading && !error && categories.length > 0 && <div className="chip-row" role="group" aria-label="Filter by category">
-      <button type="button" className="chip" aria-pressed={!category} onClick={() => setCategory("")}>All</button>
-      {categories.map((name) => <button type="button" className="chip" key={name} aria-pressed={category === name} onClick={() => setCategory(name)}>{name}</button>)}
-      {hasGeneral && <button type="button" className="chip" aria-pressed={category === "__general"} onClick={() => setCategory("__general")}>General</button>}
-    </div>}
-    {error && <ErrorState message={error} onRetry={load} />}
-    {loading && <Loading />}
-    {!loading && !error && courses.length === 0 && <EmptyState icon={BookOpen} title="No courses yet" description="Create the first course to start adding units and lessons." action={<Button onClick={openCreate}>New course</Button>} />}
-    {!loading && !error && courses.length > 0 && visible.length === 0 && <p className="muted">No course matches{query ? ` "${query}"` : " this filter"}.</p>}
-    {!loading && !error && visible.length > 0 && <div className="admin-course-list">
-      {visible.map((course) => {
-        const id = course._id || course.id;
-        return <article className="admin-course-row" key={id}>
-          <Link className="admin-course-main" to={`/admin/courses/${id}`}>
-            <strong>{course.code}</strong>
-            <span>{course.title}</span>
-            <small>{course.description}</small>
-          </Link>
-          <Switch checked={course.isPublished} onChange={(value) => publish(course, value)} label={course.isPublished ? "Published" : "Publish"} />
-          <ActionMenu actions={[{ label: "Delete course", onSelect: () => setDeleteTarget(course) }]} />
-        </article>;
-      })}
-    </div>}
-    <Dialog open={createOpen} onClose={closeCreate} title="New course" actions={<>
-      <Button variant="secondary" onClick={closeCreate}>Cancel</Button>
-      <Button type="submit" form="create-course-form" loading={saving}>{saving ? "Creating..." : "Create course"}</Button>
-    </>}>
-      <form id="create-course-form" className="form-stack" onSubmit={createCourse}>
-        {createError && <p className="form-error" role="alert">{createError}</p>}
-        <TextField label="Code" required value={form.code} onChange={(event) => setForm({ ...form, code: event.target.value })} />
-        <TextField label="Title" required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
-        <TextArea label="Short description" required maxLength="200" hint={`${form.description.length}/200`} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
-      </form>
-    </Dialog>
-    <ConfirmDialog
-      open={Boolean(deleteTarget)}
-      title="Delete course?"
-      description="The course will disappear for students. Its content is kept, and you can restore the course later from the Trash."
-      confirmLabel="Delete course"
-      onConfirm={deleteCourse}
-      onCancel={() => setDeleteTarget(null)}
-    />
+    </AstryxTheme>
   </AdminLayout>;
 }

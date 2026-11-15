@@ -12,7 +12,8 @@ import InlineRename from "../components/admin/InlineRename";
 import StatusBadge from "../components/admin/StatusBadge";
 import StatusMessage from "../components/admin/StatusMessage";
 import Switch from "../components/admin/Switch";
-import useUnsavedChanges from "../hooks/useUnsavedChanges";
+import CourseDetails from "../components/admin/CourseDetails";
+import "../styles/admin-polish.css";
 import MoveButton from "../components/admin/MoveButton";
 
 function dataOf(payload) {
@@ -23,40 +24,27 @@ function idOf(item) {
   return item._id || item.id;
 }
 
-// The editable part of a course, in the shape the form keeps. A course with no category has "".
-function detailsOf(course) {
-  return { code: course.code || "", title: course.title || "", description: course.description || "", category: typeof course.category === "string" ? course.category : "", authors: (course.authors || []).map((author) => ({ displayName: author.displayName || "", bio: author.bio || "" })) };
-}
-
 export default function AdminCourseEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [course, setCourse] = useState(null);
-  const [details, setDetails] = useState(null);
+  const [justAdded, setJustAdded] = useState(null);   // id of a unit just created, opened for naming
   const [categoryNames, setCategoryNames] = useState([]);   // categories already used by other courses, offered as suggestions
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [addUnit, setAddUnit] = useState(false);
-  const [newUnit, setNewUnit] = useState("");
-  const [addLesson, setAddLesson] = useState(null);
-  const [newLesson, setNewLesson] = useState("");
   const [confirmTarget, setConfirmTarget] = useState(null);
   const [summaryBusy, setSummaryBusy] = useState(null); // id of the unit whose PDF is being made
   const [focusTarget, setFocusTarget] = useState(null);
   const unitButtonRefs = useRef({});
   const lessonButtonRefs = useRef({});
-  const dirty = Boolean(details && JSON.stringify(details) !== JSON.stringify(detailsOf(course)));
-  const blocker = useUnsavedChanges(dirty);
 
-  async function load() {
-    setLoading(true);
+  async function load(silent = false) {
+    if (!silent) setLoading(true);
     setError("");
     try {
       const next = dataOf(await api.getAdminCourse(id));
       setCourse(next);
-      setDetails(detailsOf(next));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -78,19 +66,10 @@ export default function AdminCourseEditor() {
     setFocusTarget(null);
   }, [course, focusTarget]);
 
-  async function saveDetails(event) {
-    event.preventDefault();
-    setSaving(true);
-    setError("");
-    try {
-      await api.updateCourse(id, { code: details.code, title: details.title, description: details.description, category: details.category.trim(), authors: details.authors.filter((author) => author.displayName.trim().length >= 2).map((author) => ({ displayName: author.displayName.trim(), bio: author.bio.trim() })) });
-      setMessage("Saved");
-      await load();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSaving(false);
-    }
+  // A detail changed: save it at once and refresh quietly. Throws so the details rows can show the problem.
+  async function saveCourse(patch) {
+    await api.updateCourse(id, patch);
+    await load(true);
   }
 
   async function setFree(value) {
@@ -152,29 +131,22 @@ export default function AdminCourseEditor() {
     }
   }
 
-  async function createUnit(event) {
-    event.preventDefault();
-    if (!newUnit.trim()) return;
+  // "Add unit" makes "Untitled unit" at once and opens its name for typing.
+  async function createUnit() {
     try {
-      await api.createUnit({ course: id, title: newUnit.trim(), order: (course.units || []).length + 1 });
-      setNewUnit("");
-      setAddUnit(false);
-      setMessage("Saved");
-      await load();
+      const created = dataOf(await api.createUnit({ course: id, title: "Untitled unit", order: (course.units || []).length + 1 }));
+      setJustAdded(idOf(created));
+      await load(true);
     } catch (err) {
       setError(err.message);
     }
   }
 
-  async function createLesson(event, unit) {
-    event.preventDefault();
-    if (!newLesson.trim()) return;
+  // "Add lesson" makes "Untitled lesson" at once and opens it, where its title is the first thing to change.
+  async function createLesson(unit) {
     try {
-      await api.createLesson({ unit: idOf(unit), title: newLesson.trim(), order: (unit.lessons || []).length + 1, explanation: "Explanation coming soon.", isPublished: false });
-      setNewLesson("");
-      setAddLesson(null);
-      setMessage("Saved");
-      await load();
+      const created = dataOf(await api.createLesson({ unit: idOf(unit), title: "Untitled lesson", order: (unit.lessons || []).length + 1, explanation: "Explanation coming soon.", isPublished: false }));
+      navigate(`/admin/lessons/${idOf(created)}`, { state: { context: { courseCode: course.code || "", unitTitle: unit.title } } });
     } catch (err) {
       setError(err.message);
     }
@@ -194,7 +166,7 @@ export default function AdminCourseEditor() {
     try {
       await api.updateUnit(idOf(unit), { title });
       setMessage("Saved");
-      await load();
+      await load(true);
     } catch (err) {
       setError(err.message);
     }
@@ -217,29 +189,12 @@ export default function AdminCourseEditor() {
 
   const units = course.units || [];
   const courseTests = course.tests || course.courseTests || [];
-  return <div className="admin-layout"><div className="admin-layout-inner">
+  return <div className="admin-layout"><div className="admin-layout-inner admin-capped">
     <Breadcrumbs items={[{ label: "Courses", to: "/admin" }, { label: course.code }]} />
-    <div className="admin-heading"><h1>{course.code}</h1><Switch checked={course.isPublished} onChange={publish} label={course.isPublished ? "Published" : "Publish"} /><Switch checked={Boolean(course.isFree)} onChange={setFree} label={course.isFree ? "Free for everyone" : "Make free"} /></div>
+    <div className="admin-heading"><h1>{course.title || course.code}</h1><Switch checked={course.isPublished} onChange={publish} label={course.isPublished ? "Published" : "Publish"} /><Switch checked={Boolean(course.isFree)} onChange={setFree} label={course.isFree ? "Free for everyone" : "Make free"} /></div>
     <StatusMessage message={error || message} error={Boolean(error)} />
     <section className="admin-editor-section">
-      <h2>Course details</h2>
-      <form className="admin-details-form" onSubmit={saveDetails}>
-        <TextField label="Code" required value={details.code} onChange={(event) => setDetails({ ...details, code: event.target.value })} />
-        <TextField label="Title" required value={details.title} onChange={(event) => setDetails({ ...details, title: event.target.value })} />
-        <TextArea label="Description" required maxLength="200" value={details.description} onChange={(event) => setDetails({ ...details, description: event.target.value })} />
-        <TextField label="Category (optional)" list="course-categories" maxLength="60" value={details.category} onChange={(event) => setDetails({ ...details, category: event.target.value })} hint="Courses with the same category are grouped together. Leave empty for General." />
-        <datalist id="course-categories">{categoryNames.map((name) => <option key={name} value={name} />)}</datalist>
-        <fieldset className="author-picker">
-          <legend>Authors</legend>
-          {details.authors.map((author, index) => <div className="option-row" key={index}>
-            <TextField label={`Author ${index + 1} name`} maxLength="80" value={author.displayName} onChange={(event) => setDetails({ ...details, authors: details.authors.map((item, at) => (at === index ? { ...item, displayName: event.target.value } : item)) })} />
-            <TextField label="Short bio (optional)" maxLength="300" value={author.bio} onChange={(event) => setDetails({ ...details, authors: details.authors.map((item, at) => (at === index ? { ...item, bio: event.target.value } : item)) })} />
-            <Button variant="secondary" type="button" onClick={() => setDetails({ ...details, authors: details.authors.filter((_, at) => at !== index) })} aria-label={`Remove author ${index + 1}`}>Remove</Button>
-          </div>)}
-          {details.authors.length < 10 && <Button variant="secondary" type="button" onClick={() => setDetails({ ...details, authors: [...details.authors, { displayName: "", bio: "" }] })}>Add author</Button>}
-        </fieldset>
-        <div className="editor-actions"><span className="muted">{dirty ? "Unsaved changes" : ""}</span><Button variant="secondary" type="button" disabled={!dirty} onClick={() => setDetails(detailsOf(course))}>Discard changes</Button><Button variant="primary" type="submit" disabled={!dirty || saving}>Save changes</Button></div>
-      </form>
+      <CourseDetails course={course} categoryNames={categoryNames} onSave={saveCourse} />
     </section>
     <section className="admin-editor-section">
       <h2>Units and lessons</h2>
@@ -248,7 +203,7 @@ export default function AdminCourseEditor() {
           const unitId = idOf(unit);
           const lessons = unit.lessons || [];
           return <article className="unit-card" key={unitId}>
-            <header className="tree-item-header"><InlineRename name={unit.title} onSave={(title) => renameUnit(unit, title)} /><div className="tree-controls"><MoveButton buttonRef={(element) => { unitButtonRefs.current[`${unitId}-up`] = element; }} direction="up" disabled={index === 0} onClick={() => reorder("unit", id, units, index, -1)} /><MoveButton buttonRef={(element) => { unitButtonRefs.current[`${unitId}-down`] = element; }} direction="down" disabled={index === units.length - 1} onClick={() => reorder("unit", id, units, index, 1)} /><ActionMenu actions={[{ label: "Delete unit", onSelect: () => setConfirmTarget({ type: "unit", item: unit }) }]} /></div></header>
+            <header className="tree-item-header"><InlineRename name={unit.title} autoEdit={justAdded === unitId} onSave={(title) => renameUnit(unit, title)} /><div className="tree-controls"><MoveButton buttonRef={(element) => { unitButtonRefs.current[`${unitId}-up`] = element; }} direction="up" disabled={index === 0} onClick={() => reorder("unit", id, units, index, -1)} /><MoveButton buttonRef={(element) => { unitButtonRefs.current[`${unitId}-down`] = element; }} direction="down" disabled={index === units.length - 1} onClick={() => reorder("unit", id, units, index, 1)} /><ActionMenu actions={[{ label: "Delete unit", onSelect: () => setConfirmTarget({ type: "unit", item: unit }) }]} /></div></header>
             {lessons.map((lesson, lessonIndex) => {
               const lessonId = idOf(lesson);
               return <div className="lesson-row" key={lessonId}>
@@ -258,14 +213,13 @@ export default function AdminCourseEditor() {
               </div>;
             })}
             {unit.tests?.map((test) => <Link className="test-row" key={idOf(test)} to={`/admin/tests/${idOf(test)}`} state={{ trail: [{ label: "Courses", to: "/admin" }, { label: course.code || course.title, to: `/admin/courses/${id}` }, { label: unit.title, to: `/admin/courses/${id}` }, { label: test.title }] }}><span>{test.title}</span><StatusBadge isPublished={test.isPublished} /><span>{test.questionCount || test.questions?.length || 0} questions</span></Link>)}
-            {addLesson === unitId ? <form className="inline-add-form" onSubmit={(event) => createLesson(event, unit)}><input autoFocus required value={newLesson} onChange={(event) => setNewLesson(event.target.value)} aria-label="Lesson title" /><Button variant="primary" type="submit">Add lesson</Button><Button variant="secondary" type="button" onClick={() => setAddLesson(null)}>Cancel</Button></form> : <div className="tree-add-actions"><Button variant="secondary" type="button" onClick={() => setAddLesson(unitId)}>Add lesson</Button><Button variant="secondary" type="button" onClick={() => createTest("unit", unitId)}>Add unit test</Button><Button variant="secondary" type="button" loading={summaryBusy === unitId} disabled={Boolean(summaryBusy) || lessons.length === 0} onClick={() => createSummary(unit)}>Create summary PDF</Button></div>}
+            <div className="tree-add-actions"><Button variant="secondary" type="button" onClick={() => createLesson(unit)}>Add lesson</Button><Button variant="secondary" type="button" onClick={() => createTest("unit", unitId)}>Add unit test</Button><Button variant="secondary" type="button" loading={summaryBusy === unitId} disabled={Boolean(summaryBusy) || lessons.length === 0} onClick={() => createSummary(unit)}>Create summary PDF</Button></div>
           </article>;
         })}
       </div>
-      {addUnit ? <form className="inline-add-form" onSubmit={createUnit}><input autoFocus required value={newUnit} onChange={(event) => setNewUnit(event.target.value)} aria-label="Unit title" /><Button variant="primary" type="submit">Add unit</Button><Button variant="secondary" type="button" onClick={() => setAddUnit(false)}>Cancel</Button></form> : <Button variant="secondary" type="button" onClick={() => setAddUnit(true)}>Add unit</Button>}
+      <Button variant="secondary" type="button" onClick={createUnit}>Add unit</Button>
     </section>
     <section className="admin-editor-section"><h2>Course tests</h2>{courseTests.map((test) => <Link className="test-row" key={idOf(test)} to={`/admin/tests/${idOf(test)}`} state={{ trail: [{ label: "Courses", to: "/admin" }, { label: course.code || course.title, to: `/admin/courses/${id}` }, { label: test.title }] }}><span>{test.title}</span><StatusBadge isPublished={test.isPublished} /><span>{test.questionCount || test.questions?.length || 0} questions</span></Link>)}<Button variant="secondary" type="button" onClick={() => createTest("course", id)}>Add course test</Button></section>
     <ConfirmDialog open={Boolean(confirmTarget)} title={`Delete ${confirmTarget?.type || "item"}?`} description="This content will be removed from the course. You can restore it later from the Trash." confirmLabel="Delete" onConfirm={removeTarget} onCancel={() => setConfirmTarget(null)} />
-    <ConfirmDialog open={blocker.state === "blocked"} title="Leave without saving?" description="Your unsaved changes will be lost." cancelLabel="Stay" confirmLabel="Leave" onConfirm={() => blocker.proceed()} onCancel={() => blocker.reset()} />
   </div></div>;
 }
