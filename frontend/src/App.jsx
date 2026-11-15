@@ -49,7 +49,6 @@ const CommunitySet = lazy(() => import("./pages/CommunitySet"));
 const CommunityBoards = lazy(() => import("./pages/CommunityBoards"));
 const AdminCommunity = lazy(() => import("./pages/AdminCommunity"));
 const Challenge = lazy(() => import("./pages/Challenge"));
-const AdminCatalog = lazy(() => import("./pages/AdminCatalog"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 import AdminLayout from "./components/admin/AdminLayout";
 import { Skeleton, SkeletonGroup } from "./components/ui";
@@ -133,7 +132,6 @@ export default function App() {
     <Route path="/admin/tests/:id" element={<AdminPage><AdminTestEditor /></AdminPage>} />
     <Route path="/admin/lessons/:id" element={<AdminPage><AdminLessonEditor /></AdminPage>} />
     <Route path="/admin/dashboard" element={<AdminPage><AdminDashboard /></AdminPage>} />
-    <Route path="/admin/catalog" element={<AdminPage><AdminCatalog /></AdminPage>} />
     <Route path="/admin/users" element={<AdminPage><AdminUsers /></AdminPage>} />
     <Route path="/admin/trash" element={<AdminPage><AdminTrash /></AdminPage>} />
     <Route path="/admin/reports" element={<AdminPage><AdminReports /></AdminPage>} />

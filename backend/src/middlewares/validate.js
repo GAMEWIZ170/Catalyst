@@ -209,8 +209,8 @@ const courseFields = {
   description: Joi.string().trim().max(200),
   isPublished: Joi.boolean(),
   isFree: Joi.boolean(),
-  category: objectId.allow(null),
-  authors: Joi.array().items(objectId).max(10).unique()
+  category: Joi.string().trim().max(60).allow("", null),
+  authors: Joi.array().items(Joi.object({ displayName: Joi.string().trim().min(2).max(80).required(), bio: Joi.string().trim().allow("").max(300).default("") })).max(10)
 };
 const validateCourse = validateWith(Joi.object({
   code: courseFields.code.required(),
@@ -218,14 +218,9 @@ const validateCourse = validateWith(Joi.object({
   description: courseFields.description.required(),
   isPublished: courseFields.isPublished.default(false),
   isFree: courseFields.isFree.default(false),
-  category: courseFields.category.default(null),
+  category: courseFields.category.default(""),
   authors: courseFields.authors.default([])
 }));
-const validateCategory = validateWith(Joi.object({ name: Joi.string().trim().min(2).max(60).required(), order: Joi.number().integer().min(0).max(1000) }));
-const validateCategoryUpdate = validateWith(Joi.object({ name: Joi.string().trim().min(2).max(60), order: Joi.number().integer().min(0).max(1000) }).min(1));
-const authorFields = { displayName: Joi.string().trim().min(2).max(80), bio: Joi.string().trim().allow("").max(300), avatar: optionalImage };
-const validateAuthor = validateWith(Joi.object({ displayName: authorFields.displayName.required(), bio: authorFields.bio.default(""), avatar: authorFields.avatar.default(null) }));
-const validateAuthorUpdate = validateWith(Joi.object(authorFields).min(1));
 const validateCourseUpdate = validateWith(Joi.object(courseFields).min(1));
 
 const unitFields = { course: objectId, title: Joi.string().trim(), order: Joi.number().integer().min(1) };
@@ -531,10 +526,6 @@ module.exports = {
   validateNote,
   validateCourse,
   validateCourseUpdate,
-  validateCategory,
-  validateCategoryUpdate,
-  validateAuthor,
-  validateAuthorUpdate,
   validateUnit,
   validateUnitUpdate,
   validateLesson,

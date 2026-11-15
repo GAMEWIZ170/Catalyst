@@ -99,7 +99,7 @@ export default function CourseOutline() {
       <p className="ol-code">{course.code}</p>
       <h1>{course.title}</h1>
       <CourseByline course={course} className="ol-byline" />
-      {course.authors?.some((author) => author.bio) && <ul className="ol-authors muted">{course.authors.filter((author) => author.bio).map((author) => <li key={author._id}><strong>{author.displayName}</strong>: {author.bio}</li>)}</ul>}
+      {course.authors?.some((author) => author.bio) && <ul className="ol-authors muted">{course.authors.filter((author) => author.bio).map((author, index) => <li key={`${author.displayName}-${index}`}><strong>{author.displayName}</strong>: {author.bio}</li>)}</ul>}
       <p className="muted">{completed} of {total} lessons complete</p>
       <Progress value={percent} label="Course progress" />
       {nextLesson && <div className="button-row button-row--stack">

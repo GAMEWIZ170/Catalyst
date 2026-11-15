@@ -186,8 +186,8 @@ All routes need login. Messages are in-app only (no email).
 
 | Method | Path | Access | Purpose |
 | --- | --- | --- | --- |
-| GET | `/courses` | Student | Published courses, each with `category` (`{ _id, name, slug }`, General when none) and `authors` (`displayName`, `bio`, `avatar`). `?category=<slug>` filters; `general` also matches courses with no category |
-| GET | `/courses/categories` | Student | Categories that have a published course (General included when some course has none), for the filter |
+| GET | `/courses` | Student | Published courses, each with `category` (`{ name, slug }`, General when the course has none) and `authors` (`displayName`, `bio`). `?category=<slug>` filters; `general` takes courses with no category. Category is plain text on the course; there is no separate catalog |
+| GET | `/courses/categories` | Student | The categories in use by published courses (General included when some course has none), for the filter |
 | POST | `/events` | Student | Body `{ type: "video_started" | "focus_session_completed", props? }`. Answers 204. Only things the server cannot see itself. Ignored for admins |
 | GET | `/home` | Student | Every published course (with `category` and `authors`) with this student's progress and the next lesson to open |
 | GET | `/courses/:id` | Student | Course outline, tests and lesson progress |
@@ -370,17 +370,9 @@ Create routes require an available parent. Delete routes are soft deletes.
 | --- | --- | --- |
 | GET | `/admin/courses` | List all non-deleted courses |
 | GET | `/admin/courses/:id` | Full editor tree with drafts, tests and lesson counts |
-| POST | `/admin/courses` | Create a course. Optional `category` (id or null) and `authors` (up to 10 ids); 400 when one does not exist |
+| POST | `/admin/courses` | Create a course. Optional `category` (text up to 60 characters, empty or null for General) and `authors` (up to 10 objects `{ displayName, bio? }`) |
 | PUT | `/admin/courses/:id` | Update a course (same optional `category` and `authors`) |
 | GET | `/admin/dashboard` | The dashboard numbers: `computedAt`, 30 days of `trend` (dau, wau, mau, signups), `stickiness` (DAU divided by MAU, latest finished day), `latest`, `signupsThisWeek`, `openReports` (live) and `summary` (activation, retention, top lessons, drop-off, 7 and 30 day totals). `summary` is null until the stats script has run |
-| GET | `/admin/categories` | Every category, by order then name |
-| POST | `/admin/categories` | Body `{ name, order? }`. The slug is made from the name. "General" is reserved. 409 on a clash |
-| PUT | `/admin/categories/:id` | Rename or reorder |
-| DELETE | `/admin/categories/:id` | Delete. Its courses fall back to General |
-| GET | `/admin/authors` | Every author |
-| POST | `/admin/authors` | Body `{ displayName, bio?, avatar? }` (avatar is an uploaded image like other images) |
-| PUT | `/admin/authors/:id` | Update an author |
-| DELETE | `/admin/authors/:id` | Delete. The author is removed from every course |
 | DELETE | `/admin/courses/:id` | Soft-delete a course |
 | POST | `/admin/units` | Create a unit |
 | POST | `/admin/units/:id/summary-pdf` | Body `{ lesson }` (optional: one of the unit's lessons, else the first). Makes a PDF of the unit's published lessons and saves it as an unpublished PDF material on that lesson. 409 when the unit has no published lessons. 30 per 15 minutes (upload limit) |
@@ -662,6 +654,10 @@ Everything is checked against the owner (`utils/ownSet.js`), so another student'
 - **Activation:** of students who signed up in the last 8 weeks and at least 48 hours ago, the share who completed a lesson and submitted a test within 48 hours of signing up. Only sign-ups in the event log count, so students from before the event log (X1) are not in it.
 - **Lessons (last 30 days, each student counted once per lesson):** "most completed" ranks by students who completed; "drop off" lists lessons opened by 3 or more students, ordered by the share who did not complete.
 - Study set, challenge and achievement counts are 0 until those features exist (achievements are not tracked at all yet).
+
+### Course category and authors
+
+A course's `category` is text and its `authors` are `[{ displayName, bio }]`, both stored on the course. The old Category and Author collections and the `/admin/categories` and `/admin/authors` routes were removed. Existing data is converted once with `npm run migrate:course-meta` (add `-- --drop` afterwards to drop the old `categories` and `authors` collections). Run it on each database you use.
 
 ### Focus timer and exam countdown
 

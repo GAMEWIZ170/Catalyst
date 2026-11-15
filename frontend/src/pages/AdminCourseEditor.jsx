@@ -25,7 +25,7 @@ function idOf(item) {
 
 // The editable part of a course, in the shape the form keeps. A course with no category has "".
 function detailsOf(course) {
-  return { code: course.code || "", title: course.title || "", description: course.description || "", category: course.category || "", authors: course.authors || [] };
+  return { code: course.code || "", title: course.title || "", description: course.description || "", category: typeof course.category === "string" ? course.category : "", authors: (course.authors || []).map((author) => ({ displayName: author.displayName || "", bio: author.bio || "" })) };
 }
 
 export default function AdminCourseEditor() {
@@ -33,7 +33,7 @@ export default function AdminCourseEditor() {
   const navigate = useNavigate();
   const [course, setCourse] = useState(null);
   const [details, setDetails] = useState(null);
-  const [catalog, setCatalog] = useState({ categories: [], authors: [] });
+  const [categoryNames, setCategoryNames] = useState([]);   // categories already used by other courses, offered as suggestions
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -67,9 +67,7 @@ export default function AdminCourseEditor() {
   useEffect(() => { load(); }, [id]);
 
   useEffect(() => {
-    Promise.all([api.getAdminCategories(), api.getAdminAuthors()])
-      .then(([categories, authors]) => setCatalog({ categories: categories.data || [], authors: authors.data || [] }))
-      .catch(() => {});
+    api.getCategories().then(({ data }) => setCategoryNames((data || []).filter((item) => item.slug !== "general").map((item) => item.name))).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -85,7 +83,7 @@ export default function AdminCourseEditor() {
     setSaving(true);
     setError("");
     try {
-      await api.updateCourse(id, { ...details, category: details.category || null });
+      await api.updateCourse(id, { code: details.code, title: details.title, description: details.description, category: details.category.trim(), authors: details.authors.filter((author) => author.displayName.trim().length >= 2).map((author) => ({ displayName: author.displayName.trim(), bio: author.bio.trim() })) });
       setMessage("Saved");
       await load();
     } catch (err) {
@@ -229,16 +227,16 @@ export default function AdminCourseEditor() {
         <TextField label="Code" required value={details.code} onChange={(event) => setDetails({ ...details, code: event.target.value })} />
         <TextField label="Title" required value={details.title} onChange={(event) => setDetails({ ...details, title: event.target.value })} />
         <TextArea label="Description" required maxLength="200" value={details.description} onChange={(event) => setDetails({ ...details, description: event.target.value })} />
-        <SelectField label="Category" value={details.category} onChange={(event) => setDetails({ ...details, category: event.target.value })}>
-          <option value="">General</option>
-          {catalog.categories.map((item) => <option key={item._id} value={item._id}>{item.name}</option>)}
-        </SelectField>
+        <TextField label="Category (optional)" list="course-categories" maxLength="60" value={details.category} onChange={(event) => setDetails({ ...details, category: event.target.value })} hint="Courses with the same category are grouped together. Leave empty for General." />
+        <datalist id="course-categories">{categoryNames.map((name) => <option key={name} value={name} />)}</datalist>
         <fieldset className="author-picker">
           <legend>Authors</legend>
-          {catalog.authors.length === 0 && <p className="muted">No authors yet.</p>}
-          {catalog.authors.map((author) => <Checkbox key={author._id} label={author.displayName} checked={details.authors.includes(author._id)}
-            onChange={(event) => setDetails({ ...details, authors: event.target.checked ? [...details.authors, author._id] : details.authors.filter((value) => value !== author._id) })} />)}
-          <Link to="/admin/catalog">Manage categories and authors</Link>
+          {details.authors.map((author, index) => <div className="option-row" key={index}>
+            <TextField label={`Author ${index + 1} name`} maxLength="80" value={author.displayName} onChange={(event) => setDetails({ ...details, authors: details.authors.map((item, at) => (at === index ? { ...item, displayName: event.target.value } : item)) })} />
+            <TextField label="Short bio (optional)" maxLength="300" value={author.bio} onChange={(event) => setDetails({ ...details, authors: details.authors.map((item, at) => (at === index ? { ...item, bio: event.target.value } : item)) })} />
+            <Button variant="secondary" type="button" onClick={() => setDetails({ ...details, authors: details.authors.filter((_, at) => at !== index) })} aria-label={`Remove author ${index + 1}`}>Remove</Button>
+          </div>)}
+          {details.authors.length < 10 && <Button variant="secondary" type="button" onClick={() => setDetails({ ...details, authors: [...details.authors, { displayName: "", bio: "" }] })}>Add author</Button>}
         </fieldset>
         <div className="editor-actions"><span className="muted">{dirty ? "Unsaved changes" : ""}</span><Button variant="secondary" type="button" disabled={!dirty} onClick={() => setDetails(detailsOf(course))}>Discard changes</Button><Button variant="primary" type="submit" disabled={!dirty || saving}>Save changes</Button></div>
       </form>

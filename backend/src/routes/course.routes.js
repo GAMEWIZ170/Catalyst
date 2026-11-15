@@ -2,8 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const authenticate = require("../middlewares/authenticate");
-const { getAllCourses, getCourseByID } = require("../controllers/course.controller");
-const { listCategories } = require("../controllers/catalog.controller");
+const { getAllCourses, getCourseByID, listCategories } = require("../controllers/course.controller");
 
 router.use(authenticate);
 

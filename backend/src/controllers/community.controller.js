@@ -8,6 +8,7 @@ const Test = require("../models/test.models");
 const Question = require("../models/question.models");
 const Course = require("../models/course.models");
 const { findOwnSet } = require("../utils/ownSet");
+const { slugOf } = require("../utils/courseMeta");
 const { findSharedSet, authorNames } = require("../utils/sharedSet");
 const { notesToText } = require("./aigenerate.controller");
 const { logEvent } = require("../utils/events");
@@ -77,8 +78,10 @@ const shelf = async (req, res, next) => {
     }
     if (typeof req.query.topic === "string" && req.query.topic.trim()) filter.topic = new RegExp(`^${escapeRegex(req.query.topic.trim().slice(0, 80))}$`, "i");
     if (req.query.course && !badId(req.query.course)) filter.course = req.query.course;
-    if (req.query.category && !badId(req.query.category)) {
-      filter.course = { $in: await Course.find({ category: req.query.category, deletedAt: null }).distinct("_id") };
+    if (typeof req.query.category === "string" && req.query.category) {
+      const wanted = req.query.category.toLowerCase().slice(0, 60);
+      const names = (await Course.distinct("category", { deletedAt: null })).filter((name) => name && slugOf(name) === wanted);
+      filter.course = { $in: names.length ? await Course.find({ category: { $in: names }, deletedAt: null }).distinct("_id") : [] };
     }
     if (req.query.saved === "1") filter._id = { $in: await SetSave.find({ user: req.user.id }).distinct("set") };
     const sort = req.query.sort === "studied" ? { studiedCount: -1, reviewedAt: -1 } : req.query.sort === "saved" ? { savedCount: -1, reviewedAt: -1 } : { reviewedAt: -1 };
@@ -103,9 +106,9 @@ const shelfFilters = async (req, res, next) => {
   try {
     const base = { communityStatus: "approved", visibility: "community", deletedAt: null };
     const [courseIds, topics] = await Promise.all([StudySet.distinct("course", { ...base, course: { $ne: null } }), StudySet.distinct("topic", { ...base, topic: { $ne: "" } })]);
-    const courses = await Course.find({ _id: { $in: courseIds } }).select("code title category").populate("category", "name").sort({ code: 1 }).lean();
+    const courses = await Course.find({ _id: { $in: courseIds } }).select("code title category").sort({ code: 1 }).lean();
     const categories = new Map();
-    for (const course of courses) if (course.category) categories.set(String(course.category._id), { id: course.category._id, name: course.category.name });
+    for (const course of courses) if (course.category && slugOf(course.category)) categories.set(slugOf(course.category), { id: slugOf(course.category), name: course.category });
     return res.status(200).json({
       data: {
         courses: courses.map((course) => ({ id: course._id, code: course.code, title: course.title })),

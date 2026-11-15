@@ -1,26 +1,25 @@
-const Category = require("../models/category.models");
-const Author = require("../models/author.models");
-
+// A course's category is a plain text property of the course (empty means "General"), and its authors are a short list of
+// { displayName, bio } kept on the course too. There is no separate catalog to manage.
 const GENERAL = { _id: null, name: "General", slug: "general" };
 
-// Adds { category, authors } to course objects (plain, from .lean()). Two queries for any number of courses.
-// A course with no category, or one whose category was removed, shows as General.
+// "Computer Science" -> "computer-science". Used for the category filter in the address.
+const slugOf = (name) => String(name || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+
+const categoryOf = (course) => {
+  const name = typeof course.category === "string" ? course.category.trim() : "";
+  return name ? { _id: null, name, slug: slugOf(name) || "general" } : GENERAL;
+};
+
+// Adds { category: { name, slug }, authors: [{ displayName, bio }] } to course objects (plain, from .lean()).
+// Kept async so callers do not change.
 const attachMeta = async (courses) => {
   const list = Array.isArray(courses) ? courses : [courses];
-  const categoryIds = [...new Set(list.map((course) => course.category).filter(Boolean).map(String))];
-  const authorIds = [...new Set(list.flatMap((course) => course.authors || []).map(String))];
-  const [categories, authors] = await Promise.all([
-    categoryIds.length ? Category.find({ _id: { $in: categoryIds } }).select("name slug").lean() : [],
-    authorIds.length ? Author.find({ _id: { $in: authorIds } }).select("displayName bio avatar").lean() : []
-  ]);
-  const categoryById = new Map(categories.map((row) => [String(row._id), row]));
-  const authorById = new Map(authors.map((row) => [String(row._id), row]));
   const out = list.map((course) => ({
     ...course,
-    category: categoryById.get(String(course.category)) || GENERAL,
-    authors: (course.authors || []).map((id) => authorById.get(String(id))).filter(Boolean)
+    category: categoryOf(course),
+    authors: (course.authors || []).map((author) => ({ displayName: author.displayName, bio: author.bio || "" }))
   }));
   return Array.isArray(courses) ? out : out[0];
 };
 
-module.exports = { attachMeta, GENERAL };
+module.exports = { attachMeta, GENERAL, slugOf, categoryOf };

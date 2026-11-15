@@ -5,8 +5,7 @@ import { ChevronDown } from "lucide-react";
 // Used every day: always visible. The rest sit behind the "More" button.
 const MAIN = [
   { label: "Courses", to: "/admin" },
-  { label: "Dashboard", to: "/admin/dashboard" },
-  { label: "Catalog", to: "/admin/catalog" }
+  { label: "Dashboard", to: "/admin/dashboard" }
 ];
 const MORE = [
   { label: "Reports", to: "/admin/reports" },

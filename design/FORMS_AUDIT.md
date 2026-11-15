@@ -47,7 +47,7 @@ Rule numbers: 1 minimise forms, 2 create first and autosave, 3 choose don't type
 
 | Screen | Violation | Proposed replacement |
 |---|---|---|
-| Catalog (`AdminCatalog.jsx`) | Always-open Add category and Add author forms, two Delete buttons, Save (rules 1, 2, 5) | "Add category" and "Add author" create a row in edit mode; Delete in ⋯ with undo |
+| Catalog (`AdminCatalog.jsx`) | REMOVED by the owner. Category and authors are now plain properties of a course, edited in the course editor | Done (course editor rows to be restyled in step 6) |
 | Courses list (`AdminCourses.jsx`) | New course form with four fields and two text areas always open (rules 1, 2) | "New course" creates "Untitled course" and opens it with the title in edit mode |
 | Course editor (`AdminCourseEditor.jsx`) | Course form with Save changes, unit and lesson title forms, 3 selects, 2 checkboxes (rules 1, 2, 3) | Autosave; "Add unit" and "Add lesson" create rows in edit mode; switches and chips for flags and category |
 | Lesson editor (`AdminLessonEditor.jsx`) | Seven text fields, five text areas, five selects, a native PDF input (rules 1, 3) | Sections as inline edit blocks; video host as chips; file drop zones |

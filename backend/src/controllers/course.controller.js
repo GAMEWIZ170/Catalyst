@@ -9,16 +9,7 @@ const { buildCourseOutline } = require("../utils/courseOutline");
 const Question = require("../models/question.models");
 const Flashcard = require("../models/flashcard.models");
 const Material = require("../models/material.models");
-const Category = require("../models/category.models");
-const Author = require("../models/author.models");
-const { attachMeta } = require("../utils/courseMeta");
-
-// The category and authors an admin picked must exist. Returns a message, or null when all is well.
-const checkMeta = async ({ category, authors }) => {
-  if (category && !(await Category.exists({ _id: category }))) return "Category not found";
-  if (authors && authors.length && (await Author.countDocuments({ _id: { $in: authors } })) !== authors.length) return "Author not found";
-  return null;
-};
+const { attachMeta, slugOf, GENERAL } = require("../utils/courseMeta");
 
 // Course codes are unique ignoring upper and lower case, and a code in the Trash is still taken.
 const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -34,8 +25,6 @@ const createCourse = async (req, res, next) => {
   try {
     const clash = await findCodeClash(req.body.code);
     if (clash) return res.status(409).json({ message: codeClashMessage(clash) });
-    const metaProblem = await checkMeta(req.body);
-    if (metaProblem) return res.status(400).json({ message: metaProblem });
     const course = new Course(req.body);
     await course.save();
 
@@ -71,16 +60,36 @@ const getCourseByID = async (req, res, next) => {
   }
 };
 
+// STUDENT: the categories in use by published courses, for the filter on the course list. General shows when some course has none.
+const listCategories = async (req, res, next) => {
+  try {
+    const base = { isPublished: true, deletedAt: null };
+    const names = (await Course.distinct("category", base)).filter(Boolean).sort((a, b) => a.localeCompare(b));
+    const seen = new Set();
+    const data = [];
+    for (const name of names) {
+      const slug = slugOf(name) || "general";
+      if (!seen.has(slug)) { seen.add(slug); data.push({ _id: null, name, slug }); }
+    }
+    if (await Course.exists({ ...base, category: { $in: ["", null] } })) data.unshift(GENERAL);
+    return res.status(200).json({ data });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const getAllCourses = async (req, res, next) => {
   try {
     const filter = { isPublished: true, deletedAt: null };
-    // ?category=<slug> shows one category. "general" also takes courses with no category.
+    // ?category=<slug> shows one category. "general" takes courses with no category.
     if (typeof req.query.category === "string" && req.query.category) {
       const slug = req.query.category.toLowerCase();
-      const found = slug === "general" ? null : await Category.findOne({ slug }).select("_id").lean();
-      if (slug === "general") filter.$or = [{ category: null }, { category: { $nin: await Category.distinct("_id") } }];
-      else filter.category = found ? found._id : null;
-      if (slug !== "general" && !found) return res.status(200).json({ count: 0, data: [] });
+      if (slug === "general") filter.category = { $in: ["", null] };
+      else {
+        const names = (await Course.distinct("category", filter)).filter((name) => name && slugOf(name) === slug);
+        if (!names.length) return res.status(200).json({ count: 0, data: [] });
+        filter.category = { $in: names };
+      }
     }
     const courses = await attachMeta(await Course.find(filter)
       .select("code title description category authors isFree")
@@ -102,8 +111,6 @@ const updateCourse = async (req, res, next) => {
       const clash = await findCodeClash(req.body.code, req.params.id);
       if (clash) return res.status(409).json({ message: codeClashMessage(clash) });
     }
-    const metaProblem = await checkMeta(req.body);
-    if (metaProblem) return res.status(400).json({ message: metaProblem });
     const updatedCourse = await Course.findOneAndUpdate(
       { _id: req.params.id, deletedAt: null },
       req.body,
@@ -300,6 +307,7 @@ module.exports = {
   createCourse,
   getCourseByID,
   getAllCourses,
+  listCategories,
   updateCourse,
   deleteCourse,
   getAllCoursesForAdmin,

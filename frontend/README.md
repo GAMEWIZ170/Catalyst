@@ -124,7 +124,7 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 | `/confirm-email` | Public | Opened from the link sent to a new address. Confirms an email change (`?token=`) |
 | `/privacy`, `/terms` | Public | Plain-English privacy and terms pages. Linked in the footer and on Register |
 | `/home` | Authenticated | Home: continue where you left off, today's plan, daily goal, due review, your courses with their authors |
-| `/courses` | Authenticated | The course list with a category filter (`?category=<slug>`), author names and a category label on each card |
+| `/courses` | Authenticated | The course list with a category filter (`?category=<slug>`), author names and a category label on each card. The category and authors are plain properties of the course, edited in the course editor |
 | `/me` | Authenticated | Me (capped at 760 px): a compact header (picture, name, level bar and XP inline) and one grouped list with dividers: Progress, My exams, Friends, Saved items, Settings. An Achievements tab. Progress, Saved and Settings keep Me highlighted |
 | `/exams` | Authenticated | My exams: the list comes first (upcoming, then past); "Add exam" opens a dialog with a course picker, a type control, quick chips (Tomorrow, In a week, In a month), a date picker and a time picker. Delete is in each row's ⋯ menu and asks first. Home shows the nearest exam and Today's plan counts down to it |
 | `/tests/:id/exam?timed=1` | Authenticated | Any test taken timed: a "Take it timed" button on the test intro. Timed quizzes add the extra time from Settings, Study |
@@ -149,7 +149,6 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 | `/progress` | Authenticated | View scores, completed lessons, and streak |
 | `/settings` | Authenticated | Four tabs, kept in the address (`?tab=account\|appearance\|notifications\|study`). Rows have the label and one line of help on the left and the control on the right: switches, segmented controls, pickers. Every change saves by itself and a small "Saved" shows at the top; there are no Save buttons. Account: profile picture, time zone, and rows that open dialogs for email, password and download; Delete my account is in a ⋯ menu and asks for the password and the word DELETE. Appearance: colour theme, text size, low data, install. Notifications: two switches. Study: focus and break lengths, extra time, daily and weekly goal, exam date (date picker), link to My exams |
 | `/admin/dashboard` | Admin | DAU, WAU, MAU, stickiness, new sign-ups, activation, open reports, a 30 day trend chart (with a table of the same numbers), retention by sign-up week, top and drop-off lessons, and activity totals. Shows "Not worked out yet" until `npm run stats` has run in the backend |
-| `/admin/catalog` | Admin | Categories (add, rename, delete) and authors (name, short bio, picture). The course editor picks a category and authors from these |
 | Notification bell | Authenticated | Top bar bell with an unread count. The panel lists new-lesson and review-due messages, each linking to its page, plus Mark all as read. On phones the panel spans the screen under the top bar |
 | `/admin` | Admin | Overview numbers and the course list, with search |
 | `/admin/users` | Admin | Find users, change roles, deactivate accounts and manage subscriptions |
