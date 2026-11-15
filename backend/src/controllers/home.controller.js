@@ -17,7 +17,7 @@ const { awardXp } = require("../utils/xp");
 const getHome = async (req, res, next) => {
   try {
     const courses = await attachMeta(await Course.find({ isPublished: true, deletedAt: null })
-      .select("code title description category authors")
+      .select("code title description category authors isFree")
       .sort({ code: 1 })
       .lean());
     const today = dayKey(req.user.timeZone);

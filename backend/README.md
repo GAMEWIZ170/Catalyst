@@ -437,7 +437,7 @@ Deleted items are listed at `GET /admin/trash` and put back with `POST /admin/tr
 
 ### Subscriptions
 
-`User.subscriptionEndsAt` is set by an admin (`PUT /admin/users/:id`). It does nothing until `REQUIRE_SUBSCRIPTION=true`. Then a student without a future `subscriptionEndsAt` gets `403` with `code: "SUBSCRIPTION_REQUIRED"` from lessons, tests, questions, flashcards and materials. Browsing courses, progress and settings stay open, and admins always have access. `GET /auth/me` returns `subscriptionEndsAt` and `hasAccess`.
+`User.subscriptionEndsAt` is set by an admin (`PUT /admin/users/:id`). It does nothing until `REQUIRE_SUBSCRIPTION=true`. Then a student without a future `subscriptionEndsAt` gets `403` with `code: "SUBSCRIPTION_REQUIRED"` from lessons, tests, questions, flashcards and materials. Browsing courses, progress and settings stay open, and admins always have access. `GET /auth/me` returns `subscriptionEndsAt` and `hasAccess`. A course with `isFree: true` (set by an admin with `PUT /admin/courses/:id`, default `false`) is the exception: while it is published and not deleted, its lessons, tests, questions, flashcards and materials stay open to every signed-in student, even without a subscription. `requireAccess` finds the course from the URL (lesson, test, question or flashcard id) when the subscription check fails. Spaced review, mistakes and topics stay behind the subscription.
 
 ### Question types
 
@@ -716,7 +716,7 @@ All schemas have timestamps. Soft-deletable content has `deletedAt`.
 | --- | --- |
 | **AuthToken** | `user`, `type` (`reset` or `verify`), `tokenHash` (SHA-256, never the plain token), `expiresAt` (TTL index removes it) |
 | **User** | `name`, `email`, hidden bcrypt `password`, `role`, `avatar`, `isActive`, `subscriptionEndsAt`, `emailVerified`, `passwordChangedAt`, `deletedAt` |
-| **Course** | `code`, `title`, `description`, `isPublished`, `deletedAt` |
+| **Course** | `code`, `title`, `description`, `isFree`, `isPublished`, `deletedAt` |
 | **Unit** | `course`, `title`, `order`, `deletedAt` |
 | **Lesson** | `unit`, `title`, `order`, `explanation`, `explanationMath` (formulas drawn by the server, hidden from reads unless asked for), optional `explanationImage`, `videoHost`, `videoId`, `isPublished`, `deletedAt` |
 | **Test** | `scope`, one of `lesson`/`unit`/`course`, `title`, `order`, `isPublished`, `deletedAt` |

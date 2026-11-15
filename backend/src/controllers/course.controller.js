@@ -83,7 +83,7 @@ const getAllCourses = async (req, res, next) => {
       if (slug !== "general" && !found) return res.status(200).json({ count: 0, data: [] });
     }
     const courses = await attachMeta(await Course.find(filter)
-      .select("code title description category authors")
+      .select("code title description category authors isFree")
       .sort({ code: 1 })
       .lean());
 
@@ -158,7 +158,7 @@ const deleteCourse = async (req, res, next) => {
 const getAllCoursesForAdmin = async (req, res, next) => {
   try {
     const courses = await Course.find({ deletedAt: null })
-      .select("code title description isPublished category authors")
+      .select("code title description isPublished category authors isFree")
       .sort({ code: 1 })
       .lean();
     const courseIds = courses.map((course) => course._id);
@@ -211,7 +211,7 @@ const getCourseForAdmin = async (req, res, next) => {
   }
   try {
     const course = await Course.findOne({ _id: req.params.id, deletedAt: null })
-      .select("_id code title description isPublished category authors")
+      .select("_id code title description isPublished category authors isFree")
       .lean();
     if (!course) return res.status(404).json({ message: "Course not found" });
 
