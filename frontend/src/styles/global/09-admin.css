@@ -252,6 +252,7 @@ textarea {
 }
 
 .lesson-main > * {
+  margin-inline: auto;
   max-width: var(--measure);
 }
 
