@@ -759,12 +759,22 @@ src/
   app.js
   server.js
   config/
-  controllers/
-  middlewares/
-  models/
-  routes/
-  utils/
+  middlewares/      shared: authenticate, authorizeRole, limiters, validate, uploads
+  utils/            shared helpers
+  modules/          one folder per feature, holding its x.models.js, x.controller.js and x.routes.js
+    auth/           login, account, users, auth tokens
+    courses/        courses, units, lessons, materials, topics, reorder, preview, summary
+    assessments/    tests, questions, exams, exam dates, mistakes, question import
+    flashcards/     flashcards and spaced review
+    progress/       progress, home, plan, study notes and bookmarks, events
+    gamification/   XP and achievements
+    social/         friends, circles, challenges, notifications
+    lab/            study sets, set materials and notes, AI drafts
+    community/      community sets, leaderboards, share links, reports
+    admin/          admin routes, dashboard, analytics, trash, uploads
 ```
+
+A file may require a model from another module. The folder says which feature owns the file, not who may use it.
 
 </details>
 

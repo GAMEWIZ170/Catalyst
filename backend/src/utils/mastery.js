@@ -1,4 +1,4 @@
-const Mastery = require("../models/mastery.models");
+const Mastery = require("../modules/assessments/mastery.models");
 
 const LABELS = ["Not started", "Attempted", "Familiar", "Proficient", "Mastered"];
 const { dayKey } = require("./day");

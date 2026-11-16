@@ -3,7 +3,7 @@
 // Safe to run again. Run it against each database: npm run sync:search-index
 require("dotenv").config();
 const mongoose = require("mongoose");
-const Lesson = require("../src/models/lesson.models");
+const Lesson = require("../src/modules/courses/lesson.models");
 
 (async () => {
   await mongoose.connect(process.env.MONGODB_URI);

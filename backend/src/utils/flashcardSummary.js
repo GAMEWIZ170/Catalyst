@@ -1,5 +1,5 @@
-const Flashcard = require("../models/flashcard.models");
-const FlashcardProgress = require("../models/flashcardprogress.models");
+const Flashcard = require("../modules/flashcards/flashcard.models");
+const FlashcardProgress = require("../modules/flashcards/flashcardprogress.models");
 
 // Counts cards by rating. Takes cards already loaded and a Map of cardId -> confidence.
 const summarize = (cards, confidence) => {

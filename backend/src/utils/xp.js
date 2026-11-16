@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
-const XpEntry = require("../models/xp.models");
-const User = require("../models/user.models");
+const XpEntry = require("../modules/gamification/xp.models");
+const User = require("../modules/auth/user.models");
 const { dayKey } = require("./day");
 
 // What each kind of learning is worth, and the most one student can earn from it in one of their own days.

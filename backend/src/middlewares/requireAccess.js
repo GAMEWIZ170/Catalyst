@@ -3,12 +3,12 @@
 // Browsing courses and viewing progress stay open. With the setting off, everyone has access.
 // Exception: content inside a course marked isFree stays open to every signed-in student.
 const mongoose = require("mongoose");
-const Course = require("../models/course.models");
-const Unit = require("../models/unit.models");
-const Lesson = require("../models/lesson.models");
-const Test = require("../models/test.models");
-const Question = require("../models/question.models");
-const Flashcard = require("../models/flashcard.models");
+const Course = require("../modules/courses/course.models");
+const Unit = require("../modules/courses/unit.models");
+const Lesson = require("../modules/courses/lesson.models");
+const Test = require("../modules/assessments/test.models");
+const Question = require("../modules/assessments/question.models");
+const Flashcard = require("../modules/flashcards/flashcard.models");
 
 const hasAccess = (user) =>
   process.env.REQUIRE_SUBSCRIPTION !== "true" ||

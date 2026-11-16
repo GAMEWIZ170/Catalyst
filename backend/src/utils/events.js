@@ -1,4 +1,4 @@
-const Event = require("../models/event.models");
+const Event = require("../modules/progress/event.models");
 
 // Only plain ids, numbers, booleans and short words may go in props, so no personal data can slip in by accident.
 const cleanProps = (props) => {

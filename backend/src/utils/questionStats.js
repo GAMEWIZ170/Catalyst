@@ -1,4 +1,4 @@
-const QuestionStat = require("../models/questionstat.models");
+const QuestionStat = require("../modules/assessments/questionstat.models");
 
 // The wrong choice worth counting. Only multiple choice and true/false have a single wrong choice to name;
 // the other types still count attempts and right answers. The key is checked, so a student cannot write odd field names.

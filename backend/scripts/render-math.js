@@ -3,7 +3,7 @@
 // Safe to run again. Run it against each database: npm run render:math  (or: npm run render:math -- --all)
 require("dotenv").config();
 const mongoose = require("mongoose");
-const Lesson = require("../src/models/lesson.models");
+const Lesson = require("../src/modules/courses/lesson.models");
 const { prerenderMath } = require("../src/utils/math");
 
 (async () => {

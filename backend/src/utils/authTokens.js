@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const AuthToken = require("../models/authtoken.models");
+const AuthToken = require("../modules/auth/authtoken.models");
 
 // Reset links live 30 minutes, verification links 24 hours (a student may open the mail later), email-change links 1 hour.
 const LIFETIME_MS = { reset: 30 * 60 * 1000, verify: 24 * 60 * 60 * 1000, email: 60 * 60 * 1000 };

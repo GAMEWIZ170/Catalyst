@@ -1,13 +1,13 @@
 const mongoose = require("mongoose");
-const AchievementUnlock = require("../models/achievement.models");
-const User = require("../models/user.models");
-const Event = require("../models/event.models");
-const Progress = require("../models/progress.models");
-const TestResult = require("../models/testresult.models");
-const Mastery = require("../models/mastery.models");
-const Lesson = require("../models/lesson.models");
-const StudySet = require("../models/studyset.models");
-const Report = require("../models/report.models");
+const AchievementUnlock = require("../modules/gamification/achievement.models");
+const User = require("../modules/auth/user.models");
+const Event = require("../modules/progress/event.models");
+const Progress = require("../modules/progress/progress.models");
+const TestResult = require("../modules/assessments/testresult.models");
+const Mastery = require("../modules/assessments/mastery.models");
+const Lesson = require("../modules/courses/lesson.models");
+const StudySet = require("../modules/lab/studyset.models");
+const Report = require("../modules/community/report.models");
 const { levelFor } = require("./xp");
 const { shiftDay } = require("./day");
 

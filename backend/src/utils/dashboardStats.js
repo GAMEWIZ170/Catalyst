@@ -1,8 +1,8 @@
-const Event = require("../models/event.models");
-const User = require("../models/user.models");
-const Lesson = require("../models/lesson.models");
-const DailyStat = require("../models/dailystat.models");
-const StatSummary = require("../models/statsummary.models");
+const Event = require("../modules/progress/event.models");
+const User = require("../modules/auth/user.models");
+const Lesson = require("../modules/courses/lesson.models");
+const DailyStat = require("../modules/admin/dailystat.models");
+const StatSummary = require("../modules/admin/statsummary.models");
 const { shiftDay } = require("./day");
 
 // Everything on the admin dashboard is built here from the events collection. Days are UTC days (one clock for the

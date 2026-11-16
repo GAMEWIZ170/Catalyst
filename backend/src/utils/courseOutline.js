@@ -1,13 +1,13 @@
-const Course = require("../models/course.models");
-const Unit = require("../models/unit.models");
-const Lesson = require("../models/lesson.models");
-const Progress = require("../models/progress.models");
-const Test = require("../models/test.models");
-const TestResult = require("../models/testresult.models");
-const Question = require("../models/question.models");
-const Flashcard = require("../models/flashcard.models");
-const Material = require("../models/material.models");
-const Mastery = require("../models/mastery.models");
+const Course = require("../modules/courses/course.models");
+const Unit = require("../modules/courses/unit.models");
+const Lesson = require("../modules/courses/lesson.models");
+const Progress = require("../modules/progress/progress.models");
+const Test = require("../modules/assessments/test.models");
+const TestResult = require("../modules/assessments/testresult.models");
+const Question = require("../modules/assessments/question.models");
+const Flashcard = require("../modules/flashcards/flashcard.models");
+const Material = require("../modules/courses/material.models");
+const Mastery = require("../modules/assessments/mastery.models");
 const { attachMeta } = require("./courseMeta");
 
 const countBy = (rows, field) => new Map(rows.map((row) => [row._id.toString(), row[field]]));

@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
-const StudySet = require("../models/studyset.models");
-const User = require("../models/user.models");
+const StudySet = require("../modules/lab/studyset.models");
+const User = require("../modules/auth/user.models");
 const { displayNameOf } = require("./friends");
 
 // A study set this student may look at: their own, or one its owner shared by link or with the community and that was not

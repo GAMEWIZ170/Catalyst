@@ -1,4 +1,4 @@
-const AiUsage = require("../models/aiusage.models");
+const AiUsage = require("../modules/lab/aiusage.models");
 
 // Fair use while the AI is a free beta with low limits (Phase X6.4).
 //   per student, per UTC day: AI_DAILY_MESSAGES (default 20) companion messages and AI_DAILY_GENERATIONS (default 9) drafts

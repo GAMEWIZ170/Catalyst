@@ -1,4 +1,4 @@
-const Friendship = require("../models/friendship.models");
+const Friendship = require("../modules/social/friendship.models");
 
 // What other students see of a student: a display name and an avatar, never the full name or email.
 // Without a display name, only the first word of the name is used.

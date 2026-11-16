@@ -1,8 +1,8 @@
-const Lesson = require("../models/lesson.models");
-const Unit = require("../models/unit.models");
-const Course = require("../models/course.models");
-const Test = require("../models/test.models");
-const Question = require("../models/question.models");
+const Lesson = require("../modules/courses/lesson.models");
+const Unit = require("../modules/courses/unit.models");
+const Course = require("../modules/courses/course.models");
+const Test = require("../modules/assessments/test.models");
+const Question = require("../modules/assessments/question.models");
 const mongoose = require("mongoose");
 
 const courseIsVisible = (course) => Boolean(
