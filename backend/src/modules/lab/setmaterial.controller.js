@@ -54,8 +54,9 @@ const uploadPrivate = (buffer, publicId) => new Promise((resolve, reject) => {
 
 // A PDF: its type and %PDF- bytes were checked by uploadMaterial before this runs. The text is read first, so a PDF with
 // no readable text (a scan) is refused without storing anything. The file then goes to a private folder.
+// allowScan (the build flow, when the AI model can read files): a PDF with no text is kept, and the model reads the file itself.
 // Throws an error with a status (400, 409 or 502) the caller turns into a reply.
-const storePdfMaterial = async (set, userId, file, title) => {
+const storePdfMaterial = async (set, userId, file, title, { allowScan = false } = {}) => {
   if ((await SetMaterial.countDocuments({ set: set._id })) >= MAX_PER_SET) throw httpError(409, `A set can hold up to ${MAX_PER_SET} materials`);
   if ((await usedBytes(userId)) + file.size > MAX_TOTAL_BYTES) throw httpError(409, "You have used your upload space. Delete some material first.");
   let text = "";
@@ -68,7 +69,7 @@ const storePdfMaterial = async (set, userId, file, title) => {
   } catch {
     throw httpError(400, "This PDF could not be read");
   }
-  if (text.length < 20) throw httpError(400, "No text was found in this PDF. It may be a scan or a photo. Paste the text instead.");
+  if (text.length < 20 && !allowScan) throw httpError(400, "No text was found in this PDF. It may be a scan or a photo. Paste the text instead.");
   const publicId = `${userId}-${crypto.randomBytes(12).toString("hex")}.pdf`;
   let uploaded;
   try {

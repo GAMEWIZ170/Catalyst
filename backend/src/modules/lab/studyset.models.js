@@ -30,7 +30,13 @@ const studySetSchema = new mongoose.Schema({
     status: { type: String, enum: ["none", "processing", "ready", "issue"], default: "none" },
     message: { type: String, default: "", maxlength: 300 },
     startedAt: { type: Date, default: null },
-    drafts: { type: mongoose.Schema.Types.Mixed, default: null }
+    drafts: { type: mongoose.Schema.Types.Mixed, default: null },
+    // One-shot build (study companion). source: { kind: "pdf" | "text" | "topic", topic }. progress lists every lesson
+    // the outline planned: { lessons: [{ id, title, status: "pending" | "done" | "failed" }], finishedAt }.
+    // touchedAt moves each time a lesson finishes, so a build that stopped moving can be told from a slow one.
+    source: { type: mongoose.Schema.Types.Mixed, default: null },
+    progress: { type: mongoose.Schema.Types.Mixed, default: null },
+    touchedAt: { type: Date, default: null }
   },
   deletedAt: { type: Date, default: null }
 }, { timestamps: true });

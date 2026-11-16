@@ -5,7 +5,7 @@ const mongoose = require("mongoose");
 // edit the text and a new draft is made. Private to the student. Removed after 30 days.
 const aiDraftSchema = new mongoose.Schema({
   owner: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  kind: { type: String, enum: ["cards", "questions", "notes"], required: true },
+  kind: { type: String, enum: ["cards", "questions", "notes", "outline", "lesson"], required: true },
   hash: { type: String, required: true },
   result: { type: mongoose.Schema.Types.Mixed, required: true },
   model: { type: String, default: "" },
