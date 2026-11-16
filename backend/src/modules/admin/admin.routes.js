@@ -146,6 +146,8 @@ router.post("/preview/questions/:id/answer", validateAnswer, preview.previewAnsw
 
 // Dashboard numbers (worked out nightly by scripts/compute-stats.js)
 router.get("/dashboard", dashboard.getDashboard);
+// AI use and what it would cost on the paid tier, per student
+router.get("/ai-usage", dashboard.getAiUsage);
 
 // Question analytics and the report inbox
 router.get("/analytics/questions", analytics.questionAnalytics);

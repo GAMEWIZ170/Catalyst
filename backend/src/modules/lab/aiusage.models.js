@@ -8,6 +8,8 @@ const aiUsageSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   messages: { type: Number, default: 0 },                                 // study companion messages
   generations: { type: Number, default: 0 },                              // drafts made in a study set
+  builds: { type: Number, default: 0 },                                   // whole sets built from material or a topic
+  requests: { type: Number, default: 0 },                                 // every real call to the AI provider
   inputTokens: { type: Number, default: 0 },
   outputTokens: { type: Number, default: 0 },
   resting: { type: Boolean, default: false }
