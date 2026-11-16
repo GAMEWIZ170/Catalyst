@@ -6,6 +6,8 @@ const testSchema = new mongoose.Schema({
   unit: { type: mongoose.Schema.Types.ObjectId, ref: "Unit", default: null },
   course: { type: mongoose.Schema.Types.ObjectId, ref: "Course", default: null },
   set: { type: mongoose.Schema.Types.ObjectId, ref: "StudySet", default: null }, // a quiz inside a student's study set
+  // For a quiz in a study set: the unit it tests. null is a test of the whole set. It is not a parent: `set` still is.
+  setUnit: { type: mongoose.Schema.Types.ObjectId, ref: "SetUnit", default: null },
   title: { type: String, trim: true, maxlength: 80 },
   order: { type: Number, min: 1 },
   isPublished: { type: Boolean, default: false },
@@ -20,6 +22,7 @@ testSchema.index({ lesson: 1 });
 testSchema.index({ unit: 1 });
 testSchema.index({ course: 1 });
 testSchema.index({ set: 1 });
+testSchema.index({ setUnit: 1 });
 
 testSchema.pre("validate", async function () {
   const parents = [this.lesson, this.unit, this.course, this.set].filter(Boolean);

@@ -1,5 +1,7 @@
 const SetMaterial = require("./setmaterial.models");
 const SetNote = require("./setnote.models");
+const SetUnit = require("./setunit.models");
+const SetLesson = require("./setlesson.models");
 const AiDraft = require("./aidraft.models");
 const User = require("../auth/user.models");
 const { findOwnSet } = require("../../utils/ownSet");
@@ -17,10 +19,22 @@ const notesToText = (node) => {
   return ["heading", "paragraph", "listItem", "blockquote", "codeBlock"].includes(node.type) ? `${inner}\n` : inner;
 };
 
+// The notes of every lesson of a set, in course order, as [{ id, title, text }]. Lessons with no notes are left out.
+const lessonTexts = async (setId) => {
+  const units = await SetUnit.find({ set: setId, deletedAt: null }).select("order").lean();
+  const unitOrder = new Map(units.map((unit) => [String(unit._id), unit.order]));
+  const lessons = await SetLesson.find({ set: setId, deletedAt: null, content: { $ne: null } }).select("unit title order content").lean();
+  return lessons.filter((lesson) => unitOrder.has(String(lesson.unit)))
+    .sort((a, b) => unitOrder.get(String(a.unit)) - unitOrder.get(String(b.unit)) || a.order - b.order)
+    .map((lesson) => ({ id: lesson._id, title: lesson.title, text: notesToText(lesson.content).trim() }))
+    .filter((lesson) => lesson.text);
+};
+
 // What the student sees when the AI cannot help. Each failure has its own calm message and a fitting status.
 const AI_PROBLEMS = {
   not_configured: [503, "AI is not set up yet."],
   capacity: [503, "AI is resting until tomorrow. Please try again then."],
+  busy: [503, "The AI is busy. Please try again in a minute."],
   timeout: [504, "The AI took too long. Please try again."],
   too_long: [413, "That text is too long for one go. Pick a smaller part."],
   bad_output: [502, "The AI answer could not be used. Try again, or choose a different part of the text."],
@@ -43,7 +57,8 @@ const generate = async (req, res, next) => {
       text = material.text;
     } else if (source.type === "notes") {
       const note = await SetNote.findOne({ set: set._id }).lean();
-      text = notesToText(note?.content);
+      // The set's own notes page, then the notes of each lesson.
+      text = [notesToText(note?.content), ...(await lessonTexts(set._id)).map((lesson) => `${lesson.title}\n${lesson.text}`)].filter((part) => part.trim()).join("\n\n");
     } else {
       text = source.text;
     }
@@ -81,4 +96,4 @@ const generate = async (req, res, next) => {
   }
 };
 
-module.exports = { generate, notesToText };
+module.exports = { generate, notesToText, lessonTexts };

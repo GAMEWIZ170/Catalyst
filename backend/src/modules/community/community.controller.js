@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const StudySet = require("../lab/studyset.models");
 const SetNote = require("../lab/setnote.models");
+const SetUnit = require("../lab/setunit.models");
+const SetLesson = require("../lab/setlesson.models");
 const SetSave = require("../lab/setsave.models");
 const SetStudy = require("../lab/setstudy.models");
 const Flashcard = require("../flashcards/flashcard.models");
@@ -10,7 +12,7 @@ const Course = require("../courses/course.models");
 const { findOwnSet } = require("../../utils/ownSet");
 const { slugOf } = require("../../utils/courseMeta");
 const { findSharedSet, authorNames } = require("../../utils/sharedSet");
-const { notesToText } = require("../lab/aigenerate.controller");
+const { notesToText, lessonTexts } = require("../lab/aigenerate.controller");
 const { logEvent } = require("../../utils/events");
 const { awardXp } = require("../../utils/xp");
 
@@ -127,13 +129,14 @@ const detail = async (req, res, next) => {
     const set = await findSharedSet(req.params.id, req.user.id);
     if (!set) return notFound(res);
     const mine = String(set.owner) === String(req.user.id);
-    const [cards, note, quizzes, names, saved, course] = await Promise.all([
+    const [cards, note, quizzes, names, saved, course, lessons] = await Promise.all([
       Flashcard.find({ set: set._id, deletedAt: null }).sort({ order: 1 }).lean(),
       SetNote.findOne({ set: set._id }).lean(),
       Test.find({ set: set._id, deletedAt: null, isPublished: true }).sort({ order: 1 }).lean(),
       authorNames([set.owner]),
       SetSave.exists({ user: req.user.id, set: set._id }),
-      set.course ? Course.findById(set.course).select("code title").lean() : null
+      set.course ? Course.findById(set.course).select("code title").lean() : null,
+      lessonTexts(set._id)
     ]);
     const counts = await Question.aggregate([{ $match: { test: { $in: quizzes.map((quiz) => quiz._id) }, deletedAt: null } }, { $group: { _id: "$test", n: { $sum: 1 } } }]);
     const byTest = new Map(counts.map((row) => [String(row._id), row.n]));
@@ -145,7 +148,7 @@ const detail = async (req, res, next) => {
         visibility: set.visibility, communityStatus: set.communityStatus, onShelf: set.communityStatus === "approved" && set.visibility === "community",
         studied: set.studiedCount, saved: set.savedCount, isSaved: Boolean(saved),
         cards: cards.map((card) => ({ front: card.front?.text || "", back: card.back?.text || "" })),
-        notesText: notesToText(note?.content).trim(),
+        notesText: [notesToText(note?.content).trim(), ...lessons.map((lesson) => `${lesson.title}\n${lesson.text}`)].filter(Boolean).join("\n\n"),
         quizzes: quizzes.map((quiz) => ({ id: quiz._id, title: quiz.title, questionCount: byTest.get(String(quiz._id)) || 0 })).filter((quiz) => quiz.questionCount > 0)
       }
     });
@@ -177,8 +180,8 @@ const unsave = async (req, res, next) => {
   }
 };
 
-// STUDENT: a private copy in the student's own Lab, to edit freely and review with spaced repetition. Cards, notes and
-// quizzes are copied. Source material never is. The copy remembers where it came from but shares nothing back.
+// STUDENT: a private copy in the student's own Lab, to edit freely and review with spaced repetition. Units, lessons,
+// cards, notes and quizzes are copied. Source material never is. The copy remembers where it came from but shares nothing back.
 const copy = async (req, res, next) => {
   try {
     const source = await findSharedSet(req.params.id, req.user.id);
@@ -188,15 +191,26 @@ const copy = async (req, res, next) => {
       owner: req.user.id, title: `${source.title} (copy)`.slice(0, 80), description: source.description, topic: source.topic,
       course: source.course, visibility: "private", copiedFrom: source._id
     });
-    const [cards, note, tests] = await Promise.all([
+    const [cards, note, tests, units, lessons] = await Promise.all([
       Flashcard.find({ set: source._id, deletedAt: null }).sort({ order: 1 }).lean(),
       SetNote.findOne({ set: source._id }).lean(),
-      Test.find({ set: source._id, deletedAt: null, isPublished: true }).sort({ order: 1 }).lean()
+      Test.find({ set: source._id, deletedAt: null, isPublished: true }).sort({ order: 1 }).lean(),
+      SetUnit.find({ set: source._id, deletedAt: null }).sort({ order: 1 }).lean(),
+      SetLesson.find({ set: source._id, deletedAt: null }).sort({ order: 1 }).lean()
     ]);
-    if (cards.length) await Flashcard.insertMany(cards.map((card, index) => ({ set: made._id, front: { text: card.front?.text }, back: { text: card.back?.text }, order: index + 1, isPublished: true })));
+    // The units and lessons are copied first, so each card and quiz can point at its new lesson or unit. Only the title,
+    // the order and the notes of a lesson are copied: never what the AI was asked (it can point into the source material).
+    const newUnit = new Map();
+    const newLesson = new Map();
+    for (const unit of units) newUnit.set(String(unit._id), (await SetUnit.create({ set: made._id, title: unit.title, order: unit.order }))._id);
+    for (const lesson of lessons) {
+      if (!newUnit.has(String(lesson.unit))) continue;
+      newLesson.set(String(lesson._id), (await SetLesson.create({ set: made._id, unit: newUnit.get(String(lesson.unit)), title: lesson.title, order: lesson.order, content: lesson.content || null }))._id);
+    }
+    if (cards.length) await Flashcard.insertMany(cards.map((card, index) => ({ set: made._id, setLesson: newLesson.get(String(card.setLesson)) || null, front: { text: card.front?.text }, back: { text: card.back?.text }, order: index + 1, isPublished: true })));
     if (note?.content) await SetNote.create({ set: made._id, content: note.content });
     for (const test of tests) {
-      const newTest = await Test.create({ scope: "set", set: made._id, title: test.title, isPublished: true });
+      const newTest = await Test.create({ scope: "set", set: made._id, setUnit: newUnit.get(String(test.setUnit)) || null, title: test.title, isPublished: true });
       const questions = await Question.find({ test: test._id, deletedAt: null, type: { $in: ["mcq", "true_false"] } }).sort({ order: 1 }).lean();
       for (const [index, question] of questions.entries()) {
         const doc = new Question({ test: newTest._id, type: question.type, text: question.text, order: index + 1, explanation: question.explanation || "" });

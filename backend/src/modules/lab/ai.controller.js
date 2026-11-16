@@ -9,7 +9,7 @@ const { findOwnSet } = require("../../utils/ownSet");
 const { complete, AiError } = require("../../utils/ai");
 const quota = require("../../utils/aiQuota");
 const { pickExcerpts, systemPrompt, cleanHistory, givesAnswer, citedNumbers, STRICTER } = require("../../utils/companion");
-const { notesToText } = require("./aigenerate.controller");
+const { notesToText, lessonTexts } = require("./aigenerate.controller");
 const { logEvent } = require("../../utils/events");
 
 const LABEL = "Free beta, fair-use limits apply.";
@@ -18,6 +18,7 @@ const LABEL = "Free beta, fair-use limits apply.";
 const PROBLEMS = {
   not_configured: [503, "AI is not set up yet."],
   capacity: [503, "AI is resting until tomorrow. Please try again then."],
+  busy: [503, "The AI is busy. Please try again in a minute."],
   timeout: [504, "The AI took too long. Please try again."],
   too_long: [413, "That message is too long. Please shorten it."],
   provider: [502, "The AI could not be reached. Please try again in a moment."],
@@ -43,14 +44,16 @@ const sourcesFor = async (context, userId) => {
   }
   const set = await findOwnSet(context.id, userId);
   if (!set) return null;
-  const [note, materials] = await Promise.all([
+  const [note, materials, lessons] = await Promise.all([
     SetNote.findOne({ set: set._id }).lean(),
-    SetMaterial.find({ set: set._id, owner: userId }).select("title text").limit(20).lean()
+    SetMaterial.find({ set: set._id, owner: userId }).select("title text").limit(20).lean(),
+    lessonTexts(set._id)
   ]);
   const link = `/lab/${set._id}?tab=notes`;
   const sources = [];
   const notesText = notesToText(note?.content);
   if (notesText.trim()) sources.push({ label: `Set "${set.title}" › Notes`, text: notesText, link });
+  for (const lesson of lessons) sources.push({ label: `Set "${set.title}" › ${lesson.title}`, text: lesson.text, link });
   for (const material of materials) if (material.text) sources.push({ label: `Set "${set.title}" › ${material.title}`, text: material.text.slice(0, 100000), link });
   return { title: set.title, sources };
 };

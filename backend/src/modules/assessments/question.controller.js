@@ -55,21 +55,21 @@ const checkAnswer = async (req, res, next) => {
     const question = await Question.findOne({ _id: req.params.id, deletedAt: null }).lean();
     const test = question && question.test ? await findVisibleTest(question.test, req.user.id) : null;
     if (!test) return res.status(404).json({ message: "Question not found" });
-    const inSet = test.scope === "set"; // a student's own quiz: no mistakes queue and no question statistics (those are for official content)
+    const inSet = test.scope === "set"; // a quiz in a study set: no question statistics and no XP (those are for official content). Mistakes are kept, for GET /study-sets/:id/mistakes
     const answer = req.body.answer;
     if (typeof answer !== "string") {
       return res.status(400).json({ message: "Please provide an answer" });
     }
     const { isCorrect, unitWrong } = grade(question, answer);
     const correctAnswer = correctAnswerOf(question);
-    const wasMistake = inSet ? false : await recordAnswer(req.user.id, question._id, isCorrect, req.user.timeZone);
+    const wasMistake = await recordAnswer(req.user.id, question._id, isCorrect, req.user.timeZone);
     if (!inSet) await recordStat(question, answer, isCorrect);
     // XP is for official content only (a student's own quiz could be farmed). First try = never answered before.
     if (!inSet && isCorrect) {
       const answeredBefore = await Event.exists({ user: req.user.id, type: "question_answered", "props.question": String(question._id) });
       await awardXp(req.user.id, "answer", { timeZone: req.user.timeZone, key: `${question._id}:${dayKey(req.user.timeZone)}`, amount: answeredBefore ? 2 : 3 });
     }
-    if (wasMistake && isCorrect) await awardXp(req.user.id, "review", { timeZone: req.user.timeZone, key: `${question._id}:${dayKey(req.user.timeZone)}` });
+    if (wasMistake && isCorrect && !inSet) await awardXp(req.user.id, "review", { timeZone: req.user.timeZone, key: `${question._id}:${dayKey(req.user.timeZone)}` });
     logEvent(req.user.id, "question_answered", { question: question._id, correct: isCorrect });
     if (wasMistake) logEvent(req.user.id, "review_done", { kind: "mistake", correct: isCorrect });
     // Lesson mastery follows questions from lesson tests. A right answer only counts as review when it was a mistake before.

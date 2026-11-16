@@ -9,6 +9,7 @@
     "dev": "nodemon src/server.js",
     "seed:demo": "node scripts/seed-demo.js",
     "migrate:course-meta": "node scripts/migrate-course-meta.js",
+    "migrate:set-structure": "node scripts/migrate-set-structure.js",
     "stats": "node scripts/compute-stats.js",
     "sync:search-index": "node scripts/sync-search-index.js",
     "render:math": "node scripts/render-math.js"

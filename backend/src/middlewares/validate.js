@@ -162,13 +162,25 @@ const validateSetNote = validateWith(Joi.object({
   })
 }));
 const cardSide = Joi.string().trim().min(1).max(500);
-const validateSetCard = validateWith(Joi.object({ front: cardSide.required(), back: cardSide.required() }));
-const validateSetCardUpdate = validateWith(Joi.object({ front: cardSide, back: cardSide }).min(1));
+const validateSetCard = validateWith(Joi.object({ front: cardSide.required(), back: cardSide.required(), lesson: objectId.allow(null) }));
+const validateSetCardUpdate = validateWith(Joi.object({ front: cardSide, back: cardSide, lesson: objectId.allow(null) }).min(1));
 const validateCardOrder = validateWith(Joi.object({ ids: Joi.array().items(objectId.required()).min(1).max(500).unique().required() }));
-const validateSetCards = validateWith(Joi.object({ cards: Joi.array().items(Joi.object({ front: cardSide.required(), back: cardSide.required() })).min(1).max(200).required() }));
+const validateSetCards = validateWith(Joi.object({ cards: Joi.array().items(Joi.object({ front: cardSide.required(), back: cardSide.required() })).min(1).max(200).required(), lesson: objectId.allow(null) }));
 const validateSetText = validateWith(Joi.object({ title: Joi.string().trim().min(1).max(120).required(), text: Joi.string().trim().min(20).max(100000).required() }));
-const validateBuildText = validateWith(Joi.object({ text: Joi.string().trim().min(40).max(100000).required() }));
-const validateSetQuiz = validateWith(Joi.object({ title: Joi.string().trim().min(1).max(80).required() }));
+// The build flow takes pasted text OR a topic name, never both.
+const validateBuildText = validateWith(Joi.object({ text: Joi.string().trim().min(40).max(100000), topic: Joi.string().trim().min(3).max(120) }).xor("text", "topic").messages({ "object.missing": "Send some text or a topic", "object.xor": "Send text or a topic, not both" }));
+const validateSetQuiz = validateWith(Joi.object({ title: Joi.string().trim().min(1).max(80).required(), unit: objectId.allow(null) }));
+// Units and lessons of a study set. "New unit" and "New lesson" create at once with a default title, so the title is optional.
+const structureTitle = Joi.string().trim().min(1).max(80);
+const noteContent = Joi.object().unknown(true).custom((value, helpers) => {
+  const problem = noteDocProblem(value);
+  return problem ? helpers.message(problem) : value;
+});
+const validateSetUnit = validateWith(Joi.object({ title: structureTitle }));
+const validateSetUnitUpdate = validateWith(Joi.object({ title: structureTitle.required() }));
+const validateSetLesson = validateWith(Joi.object({ title: structureTitle }));
+const validateSetLessonUpdate = validateWith(Joi.object({ title: structureTitle, content: noteContent, unit: objectId }).min(1));
+const validateStructureOrder = validateWith(Joi.object({ ids: Joi.array().items(objectId.required()).min(1).max(100).unique().required() }));
 
 const validateStudyTime = validateWith(Joi.object({ seconds: Joi.number().integer().min(1).max(120).required() }));
 
@@ -521,6 +533,11 @@ module.exports = {
   validateSetText,
   validateBuildText,
   validateCardOrder,
+  validateSetUnit,
+  validateSetUnitUpdate,
+  validateSetLesson,
+  validateSetLessonUpdate,
+  validateStructureOrder,
   validateExamDate,
   validateBookmark,
   validateNote,

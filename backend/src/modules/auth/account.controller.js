@@ -16,6 +16,9 @@ const StudyTime = require("../progress/studytime.models");
 const TestResult = require("../assessments/testresult.models");
 const StudySet = require("../lab/studyset.models");
 const SetNote = require("../lab/setnote.models");
+const SetUnit = require("../lab/setunit.models");
+const SetLesson = require("../lab/setlesson.models");
+const SetMastery = require("../lab/setmastery.models");
 const Flashcard = require("../flashcards/flashcard.models");
 const Test = require("../assessments/test.models");
 const Question = require("../assessments/question.models");
@@ -41,17 +44,20 @@ const { cookieOptions } = require("./auth.controller");
 const exportStudySets = async (user) => {
   const sets = await StudySet.find({ owner: user, deletedAt: null }).select("-__v -owner").lean();
   const ids = sets.map((set) => set._id);
-  const [notes, cards, tests, materials] = await Promise.all([
+  const [notes, cards, tests, materials, units, lessons] = await Promise.all([
     SetNote.find({ set: { $in: ids } }).select("-_id -__v").lean(),
     Flashcard.find({ set: { $in: ids }, deletedAt: null }).select("set front back order -_id").lean(),
     Test.find({ set: { $in: ids }, deletedAt: null }).select("_id set title").lean(),
-    SetMaterial.find({ set: { $in: ids } }).select("set kind title text pages -_id").lean()
+    SetMaterial.find({ set: { $in: ids } }).select("set kind title text pages -_id").lean(),
+    SetUnit.find({ set: { $in: ids }, deletedAt: null }).select("set title order").sort({ order: 1 }).lean(),
+    SetLesson.find({ set: { $in: ids }, deletedAt: null }).select("set unit title order content").sort({ order: 1 }).lean()
   ]);
   const questions = await Question.find({ test: { $in: tests.map((test) => test._id) }, deletedAt: null }).select("-__v -deletedAt").lean();
   const by = (rows, key) => (id) => rows.filter((row) => String(row[key]) === String(id));
   return sets.map((set) => ({
     ...set,
     notes: by(notes, "set")(set._id)[0]?.content || null,
+    units: by(units, "set")(set._id).map((unit) => ({ title: unit.title, order: unit.order, lessons: by(lessons, "unit")(unit._id).map(({ title, order, content }) => ({ title, order, notes: content || null })) })),
     cards: by(cards, "set")(set._id).map(({ front, back, order }) => ({ front, back, order })),
     materials: by(materials, "set")(set._id).map(({ kind, title, text, pages }) => ({ kind, title, text, pages })),
     quizzes: by(tests, "set")(set._id).map((test) => ({ title: test.title, questions: by(questions, "test")(test._id).map(({ _id, test: t, createdAt, updatedAt, ...rest }) => rest) }))
@@ -73,6 +79,9 @@ const deleteStudySets = async (user) => {
     Question.deleteMany({ test: { $in: tests.map((test) => test._id) } }),
     FlashcardProgress.deleteMany({ flashcard: { $in: cards.map((card) => card._id) } }),
     SetNote.deleteMany({ set: { $in: ids } }),
+    SetUnit.deleteMany({ set: { $in: ids } }),
+    SetLesson.deleteMany({ set: { $in: ids } }),
+    SetMastery.deleteMany({ set: { $in: ids } }),
     Test.deleteMany({ set: { $in: ids } }),
     Flashcard.deleteMany({ set: { $in: ids } })
   ]);

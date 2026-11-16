@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const StudySet = require("./studyset.models");
 const SetNote = require("./setnote.models");
+const SetUnit = require("./setunit.models");
+const SetLesson = require("./setlesson.models");
 const Flashcard = require("../flashcards/flashcard.models");
 const FlashcardProgress = require("../flashcards/flashcardprogress.models");
 const Test = require("../assessments/test.models");
@@ -130,13 +132,19 @@ const saveNotes = async (req, res, next) => {
 
 // --- flashcards
 const sideText = (value) => ({ text: String(value).trim() });
-const publicCard = (card) => ({ id: card._id, front: card.front?.text || "", back: card.back?.text || "", order: card.order });
+const publicCard = (card) => ({ id: card._id, front: card.front?.text || "", back: card.back?.text || "", order: card.order, lesson: card.setLesson || null });
+// A card may sit in one lesson of its own set. True when `lessonId` is empty or names a live lesson of this set.
+const lessonInSet = async (setId, lessonId) => !lessonId || Boolean(await SetLesson.exists({ _id: lessonId, set: setId, deletedAt: null }));
 
 const listCards = async (req, res, next) => {
   try {
     const set = await findOwnSet(req.params.id, req.user.id);
     if (!set) return notFound(res);
-    const cards = await Flashcard.find({ set: set._id, deletedAt: null }).sort({ order: 1 }).lean();
+    // ?lesson=<id> gives one lesson's cards, ?lesson=none the cards that sit in no lesson.
+    const filter = { set: set._id, deletedAt: null };
+    if (req.query.lesson === "none") filter.setLesson = null;
+    else if (typeof req.query.lesson === "string" && !badId(req.query.lesson)) filter.setLesson = req.query.lesson;
+    const cards = await Flashcard.find(filter).sort({ order: 1 }).lean();
     return res.status(200).json({ data: cards.map(publicCard) });
   } catch (error) {
     next(error);
@@ -151,7 +159,8 @@ const createCard = async (req, res, next) => {
     const set = await findOwnSet(req.params.id, req.user.id);
     if (!set) return notFound(res);
     if ((await cardCount(set._id)) >= MAX_CARDS) return res.status(409).json({ message: `A set can hold up to ${MAX_CARDS} cards` });
-    const card = await Flashcard.create({ set: set._id, front: sideText(req.body.front), back: sideText(req.body.back), order: await nextOrder(set._id), isPublished: true });
+    if (!(await lessonInSet(set._id, req.body.lesson))) return notFound(res, "Lesson");
+    const card = await Flashcard.create({ set: set._id, setLesson: req.body.lesson || null, front: sideText(req.body.front), back: sideText(req.body.back), order: await nextOrder(set._id), isPublished: true });
     return res.status(201).json({ message: "Card added", data: publicCard(card) });
   } catch (error) {
     next(error);
@@ -165,8 +174,9 @@ const createCards = async (req, res, next) => {
     if (!set) return notFound(res);
     const existing = await cardCount(set._id);
     if (existing + req.body.cards.length > MAX_CARDS) return res.status(409).json({ message: `A set can hold up to ${MAX_CARDS} cards. This one has ${existing}.` });
+    if (!(await lessonInSet(set._id, req.body.lesson))) return notFound(res, "Lesson");
     let order = await nextOrder(set._id);
-    const docs = req.body.cards.map((card) => ({ set: set._id, front: sideText(card.front), back: sideText(card.back), order: order++, isPublished: true }));
+    const docs = req.body.cards.map((card) => ({ set: set._id, setLesson: req.body.lesson || null, front: sideText(card.front), back: sideText(card.back), order: order++, isPublished: true }));
     const made = await Flashcard.insertMany(docs);
     await StudySet.updateOne({ _id: set._id }, { $set: { updatedAt: new Date() } });
     return res.status(201).json({ message: `${made.length} cards added`, data: made.map(publicCard) });
@@ -204,6 +214,10 @@ const updateCard = async (req, res, next) => {
     if (!card) return notFound(res, "Card");
     if (req.body.front !== undefined) card.front = sideText(req.body.front);
     if (req.body.back !== undefined) card.back = sideText(req.body.back);
+    if (req.body.lesson !== undefined) {
+      if (!(await lessonInSet(card.set, req.body.lesson))) return notFound(res, "Lesson");
+      card.setLesson = req.body.lesson || null;
+    }
     await card.save();
     return res.status(200).json({ message: "Card saved", data: publicCard(card) });
   } catch (error) {
@@ -246,7 +260,7 @@ const studyCards = async (req, res, next) => {
 };
 
 // --- quizzes (a Test with scope "set", played in the normal test screen)
-const quizCard = (test, questionCount) => ({ id: test._id, title: test.title, questionCount, timeLimitMinutes: test.timeLimitMinutes || null });
+const quizCard = (test, questionCount) => ({ id: test._id, title: test.title, questionCount, timeLimitMinutes: test.timeLimitMinutes || null, unit: test.setUnit || null });
 
 const listQuizzes = async (req, res, next) => {
   try {
@@ -266,7 +280,9 @@ const createQuiz = async (req, res, next) => {
     const set = await findOwnSet(req.params.id, req.user.id);
     if (!set) return notFound(res);
     if ((await Test.countDocuments({ set: set._id, deletedAt: null })) >= MAX_QUIZZES) return res.status(409).json({ message: `A set can hold up to ${MAX_QUIZZES} quizzes` });
-    const test = await Test.create({ scope: "set", set: set._id, title: req.body.title, isPublished: true });
+    // A quiz with a unit is that unit's quiz (it drives the unit's mastery). Without one it is a test of the whole set.
+    if (req.body.unit && !(await SetUnit.exists({ _id: req.body.unit, set: set._id, deletedAt: null }))) return notFound(res, "Unit");
+    const test = await Test.create({ scope: "set", set: set._id, setUnit: req.body.unit || null, title: req.body.title, isPublished: true });
     return res.status(201).json({ message: "Quiz created", data: quizCard(test, 0) });
   } catch (error) {
     if (error.name === "ValidationError") return res.status(400).json({ message: Object.values(error.errors)[0].message });
@@ -287,6 +303,10 @@ const updateQuiz = async (req, res, next) => {
     const test = await ownQuiz(req.params.testId, req.user.id);
     if (!test) return notFound(res, "Quiz");
     test.title = req.body.title;
+    if (req.body.unit !== undefined) {
+      if (req.body.unit && !(await SetUnit.exists({ _id: req.body.unit, set: test.set, deletedAt: null }))) return notFound(res, "Unit");
+      test.setUnit = req.body.unit || null;
+    }
     await test.save();
     return res.status(200).json({ message: "Quiz saved", data: quizCard(test, undefined) });
   } catch (error) {
@@ -312,7 +332,7 @@ const getQuiz = async (req, res, next) => {
     const test = await ownQuiz(req.params.testId, req.user.id);
     if (!test) return notFound(res, "Quiz");
     const questions = await Question.find({ test: test._id, deletedAt: null }).sort({ order: 1 }).lean();
-    return res.status(200).json({ data: { id: test._id, title: test.title, set: test.set, questions: questions.map(questionForAdmin) } });
+    return res.status(200).json({ data: { id: test._id, title: test.title, set: test.set, unit: test.setUnit || null, questions: questions.map(questionForAdmin) } });
   } catch (error) {
     next(error);
   }

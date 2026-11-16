@@ -15,6 +15,8 @@ const flashcardSchema = new mongoose.Schema({
   // A card belongs to a lesson (admin) or to a student's study set, never both.
   lesson: { type: mongoose.Schema.Types.ObjectId, ref: "Lesson", default: null },
   set: { type: mongoose.Schema.Types.ObjectId, ref: "StudySet", default: null },
+  // For a card in a study set: the set lesson it belongs to. null is a card of the set that sits in no lesson.
+  setLesson: { type: mongoose.Schema.Types.ObjectId, ref: "SetLesson", default: null },
   front: { type: sideSchema, required: true },
   back: { type: sideSchema, required: true },
   order: { type: Number, required: true, min: 1 },
@@ -24,6 +26,7 @@ const flashcardSchema = new mongoose.Schema({
 
 flashcardSchema.index({ lesson: 1, order: 1 });
 flashcardSchema.index({ set: 1, order: 1 });
+flashcardSchema.index({ setLesson: 1, order: 1 });
 
 const validateSide = (side, path, invalidate) => {
   if (!side || (!side.text && !(side.image && side.image.url))) {

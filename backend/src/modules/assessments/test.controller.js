@@ -9,6 +9,7 @@ const { findVisibleTest, parentIsAvailable } = require("../../utils/visibility")
 const { studentQuestion, questionForAdmin } = require("../../utils/serializers");
 const { grade } = require("../../utils/grading");
 const mastery = require("../../utils/mastery");
+const setMastery = require("../../utils/setMastery");
 
 const badId = (id) => !mongoose.isObjectIdOrHexString(id);
 const { dayKey } = require("../../utils/day");
@@ -74,6 +75,8 @@ const recordResult = async (userId, test, score, timeZone) => {
     await mastery.record(userId, test.lesson._id, { type: "attempt" }, timeZone);
     await mastery.record(userId, test.lesson._id, { type: "score", score }, timeZone);
   }
+  // A quiz that belongs to a unit of a study set moves that unit's mastery (for whoever took it).
+  if (test.scope === "set") await setMastery.recordQuiz(userId, test, score);
   return { result, passPercent, passed };
 };
 

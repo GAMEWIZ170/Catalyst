@@ -4,13 +4,16 @@ const router = express.Router();
 const authenticate = require("../../middlewares/authenticate");
 const {
   validateSet, validateSetUpdate, validateSetNote, validateSetCard, validateSetCardUpdate, validateSetCards, validateSetQuiz, validateSetText,
-  validateQuestion, validateQuestionUpdate, validateGenerate, validateVisibility, validateBuildText, validateCardOrder
+  validateQuestion, validateQuestionUpdate, validateGenerate, validateVisibility, validateBuildText, validateCardOrder,
+  validateSetUnit, validateSetUnitUpdate, validateSetLesson, validateSetLessonUpdate, validateStructureOrder
 } = require("../../middlewares/validate");
 const sets = require("./studyset.controller");
 const materials = require("./setmaterial.controller");
+const structure = require("./setstructure.controller");
 const { uploadMaterial } = require("../../middlewares/materialUpload");
 const uploadLimiter = require("../../middlewares/uploadLimiter");
 const aiLimiter = require("../../middlewares/aiLimiter");
+const markDoneLimiter = require("../../middlewares/markDoneLimiter");
 const { generate } = require("./aigenerate.controller");
 const build = require("./setbuild.controller");
 const { setVisibility } = require("../community/community.controller");
@@ -22,7 +25,7 @@ router.use(authenticate);
 router.get("/", sets.listSets);
 router.post("/", validateSet, sets.createSet);
 
-// "Drop in your notes": a PDF (multipart, field "file") or pasted text (JSON). Declared before /:id.
+// One-shot build: a PDF (multipart, field "file"), pasted text (JSON {text}) or a topic name (JSON {topic}). Declared before /:id.
 const buildInput = (req, res, next) => (req.is("multipart/form-data") ? uploadMaterial(req, res, next) : validateBuildText(req, res, next));
 router.post("/build", uploadLimiter, aiLimiter, buildInput, build.startBuild);
 
@@ -37,10 +40,27 @@ router.post("/questions", validateQuestion, sets.ownQuizInBody, createQuestion);
 router.put("/questions/:id", validateQuestionUpdate, sets.ownQuestion, updateQuestion);
 router.delete("/questions/:id", sets.ownQuestion, deleteQuestion);
 
+// Units and lessons of a set (the set is found through the unit or the lesson). Declared before /:id, and the reorder
+// route before the routes that take a lesson or unit id alone.
+router.put("/units/:unitId/lessons/order", validateStructureOrder, structure.reorderLessons);
+router.post("/units/:unitId/lessons", validateSetLesson, structure.createLesson);
+router.put("/units/:unitId", validateSetUnitUpdate, structure.updateUnit);
+router.delete("/units/:unitId", structure.deleteUnit);
+router.get("/lessons/:lessonId/check", structure.quickCheck);
+router.post("/lessons/:lessonId/done", markDoneLimiter, structure.finishLesson);
+router.get("/lessons/:lessonId", structure.getLesson);
+router.put("/lessons/:lessonId", validateSetLessonUpdate, structure.updateLesson);
+router.delete("/lessons/:lessonId", structure.deleteLesson);
+
 router.get("/:id", sets.getSet);
 router.put("/:id", validateSetUpdate, sets.updateSet);
 router.delete("/:id", sets.deleteSet);
 router.put("/:id/visibility", validateVisibility, setVisibility);
+router.get("/:id/outline", structure.outline);
+router.get("/:id/offline", structure.offlineBundle);
+router.get("/:id/mistakes", structure.setMistakes);
+router.put("/:id/units/order", validateStructureOrder, structure.reorderUnits);
+router.post("/:id/units", validateSetUnit, structure.createUnit);
 router.get("/:id/notes", sets.getNotes);
 router.put("/:id/notes", validateSetNote, sets.saveNotes);
 router.get("/:id/cards", sets.listCards);
