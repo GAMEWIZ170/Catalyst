@@ -46,6 +46,14 @@ function tokenize(source) {
     index = end + (block ? 2 : 1);
   }
   flush();
+  // A block formula already sits on its own line with its own margin. The blank lines the author typed
+  // around it would add empty lines on top of that margin, so drop them.
+  parts.forEach((part, at) => {
+    if (part.type !== "block") return;
+    const before = parts[at - 1], after = parts[at + 1];
+    if (before?.type === "text") before.value = before.value.replace(/[ \t]*(\r?\n[ \t]*)+$/, "");
+    if (after?.type === "text") after.value = after.value.replace(/^[ \t]*(\r?\n[ \t]*)+/, "");
+  });
   return parts;
 }
 

@@ -88,8 +88,8 @@ export default function Courses() {
     {!loading && !error && resume && next && <Card className="home-continue" aria-labelledby="continue-title">
       <h2 id="continue-title">{resume.progress?.completedLessons > 0 ? "Continue where you left off" : "Start your first lesson"}</h2>
       <p className="home-continue-copy"><strong>{resume.code}</strong> · Lesson {next.label}: {next.title}{where && `, ${where}`}</p>
-      <Progress value={percent(resume)} label={`${resume.code} progress`} showLabel />
-      <div className="button-row button-row--stack"><Button as={Link} variant="primary" to={nextHref} state={nextState} {...nearToPrefetch(() => prefetchLesson(next.lessonId))}>{midDeck ? "Resume flashcards" : `Resume: Lesson ${next.label}`}</Button></div>
+      <Progress value={percent(resume)} label={`${resume.title} progress`} showLabel />
+      <div className="button-row button-row--stack"><Button as={Link} variant="primary" to={nextHref} state={nextState} {...nearToPrefetch(() => prefetchLesson(next.lessonId))}>{midDeck ? "Resume flashcards" : `${resume.progress?.completedLessons > 0 ? "Resume" : "Start"}: Lesson ${next.label}`}</Button></div>
     </Card>}
     {user && !loading && !error && <ExamCountdown />}
     {user && !loading && !error && <TodayPlan />}
