@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Pause, Play, Square } from "lucide-react";
 import { t } from "../../i18n";
+import { Button } from "../ui";
 
 const SPEEDS = [0.75, 1, 1.25, 1.5];
 const CHUNK = 220;
@@ -97,9 +98,9 @@ export default function ReadAloud({ text }) {
   if (!supported || !readableText(text)) return null;
   return <div className="read-aloud" role="group" aria-label={t("readAloud.label")}>
     {state === "playing"
-      ? <button className="button button-secondary" type="button" onClick={pause}><Pause size={16} aria-hidden="true" />{t("readAloud.pause")}</button>
-      : <button className="button button-secondary" type="button" onClick={play}><Play size={16} aria-hidden="true" />{state === "paused" ? t("readAloud.resume") : t("readAloud.play")}</button>}
-    {state !== "idle" && <button className="button button-secondary" type="button" onClick={stop}><Square size={16} aria-hidden="true" />{t("readAloud.stop")}</button>}
+      ? <Button variant="secondary" icon={Pause} onClick={pause}>{t("readAloud.pause")}</Button>
+      : <Button variant="secondary" icon={Play} onClick={play}>{state === "paused" ? t("readAloud.resume") : t("readAloud.play")}</Button>}
+    {state !== "idle" && <Button variant="secondary" icon={Square} onClick={stop}>{t("readAloud.stop")}</Button>}
     {state !== "idle" && <div className="read-aloud-speed" role="group" aria-label={t("readAloud.speed")}>
       {SPEEDS.map((value) => <button className="speed-chip" type="button" key={value} aria-pressed={speed === value} onClick={() => changeSpeed(value)}>{value}x</button>)}
     </div>}

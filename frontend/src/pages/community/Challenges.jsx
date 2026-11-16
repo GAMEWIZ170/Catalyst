@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../../api/client";
-import { EmptyState } from "../../components/ui";
+import { Button, EmptyState } from "../../components/ui";
 import { ErrorState, Loading } from "../learn/Courses";
 import { t } from "../../i18n";
 
@@ -26,7 +26,7 @@ export default function Challenges() {
     <h1>{t("challenges.title")}</h1>
     <p className="muted">{t("challenges.intro")}</p>
     {state.items.length === 0
-      ? <EmptyState title={t("challenges.emptyTitle")} description={t("challenges.emptyText")} action={<Link className="button button-primary" to="/friends">{t("me.friends")}</Link>} />
+      ? <EmptyState title={t("challenges.emptyTitle")} description={t("challenges.emptyText")} action={<Button as={Link} to="/friends">{t("me.friends")}</Button>} />
       : <ul className="friend-list">
         {state.items.map((item) => <li key={item.id} className="friend-row">
           <Link className="friend-name" to={`/challenge/${item.id}`}>{item.title}{item.with ? <span className="muted"> · {item.with}</span> : null}</Link>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Zap } from "lucide-react";
+import { Heading } from "@astryxdesign/core/Heading";
 import { api } from "../../api/client";
 import { Button, Card, EmptyState, Progress as Bar } from "../../components/ui";
 import { ErrorState, Loading } from "./Courses";
@@ -33,7 +34,7 @@ export default function Progress() {
     ...(tree.tests || []).filter((test) => test.bestScore != null).map((test) => ({ id: test._id, title: test.title, score: test.bestScore }))
   ]);
   return <div className="content progress-page">
-    <h1>Your progress</h1>
+    <Heading level={1}>Your progress</Heading>
     <div className="stats-grid">
       <Stat label="Current streak" value={`${streak.streak} ${streak.streak === 1 ? "day" : "days"}`} detail={streak.completedToday ? "Studied today" : "Not yet today"} icon={<Zap size={20} aria-hidden="true" />} />
       <Stat label="Lessons completed" value={completed.length} />
@@ -55,7 +56,8 @@ export default function Progress() {
     </Card>)}
     {trees.some((tree) => !isStarted(tree)) && <Card aria-labelledby="not-started-title">
       <h2 id="not-started-title">Not started</h2>
-      <ul className="score-list">{trees.filter((tree) => !isStarted(tree)).map((tree) => <li key={tree._id}><span>{tree.code} · {tree.title}</span><span className="muted progress-num">0 of {tree.units.reduce((sum, unit) => sum + unit.lessons.length, 0)}</span></li>)}</ul>
+      <ul className="score-list">{trees.filter((tree) => !isStarted(tree)).slice(0, 4).map((tree) => <li key={tree._id}><span>{tree.title}</span><span className="muted progress-num">0 of {tree.units.reduce((sum, unit) => sum + unit.lessons.length, 0)}</span></li>)}</ul>
+      {trees.filter((tree) => !isStarted(tree)).length > 4 && <p className="muted"><Link to="/courses">Browse all {trees.length} courses</Link></p>}
     </Card>}
     <Card aria-labelledby="scores-title">
       <h2 id="scores-title">Test scores</h2>

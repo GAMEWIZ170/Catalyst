@@ -32,10 +32,10 @@ export default function ShareButton({ url, title, text }) {
   }
 
   return <div className="share-row">
-    <Button variant="secondary" onClick={share}><Share2 size={16} aria-hidden="true" /> {t("share.button")}</Button>
+    <Button variant="secondary" icon={Share2} onClick={share}>{t("share.button")}</Button>
     {fallback && <>
-      <a className="button button-secondary" href={`https://wa.me/?text=${encodeURIComponent(message)}`} target="_blank" rel="noopener noreferrer"><MessageCircle size={16} aria-hidden="true" /> {t("share.whatsapp")}</a>
-      <Button variant="secondary" onClick={copy}><Link2 size={16} aria-hidden="true" /> {t("share.copy")}</Button>
+      <Button variant="secondary" icon={MessageCircle} href={`https://wa.me/?text=${encodeURIComponent(message)}`} target="_blank" rel="noopener noreferrer">{t("share.whatsapp")}</Button>
+      <Button variant="secondary" icon={Link2} onClick={copy}>{t("share.copy")}</Button>
     </>}
   </div>;
 }

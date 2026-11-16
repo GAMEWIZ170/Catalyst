@@ -1,5 +1,6 @@
-import { useId } from "react";
+import { Children, useId } from "react";
 import { AlertCircle } from "lucide-react";
+import { Selector } from "@astryxdesign/core/Selector";
 
 // Labels sit above the control, hint and error text below. Errors are text plus an icon, never colour alone.
 function FieldShell({ id, label, hint, error, children, className = "" }) {
@@ -37,13 +38,29 @@ export function TextArea({ label, hint, error, id, className, ...input }) {
   );
 }
 
-export function SelectField({ label, hint, error, id, className, children, ...input }) {
-  const auto = useId();
-  const fieldId = id || auto;
+// A fixed set of choices. It takes <option> children and an onChange(event) like a native select, so callers did not
+// change, but it draws the Astryx Selector (this needs the Astryx theme, which AppShell provides).
+// An empty value cannot be a Selector value, so it travels as NONE.
+const NONE = "__none__";
+export function SelectField({ label, hint, error, className, children, value, onChange, disabled, isLabelHidden, ...rest }) {
+  const options = Children.toArray(children).filter((child) => child?.props).map((child) => ({
+    value: String(child.props.value ?? "") === "" ? NONE : String(child.props.value),
+    label: Children.toArray(child.props.children).join("")
+  }));
+  const current = String(value ?? "") === "" ? NONE : String(value);
   return (
-    <FieldShell id={fieldId} label={label} hint={hint} error={error} className={className}>
-      <select className="ui-control ui-select" id={fieldId} aria-invalid={error ? true : undefined} aria-describedby={describedBy(fieldId, hint, error)} {...input}>{children}</select>
-    </FieldShell>
+    <div className={`ui-field ${className || ""}`}>
+      <Selector
+        label={label}
+        isLabelHidden={isLabelHidden || rest["aria-label"] != null}
+        description={error ? undefined : hint}
+        status={error ? { type: "error", message: error } : undefined}
+        options={options}
+        value={current}
+        isDisabled={disabled}
+        onChange={(next) => onChange?.({ target: { value: next === NONE ? "" : next } })}
+      />
+    </div>
   );
 }
 

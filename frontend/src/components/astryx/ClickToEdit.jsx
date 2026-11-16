@@ -32,5 +32,6 @@ export default function ClickToEdit({ value, onSave, label, placeholder, heading
       <IconButton label={`Change ${label.toLowerCase()}`} tooltip={`Change ${label.toLowerCase()}`} variant="ghost" size="sm" icon={<Pencil size={16} aria-hidden="true" />} onClick={start} />
     </HStack>;
   }
-  return <Button label={value || placeholder} tooltip={`Change ${label.toLowerCase()}`} variant="ghost" size="sm" onClick={start} />;
+  // The pencil says this can be changed.
+  return <Button label={value || placeholder} tooltip={`Change ${label.toLowerCase()}`} variant="ghost" size="sm" icon={<Pencil size={14} aria-hidden="true" />} onClick={start} />;
 }

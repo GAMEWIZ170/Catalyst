@@ -84,7 +84,7 @@
 }
 
 @media (max-width: 479px) {
-  .button-row--stack > .button {
+  .button-row--stack > * {
     flex: 1 1 100%;
   }
 }

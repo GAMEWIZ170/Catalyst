@@ -195,7 +195,7 @@ frontend/
     ├── api/cache.js           # Short read cache for student screens
     ├── api/prefetch.js        # Start loading a lesson or course on hover or touch
     ├── components/
-    │   ├── ui/                # Primitives: Button, fields, Card, Badge, Tabs, Progress, Dialog, EmptyState, Skeleton, Toast
+    │   ├── ui/                # Primitives. Button and SelectField render Astryx (Button, Selector) behind the old props. Also fields, Card, Badge, Tabs, Progress, Dialog, EmptyState, Skeleton, Toast
     │   ├── astryx/            # Astryx theme and wrappers
     │   ├── layout/            # App shell, header search, quick settings, notifications, route guard
     │   ├── shared/            # Used across areas: RichText, ResponsiveImage, ShareButton, ReportButton

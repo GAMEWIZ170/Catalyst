@@ -21,7 +21,7 @@ Structure: course > unit > lesson. Tests can belong to a lesson, a unit or a cou
 - Backend: Node 24, Express 5, MongoDB with Mongoose 9, Joi (via the `validateWith` helper), bcrypt, jsonwebtoken (httpOnly cookie named `token`), cookie-parser, cors, helmet, express-rate-limit, multer (memory storage), cloudinary, ms. All CommonJS.
 - Frontend: React and Vite, react-router data router (`createBrowserRouter`, `useBlocker`), plain CSS with tokens, KaTeX plus mhchem loaded lazily (`RichText`), `Avatar.jsx` for profile pictures.
 - Themes: `data-palette` (lagoon, indigo, ember, orchid, graphite) and `data-theme` (light, dark). Storage keys `catalyst-palette` and `catalyst-theme`. No colour literals outside `tokens.css` and `Avatar.jsx`.
-- UI library trial: Astryx is allowed on feature/astryx-trial
+- UI library: Astryx is the base. `main.jsx` wraps the app in `AstryxTheme`. `components/ui/Button.jsx` and `SelectField` draw Astryx components behind their old props, so use them instead of native buttons and selects.
 
 ## Layout and naming
 

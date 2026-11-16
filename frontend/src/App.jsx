@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Link, Navigate, Route, Routes, useParams } from "react-router-dom";
 import { api } from "./api/client";
 import { useAuth } from "./context/AuthContext";
+import { Button } from "./components/ui";
 import AppShell from "./components/layout/AppShell";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
 import Login from "./pages/auth/Login";
@@ -83,7 +84,7 @@ function AdminPage({ children }) {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
-  if (user.role !== "admin") return <AppShell><AdminLayout nav={false}><div className="access-denied"><h1>You do not have access to this page</h1><p>Only administrators can manage Catalyst content.</p><Link className="button button-primary" to="/home">Back to home</Link></div></AdminLayout></AppShell>;
+  if (user.role !== "admin") return <AppShell><AdminLayout nav={false}><div className="access-denied"><h1>You do not have access to this page</h1><p>Only administrators can manage Catalyst content.</p><Button as={Link} to="/home">Back to home</Button></div></AdminLayout></AppShell>;
   return <AppShell><Suspense fallback={<PageFallback />}>{children}</Suspense></AppShell>;
 }
 

@@ -33,7 +33,7 @@ export default function ResetPassword() {
   </AuthLayout>;
 
   if (done) return <AuthLayout title="Password changed" subtitle="You can log in with your new password now.">
-    <Link className="button button-primary button-wide" to="/login">Log in</Link>
+    <Button as={Link} block to="/login">Log in</Button>
   </AuthLayout>;
 
   return <AuthLayout title="Choose a new password" subtitle="Use at least 8 characters.">

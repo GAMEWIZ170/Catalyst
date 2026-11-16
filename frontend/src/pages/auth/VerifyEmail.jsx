@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { Button } from "../../components/ui";
 import { api } from "../../api/client";
 import { useAuth } from "../../context/AuthContext";
 import { AuthLayout } from "./Login";
@@ -29,10 +30,10 @@ export default function VerifyEmail({ change = false }) {
 
   if (state === "working") return <AuthLayout title={change ? "Confirming your new email" : "Verifying your email"} subtitle="One moment."><span className="spinner" aria-label="Loading" /></AuthLayout>;
   if (state === "done") return <AuthLayout title={change ? "Email changed" : "Email verified"} subtitle={change ? "Your new email is confirmed. Use it to log in from now on." : "Thank you. Your email is confirmed."}>
-    <Link className="button button-primary button-wide" to={home}>{homeLabel}</Link>
+    <Button as={Link} block to={home}>{homeLabel}</Button>
   </AuthLayout>;
   return <AuthLayout title="This link did not work" subtitle={state === "missing" ? "The link is incomplete." : message}>
     <p className="auth-switch">{change ? "Ask for a new link in Settings, under Change email." : user ? "Use \"Send the link again\" at the top of any page." : "Log in, then use \"Send the link again\" at the top of the page."}</p>
-    <Link className="button button-primary button-wide" to={home}>{homeLabel}</Link>
+    <Button as={Link} block to={home}>{homeLabel}</Button>
   </AuthLayout>;
 }

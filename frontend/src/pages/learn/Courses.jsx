@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
+import { Heading } from "@astryxdesign/core/Heading";
 import { api, ACCESS_ENDED } from "../../api/client";
 import { nearToPrefetch, prefetchCourse, prefetchLesson } from "../../api/prefetch";
 import { useAuth } from "../../context/AuthContext";
@@ -25,7 +26,7 @@ function Welcome({ onDone }) {
       <li>Each lesson has an explanation, then a test or flashcards. Pass the test or finish the deck to complete it.</li>
       <li>Study on any day to keep your streak going.</li>
     </ol>
-    <button className="button button-secondary" type="button" onClick={onDone}>Got it</button>
+    <Button variant="secondary" onClick={onDone}>Got it</Button>
   </section>;
 }
 
@@ -68,11 +69,15 @@ export default function Courses() {
   const where = midDeck ? `flashcards ${last.position + 1}/${last.total}` : "";
   const nextHref = !target ? "" : midDeck ? `/lessons/${target.lessonId}/flashcards` : `/lessons/${target.lessonId}`;
   const nextState = !resume ? undefined : midDeck ? { from: `/courses/${resume._id}`, courseFrom: `/courses/${resume._id}`, resume: last.position } : { from: `/courses/${resume._id}` };
+  // "Your courses" are the ones the student joined or has started. A new student with none sees the first few courses instead.
+  const joined = new Set((user?.enrolledCourses || []).map(String));
+  const mine = courses.filter((course) => course.progress?.completedLessons > 0 || joined.has(String(course._id)) || course._id === resume?._id);
+  const listed = (mine.length ? mine : courses).slice(0, HOME_COURSES);
   const percent = (course) => (course?.progress?.totalLessons ? Math.round((course.progress.completedLessons / course.progress.totalLessons) * 100) : 0);
 
   return <div className="content student-page home-page">
     <header className="home-header">
-      <h1>Home</h1>
+      <Heading level={1}>Home</Heading>
     </header>
     {!loading && !error && goal && goal.kind !== "none" && <div className="home-goal">
       <Progress value={Math.round((Math.min(goal.done, goal.target) / goal.target) * 100)} label="Today's goal" />
@@ -99,9 +104,9 @@ export default function Courses() {
     {isStudent && showWelcome && <Welcome onDone={dismissWelcome} />}
     {!loading && !error && !courses.length && <EmptyState illustration={<Illustration name="empty" />} title="No courses yet" description="Check back soon." />}
     {!loading && !error && courses.length > 0 && <section aria-labelledby="courses-title">
-      <h2 id="courses-title">Your courses</h2>
+      <h2 id="courses-title">{mine.length ? "Your courses" : "Courses"}</h2>
       <div className="home-courses">
-        {courses.slice(0, HOME_COURSES).map((course) => <Card as={Link} className="home-course" to={`/courses/${course._id}`} key={course._id} {...nearToPrefetch(() => prefetchCourse(course._id))}>
+        {listed.map((course) =><Card as={Link} className="home-course" to={`/courses/${course._id}`} key={course._id} {...nearToPrefetch(() => prefetchCourse(course._id))}>
           <span className="home-course-code">{course.code}{course.isFree && <span className="count-chip"> Free</span>}</span>
           <strong className="home-course-title">{course.title}</strong>
           <CourseByline course={course} />
@@ -109,7 +114,7 @@ export default function Courses() {
           {course.progress?.completedLessons > 0 && <Progress value={percent(course)} label={`${course.code} progress`} />}
         </Card>)}
       </div>
-      {courses.length > HOME_COURSES && <p className="home-soon"><Link to="/courses">All {courses.length} courses</Link></p>}
+      {courses.length > listed.length && <p className="home-soon"><Link to="/courses">Browse all {courses.length} courses</Link></p>}
       {courses.length <= 1 && <p className="muted home-soon">More subjects coming soon.</p>}
     </section>}
   </div>;
@@ -130,7 +135,7 @@ export function Loading() {
 export function ErrorState({ message, onRetry }) {
   // A student whose subscription has ended gets a clear explanation instead of a retry button.
   if (String(message).startsWith(ACCESS_ENDED)) {
-    return <div className="error-state"><strong>Your access has ended</strong><p>{message}</p><Link className="button button-secondary" to="/courses">Back to courses</Link></div>;
+    return <div className="error-state"><strong>Your access has ended</strong><p>{message}</p><Button as={Link} variant="secondary" to="/courses">Back to courses</Button></div>;
   }
-  return <div className="error-state"><strong>We couldn’t load this.</strong><p>{message}</p>{onRetry && <button className="button button-secondary" type="button" onClick={onRetry}>Retry</button>}</div>;
+  return <div className="error-state"><strong>We couldn’t load this.</strong><p>{message}</p>{onRetry && <Button variant="secondary" onClick={onRetry}>Retry</Button>}</div>;
 }

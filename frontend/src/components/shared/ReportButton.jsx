@@ -11,8 +11,12 @@ const CATEGORIES = [
 ];
 
 // "Report a problem" on a question or a lesson. The answer from the admin comes back as a notification.
-export default function ReportButton({ kind, target }) {
-  const [open, setOpen] = useState(false);
+// Give it `open` and `onOpenChange` to open it from somewhere else (a menu item). Then it draws only the dialog.
+export default function ReportButton({ kind, target, open: controlledOpen, onOpenChange }) {
+  const [ownOpen, setOwnOpen] = useState(false);
+  const controlled = controlledOpen !== undefined;
+  const open = controlled ? controlledOpen : ownOpen;
+  const setOpen = controlled ? onOpenChange : setOwnOpen;
   const [category, setCategory] = useState("wrong_answer");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
@@ -43,7 +47,7 @@ export default function ReportButton({ kind, target }) {
   }
 
   return <div className="report-box">
-    <Button variant="tertiary" icon={Flag} onClick={() => { setError(""); setOpen(true); }}>Report a problem</Button>
+    {!controlled && <Button variant="tertiary" icon={Flag} onClick={() => { setError(""); setOpen(true); }}>Report a problem</Button>}
     <span className="muted report-status" role="status">{sentFor === target ? "Report sent. Thank you." : ""}</span>
     <Dialog open={open} onClose={close} title={kind === "lesson" ? "Report a problem with this lesson" : kind === "set" ? "Report this study set" : "Report a problem with this question"}>
       <form className="form-stack" onSubmit={submit}>

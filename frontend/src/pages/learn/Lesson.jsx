@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useMatch, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Bookmark, CheckCircle2, Circle, ExternalLink, FileText, Link2, Play } from "lucide-react";
+import { ArrowLeft, Bookmark, CheckCircle2, Circle, ExternalLink, FileText, Flag, Link2, Play, Share2 } from "lucide-react";
+import { Heading } from "@astryxdesign/core/Heading";
+import { MoreMenu } from "@astryxdesign/core/MoreMenu";
+import { t } from "../../i18n";
 import { api } from "../../api/client";
 import { nearToPrefetch, prefetchLesson } from "../../api/prefetch";
 import DeckSummary from "../../components/learn/DeckSummary";
@@ -8,9 +11,8 @@ import RichText from "../../components/shared/RichText";
 import ReadAloud from "../../components/learn/ReadAloud";
 import ReportButton from "../../components/shared/ReportButton";
 import Companion from "../../components/learn/Companion";
-import ShareButton from "../../components/shared/ShareButton";
 import { PreviewBanner, PreviewCards } from "../../components/learn/PreviewBits";
-import { Badge, Button, SelectField, Skeleton, SkeletonGroup, TextArea } from "../../components/ui";
+import { Badge, Button, SelectField, Skeleton, SkeletonGroup, TextArea, useToast } from "../../components/ui";
 import ResponsiveImage from "../../components/shared/ResponsiveImage";
 import { recallCourse } from "../../utils/courseCache";
 import { isLowData } from "../../utils/lowData";
@@ -104,6 +106,8 @@ export default function Lesson() {
   const [error, setError] = useState("");
   const [doneMessage, setDoneMessage] = useState("");
   const [savedOverride, setSavedOverride] = useState(null);
+  const [reporting, setReporting] = useState(false);
+  const { toast } = useToast();
 
   const from = location.state?.from || (preview ? `/admin/lessons/${id}` : "/home");
   const courseId = /^\/courses\/([^/]+)$/.exec(from)?.[1];
@@ -147,6 +151,19 @@ export default function Lesson() {
   if (!lesson) return <LessonSkeleton />;
 
   const savedLesson = savedOverride ?? lesson.saved;
+  // The phone's own share menu first. Where there is none, the link is copied.
+  async function shareLesson() {
+    const url = `${window.location.origin}/s/l/${id}`;
+    if (navigator.share) {
+      try { await navigator.share({ title: lesson.title, text: `${lesson.title} on Catalyst.`, url }); return; } catch (err) { if (err?.name === "AbortError") return; }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({ tone: "success", message: t("share.copied") });
+    } catch {
+      toast({ tone: "warning", message: t("share.copyFailed") });
+    }
+  }
   async function toggleSaved() {
     const next = !savedLesson;
     setSavedOverride(next);
@@ -203,15 +220,20 @@ export default function Lesson() {
       </aside>}
       <div className="lesson-main">
         <article className="reading-column">
-          <h1>{lesson.title}</h1>
-          {(unit || completed) && <p className="lesson-meta">
+          <Heading level={1}>{lesson.title}</Heading>
+          {(unit || completed || savedLesson) && <p className="lesson-meta">
             {unit && <span>{unit.title}</span>}
             {completed && <Badge tone="success" icon={CheckCircle2}>Completed</Badge>}
+            {savedLesson && !preview && <Badge icon={Bookmark}>Saved</Badge>}
           </p>}
           <div className="lesson-tools">
-            {!preview && <ShareButton url={`${window.location.origin}/s/l/${id}`} title={lesson.title} text={`${lesson.title} on Catalyst.`} />}
-            {!preview && <Button variant="tertiary" icon={Bookmark} aria-pressed={savedLesson} onClick={toggleSaved}>{savedLesson ? "Saved" : "Save"}</Button>}
             <ReadAloud text={lesson.explanation} />
+            {!preview && <MoreMenu label="More for this lesson" alignment="start" items={[
+              { label: savedLesson ? "Remove from saved" : "Save for later", icon: <Bookmark size={18} aria-hidden="true" />, onClick: toggleSaved },
+              { label: "Share this lesson", icon: <Share2 size={18} aria-hidden="true" />, onClick: shareLesson },
+              { type: "divider" },
+              { label: "Report a problem", icon: <Flag size={18} aria-hidden="true" />, onClick: () => setReporting(true) }
+            ]} />}
           </div>
           <div className="lesson-explanation"><RichText math={lesson.explanationMath}>{lesson.explanation}</RichText></div>
           {lesson.explanationImage?.url && <figure className="lesson-figure">
@@ -225,7 +247,7 @@ export default function Lesson() {
         {lesson.materialCount > 0 && <section className="lesson-section"><h2>Materials</h2><div className="material-list">{(lesson.materials || []).map((material) => <div className="material-row" key={material._id}>{material.kind === "file" ? <FileText size={20} aria-hidden="true" /> : <Link2 size={20} aria-hidden="true" />}<span><strong>{material.title}</strong><span className="muted">{material.description}{material.bytes ? ` · ${formatBytes(material.bytes)}` : ""}</span></span><a href={material.url} target="_blank" rel="noopener noreferrer" aria-label={`Open ${material.title}${material.kind === "file" ? " (PDF)" : ""}`}>Open<ExternalLink size={16} aria-hidden="true" /></a></div>)}</div></section>}
         {!preview && <NoteBox key={id} lessonId={id} initial={lesson.note} />}
         {!preview && <Companion key={`companion-${id}`} kind="lesson" id={id} />}
-        {!preview && <ReportButton key={`report-${id}`} kind="lesson" target={id} />}
+        {!preview && <ReportButton key={`report-${id}`} kind="lesson" target={id} open={reporting} onOpenChange={setReporting} />}
         {/* The one next step stays in reach at the bottom of the screen while the student reads. */}
         {nextStep && <div className="lesson-next">
           {nextStep === "test" && <Button as={Link} to={`/tests/${mainTest._id}`} state={state}>{primaryLabel}</Button>}

@@ -446,8 +446,8 @@ textarea {
 }
 
 @media (max-width: 479px) {
-  .lesson-end > .button,
-  .lesson-pager > .button {
+  .lesson-end > *,
+  .lesson-pager > * {
     flex: 1 1 100%;
     justify-self: stretch;
   }

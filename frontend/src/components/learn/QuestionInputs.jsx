@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Button, SelectField } from "../ui";
 import RichText from "../shared/RichText";
 import ResponsiveImage from "../shared/ResponsiveImage";
 
@@ -66,10 +67,10 @@ function MatchingInput({ question, onAnswer, disabled }) {
   return <fieldset className="qi-matching"><legend>Match each item on the left with one on the right.</legend>
     {question.left.map((left, index) => <div className="qi-match-row" key={index}>
       <span className="qi-match-left"><RichText>{left}</RichText></span>
-      <select className="ui-input" aria-label={`Match for ${left}`} value={picks[index]} disabled={disabled} onChange={(event) => pick(index, event.target.value)}>
+      <SelectField label={`Match for ${left}`} isLabelHidden value={picks[index]} disabled={disabled} onChange={(event) => pick(index, event.target.value)}>
         <option value="">Choose…</option>
         {question.right.map((right, rightIndex) => <option value={rightIndex} key={rightIndex}>{right}</option>)}
-      </select>
+      </SelectField>
     </div>)}
   </fieldset>;
 }
@@ -93,7 +94,7 @@ function OrderingInput({ question, onAnswer, disabled }) {
         <span className="exam-option-text"><RichText>{item}</RichText>{at !== -1 && <span className="sr-only"> (position {at + 1})</span>}</span>
       </button>;
     })}
-    <button className="button button-tertiary" type="button" disabled={disabled || !sequence.length} onClick={() => update([])}>Start over</button>
+    <Button variant="tertiary" disabled={disabled || !sequence.length} onClick={() => update([])}>Start over</Button>
   </fieldset>;
 }
 

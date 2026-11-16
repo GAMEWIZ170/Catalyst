@@ -24,7 +24,9 @@ body {
   overflow-wrap: break-word;
 }
 
-a {
+/* Astryx draws its own links (a link-shaped Button must keep white text on the accent). This rule is outside
+   Astryx's style layer, so it would win over it; leave those anchors alone. */
+a:not([class*="astryx-"]) {
   color: inherit;
   text-decoration: none;
 }

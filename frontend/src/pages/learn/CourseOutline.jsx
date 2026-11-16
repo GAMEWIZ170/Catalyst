@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, CheckCircle2, ChevronDown, ChevronRight, Circle, PlayCircle } from "lucide-react";
+import { Heading } from "@astryxdesign/core/Heading";
 import { api } from "../../api/client";
 import { nearToPrefetch, prefetchLesson } from "../../api/prefetch";
 import MistakesPanel from "../../components/learn/MistakesPanel";
@@ -97,7 +98,7 @@ export default function CourseOutline() {
     <Link className="back-link" to="/courses"><ArrowLeft size={16} aria-hidden="true" />Back to courses</Link>
     <header className="ol-header">
       <p className="ol-code">{course.code}</p>
-      <h1>{course.title}</h1>
+      <Heading level={1}>{course.title}</Heading>
       <CourseByline course={course} className="ol-byline" />
       {course.authors?.some((author) => author.bio) && <ul className="ol-authors muted">{course.authors.filter((author) => author.bio).map((author, index) => <li key={`${author.displayName}-${index}`}><strong>{author.displayName}</strong>: {author.bio}</li>)}</ul>}
       <p className="muted">{completed} of {total} lessons complete</p>

@@ -325,11 +325,11 @@
 
 /* Lesson: the next step floats above the reading, clear of the phone tab bar. */
 .lesson-next { bottom: var(--space-4); display: flex; margin-top: var(--space-6); position: sticky; z-index: 3; }
-.lesson-next .button { box-shadow: var(--shadow-md); }
+.lesson-next > * { box-shadow: var(--shadow-md); }
 .lesson-end:not(:has(.lesson-pager)) { border: 0; margin: 0; padding: 0; }
 .lesson-note-status { font-size: var(--text-sm); margin: var(--space-1) 0 0; min-height: 1.55em; }
 @media (max-width: 767px) {
   .lesson-next { bottom: calc(56px + env(safe-area-inset-bottom) + var(--space-3)); }
-  .lesson-next .button { flex: 1 1 auto; }
+  .lesson-next > * { flex: 1 1 auto; }
 }
 
