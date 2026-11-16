@@ -21,12 +21,14 @@ Structure: course > unit > lesson. Tests can belong to a lesson, a unit or a cou
 - Backend: Node 24, Express 5, MongoDB with Mongoose 9, Joi (via the `validateWith` helper), bcrypt, jsonwebtoken (httpOnly cookie named `token`), cookie-parser, cors, helmet, express-rate-limit, multer (memory storage), cloudinary, ms. All CommonJS.
 - Frontend: React and Vite, react-router data router (`createBrowserRouter`, `useBlocker`), plain CSS with tokens, KaTeX plus mhchem loaded lazily (`RichText`), `Avatar.jsx` for profile pictures.
 - Themes: `data-palette` (lagoon, indigo, ember, orchid, graphite) and `data-theme` (light, dark). Storage keys `catalyst-palette` and `catalyst-theme`. No colour literals outside `tokens.css` and `Avatar.jsx`.
-- UI library trial: Astryx is allowed on feature/astryx-trial
+- UI library trial: Astryx is allowed on feature/astryx-trial
 
 ## Layout and naming
 
 - Repo root: `C:\Users\Professor\Desktop\API\Catalyst` with `backend/` and `frontend/`.
-- Backend files: `x.models.js`, `x.controller.js`, `x.routes.js`. Folder is `middlewares`.
+- Backend files: `x.models.js`, `x.controller.js`, `x.routes.js`, grouped by feature in `backend/src/modules/<feature>/`. Shared code is in `src/middlewares`, `src/utils` and `src/config`.
+- Frontend: `pages/` and `components/` are grouped by area (`auth`, `learn`, `lab`, `community`, `account`, `admin`). Global CSS is in numbered layers in `styles/global/`: the numbers are the cascade order.
+- Docs: `docs/ROADMAP.md` (roadmap, then expansion plan), `docs/archive/` (finished plans). `PRODUCT.md` and `DESIGN.md` stay in the root because the design skill reads them there.
 - Windows with PowerShell. Use PowerShell syntax in commands.
 
 ## Run commands
@@ -84,7 +86,7 @@ When asked to verify against the real backend:
 
 Short report: commits (hash and message), files changed, CHECK lines, what is `NOT RUN`, and anything the owner must decide. No long recaps.
 
-## Interaction rules (UI polish, from UI_polish/UI_POLISH_BRIEF.md)
+## Interaction rules (UI polish, from docs/archive/UI_POLISH_BRIEF.md)
 
 1. Minimize forms, maximize interactive UI. Never leave a form open on a page.
 2. Create first, edit in place. A "New X" button creates X with defaults at once, with its title already in edit mode. Autosave everywhere. No Save buttons, except in dialogs that need confirmation.
@@ -109,9 +111,20 @@ Study Hall is cut. Do not rebuild it. Use Astryx components wherever Astryx has 
 - Backend v2 done and pushed: tests, questions, flashcards, materials, uploads, avatars, admin course tree (`GET /admin/courses/:id`) and reorder routes.
 - Frontend done and pushed on `feature/frontend-v2`: palettes, top bar and profile menu, settings, admin course list, course editor, lesson editor, test editor, rich text and formulas, student course list, outline, lesson hub, test flow, flashcard study flow, progress page.
 - Not yet verified on a real backend: student screens, flashcard flow, progress page, the latest visual fixes, the lesson editor load time, image upload, and the full responsive matrix.
-- Current work: UI overhaul on `feature/ui-overhaul` (made from `main`), following `UI_OVERHAUL.md`. One phase step per session.
-- Next: finish the overhaul phases in `UI_OVERHAUL.md`, then run the unverified checks above, then merge into `main` when the owner says so.
+- Current work: UI overhaul on `feature/ui-overhaul` (made from `main`), following `docs/archive/UI_OVERHAUL.md`. One phase step per session.
+- Next: finish the overhaul phases in `docs/archive/UI_OVERHAUL.md`, then run the unverified checks above, then merge into `main` when the owner says so.
 
 ## Roadmap (owner may do some himself)
 
 Hosting and production cookie and proxy settings (`trust proxy`), subscriptions and payments (start manually with mobile money), expiring material links, password reset, restore for deleted content, saving theme on the account, notifications, deactivating users, an automated test suite, backups (Atlas free has none), deleting orphaned Cloudinary assets, an Enrollment model, a unique course code index, an admin promote route, email verification.
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+Rules:
+- When graphify-out/graph.json exists, run `graphify query "<question>"` before your first grep, search or source-file read for a codebase question, and put this rule in every subagent prompt that explores code. Read raw files only for lines the graph or an earlier read already located. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+- A committed graphify-out/graph.json is rewritten whole on every build, so a large diff to it in a pull request is expected. Do not flag it as churn or suggest skipping the graph rebuild or its hooks.

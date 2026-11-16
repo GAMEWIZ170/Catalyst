@@ -8,21 +8,26 @@ Catalyst is a full-stack learning platform. The backend exposes a versioned REST
 Catalyst/
 ├── backend/
 │   ├── package.json
+│   ├── scripts/            # seed, migrate and stats scripts
 │   └── src/
 │       ├── config/
-│       ├── controllers/
-│       ├── middlewares/
-│       ├── models/
-│       ├── routes/
-│       ├── utils/
+│       ├── middlewares/    # shared: auth, limiters, validation, uploads
+│       ├── modules/        # one folder per feature: its models, controllers and routes
+│       ├── utils/          # shared helpers
 │       ├── app.js
 │       └── server.js
 ├── frontend/
 │   ├── package.json
 │   ├── vite.config.js
-│   └── src/
-├── .gitignore
-└── APPLICATION.md
+│   └── src/                # pages/ and components/ are grouped by area (see frontend/README.md)
+├── docs/
+│   ├── ROADMAP.md          # the roadmap, then the expansion plan
+│   ├── archive/            # finished plans and old audits, kept for history
+│   └── references/         # the owner's reference images (not committed)
+├── CLAUDE.md               # working rules for Claude Code
+├── PRODUCT.md              # product context (the design skill reads it from the root)
+├── DESIGN.md               # design system (the design skill reads it from the root)
+└── README.md
 ```
 
 ## Prerequisites

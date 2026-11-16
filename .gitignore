@@ -2,3 +2,9 @@ node_modules/
 .env
 dist/
 graphify-out/
+
+# local tooling and captures
+.playwright-mcp/
+.claude/skills/
+.claude/agents/
+docs/references/
