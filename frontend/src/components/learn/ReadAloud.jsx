@@ -100,12 +100,9 @@ export default function ReadAloud({ text }) {
       ? <button className="button button-secondary" type="button" onClick={pause}><Pause size={16} aria-hidden="true" />{t("readAloud.pause")}</button>
       : <button className="button button-secondary" type="button" onClick={play}><Play size={16} aria-hidden="true" />{state === "paused" ? t("readAloud.resume") : t("readAloud.play")}</button>}
     {state !== "idle" && <button className="button button-secondary" type="button" onClick={stop}><Square size={16} aria-hidden="true" />{t("readAloud.stop")}</button>}
-    <label className="read-aloud-speed">
-      <span>{t("readAloud.speed")}</span>
-      <select value={speed} onChange={(event) => changeSpeed(Number(event.target.value))}>
-        {SPEEDS.map((value) => <option key={value} value={value}>{value}x</option>)}
-      </select>
-    </label>
+    {state !== "idle" && <div className="read-aloud-speed" role="group" aria-label={t("readAloud.speed")}>
+      {SPEEDS.map((value) => <button className="speed-chip" type="button" key={value} aria-pressed={speed === value} onClick={() => changeSpeed(value)}>{value}x</button>)}
+    </div>}
     <span className="sr-only" role="status">{state === "playing" ? t("readAloud.reading") : state === "paused" ? t("readAloud.paused") : ""}</span>
   </div>;
 }

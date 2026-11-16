@@ -64,28 +64,32 @@ function NoteBox({ lessonId, initial }) {
   const [text, setText] = useState(initial || "");
   const [saved, setSaved] = useState(initial || "");
   const [status, setStatus] = useState("");
-  const [busy, setBusy] = useState(false);
+  const changed = text.trim() !== saved;
 
   async function save() {
-    setBusy(true);
-    setStatus("");
+    const value = text.trim();
+    if (value === saved) return;
+    setStatus("Saving");
     try {
-      await api.saveNote(lessonId, text.trim());
-      setSaved(text.trim());
-      setStatus(text.trim() ? "Note saved" : "Note removed");
+      await api.saveNote(lessonId, value);
+      setSaved(value);
+      setStatus(value ? "Saved" : "Note removed");
     } catch (err) {
       setStatus(err.message);
     }
-    setBusy(false);
   }
+
+  // The note saves itself a moment after the student stops typing, and at once when they leave the box.
+  useEffect(() => {
+    if (!changed) return undefined;
+    const timer = setTimeout(save, 900);
+    return () => clearTimeout(timer);
+  }, [text]);
 
   return <section className="lesson-section lesson-note" aria-labelledby="note-heading">
     <h2 id="note-heading">My note</h2>
-    <TextArea label="Private note" hint="Only you can see this." value={text} maxLength={2000} rows={4} onChange={(event) => setText(event.target.value)} />
-    <div className="button-row">
-      <Button variant="secondary" loading={busy} disabled={text.trim() === saved} onClick={save}>Save note</Button>
-      <span className="muted" role="status">{status}</span>
-    </div>
+    <TextArea label="Private note" hint="Only you can see this. It saves as you type." value={text} maxLength={2000} rows={4} onChange={(event) => setText(event.target.value)} onBlur={save} />
+    <p className="muted lesson-note-status" role="status">{status}</p>
   </section>;
 }
 
@@ -222,10 +226,13 @@ export default function Lesson() {
         {!preview && <NoteBox key={id} lessonId={id} initial={lesson.note} />}
         {!preview && <Companion key={`companion-${id}`} kind="lesson" id={id} />}
         {!preview && <ReportButton key={`report-${id}`} kind="lesson" target={id} />}
-        <section className="lesson-end" aria-label="Next steps">
+        {/* The one next step stays in reach at the bottom of the screen while the student reads. */}
+        {nextStep && <div className="lesson-next">
           {nextStep === "test" && <Button as={Link} to={`/tests/${mainTest._id}`} state={state}>{primaryLabel}</Button>}
           {nextStep === "deck" && <Button as={Link} to={`/lessons/${id}/flashcards`} state={{ courseFrom: from }}>{primaryLabel}</Button>}
           {nextStep === "done" && <Button onClick={markDone} disabled={completed}>{primaryLabel}</Button>}
+        </div>}
+        <section className="lesson-end" aria-label="Next steps">
           <div className="sr-only" aria-live="polite">{doneMessage}</div>
           {(prevLesson || nextLesson) && <div className="lesson-pager">
             {prevLesson ? <Button as={Link} variant="secondary" icon={ArrowLeft} to={`/lessons/${prevLesson._id}`} state={{ from }} {...nearToPrefetch(() => prefetchLesson(prevLesson._id))}>Previous lesson</Button> : <span />}
