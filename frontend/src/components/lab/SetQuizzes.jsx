@@ -9,7 +9,7 @@ import { HStack, VStack } from "@astryxdesign/core/Stack";
 import { Text } from "@astryxdesign/core/Text";
 import { TextInput } from "@astryxdesign/core/TextInput";
 import { api } from "../../api/client";
-import { Loading } from "../../pages/Courses";
+import { Loading } from "../../pages/learn/Courses";
 import GenerateMore from "./GenerateMore";
 
 const icon = (Icon) => <Icon size={18} aria-hidden="true" />;

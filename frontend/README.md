@@ -89,15 +89,15 @@ The generated files are written to `frontend/dist/`, which is ignored by Git.
 - **Time zone.** Register sends the browser's time zone. An account with none (made before time zones existed) reports it once on the first visit. Students can change it under Settings, Account.
 - **Focus timer.** The timer button in the top bar (students) starts a focus session or a break. Lengths are in Settings, Study (saved on the device). `TimerContext` stores `endsAt` and the phase in `localStorage`, never a counter: the screen shows `endsAt` minus now, ticks every second, wakes at the exact end and re-checks when the tab becomes visible, so a hidden tab stays accurate. It survives page changes and reloads, and works across tabs. At the end it plays a short sound, shows a browser notification (permission is asked only when the student first starts a timer) and sets a message that screen readers hear ("Focus session complete"). The countdown itself is hidden from screen readers. While a focus session runs the study timer reports active seconds, so the server can count focus minutes.
 - **Notes editor.** Tiptap (`@tiptap/react`, `starter-kit`, `extension-mathematics`) is loaded only when a student opens a set's Notes tab (a separate file of about 134 KB compressed), so the rest of the app is unchanged. The Mathematics extension asks for KaTeX 0.16 to 0.18 and the app uses 0.19, so it was installed with `--legacy-peer-deps`; formulas draw correctly. Run `npm install --legacy-peer-deps` if npm complains. Notes are saved as Tiptap JSON and never as HTML.
-- **Level and XP.** The avatar menu shows the level and Me shows a level card with a thin bar (`components/XpBits.jsx`). `useXp` loads `/xp/me` after each page change, so a level reached during a test shows its small panel only on the next page change, never mid-test. The panel is a plain dialog with one button; no confetti.
+- **Level and XP.** The avatar menu shows the level and Me shows a level card with a thin bar (`components/profile/XpBits.jsx`). `useXp` loads `/xp/me` after each page change, so a level reached during a test shows its small panel only on the next page change, never mid-test. The panel is a plain dialog with one button; no confetti.
 - **Achievements.** Me has two tabs, Overview and Achievements (`?tab=achievements`). A new achievement shows a small success toast (`useAchievementToasts`, sent by `/xp/me`) and is then marked as seen. Hidden ones show as locked until earned.
 - **Weekly goal.** Settings, Study has a weekly goal (off, or 3 to 6 study days a week). Home shows a thin "This week" bar under the daily goal. The text is only encouraging ("Weekly goal met. Enjoy your rest days.") and never mentions missed days.
 - **Friends.** `/friends`: your code as a chip with copy and share buttons, "Add friend" in a small popover, the friends list first (a ⋯ menu removes a friend), incoming and waiting requests, and privacy rows (click the display name to change it; a switch hides your level). Capped at 760 px; changes save by themselves.
-- **Challenges.** The test results screen has a Challenge a friend button (full tests only, not practice runs). It opens `/challenge/:id`, which plays up to 10 questions one at a time with no feedback (it reuses `QuestionInputs`), then shows the score and a friendly comparison once both have played. `/challenges` lists them. Sharing uses `components/ShareButton.jsx`: the phone's own share menu first, then a WhatsApp link and Copy link.
-- **Sharing.** `components/ShareButton.jsx` opens the phone's own share menu (`navigator.share`) first. Where there is none it shows WhatsApp and Copy link. It is used on a lesson (`/s/l/:id`), on the Friends page for the invite (`/s/i/:code`) and on a challenge you made (`/s/c/:id`). The links go through the backend so chat apps get a preview; see the backend README.
+- **Challenges.** The test results screen has a Challenge a friend button (full tests only, not practice runs). It opens `/challenge/:id`, which plays up to 10 questions one at a time with no feedback (it reuses `QuestionInputs`), then shows the score and a friendly comparison once both have played. `/challenges` lists them. Sharing uses `components/shared/ShareButton.jsx`: the phone's own share menu first, then a WhatsApp link and Copy link.
+- **Sharing.** `components/shared/ShareButton.jsx` opens the phone's own share menu (`navigator.share`) first. Where there is none it shows WhatsApp and Copy link. It is used on a lesson (`/s/l/:id`), on the Friends page for the invite (`/s/i/:code`) and on a challenge you made (`/s/c/:id`). The links go through the backend so chat apps get a preview; see the backend README.
 - **Study circles.** `/circles` (linked from Friends) lists circles, invites, a combined weekly bar per circle and an invite box (friends by display name). There are no scores per person, and the text never names a member who studied less.
 - **AI drafts.** Drafts are made in two places: the "Generate more" button on each set tab (`components/lab/GenerateMore.jsx`, which wraps `AiDrafts.jsx` for one kind), and the review screen after "drop in your notes". The AI makes drafts only; the student edits and saves them.
-- **Study companion.** `components/Companion.jsx` is on every lesson (not in the admin preview) and on the AI tab of a study set. It sends the last few turns with each message, shows a log (`role="log"`, polite live region), the sources each answer came from, the note "AI can make mistakes. Check with your lesson.", and a Flag this answer form that goes to the report inbox. It shows "Free beta, fair-use limits apply", the messages left today, and "AI is resting until tomorrow" when the daily limit or global cap is reached. It is not placed on test or exam screens.
+- **Study companion.** `components/learn/Companion.jsx` is on every lesson (not in the admin preview) and on the AI tab of a study set. It sends the last few turns with each message, shows a log (`role="log"`, polite live region), the sources each answer came from, the note "AI can make mistakes. Check with your lesson.", and a Flag this answer form that goes to the report inbox. It shows "Free beta, fair-use limits apply", the messages left today, and "AI is resting until tomorrow" when the daily limit or global cap is reached. It is not placed on test or exam screens.
 - **Community sets.** The Study Lab has a Community sets button. `/community` is the shelf (search, category, course, topic, sort, saved sets, paging), `/community/:id` shows a shared set read only with Save, Copy to my Study Lab, Share, Report, flashcard study, notes as text, quizzes (Practise, Timed, and a Leaderboard with this week and this month) and `/community/boards` has "Most studied sets" and "Top creators". A set's owner uses the Sharing panel on the set page (who can see it, the originality declaration, status and any reviewer note). Admins have Community in the admin More menu: approve, reject with a note, take down. A Timed quiz link carries `?timed=1&board=1` when the student chose the leaderboard.
 - **Read aloud.** Lessons have a Read aloud button (play, pause, stop and speed 0.75x to 1.5x) that uses the browser's own voice. Formulas are read as "formula". Nothing is sent anywhere, and the button is hidden in browsers with no speech voice.
 
@@ -194,15 +194,28 @@ frontend/
     ├── api/client.js          # API requests and credential handling
     ├── api/cache.js           # Short read cache for student screens
     ├── api/prefetch.js        # Start loading a lesson or course on hover or touch
-    ├── components/            # Shared UI: app shell, rich text, responsive image, avatar, deck summary
+    ├── components/
+    │   ├── ui/                # Primitives: Button, fields, Card, Badge, Tabs, Progress, Dialog, EmptyState, Skeleton, Toast
+    │   ├── astryx/            # Astryx theme and wrappers
+    │   ├── layout/            # App shell, header search, quick settings, notifications, route guard
+    │   ├── shared/            # Used across areas: RichText, ResponsiveImage, ShareButton, ReportButton
+    │   ├── learn/             # Lesson, test and flashcard pieces: question inputs, deck summary, companion
+    │   ├── profile/           # Avatar, XP, achievements, account section
+    │   ├── lab/               # Study Lab set tabs and dialogs
     │   └── admin/             # Builder components: breadcrumbs, switch, dialogs, image field
-    ├── context/AuthContext.jsx
-    ├── hooks/                 # useUnsavedChanges
-    ├── pages/                 # Student pages and admin editors
+    ├── context/               # AuthContext, TimerContext
+    ├── hooks/                 # useUnsavedChanges, useStudyTimer
+    ├── pages/
+    │   ├── auth/              # Login, register, password reset, email verify, onboarding
+    │   ├── learn/             # Courses, outline, lesson, test, flashcards, review, exams, progress, search
+    │   ├── lab/               # Study Lab
+    │   ├── community/         # Community sets, boards, challenges, circles, friends
+    │   ├── account/           # Me, Settings
+    │   └── admin/             # Admin screens and editors
     ├── styles/tokens.css      # Neutrals, per-palette accent, status colours, type, space and radius tokens
-    ├── components/ui/         # Shared components: Button, fields, Card, Badge, Tabs, Progress, Dialog, EmptyState, Skeleton, Toast
     ├── assets/fonts/          # Self-hosted Atkinson Hyperlegible Next (WOFF2) and its licence
-    ├── styles/global.css      # Component and layout styles
+    ├── styles/global.css      # Only a list of @imports
+    ├── styles/global/         # The global styles in 14 numbered layers. The numbers are the cascade order: do not reorder
     ├── utils/                 # Cloudinary image URLs, course cache
     ├── App.jsx                # Client-side routes
     └── main.jsx               # React entry point

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../../api/client";
 import { Badge, Button, EmptyState } from "../ui";
 import { formatDate } from "../../utils/dates";
-import { Loading } from "../../pages/Courses";
+import { Loading } from "../../pages/learn/Courses";
 import ConfirmDialog from "./ConfirmDialog";
 import StatusMessage from "./StatusMessage";
 

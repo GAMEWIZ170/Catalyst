@@ -1,0 +1,216 @@
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.topbar {
+  align-items: center;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  height: 64px;
+  justify-content: space-between;
+  padding: 0 max(var(--space-4), calc((100vw - var(--content-max)) / 2));
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.brand,
+.auth-brand {
+  align-items: center;
+  display: flex;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  gap: var(--space-2);
+  min-height: var(--control-height);
+}
+
+.brand-mark {
+  align-items: center;
+  background: var(--accent);
+  border-radius: var(--radius-control);
+  color: var(--on-accent);
+  display: inline-flex;
+  height: 32px;
+  justify-content: center;
+  width: 32px;
+}
+
+.theme-toggle {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-control);
+  color: var(--muted);
+  display: inline-flex;
+  height: var(--control-height);
+  justify-content: center;
+  padding: 0;
+  width: var(--control-height);
+}
+
+.theme-toggle svg {
+  height: 20px;
+  width: 20px;
+}
+
+.topbar-tools {
+  align-items: center;
+  display: flex;
+}
+
+.topbar-tools {
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.icon-button,
+.profile-button {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-control);
+  color: var(--muted);
+  display: inline-flex;
+  height: var(--control-height);
+  justify-content: center;
+  padding: 0;
+  width: var(--control-height);
+}
+
+.icon-button svg {
+  height: 20px;
+  width: 20px;
+}
+
+.profile-button {
+  border: 0;
+  border-radius: 50%;
+}
+
+.streak-indicator {
+  align-items: center;
+  color: var(--accent);
+  display: inline-flex;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  gap: var(--space-1);
+  min-height: var(--control-height);
+  padding: 0 var(--space-1);
+}
+
+.streak-indicator svg {
+  height: 20px;
+  width: 20px;
+}
+
+.notification-menu,
+.profile-menu {
+  position: relative;
+}
+
+.notification-panel,
+.profile-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  box-shadow: var(--shadow-md);
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  z-index: 4;
+}
+
+.notification-panel {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  width: min(280px, calc(100vw - 2rem));
+}
+
+.notification-panel span,
+.profile-header span {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.profile-panel {
+  min-width: 220px;
+  max-width: calc(100vw - 1rem);
+  padding: var(--space-2);
+}
+
+.profile-header {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-3);
+}
+
+.profile-panel a,
+.profile-panel button {
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  display: block;
+  min-height: var(--control-height);
+  padding: var(--space-3) var(--space-3);
+  text-align: left;
+  width: 100%;
+}
+
+.profile-panel a:hover,
+.profile-panel button:hover {
+  background: var(--paper);
+}
+
+.profile-panel button {
+  color: var(--muted);
+  text-align: left;
+}
+
+.avatar--initials {
+  align-items: center;
+  background: var(--accent);
+  border-radius: 50%;
+  color: var(--on-accent);
+  display: inline-flex;
+  font-weight: 600;
+  justify-content: center;
+}
+
+.page-wrap {
+  flex: 1;
+  margin: 0 auto;
+  max-width: var(--content-max);
+  padding: var(--space-7) var(--space-4) var(--space-8);
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .page-wrap {
+    padding-inline: var(--space-5);
+  }
+}
+
+@media (max-width: 599px) {
+  h1 {
+    font-size: var(--text-2xl);
+  }
+}
+
+.content {
+  margin: 0 auto;
+  max-width: 1050px;
+}
+
+.muted,
+.course-count,
+.outline-summary span,
+.unit-heading p,
+.lesson-score,
+.footer {
+  color: var(--muted);
+}
+

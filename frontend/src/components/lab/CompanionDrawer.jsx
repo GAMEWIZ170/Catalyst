@@ -2,7 +2,7 @@ import { useState } from "react";
 import { MessageCircle } from "lucide-react";
 import { Drawer } from "@astryxdesign/core/Drawer";
 import { IconButton } from "@astryxdesign/core/IconButton";
-import Companion from "../Companion";
+import Companion from "../learn/Companion";
 
 // The study companion as a floating chat button that opens a side panel. It sits above the phone tab bar.
 export default function CompanionDrawer({ kind, id }) {

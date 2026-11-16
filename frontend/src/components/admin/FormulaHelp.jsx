@@ -1,5 +1,5 @@
 import { useState } from "react";
-import RichText from "../RichText";
+import RichText from "../shared/RichText";
 
 const examples = [
   "$\\ce{H2SO4}$",

@@ -10,7 +10,7 @@ import { Text } from "@astryxdesign/core/Text";
 import { TextArea } from "@astryxdesign/core/TextArea";
 import { createReorderable } from "@astryxdesign/core";
 import { api } from "../../api/client";
-import { Loading } from "../../pages/Courses";
+import { Loading } from "../../pages/learn/Courses";
 import { parsePastedCards } from "../../utils/pasteCards";
 import GenerateMore from "./GenerateMore";
 

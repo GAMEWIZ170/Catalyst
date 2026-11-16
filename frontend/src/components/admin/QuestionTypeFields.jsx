@@ -1,5 +1,5 @@
 import { Button, Checkbox, TextArea, TextField } from "../ui";
-import RichText from "../RichText";
+import RichText from "../shared/RichText";
 
 export const TYPE_LABELS = {
   mcq: "Multiple choice",

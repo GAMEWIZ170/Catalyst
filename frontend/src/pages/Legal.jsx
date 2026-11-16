@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import ThemeToggle from "../components/ThemeToggle";
+import ThemeToggle from "../components/layout/ThemeToggle";
 
 // Privacy and terms are public: a student reads them before making an account.
 function LegalPage({ title, updated, children }) {

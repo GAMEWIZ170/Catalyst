@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { api } from "../../api/client";
-import ShareButton from "../ShareButton";
+import ShareButton from "../shared/ShareButton";
 import { Button, Checkbox, SelectField } from "../ui";
 
 const STATUS_TEXT = {

@@ -7,7 +7,7 @@ import "katex/contrib/mhchem"; // adds \ce{...} for chemical formulas to the KaT
 import { Bold, Code, Heading2, Italic, List, ListOrdered, Quote, Sigma, Strikethrough } from "lucide-react";
 import { api } from "../../api/client";
 import { Button, Dialog, TextField } from "../ui";
-import { Loading } from "../../pages/Courses";
+import { Loading } from "../../pages/learn/Courses";
 
 const SAVE_DELAY = 1200;
 

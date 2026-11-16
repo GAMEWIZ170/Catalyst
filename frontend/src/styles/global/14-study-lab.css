@@ -1,0 +1,110 @@
+/* Study Lab (Expansion X4) */
+.lab-header, .lab-set-header { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-3); justify-content: space-between; }
+.lab-header h1, .lab-set-header h1 { margin: 0; }
+.set-card-form { align-items: end; display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); margin-block: var(--space-3); }
+.set-card-list { display: grid; gap: var(--space-2); list-style: none; margin: var(--space-3) 0; padding: 0; }
+.set-card-list li { align-items: center; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: var(--space-3); justify-content: space-between; padding-block: var(--space-2); }
+ol.set-card-list { list-style: none; }
+.set-card-text { display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.paste-rows { display: grid; gap: var(--space-3); list-style: none; margin: var(--space-3) 0 0; padding: 0; }
+.paste-rows li { align-items: end; display: grid; gap: var(--space-2); grid-template-columns: 1fr; border-bottom: 1px solid var(--line); padding-bottom: var(--space-3); }
+.option-row { align-items: end; display: grid; gap: var(--space-2); grid-template-columns: auto 1fr auto; }
+.option-row input[type="radio"] { height: 24px; margin-bottom: var(--space-3); width: 24px; }
+.question-form-card { margin-top: var(--space-4); }
+.note-wrap { display: grid; gap: 0; }
+.note-toolbar { background: var(--surface); border: 1px solid var(--control-line); border-bottom-color: var(--line); border-radius: var(--radius-control) var(--radius-control) 0 0; display: flex; flex-wrap: wrap; gap: var(--space-1); padding: var(--space-1); position: sticky; top: 64px; z-index: 2; }
+.note-tool { align-items: center; background: transparent; border: 0; border-radius: var(--radius-control); color: var(--ink); cursor: pointer; display: inline-flex; height: 36px; justify-content: center; width: 36px; }
+.note-tool:hover { background: var(--sunken); }
+.note-tool.is-active { background: var(--accent-soft); color: var(--accent); }
+.note-editor { background: var(--surface); border: 1px solid var(--control-line); border-top: 0; border-radius: 0 0 var(--radius-control) var(--radius-control); min-height: 16rem; padding: var(--space-4); }
+.note-status { color: var(--muted); font-size: var(--text-sm); margin: var(--space-1) 0 0; }
+.note-editor:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.note-editor > :first-child { margin-top: 0; }
+.note-editor blockquote { border-left: 3px solid var(--line); margin-inline: 0; padding-left: var(--space-3); }
+.note-editor code { background: var(--sunken); border-radius: 4px; padding: 0 4px; }
+.note-editor .tiptap-mathematics-render { cursor: pointer; }
+@media (min-width: 640px) {
+  .paste-rows li { grid-template-columns: 1fr 1fr auto; }
+}
+.set-sharing { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-panel); display: grid; gap: var(--space-3); margin: var(--space-4) 0; padding: var(--space-4); }
+.set-sharing h2, .set-sharing p { margin: 0; }
+.set-sharing-form { align-items: end; display: grid; gap: var(--space-3); max-width: 28rem; }
+.community-filters { align-items: end; display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); }
+.community-list { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr)); list-style: none; margin: 0; padding: 0; }
+.community-card { color: inherit; display: grid; gap: var(--space-2); height: 100%; text-decoration: none; }
+.community-desc { overflow-wrap: anywhere; }
+.community-set-head h1, .community-set-head p { margin: 0; }
+.community-set-head { display: grid; gap: var(--space-2); }
+.community-cards { display: grid; gap: var(--space-3); list-style: none; margin: 0; padding: 0; }
+.community-flash { background: var(--sunken); border-radius: var(--radius-control); padding: var(--space-3); }
+.community-flash p, .community-notes { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.board { display: grid; gap: var(--space-3); }
+.board h3, .board p { margin: 0; }
+.board-head { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-3); justify-content: space-between; }
+.board-you { background: var(--accent-soft); }
+.companion { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-panel); display: grid; gap: var(--space-3); margin-top: var(--space-5); padding: var(--space-4); }
+.companion--closed { background: none; border: 0; padding: 0; }
+.companion-head { align-items: center; display: flex; justify-content: space-between; }
+.companion h2, .companion p { margin: 0; }
+.companion-log { background: var(--sunken); border-radius: var(--radius-control); display: grid; gap: var(--space-3); max-height: 26rem; overflow-y: auto; padding: var(--space-3); }
+.companion-msg { display: grid; gap: var(--space-2); justify-items: start; }
+.companion-msg--user { justify-items: end; text-align: right; }
+.companion-msg p { overflow-wrap: anywhere; white-space: pre-wrap; }
+.companion-who { font-size: var(--text-sm); }
+.companion-sources { font-size: var(--text-sm); }
+.companion-note { font-size: var(--text-sm); }
+.companion-flag, .companion-form { display: grid; gap: var(--space-3); max-width: 100%; }
+.report-ai { background: var(--sunken); border-radius: var(--radius-control); display: grid; gap: var(--space-2); padding: var(--space-3); }
+.report-ai p { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.ai-drafts { display: grid; gap: var(--space-4); margin-top: var(--space-5); }
+.ai-drafts h2, .ai-drafts h3, .ai-drafts p { margin: 0; }
+.ai-form { align-items: end; display: grid; gap: var(--space-3); max-width: 36rem; }
+.ai-results { display: grid; gap: var(--space-4); }
+.ai-list { display: grid; gap: var(--space-4); list-style: none; margin: 0; padding: 0; }
+.ai-item { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-panel); display: grid; gap: var(--space-3); justify-items: start; padding: var(--space-4); }
+.ai-item > * { max-width: 100%; width: 100%; }
+.ai-item > button { width: auto; }
+.ai-options { border: 0; display: grid; gap: var(--space-2); margin: 0; min-width: 0; padding: 0; }
+.ai-option { align-items: end; display: grid; gap: var(--space-3); grid-template-columns: auto minmax(0, 1fr); }
+.ai-option input[type="radio"] { accent-color: var(--accent); height: 1.25rem; margin-bottom: var(--space-3); width: 1.25rem; }
+.share-row { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.community-more { display: grid; gap: var(--space-3); }
+.community-more summary { cursor: pointer; font-weight: var(--weight-strong); min-height: 2.75rem; padding-block: var(--space-2); }
+.community-more[open] summary { margin-bottom: var(--space-2); }
+/* Long words with no spaces (a pasted link, a long title) wrap instead of stretching the page. */
+.home-course-title, .home-course-desc, .home-course .muted, .community-card, .report-row p, .report-row .muted { overflow-wrap: anywhere; }
+.report-row, .community-card { min-width: 0; }
+
+/* Visual audit pass (unslop): quiet top bar, grouped page actions, one lesson tool row, bigger progress figures. */
+.topbar .icon-button {
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+  transition: background-color var(--dur-hover) var(--ease-out), color var(--dur-hover) var(--ease-out);
+}
+.topbar .icon-button:hover { background: var(--sunken); color: var(--ink); }
+.topbar .icon-button:focus-visible { box-shadow: var(--focus); }
+
+.lab-header { align-items: flex-start; }
+.lab-heading p { margin: var(--space-2) 0 0; }
+.lab-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+
+.lesson-tools { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-4); }
+.lesson-tools .share-row, .lesson-tools .read-aloud { margin: 0; }
+
+.progress-stat strong { font-size: var(--text-3xl); }
+
+.home-page .welcome { background: transparent; border: 0; color: var(--muted); font-size: var(--text-sm); max-width: 40rem; padding: 0; }
+.home-page .welcome h2 { color: var(--ink); font-size: var(--text-md); margin: 0 0 var(--space-2); }
+.home-page .welcome ol { margin: 0 0 var(--space-3); padding-left: var(--space-5); }
+.home-page .welcome li { margin: 0 0 var(--space-1); }
+.lab-header { margin-bottom: var(--space-4); }
+
+/* Floating study companion button (set page). Above the phone tab bar. */
+.companion-fab { bottom: calc(var(--space-5) + env(safe-area-inset-bottom)); position: fixed; right: var(--space-5); z-index: 5; }
+@media (max-width: 767px) {
+  .companion-fab { bottom: calc(76px + var(--space-3) + env(safe-area-inset-bottom)); right: var(--space-4); }
+}
+
+/* Set page and quiz editor read like documents: capped width, centred (interaction rule 6). */
+.lab-set, .lab-quiz { margin-inline: auto; max-width: 900px; width: 100%; }
