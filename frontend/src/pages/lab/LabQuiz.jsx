@@ -1,29 +1,16 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, CheckCircle2, Circle, ListChecks, Pencil, Plus, ToggleLeft, Trash2, X } from "lucide-react";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
-import { ClickableCard } from "@astryxdesign/core/ClickableCard";
-import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
-import { EmptyState } from "@astryxdesign/core/EmptyState";
-import { IconButton } from "@astryxdesign/core/IconButton";
-import { List, ListItem } from "@astryxdesign/core/List";
-import { MoreMenu } from "@astryxdesign/core/MoreMenu";
-import { SegmentedControl, SegmentedControlItem } from "@astryxdesign/core/SegmentedControl";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Text } from "@astryxdesign/core/Text";
-import { TextArea } from "@astryxdesign/core/TextArea";
-import { TextInput } from "@astryxdesign/core/TextInput";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+import { AlertCircle, ArrowLeft, CheckCircle2, Circle, ListChecks, MoreHorizontal, Pencil, Plus, ToggleLeft, Trash2, X } from "lucide-react";
 import { api } from "../../api/client";
-import AstryxTheme from "../../components/astryx/AstryxTheme";
-import ClickToEdit from "../../components/astryx/ClickToEdit";
+import { Button, Dialog, DropdownMenu, EditableTitle, EmptyState, Segmented } from "../../components/ui";
 import { ErrorState, Loading } from "../learn/Courses";
 
-const icon = (Icon) => <Icon size={18} aria-hidden="true" />;
 const blank = (type) => ({ id: null, type, text: "", options: ["", ""], correct: 0, truth: "true", explanation: "" });
+const field = "w-full resize-y rounded-lg border border-input bg-card p-3 font-sans text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+const input = "min-h-11 w-full min-w-0 rounded-md border border-input bg-card px-3 font-sans text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
 // One quiz of a study set. A question is added by choosing its type from two cards, then filling it in a dialog.
-// The right answer is chosen by tapping it. Built with Astryx.
+// The right answer is chosen by tapping it.
 export default function LabQuiz() {
   const { testId } = useParams();
   const [quiz, setQuiz] = useState(null);
@@ -81,70 +68,71 @@ export default function LabQuiz() {
   const set = (patch) => setForm({ ...form, ...patch });
   const mcq = form?.type === "mcq";
   const valid = form?.type && form.text.trim() && (!mcq || (form.options.length >= 2 && form.options.every((option) => option.trim())));
-  const close = (open) => { if (!open) setForm(null); };
+  const close = () => setForm(null);
+  const typeCard = "grid min-h-28 cursor-pointer content-center justify-items-center gap-1 rounded-lg border border-input bg-card p-4 text-center font-sans text-foreground transition-colors duration-150 hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
-  return <AstryxTheme>
-    <div className="content student-page lab-quiz">
-      <VStack gap={4}>
-        <div><Button label="Back to my set" variant="ghost" size="sm" icon={icon(ArrowLeft)} href={`/lab/${quiz.set}?tab=quizzes`} /></div>
-        <HStack gap={3} justify="between" align="center" wrap="wrap">
-          <ClickToEdit heading label="Quiz name" value={quiz.title} placeholder="Untitled quiz" onSave={rename} />
-          <HStack gap={2}>
-            {quiz.questions.length > 0 && <Button label="Take quiz" variant="primary" href={`/tests/${testId}`} />}
-            <Button label="Add question" variant="secondary" icon={icon(Plus)} onClick={() => { setProblem(""); setForm({ type: null }); }} />
-          </HStack>
-        </HStack>
-        {error && <Banner status="error" title={error} container="section" />}
-        {quiz.questions.length === 0
-          ? <EmptyState isCompact icon={<ListChecks size={28} aria-hidden="true" />} title="No questions yet" description="Add your first question." />
-          : <List hasDividers>
-            {quiz.questions.map((question) => <ListItem key={question._id} label={question.text} onClick={() => edit(question)}
-              description={question.type === "mcq" ? `Multiple choice, ${question.options.length} options` : "True or false"}
-              endContent={<MoreMenu label="Question options" alignment="end" items={[
-                { label: "Edit", icon: icon(Pencil), onClick: () => edit(question) },
-                { type: "divider" },
-                { label: "Delete question", icon: icon(Trash2), variant: "destructive", onClick: () => setRemoving(question) }
-              ]} />} />)}
-          </List>}
-      </VStack>
-
-      <Dialog isOpen={Boolean(form)} onOpenChange={close} purpose="form" width={560}>
-        <DialogHeader title={!form?.type ? "Choose a question type" : form.id ? "Change the question" : "New question"} onOpenChange={close} />
-        {form && !form.type && <HStack gap={3} padding={4} wrap="wrap">
-          <ClickableCard label="Multiple choice" onClick={() => setForm(blank("mcq"))}><VStack gap={1} align="center"><ListChecks size={28} aria-hidden="true" /><Text weight="semibold">Multiple choice</Text><Text type="supporting" color="secondary">Pick the right answer</Text></VStack></ClickableCard>
-          <ClickableCard label="True or false" onClick={() => setForm(blank("true_false"))}><VStack gap={1} align="center"><ToggleLeft size={28} aria-hidden="true" /><Text weight="semibold">True or false</Text><Text type="supporting" color="secondary">A statement</Text></VStack></ClickableCard>
-        </HStack>}
-        {form?.type && <VStack gap={4} padding={4}>
-          {problem && <Banner status="error" title={problem} container="section" />}
-          <TextArea label="Question" isLabelHidden placeholder="Question (formulas work: $x^2$ or $\ce{H2O}$)" rows={3} maxLength={1500} value={form.text} onChange={(text) => set({ text })} hasAutoFocus />
-          {mcq && <VStack gap={2}>
-            <Text type="supporting" color="secondary">Tap the circle next to the right answer.</Text>
-            {form.options.map((option, index) => <HStack key={index} gap={2} align="center">
-              <IconButton label={form.correct === index ? `Option ${index + 1} is the correct answer` : `Mark option ${index + 1} as the correct answer`} tooltip="Correct answer" variant={form.correct === index ? "primary" : "secondary"} size="sm" icon={icon(form.correct === index ? CheckCircle2 : Circle)} onClick={() => set({ correct: index })} />
-              <div style={{ flex: 1 }}><TextInput label={`Option ${index + 1}`} isLabelHidden placeholder={`Option ${index + 1}`} maxLength={300} value={option} onChange={(value) => set({ options: form.options.map((item, i) => (i === index ? value : item)) })} /></div>
-              {form.options.length > 2 && <IconButton label={`Remove option ${index + 1}`} variant="ghost" size="sm" icon={icon(X)} onClick={() => set({ options: form.options.filter((_, i) => i !== index), correct: form.correct === index ? 0 : form.correct > index ? form.correct - 1 : form.correct })} />}
-            </HStack>)}
-            {form.options.length < 6 && <div><Button label="Add option" variant="ghost" size="sm" icon={icon(Plus)} onClick={() => set({ options: [...form.options, ""] })} /></div>}
-          </VStack>}
-          {!mcq && <SegmentedControl label="The answer is" value={form.truth} onChange={(truth) => set({ truth })}>
-            <SegmentedControlItem value="true" label="True" />
-            <SegmentedControlItem value="false" label="False" />
-          </SegmentedControl>}
-          <TextArea label="Explanation" isLabelHidden placeholder="Explanation shown after answering (optional)" rows={2} maxLength={4000} value={form.explanation} onChange={(explanation) => set({ explanation })} />
-          <HStack gap={2} justify="end">
-            <Button label="Cancel" variant="ghost" onClick={() => setForm(null)} />
-            <Button label={form.id ? "Save question" : "Add question"} variant="primary" isDisabled={!valid} isLoading={saving} onClick={save} />
-          </HStack>
-        </VStack>}
-      </Dialog>
-
-      <Dialog isOpen={Boolean(removing)} onOpenChange={(open) => { if (!open) setRemoving(null); }} width={400}>
-        <DialogHeader title="Delete this question?" onOpenChange={(open) => { if (!open) setRemoving(null); }} />
-        <VStack gap={4} padding={4}>
-          <Text>This cannot be undone.</Text>
-          <HStack gap={2} justify="end"><Button label="Cancel" variant="ghost" onClick={() => setRemoving(null)} /><Button label="Delete" variant="destructive" onClick={remove} /></HStack>
-        </VStack>
-      </Dialog>
+  return <div className="content mx-auto grid max-w-3xl gap-4">
+    <div><Button as={Link} to={`/lab/${quiz.set}?tab=quizzes`} variant="tertiary" size="sm" icon={ArrowLeft}>Back to my set</Button></div>
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <EditableTitle heading label="Quiz name" value={quiz.title} placeholder="Untitled quiz" onSave={rename} />
+      <div className="flex flex-wrap gap-2">
+        {quiz.questions.length > 0 && <Button as={Link} to={`/tests/${testId}`}>Take quiz</Button>}
+        <Button variant="secondary" icon={Plus} onClick={() => { setProblem(""); setForm({ type: null }); }}>Add question</Button>
+      </div>
     </div>
-  </AstryxTheme>;
+    {error && <p className="m-0 flex items-center gap-2 text-destructive" role="alert"><AlertCircle size={16} aria-hidden="true" />{error}</p>}
+    {quiz.questions.length === 0
+      ? <EmptyState icon={ListChecks} title="No questions yet" description="Add your first question." />
+      : <ul className="m-0 grid list-none p-0">
+        {quiz.questions.map((question) => <li key={question._id} className="flex items-center gap-2 border-b border-border py-2 last:border-b-0">
+          <button type="button" onClick={() => edit(question)} className="grid min-w-0 flex-1 cursor-pointer gap-0.5 rounded-md border-0 bg-transparent p-2 text-left font-sans text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring">
+            <span className="line-clamp-2 font-semibold">{question.text}</span>
+            <span className="text-sm text-muted-foreground">{question.type === "mcq" ? `Multiple choice, ${question.options.length} options` : "True or false"}</span>
+          </button>
+          <DropdownMenu
+            trigger={<Button variant="tertiary" size="sm" aria-label="Question options"><MoreHorizontal size={18} aria-hidden="true" /></Button>}
+            items={[
+              { label: "Edit", icon: Pencil, onSelect: () => edit(question) },
+              { separator: true },
+              { label: "Delete question", icon: Trash2, danger: true, onSelect: () => setRemoving(question) }
+            ]} />
+        </li>)}
+      </ul>}
+
+    <Dialog open={Boolean(form)} onClose={close} title={!form?.type ? "Choose a question type" : form.id ? "Change the question" : "New question"}
+      actions={form?.type ? <><Button variant="tertiary" onClick={close}>Cancel</Button><Button disabled={!valid} loading={saving} onClick={save}>{form.id ? "Save question" : "Add question"}</Button></> : null}>
+      {form && !form.type && <div className="grid grid-cols-2 gap-3">
+        <button type="button" className={typeCard} onClick={() => setForm(blank("mcq"))}><ListChecks size={28} aria-hidden="true" /><strong>Multiple choice</strong><span className="text-sm text-muted-foreground">Pick the right answer</span></button>
+        <button type="button" className={typeCard} onClick={() => setForm(blank("true_false"))}><ToggleLeft size={28} aria-hidden="true" /><strong>True or false</strong><span className="text-sm text-muted-foreground">A statement</span></button>
+      </div>}
+      {form?.type && <div className="grid gap-4">
+        {problem && <p className="m-0 flex items-center gap-2 text-destructive" role="alert"><AlertCircle size={16} aria-hidden="true" />{problem}</p>}
+        <textarea aria-label="Question" autoFocus placeholder={"Question (formulas work: $x^2$ or $\\ce{H2O}$)"} rows={3} maxLength={1500} className={field} value={form.text} onChange={(event) => set({ text: event.target.value })} />
+        {mcq && <div className="grid gap-2">
+          <p className="m-0 text-sm text-muted-foreground">Tap the circle next to the right answer.</p>
+          {form.options.map((option, index) => <div key={index} className="flex items-center gap-2">
+            <button type="button" aria-pressed={form.correct === index} title="Correct answer"
+              aria-label={form.correct === index ? `Option ${index + 1} is the correct answer` : `Mark option ${index + 1} as the correct answer`}
+              onClick={() => set({ correct: index })}
+              className={"grid size-11 shrink-0 cursor-pointer place-items-center rounded-pill border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring " + (form.correct === index ? "border-transparent bg-primary text-primary-foreground" : "border-input bg-card text-muted-foreground hover:bg-muted")}>
+              {form.correct === index ? <CheckCircle2 size={18} aria-hidden="true" /> : <Circle size={18} aria-hidden="true" />}
+            </button>
+            <input aria-label={`Option ${index + 1}`} placeholder={`Option ${index + 1}`} maxLength={300} className={input} value={option}
+              onChange={(event) => set({ options: form.options.map((item, i) => (i === index ? event.target.value : item)) })} />
+            {form.options.length > 2 && <button type="button" aria-label={`Remove option ${index + 1}`}
+              className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-pill border-0 bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+              onClick={() => set({ options: form.options.filter((_, i) => i !== index), correct: form.correct === index ? 0 : form.correct > index ? form.correct - 1 : form.correct })}><X size={18} aria-hidden="true" /></button>}
+          </div>)}
+          {form.options.length < 6 && <div><Button variant="tertiary" size="sm" icon={Plus} onClick={() => set({ options: [...form.options, ""] })}>Add option</Button></div>}
+        </div>}
+        {!mcq && <Segmented label="The answer is" value={form.truth} onChange={(truth) => set({ truth })} options={[{ value: "true", label: "True" }, { value: "false", label: "False" }]} />}
+        <textarea aria-label="Explanation" placeholder="Explanation shown after answering (optional)" rows={2} maxLength={4000} className={field} value={form.explanation} onChange={(event) => set({ explanation: event.target.value })} />
+      </div>}
+    </Dialog>
+
+    <Dialog open={Boolean(removing)} onClose={() => setRemoving(null)} title="Delete this question?"
+      actions={<><Button variant="tertiary" onClick={() => setRemoving(null)}>Cancel</Button><Button variant="danger" onClick={remove}>Delete</Button></>}>
+      <p className="m-0">This cannot be undone.</p>
+    </Dialog>
+  </div>;
 }
