@@ -1,6 +1,6 @@
 ---
 name: Catalyst
-description: Warm study desk with a gold accent. Calm neutrals, bold solid colour only where it carries meaning, serif headings, soft rounded shapes. One palette, light and dark.
+description: Warm study desk with a gold accent. Calm neutrals, bold solid colour only where it carries meaning, soft rounded shapes. One palette, light and dark.
 colors:
   background: "oklch(0.985 0.008 85)"
   card: "oklch(1 0 0)"
@@ -22,17 +22,17 @@ colors:
   info: "oklch(0.50 0.13 250)"
 typography:
   display:
-    fontFamily: "Fraunces, Georgia, serif"
+    fontFamily: "Atkinson Hyperlegible Next, system-ui, sans-serif"
     fontSize: "2.5rem"
     fontWeight: 600
     lineHeight: 1.1
   headline:
-    fontFamily: "Fraunces, Georgia, serif"
+    fontFamily: "Atkinson Hyperlegible Next, system-ui, sans-serif"
     fontSize: "1.75rem"
     fontWeight: 600
     lineHeight: 1.2
   card-face:
-    fontFamily: "Fraunces, Georgia, serif"
+    fontFamily: "Atkinson Hyperlegible Next, system-ui, sans-serif"
     fontSize: "1.75rem"
     fontWeight: 500
     lineHeight: 1.3
@@ -85,14 +85,14 @@ Status: seed for the design reset. Phase 2 turns these values into `frontend/src
 
 A quiet desk where a student sits down with their own notes. The surface is warm paper and near-black ink, with generous space and one readable column. Colour is saved for things that mean something: the gold brand on the one main action, the three rating tiles, set covers, mastery levels and the activity heatmap. When colour appears it is solid and confident, never a gradient or a glow.
 
-The layout follows StudyFetch: a slim left rail, a breadcrumb top bar with a Pomodoro timer chip, and a tutor panel docked on the right on wide screens. Phones get bottom tabs and a tutor sheet that slides up. Headings and flashcard faces use Fraunces, a warm serif, so the app reads like a good textbook; everything else uses Atkinson Hyperlegible Next, so Cl, C1 and O, 0 stay distinct.
+The layout follows StudyFetch: a slim left rail, a breadcrumb top bar with a Pomodoro timer chip, and a tutor panel docked on the right on wide screens. Phones get bottom tabs and a tutor sheet that slides up. All text uses Atkinson Hyperlegible Next, so Cl, C1 and O, 0 stay distinct. Headings and flashcard faces use heavier weights of the same family.
 
 Progress should feel welcoming and make students want to return, without pressure. Streaks forgive, nothing nags, and there are no coins, leaderboards or confetti.
 
 **Key Characteristics:**
 - Calm warm neutrals, bold solid accents only where they carry meaning.
 - Gold brand, always with dark text on it.
-- Serif display (Fraunces), legible sans body (Atkinson).
+- One family, Atkinson Hyperlegible Next, with heavier weights for headings.
 - Soft rounded shapes: pill buttons, 16 to 24 px panel corners.
 - Motion that answers the user, short and interruptible.
 
@@ -155,22 +155,22 @@ Dark mode is driven by the existing `data-theme` attribute (`@custom-variant dar
 
 ## Typography
 
-**Display Font:** Fraunces (variable serif, Google Fonts, OFL), fallback Georgia, serif
+**Display Font:** Atkinson Hyperlegible Next (same family, heavier weights)
 **Body Font:** Atkinson Hyperlegible Next (self-hosted variable WOFF2), fallback system-ui, sans-serif
 
-**Character:** a warm, slightly old-style serif for the moments that matter (page titles, set names, card faces) over a sans built for legibility. Formulas stay in KaTeX's own fonts.
+**Character:** one sans built for legibility, with weight doing the work of hierarchy. Formulas stay in KaTeX's own fonts.
 
 ### Hierarchy
-- **Display** (Fraunces 600, 2.5rem, 1.1; 2rem on phones): page titles and set names.
-- **Headline** (Fraunces 600, 1.75rem, 1.2): section headings.
-- **Card face** (Fraunces 500, 1.75rem, 1.3; shrinks to fit long cards): flashcard front and back.
+- **Display** (Atkinson 700, 2.5rem, 1.1; 2rem on phones): page titles and set names.
+- **Headline** (Atkinson 700, 1.75rem, 1.2): section headings.
+- **Card face** (Atkinson 600, 1.75rem, 1.3; shrinks to fit long cards): flashcard front and back.
 - **Title** (Atkinson 600, 1.25rem, 1.3): card titles, dialog titles.
 - **Body** (Atkinson 400, 1rem, 1.55): notes and UI text. Reading column at most 68ch.
 - **Label** (Atkinson 600, 0.875rem): buttons, chips, tabs. Sentence case.
 - **Small** (Atkinson 400, 0.75rem): meta text such as review times and counts.
 
 ### Named Rules
-**The Two Voices Rule.** Fraunces for display and card faces only; never for buttons, labels, inputs or body text. No third family.
+**The One Family Rule.** Atkinson Hyperlegible Next only. No second family.
 
 **The No Shouting Rule.** No all-caps eyebrow labels and no tracked-out caps.
 
@@ -208,7 +208,7 @@ Soft and rounded. Buttons, chips and keycaps are pills. Inputs use `md` (12 px).
 ### Don't:
 - **Don't** use gradients, glows, glass effects, 3D buttons or decorative animation.
 - **Don't** use confetti, flames, coins, leaderboards, XP bars or guilt copy.
-- **Don't** use Fraunces for UI text, or add a third font.
+- **Don't** add a second font family.
 - **Don't** put a bordered card around every section, or cards inside cards.
 - **Don't** use a native select or a bare text box for a fixed set of choices; use chips, segmented controls, steppers or pickers.
 - **Don't** add a mascot before the beta.

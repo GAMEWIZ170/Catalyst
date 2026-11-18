@@ -16,7 +16,7 @@ import SetCards from "../../components/lab/SetCards";
 import SetQuizzes from "../../components/lab/SetQuizzes";
 import SetMaterials from "../../components/lab/SetMaterials";
 import GenerateMore from "../../components/lab/GenerateMore";
-import CompanionDrawer from "../../components/lab/CompanionDrawer";
+import { useTutorTarget } from "../../context/TutorContext";
 import SetSharing from "../../components/lab/SetSharing";
 
 // The rich note editor is a big file, so it is only downloaded when a student opens the Notes tab.
@@ -30,6 +30,7 @@ const icon = (Icon) => <Icon size={18} aria-hidden="true" />;
 // The study companion is a floating chat button that opens a side panel. Click the title to rename; Delete is in the ⋯ menu.
 export default function LabSet() {
   const { id } = useParams();
+  useTutorTarget("set", id);
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const [set, setSet] = useState(null);
@@ -104,7 +105,6 @@ export default function LabSet() {
       </VStack>
 
       <GenerateMore isOpen={generating} onOpenChange={setGenerating} setId={id} kind="notes" onSaved={() => setNotesKey((key) => key + 1)} />
-      <CompanionDrawer kind="set" id={id} />
 
       <Dialog isOpen={dialog === "share"} onOpenChange={close} width={480}>
         <DialogHeader title="Share set" onOpenChange={close} />

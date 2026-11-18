@@ -14,7 +14,7 @@ import { useTimer } from "../../context/TimerContext";
 import { GOALS, goalKeyOf } from "../../utils/goals";
 import { isLowData, setLowData } from "../../utils/lowData";
 import { useInstall } from "../../utils/offline";
-import { applyPalette, applyTextSize, currentPalette, currentTextSize, palettes, textSizes } from "../../utils/appearance";
+import { applyTextSize, currentTextSize, textSizes } from "../../utils/appearance";
 import { detectTimeZone, timeZoneList } from "../../utils/timeZone";
 import AccountSection from "../../components/profile/AccountSection";
 import AstryxTheme from "../../components/astryx/AstryxTheme";
@@ -72,22 +72,10 @@ function AccountTab({ save }) {
 }
 
 function AppearanceTab() {
-  const [palette, setPalette] = useState(currentPalette);
   const [textSize, setTextSize] = useState(currentTextSize);
   const [lowData, setLowDataState] = useState(isLowData);
   const installer = useInstall();
   return <VStack gap={4}>
-    <VStack gap={2}>
-      <Text weight="semibold">Colour theme</Text>
-      <div className="settings-radio-grid" role="radiogroup" aria-label="Colour theme">
-        {palettes.map((item) => <label className="palette-card" data-palette-preview={item.key} key={item.key}>
-          <input type="radio" name="palette" value={item.key} checked={palette === item.key} onChange={() => { setPalette(item.key); applyPalette(item.key); }} />
-          <span className="palette-swatch" aria-hidden="true" />
-          <span>{item.name}</span>
-        </label>)}
-      </div>
-      <Text type="supporting" color="secondary">Use the gear in the top bar to switch between light and dark.</Text>
-    </VStack>
     <VStack gap={0}>
       <SettingRow label="Text size">
         <SegmentedControl label="Text size" value={textSize} onChange={(value) => { setTextSize(value); applyTextSize(value); }}>

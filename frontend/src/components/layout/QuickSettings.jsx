@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Checkbox, SelectField } from "../ui";
-import { applyPalette, applyTextSize, applyTheme, currentPalette, currentTextSize, currentTheme, palettes, textSizes } from "../../utils/appearance";
+import { applyTextSize, applyTheme, currentTextSize, currentTheme, textSizes } from "../../utils/appearance";
 import { isLowData, setLowData } from "../../utils/lowData";
 import { t } from "../../i18n";
 
@@ -10,7 +10,6 @@ import { t } from "../../i18n";
 export default function QuickSettings({ panelRef, onNavigate }) {
   const { user, updatePreferences } = useAuth();
   const [dark, setDark] = useState(() => currentTheme() === "dark");
-  const [palette, setPalette] = useState(currentPalette);
   const [textSize, setTextSize] = useState(currentTextSize);
   const [lowData, setLowDataState] = useState(isLowData);
   const [problem, setProblem] = useState("");
@@ -27,9 +26,6 @@ export default function QuickSettings({ panelRef, onNavigate }) {
   return <div className="quick-panel" id="quick-settings-panel" ref={panelRef} role="dialog" aria-label={t("quick.title")}>
     <h2 className="quick-title">{t("quick.title")}</h2>
     <Checkbox label={t("quick.theme")} checked={dark} onChange={(event) => { setDark(event.target.checked); applyTheme(event.target.checked ? "dark" : "light"); }} />
-    <SelectField label={t("quick.palette")} value={palette} onChange={(event) => { setPalette(event.target.value); applyPalette(event.target.value); }}>
-      {palettes.map((item) => <option key={item.key} value={item.key}>{item.name}</option>)}
-    </SelectField>
     <SelectField label={t("quick.text")} value={textSize} onChange={(event) => { setTextSize(event.target.value); applyTextSize(event.target.value); }}>
       {textSizes.map((item) => <option key={item.key} value={item.key}>{item.name}</option>)}
     </SelectField>

@@ -7,14 +7,6 @@
   Phase 6 deletes tokens.css and drops the suffix.
 */
 
-@font-face {
-  font-family: "Fraunces";
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-  src: url("../assets/fonts/fraunces-latin-wght-normal.woff2") format("woff2");
-}
-
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @layer base {
@@ -112,7 +104,7 @@
 
 @theme {
   --font-sans: "Atkinson Hyperlegible Next", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-display: "Fraunces", Georgia, serif;
+  --font-display: "Atkinson Hyperlegible Next", system-ui, -apple-system, "Segoe UI", sans-serif;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
