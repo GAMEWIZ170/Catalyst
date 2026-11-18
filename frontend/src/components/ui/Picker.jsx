@@ -4,13 +4,14 @@ import { cn } from "@/lib/utils";
 
 // Choose one from a list without a native select (rule 3). A pill button shows the choice and opens a menu.
 // options: [{ value, label }]. An empty `value` shows the placeholder. `clearLabel` adds a first item that sets value "".
-export default function Picker({ value, onChange, options, label, placeholder = "Choose", clearLabel, className }) {
+export default function Picker({ value, onChange, options, label, placeholder = "Choose", clearLabel, className, disabled }) {
   const current = options.find((option) => option.value === value);
   return (
     <MenuPrimitive.Root>
       <MenuPrimitive.Trigger
+        disabled={disabled}
         aria-label={`${label}: ${current ? current.label : placeholder}`}
-        className={cn("inline-flex min-h-11 max-w-full cursor-pointer items-center gap-2 rounded-pill border border-input bg-card px-4 font-sans text-sm font-semibold text-foreground transition-colors duration-150 hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring", !current && "text-muted-foreground", className)}
+        className={cn("inline-flex min-h-11 max-w-full cursor-pointer items-center gap-2 rounded-pill border border-input bg-card px-4 font-sans text-sm font-semibold text-foreground transition-colors duration-150 hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50", !current && "text-muted-foreground", className)}
       >
         <span className="min-w-0 truncate">{current ? current.label : placeholder}</span>
         <ChevronDown size={16} className="shrink-0" aria-hidden="true" />

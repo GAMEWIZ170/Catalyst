@@ -71,8 +71,8 @@ export default function LabSet() {
       <Suspense fallback={<Loading />}><SetNotes key={notesKey} setId={id} /></Suspense>
       <SetMaterials setId={id} />
     </div></AstryxTheme>,
-    cards: <AstryxTheme><SetCards setId={id} /></AstryxTheme>,
-    quizzes: <AstryxTheme><SetQuizzes setId={id} /></AstryxTheme>
+    cards: <SetCards setId={id} />,
+    quizzes: <SetQuizzes setId={id} />
   };
 
   return <div className="content mx-auto grid max-w-4xl gap-4">
@@ -97,10 +97,10 @@ export default function LabSet() {
       { id: "quizzes", label: "Quizzes", panel: panels.quizzes }
     ]} />
 
-    <AstryxTheme><GenerateMore isOpen={generating} onOpenChange={setGenerating} setId={id} kind="notes" onSaved={() => setNotesKey((key) => key + 1)} /></AstryxTheme>
+    <GenerateMore isOpen={generating} onOpenChange={setGenerating} setId={id} kind="notes" onSaved={() => setNotesKey((key) => key + 1)} />
 
     <Dialog open={dialog === "share"} onClose={close} title="Share set">
-      <AstryxTheme><SetSharing key={`${set.visibility}-${set.communityStatus}`} set={set} onChange={(patch) => setSet((current) => ({ ...current, ...patch }))} /></AstryxTheme>
+      <SetSharing key={`${set.visibility}-${set.communityStatus}`} set={set} onChange={(patch) => setSet((current) => ({ ...current, ...patch }))} />
     </Dialog>
 
     <Dialog open={dialog === "delete"} onClose={close} title="Delete this set?"

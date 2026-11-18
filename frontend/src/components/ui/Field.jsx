@@ -1,6 +1,6 @@
 import { Children, useId } from "react";
 import { AlertCircle } from "lucide-react";
-import { Selector } from "@astryxdesign/core/Selector";
+import Picker from "./Picker";
 
 // Labels sit above the control, hint and error text below. Errors are text plus an icon, never colour alone.
 function FieldShell({ id, label, hint, error, children, className = "" }) {
@@ -39,27 +39,32 @@ export function TextArea({ label, hint, error, id, className, ...input }) {
 }
 
 // A fixed set of choices. It takes <option> children and an onChange(event) like a native select, so callers did not
-// change, but it draws the Astryx Selector (this needs the Astryx theme, which AppShell provides).
-// An empty value cannot be a Selector value, so it travels as NONE.
-const NONE = "__none__";
+// change, but it draws our Picker (a pill that opens a menu), never a native select (rule 3).
+// An empty value shows the placeholder (the text of the option whose value is "").
 export function SelectField({ label, hint, error, className, children, value, onChange, disabled, isLabelHidden, ...rest }) {
-  const options = Children.toArray(children).filter((child) => child?.props).map((child) => ({
-    value: String(child.props.value ?? "") === "" ? NONE : String(child.props.value),
+  const id = useId();
+  const all = Children.toArray(children).filter((child) => child?.props).map((child) => ({
+    value: String(child.props.value ?? ""),
     label: Children.toArray(child.props.children).join("")
   }));
-  const current = String(value ?? "") === "" ? NONE : String(value);
+  const blank = all.find((option) => option.value === "");
+  const options = all.filter((option) => option.value !== "");
+  const hidden = isLabelHidden || rest["aria-label"] != null;
   return (
-    <div className={`ui-field ${className || ""}`}>
-      <Selector
+    <div className={`ui-field ${error ? "ui-field--error" : ""} ${className || ""}`}>
+      <span id={`${id}-label`} className={hidden ? "sr-only" : "ui-label"}>{label}</span>
+      <Picker
         label={label}
-        isLabelHidden={isLabelHidden || rest["aria-label"] != null}
-        description={error ? undefined : hint}
-        status={error ? { type: "error", message: error } : undefined}
+        value={String(value ?? "")}
+        placeholder={blank ? blank.label : "Choose"}
+        clearLabel={blank ? blank.label : undefined}
         options={options}
-        value={current}
-        isDisabled={disabled}
-        onChange={(next) => onChange?.({ target: { value: next === NONE ? "" : next } })}
+        disabled={disabled}
+        className="w-full justify-between"
+        onChange={(next) => onChange?.({ target: { value: next } })}
       />
+      {hint && !error ? <p className="ui-hint" id={`${id}-hint`}>{hint}</p> : null}
+      {error ? <p className="ui-error" id={`${id}-error`}><AlertCircle size={16} aria-hidden="true" />{error}</p> : null}
     </div>
   );
 }

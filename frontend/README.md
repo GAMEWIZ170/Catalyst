@@ -265,6 +265,10 @@ The question screen of `pages/learn/Test.jsx` uses `components/learn/QuizOption.
 
 `components/lab/NewSetDialog.jsx` is on `ui/Dialog` and the new `ui/FileDrop` (one PDF, type and size checked). It now says plainly that the free beta sends what you add to Google's AI and Google may use it. `Lab.jsx` no longer needs Astryx at all.
 
+## Select fields (design reset phase 5)
+
+`ui/SelectField` keeps its `<option>` children and `onChange(event)` but now draws `ui/Picker` (a pill that opens a menu). It no longer needs `AstryxTheme`, so `components/ui` has no Astryx imports. Every screen using it changed look (admin editors, community, settings, topics); only the set screens were checked in a browser.
+
 ## Authentication behavior
 
 The frontend does not store JWTs in local storage. Login and registration receive an HTTP-only `token` cookie from the backend, and API requests include credentials automatically. On startup, `AuthContext` calls `/auth/me` to restore the current session.

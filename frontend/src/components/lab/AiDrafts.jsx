@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Sparkles } from "lucide-react";
-import { Selector } from "@astryxdesign/core/Selector";
 import { api } from "../../api/client";
 import { Button, SelectField, TextArea, TextField, useToast } from "../ui";
 import { appendToDoc, draftToNodes, notesToDraft } from "../../utils/draftToDoc";
@@ -97,8 +96,11 @@ export default function AiDrafts({ setId, kind: fixedKind = null, onSaved = null
       {!fixedKind && <SelectField label="Make" value={kind} onChange={(event) => { setKind(event.target.value); setResult(null); }}>
         {KINDS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
       </SelectField>}
-      <Selector label="From" value={source} onChange={(value) => { setSource(value); setPart(0); setResult(null); }}
-        options={[{ value: "notes", label: "My notes in this set" }, ...materials.map((item) => ({ value: item.id, label: item.title })), { value: "paste", label: "Text I paste here" }]} />
+      <SelectField label="From" value={source} onChange={(event) => { setSource(event.target.value); setPart(0); setResult(null); }}>
+        <option value="notes">My notes in this set</option>
+        {materials.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
+        <option value="paste">Text I paste here</option>
+      </SelectField>
       {source === "paste" && <TextArea label="Paste your text (at least 40 characters)" rows={6} value={pasted} onChange={(event) => { setPasted(event.target.value); setPart(0); }} />}
       <Button onClick={() => generate(source === "paste" || result ? part : 0)} disabled={!canGenerate} icon={Sparkles}>{busy && !result ? "Working…" : "Make drafts"}</Button>
     </div>
