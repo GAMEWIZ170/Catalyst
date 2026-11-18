@@ -31,17 +31,17 @@ export default function Register() {
   }
 
   return <AuthLayout title="Create your account" subtitle="It takes a minute. Then start your first lesson.">
-    <form className="auth-form" onSubmit={submit}>
+    <form className="grid gap-4" onSubmit={submit}>
       <TextField label="Full name" type="text" required minLength="2" maxLength="60" autoComplete="name" value={form.name}
         onChange={(e) => setForm({ ...form, name: e.target.value })} />
       <TextField label="Email" type="email" required autoComplete="email" value={form.email}
         onChange={(e) => setForm({ ...form, email: e.target.value })} />
       <TextField label="Password" type="password" required minLength="8" maxLength="72" autoComplete="new-password" hint="At least 8 characters." value={form.password}
         onChange={(e) => setForm({ ...form, password: e.target.value })} />
-      {error && <p className="form-error" role="alert">{error}</p>}
+      {error && <p className="m-0 text-destructive" role="alert">{error}</p>}
       <Button type="submit" block loading={busy}>Create account</Button>
     </form>
-    <p className="auth-switch">By creating an account you agree to the <Link to="/terms">Terms</Link> and the <Link to="/privacy">Privacy</Link> page.</p>
-    <p className="auth-switch">Already have an account? <Link to="/login">Sign in</Link></p>
+    <p className="m-0 text-sm text-muted-foreground [&_a]:font-semibold [&_a]:text-brand-ink [&_a]:underline">By creating an account you agree to the <Link to="/terms">Terms</Link> and the <Link to="/privacy">Privacy</Link> page.</p>
+    <p className="m-0 text-sm text-muted-foreground [&_a]:font-semibold [&_a]:text-brand-ink [&_a]:underline">Already have an account? <Link to="/login">Sign in</Link></p>
   </AuthLayout>;
 }

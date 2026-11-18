@@ -33,7 +33,7 @@ export default function VerifyEmail({ change = false }) {
     <Button as={Link} block to={home}>{homeLabel}</Button>
   </AuthLayout>;
   return <AuthLayout title="This link did not work" subtitle={state === "missing" ? "The link is incomplete." : message}>
-    <p className="auth-switch">{change ? "Ask for a new link in Settings, under Change email." : user ? "Use \"Send the link again\" at the top of any page." : "Log in, then use \"Send the link again\" at the top of the page."}</p>
+    <p className="m-0 text-sm text-muted-foreground [&_a]:font-semibold [&_a]:text-brand-ink [&_a]:underline">{change ? "Ask for a new link in Settings, under Change email." : user ? "Use \"Send the link again\" at the top of any page." : "Log in, then use \"Send the link again\" at the top of the page."}</p>
     <Button as={Link} block to={home}>{homeLabel}</Button>
   </AuthLayout>;
 }

@@ -29,7 +29,7 @@ export default function ResetPassword() {
   }
 
   if (!token) return <AuthLayout title="Reset link missing" subtitle="Open the link from your email, or ask for a new one.">
-    <p className="auth-switch"><Link to="/forgot-password">Ask for a new link</Link></p>
+    <p className="m-0 text-sm text-muted-foreground [&_a]:font-semibold [&_a]:text-brand-ink [&_a]:underline"><Link to="/forgot-password">Ask for a new link</Link></p>
   </AuthLayout>;
 
   if (done) return <AuthLayout title="Password changed" subtitle="You can log in with your new password now.">
@@ -37,12 +37,12 @@ export default function ResetPassword() {
   </AuthLayout>;
 
   return <AuthLayout title="Choose a new password" subtitle="Use at least 8 characters.">
-    <form className="auth-form" onSubmit={submit}>
+    <form className="grid gap-4" onSubmit={submit}>
       <TextField label="New password" type="password" required minLength="8" maxLength="72" autoComplete="new-password" value={form.password}
         onChange={(e) => setForm({ ...form, password: e.target.value })} />
       <TextField label="Repeat new password" type="password" required minLength="8" maxLength="72" autoComplete="new-password" value={form.confirm}
         onChange={(e) => setForm({ ...form, confirm: e.target.value })} />
-      {error && <p className="form-error" role="alert">{error}{error.includes("expired") && <> <Link to="/forgot-password">Ask for a new link</Link></>}</p>}
+      {error && <p className="m-0 text-destructive" role="alert">{error}{error.includes("expired") && <> <Link to="/forgot-password">Ask for a new link</Link></>}</p>}
       <Button type="submit" block loading={busy}>Change password</Button>
     </form>
   </AuthLayout>;

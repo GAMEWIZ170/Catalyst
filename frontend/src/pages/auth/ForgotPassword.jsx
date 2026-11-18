@@ -26,12 +26,12 @@ export default function ForgotPassword() {
 
   return <AuthLayout title="Forgot your password?" subtitle="Enter your email and we will send you a link to choose a new one.">
     {sent
-      ? <p className="form-success" role="status">If that email has an account, a reset link is on its way. It works for 30 minutes.</p>
-      : <form className="auth-form" onSubmit={submit}>
+      ? <p className="m-0 rounded-lg bg-success/15 p-3" role="status">If that email has an account, a reset link is on its way. It works for 30 minutes.</p>
+      : <form className="grid gap-4" onSubmit={submit}>
         <TextField label="Email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        {error && <p className="form-error" role="alert">{error}</p>}
+        {error && <p className="m-0 text-destructive" role="alert">{error}</p>}
         <Button type="submit" block loading={busy}>Send reset link</Button>
       </form>}
-    <p className="auth-switch"><Link to="/login">Back to log in</Link></p>
+    <p className="m-0 text-sm text-muted-foreground [&_a]:font-semibold [&_a]:text-brand-ink [&_a]:underline"><Link to="/login">Back to log in</Link></p>
   </AuthLayout>;
 }
