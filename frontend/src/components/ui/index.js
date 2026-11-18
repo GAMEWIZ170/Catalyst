@@ -16,3 +16,4 @@ export { default as Segmented } from "./Segmented";
 export { default as Stepper } from "./Stepper";
 export { Keycap, KeycapButton } from "./Keycap";
 export { default as ProgressDots } from "./ProgressDots";
+export { default as EditableTitle } from "./EditableTitle";

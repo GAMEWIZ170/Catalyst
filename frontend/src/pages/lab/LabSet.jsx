@@ -1,16 +1,9 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Share2, Sparkles, Trash2 } from "lucide-react";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
-import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
-import { MoreMenu } from "@astryxdesign/core/MoreMenu";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Tab, TabList } from "@astryxdesign/core/TabList";
-import { Text } from "@astryxdesign/core/Text";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { AlertCircle, ArrowLeft, MoreHorizontal, Share2, Sparkles, Trash2 } from "lucide-react";
 import { api } from "../../api/client";
 import AstryxTheme from "../../components/astryx/AstryxTheme";
-import ClickToEdit from "../../components/astryx/ClickToEdit";
+import { Button, Dialog, DropdownMenu, EditableTitle, Tabs } from "../../components/ui";
 import { ErrorState, Loading } from "../learn/Courses";
 import SetCards from "../../components/lab/SetCards";
 import SetQuizzes from "../../components/lab/SetQuizzes";
@@ -23,11 +16,11 @@ import SetSharing from "../../components/lab/SetSharing";
 const SetNotes = lazy(() => import("../../components/lab/SetNotes"));
 
 const TAB_IDS = ["notes", "cards", "quizzes"];
-const icon = (Icon) => <Icon size={18} aria-hidden="true" />;
 
-// One study set. Built with Astryx (UI library trial, branch feature/astryx-trial).
+// One study set. The frame (title, tabs, menu, dialogs) is Tailwind; the tab contents are still Astryx until each is ported,
+// so they sit inside AstryxTheme.
 // Tabs are Notes, Flashcards and Quizzes. Each tab shows its content first, with "Generate more" and "Add" that work in place.
-// The study companion is a floating chat button that opens a side panel. Click the title to rename; Delete is in the ⋯ menu.
+// The tutor lives in the shell (useTutorTarget). Click the title to rename; Delete is in the ⋯ menu.
 export default function LabSet() {
   const { id } = useParams();
   useTutorTarget("set", id);
@@ -70,59 +63,49 @@ export default function LabSet() {
   if (!set) return <Loading />;
 
   const details = [set.course && `${set.course.code}: ${set.course.title}`, set.topic].filter(Boolean).join(" · ");
-  const close = (open) => { if (!open) setDialog(null); };
+  const close = () => setDialog(null);
 
-  return <AstryxTheme>
-    <div className="content student-page lab-set">
-      <VStack gap={4}>
-        <div><Button label="Study Lab" variant="ghost" size="sm" icon={icon(ArrowLeft)} href="/lab" /></div>
-        <HStack gap={3} justify="between" align="center" wrap="wrap">
-          <VStack gap={1}>
-            <ClickToEdit heading label="Title" value={set.title} placeholder="Untitled set" onSave={rename} />
-            {details && <Text color="secondary">{details}</Text>}
-          </VStack>
-          <MoreMenu label="Set actions" alignment="end" items={[
-            { label: "Share", icon: icon(Share2), onClick: () => setDialog("share") },
-            { type: "divider" },
-            { label: "Delete set", icon: icon(Trash2), variant: "destructive", onClick: () => setDialog("delete") }
-          ]} />
-        </HStack>
-        {error && <Banner status="error" title={error} container="section" />}
-        <TabList role="tablist" value={tab} onChange={(next) => setParams({ tab: next }, { replace: true })} hasDivider>
-          <Tab value="notes" label="Notes" panelId="set-panel" />
-          <Tab value="cards" label="Flashcards" panelId="set-panel" />
-          <Tab value="quizzes" label="Quizzes" panelId="set-panel" />
-        </TabList>
-        <div id="set-panel" role="tabpanel">
-          {tab === "notes" && <VStack gap={5}>
-            <HStack justify="end"><Button label="Generate more" variant="secondary" icon={icon(Sparkles)} onClick={() => setGenerating(true)} /></HStack>
-            <Suspense fallback={<Loading />}><SetNotes key={notesKey} setId={id} /></Suspense>
-            <SetMaterials setId={id} />
-          </VStack>}
-          {tab === "cards" && <SetCards setId={id} />}
-          {tab === "quizzes" && <SetQuizzes setId={id} />}
-        </div>
-      </VStack>
+  const panels = {
+    notes: <AstryxTheme><div className="grid gap-5">
+      <div className="flex justify-end"><Button variant="secondary" icon={Sparkles} onClick={() => setGenerating(true)}>Generate more</Button></div>
+      <Suspense fallback={<Loading />}><SetNotes key={notesKey} setId={id} /></Suspense>
+      <SetMaterials setId={id} />
+    </div></AstryxTheme>,
+    cards: <AstryxTheme><SetCards setId={id} /></AstryxTheme>,
+    quizzes: <AstryxTheme><SetQuizzes setId={id} /></AstryxTheme>
+  };
 
-      <GenerateMore isOpen={generating} onOpenChange={setGenerating} setId={id} kind="notes" onSaved={() => setNotesKey((key) => key + 1)} />
-
-      <Dialog isOpen={dialog === "share"} onOpenChange={close} width={480}>
-        <DialogHeader title="Share set" onOpenChange={close} />
-        <div style={{ padding: "var(--spacing-4)" }}>
-          <SetSharing key={`${set.visibility}-${set.communityStatus}`} set={set} onChange={(patch) => setSet((current) => ({ ...current, ...patch }))} />
-        </div>
-      </Dialog>
-
-      <Dialog isOpen={dialog === "delete"} onOpenChange={close} width={420}>
-        <DialogHeader title="Delete this set?" onOpenChange={close} />
-        <VStack gap={4} padding={4}>
-          <Text>Its notes, cards and quizzes are deleted too, and its cards leave your review. This cannot be undone.</Text>
-          <HStack gap={2} justify="end">
-            <Button label="Cancel" variant="ghost" onClick={() => setDialog(null)} />
-            <Button label="Delete" variant="destructive" onClick={remove} />
-          </HStack>
-        </VStack>
-      </Dialog>
+  return <div className="content mx-auto grid max-w-4xl gap-4">
+    <div><Button as={Link} to="/lab" variant="tertiary" size="sm" icon={ArrowLeft}>Study Lab</Button></div>
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="grid min-w-0 gap-1">
+        <EditableTitle heading label="Title" value={set.title} placeholder="Untitled set" onSave={rename} />
+        {details && <p className="m-0 text-muted-foreground">{details}</p>}
+      </div>
+      <DropdownMenu
+        trigger={<Button variant="tertiary" aria-label="Set actions"><MoreHorizontal size={18} aria-hidden="true" /></Button>}
+        items={[
+          { label: "Share", icon: Share2, onSelect: () => setDialog("share") },
+          { separator: true },
+          { label: "Delete set", icon: Trash2, danger: true, onSelect: () => setDialog("delete") }
+        ]} />
     </div>
-  </AstryxTheme>;
+    {error && <p className="m-0 flex items-center gap-2 text-destructive" role="alert"><AlertCircle size={16} aria-hidden="true" />{error}</p>}
+    <Tabs label="Set sections" value={tab} onChange={(next) => setParams({ tab: next }, { replace: true })} tabs={[
+      { id: "notes", label: "Notes", panel: panels.notes },
+      { id: "cards", label: "Flashcards", panel: panels.cards },
+      { id: "quizzes", label: "Quizzes", panel: panels.quizzes }
+    ]} />
+
+    <AstryxTheme><GenerateMore isOpen={generating} onOpenChange={setGenerating} setId={id} kind="notes" onSaved={() => setNotesKey((key) => key + 1)} /></AstryxTheme>
+
+    <Dialog open={dialog === "share"} onClose={close} title="Share set">
+      <AstryxTheme><SetSharing key={`${set.visibility}-${set.communityStatus}`} set={set} onChange={(patch) => setSet((current) => ({ ...current, ...patch }))} /></AstryxTheme>
+    </Dialog>
+
+    <Dialog open={dialog === "delete"} onClose={close} title="Delete this set?"
+      actions={<><Button variant="tertiary" onClick={close}>Cancel</Button><Button variant="danger" onClick={remove}>Delete</Button></>}>
+      <p className="m-0">Its notes, cards and quizzes are deleted too, and its cards leave your review. This cannot be undone.</p>
+    </Dialog>
+  </div>;
 }

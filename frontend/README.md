@@ -249,6 +249,10 @@ The question screen of `pages/learn/Test.jsx` uses `components/learn/QuizOption.
 
 `pages/lab/Lab.jsx` is plain Tailwind plus `components/ui` (Tabs, Button, EmptyState, Badge). Set covers are one solid token colour picked from the title (`rate-again`, `rate-hard`, `rate-good`, `info`), so a set keeps its colour. Processing and issue sets stay as small cards. `NewSetDialog` is still Astryx and keeps its `AstryxTheme` wrapper until the build-flow screen is ported. Not built: progress rings on covers, because the list API has no progress number per set.
 
+## Set page frame (design reset phase 5, fourth screen)
+
+`pages/lab/LabSet.jsx`: editable title (`components/ui/EditableTitle.jsx`, same props as the Astryx `ClickToEdit`), `Tabs`, a "..." `DropdownMenu`, and `Dialog`s for share and delete. The tab contents and the share form are still Astryx and sit inside `AstryxTheme` until their own ports. The tutor panel is already in the shell.
+
 ## Authentication behavior
 
 The frontend does not store JWTs in local storage. Login and registration receive an HTTP-only `token` cookie from the backend, and API requests include credentials automatically. On startup, `AuthContext` calls `/auth/me` to restore the current session.
