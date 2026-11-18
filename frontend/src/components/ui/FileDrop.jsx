@@ -12,7 +12,10 @@ export default function FileDrop({ value, onChange, accept, maxSize, label, hint
 
   function take(file) {
     if (!file) return;
-    if (accept && !file.type.match(new RegExp(`^(${accept.split(",").map((type) => type.trim().replace("*", ".*")).join("|")})$`))) { onError?.("That file type is not supported."); return; }
+    // `accept` is a list like "application/pdf" or ".csv,text/csv": a token with a dot is a file extension, others are media types.
+    const allowed = accept ? accept.split(",").map((token) => token.trim().toLowerCase()) : [];
+    const fits = !allowed.length || allowed.some((token) => (token.startsWith(".") ? file.name.toLowerCase().endsWith(token) : file.type.toLowerCase().match(new RegExp(`^${token.replace("*", ".*")}$`))));
+    if (!fits) { onError?.("That file type is not supported."); return; }
     if (maxSize && file.size > maxSize) { onError?.(`That file is too big. The limit is ${Math.round(maxSize / 1024 / 1024)} MB.`); return; }
     onError?.("");
     onChange(file);

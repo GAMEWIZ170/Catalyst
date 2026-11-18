@@ -3,9 +3,7 @@ import { Link, useLocation, useParams } from "react-router-dom";
 import { api } from "../../api/client";
 import AdminLayout from "../../components/admin/AdminLayout";
 import StatusMessage from "../../components/admin/StatusMessage";
-import { Badge, Button } from "../../components/ui";
-import { FileInput } from "@astryxdesign/core/FileInput";
-import AstryxTheme from "../../components/astryx/AstryxTheme";
+import { Badge, Button, FileDrop } from "../../components/ui";
 import { TYPE_LABELS } from "../../components/admin/QuestionTypeFields";
 
 const MAX_BYTES = 1024 * 1024;
@@ -114,7 +112,7 @@ export default function AdminQuestionImport() {
     </section>
     <section className="admin-editor-section import-step">
       <h2>2. Choose your file and check it</h2>
-      <AstryxTheme><FileInput label="CSV file" isLabelHidden mode="dropzone" accept=".csv,text/csv" maxSize={MAX_BYTES} value={picked} onChange={(next) => choose(Array.isArray(next) ? next[0] : next)} placeholder="Drop a CSV file here, or click to choose one (up to 1 MB)" /></AstryxTheme>
+      <FileDrop label="CSV file" hint="Drop a CSV file here, or click to choose one (up to 1 MB)" accept=".csv,text/csv" maxSize={MAX_BYTES} value={picked} onChange={(next) => choose(next)} onError={(message) => { if (message) setError(message); }} />
       <div><Button disabled={!file} loading={busy === "check"} onClick={check}>Check the file</Button></div>
     </section>
     <StatusMessage message={error || done} error={Boolean(error)} />
