@@ -135,17 +135,17 @@ export default function Flashcards({ setMode = false }) {
 
   if (error && !cards.length) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
   if (!cards.length && !nothingToReview && !loaded) return <Loading />;
-  if (!cards.length && !nothingToReview) return <div className="content fc-page"><EmptyState as="h1" icon={Layers} title="No flashcards yet" description={setMode ? "Add cards to this set first." : "This lesson has no flashcards."} action={<Button as={Link} to={home} state={lessonState}>{homeLabel}</Button>} /></div>;
-  const back = <Link className="back-link" to={home} state={lessonState}><ArrowLeft size={16} aria-hidden="true" />{homeLabel}</Link>;
-  if (nothingToReview) return <div className="content fc-page">{back}<EmptyState as="h1" icon={Layers} title="No cards to review" description="You have rated every card as confident." action={<Button as={Link} to={home} state={lessonState}>{homeLabel}</Button>} /></div>;
+  if (!cards.length && !nothingToReview) return <div className="content mx-auto grid max-w-2xl gap-5"><EmptyState as="h1" icon={Layers} title="No flashcards yet" description={setMode ? "Add cards to this set first." : "This lesson has no flashcards."} action={<Button as={Link} to={home} state={lessonState}>{homeLabel}</Button>} /></div>;
+  const back = <div><Button as={Link} to={home} state={lessonState} variant="tertiary" size="sm" icon={ArrowLeft}>{homeLabel}</Button></div>;
+  if (nothingToReview) return <div className="content mx-auto grid max-w-2xl gap-5">{back}<EmptyState as="h1" icon={Layers} title="No cards to review" description="You have rated every card as confident." action={<Button as={Link} to={home} state={lessonState}>{homeLabel}</Button>} /></div>;
   if (finished) {
     const toRevisit = summary.total - summary.confident;
-    return <div className="content fc-page">
-      <section className="fc-finished">
-        <h1>Deck finished</h1>
-        <p className="fc-finished-line">Confident on {summary.confident} of {summary.total}{toRevisit > 0 ? `, ${toRevisit} to revisit` : ""}</p>
+    return <div className="content mx-auto grid max-w-2xl gap-5">
+      <section className="grid justify-items-center gap-3 text-center">
+        <h1 className="m-0 text-3xl leading-tight font-bold">Deck finished</h1>
+        <p className="m-0 text-lg">Confident on {summary.confident} of {summary.total}{toRevisit > 0 ? `, ${toRevisit} to revisit` : ""}</p>
         <DeckSummary summary={summary} />
-        <div className="button-row button-row--stack">
+        <div className="flex flex-wrap justify-center gap-2">
           {toRevisit > 0 && <Button as={Link} to={reviewPath} state={location.state}>Review cards I'm not sure about</Button>}
           <Button as={Link} variant={toRevisit > 0 ? "secondary" : "primary"} to={home} state={lessonState}>{homeLabel}</Button>
         </div>

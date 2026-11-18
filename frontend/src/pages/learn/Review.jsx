@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Check, CircleHelp, Layers, RotateCcw } from "lucide-react";
-import RichText from "../../components/shared/RichText";
-import ResponsiveImage from "../../components/shared/ResponsiveImage";
-import { Button, EmptyState } from "../../components/ui";
+import { ArrowLeft, Layers } from "lucide-react";
+import FlashCard from "../../components/learn/FlashCard";
+import RatingTiles, { RATINGS } from "../../components/learn/RatingTiles";
+import { Button, EmptyState, ProgressDots } from "../../components/ui";
 import { api } from "../../api/client";
 import { ErrorState, Loading } from "./Courses";
 
-const RATINGS = [["unknown", "Don't know", RotateCcw], ["unsure", "Unsure", CircleHelp], ["confident", "Confident", Check]];
 const plural = (count, word) => `${count} ${word}${count === 1 ? "" : "s"}`;
 
 // Today's review: the flashcards that are due, then the mistakes that are due.
@@ -51,10 +50,10 @@ export default function Review() {
   live.current = { rate, shown };
   useEffect(() => {
     function onKey(event) {
-      if (event.ctrlKey || event.metaKey || event.altKey || event.target.closest?.("input, textarea, select, button, a")) return;
-      if (event.key === " ") { event.preventDefault(); setShown((value) => !value); return; }
+      if (event.ctrlKey || event.metaKey || event.altKey || event.target.closest?.("input, textarea, select, [role=menu], [role=dialog]")) return;
+      if (event.key === " ") { if (event.target.closest?.("button, a")) return; event.preventDefault(); setShown((value) => !value); return; }
       const index = Number(event.key) - 1;
-      if (live.current.shown && index >= 0 && index < RATINGS.length) live.current.rate(RATINGS[index][0]);
+      if (live.current.shown && index >= 0 && index < RATINGS.length) live.current.rate(RATINGS[index].value);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -62,44 +61,36 @@ export default function Review() {
 
   if (error && !cards) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
   if (!cards) return <Loading />;
-  const back = <Link className="back-link" to="/home"><ArrowLeft size={16} aria-hidden="true" />Back to home</Link>;
+  const back = <div><Button as={Link} to="/home" variant="tertiary" size="sm" icon={ArrowLeft}>Back to home</Button></div>;
 
-  if (!card) return <div className="content fc-page">
+  if (!card) return <div className="content mx-auto grid max-w-2xl gap-5">
     {back}
     {position === 0 && mistakes === 0
       ? <EmptyState as="h1" icon={Layers} title="Nothing due today" description="Cards and mistakes come back here when it is time to review them." action={<Button as={Link} variant="secondary" to="/home">Back to home</Button>} />
-      : <section className="fc-finished">
-        <h1>{position > 0 ? "Cards done" : "No cards due"}</h1>
-        {position > 0 && <p className="fc-finished-line">You reviewed {plural(position, "card")}.</p>}
-        {mistakes > 0 && <p className="muted">{plural(mistakes, "mistake")} due.</p>}
-        <div className="button-row button-row--stack">
+      : <section className="grid justify-items-center gap-3 text-center">
+        <h1 className="m-0 text-3xl leading-tight font-bold">{position > 0 ? "Cards done" : "No cards due"}</h1>
+        {position > 0 && <p className="m-0 text-lg">You reviewed {plural(position, "card")}.</p>}
+        {mistakes > 0 && <p className="m-0 text-muted-foreground">{plural(mistakes, "mistake")} due.</p>}
+        <div className="flex flex-wrap justify-center gap-2">
           {mistakes > 0 && <Button as={Link} to="/practice/mistakes?due=1" state={{ from: "/review" }}>Practise due mistakes</Button>}
           <Button as={Link} variant="secondary" to="/home">Back to home</Button>
         </div>
       </section>}
   </div>;
 
-  return <div className="content fc-page">
+  return <div className="content mx-auto grid max-w-2xl gap-5">
     {back}
-    <div className="fc-top">
-      <div className="exam-progress" role="progressbar" aria-label="Review progress" aria-valuemin="0" aria-valuemax={cards.length} aria-valuenow={position + 1} style={{ "--progress": `${((position + 1) / cards.length) * 100}%` }} />
-      <p className="exam-count" aria-live="polite">{position + 1} / {cards.length}</p>
+    <div className="flex items-center gap-3 rounded-pill border border-border bg-card px-4 py-1">
+      <span className="rounded-pill bg-muted px-3 py-1 text-sm font-semibold">Review</span>
+      <ProgressDots className="min-w-0 flex-1 justify-center overflow-hidden" total={cards.length} current={position} max={7} />
+      <p className="m-0 shrink-0 text-sm text-muted-foreground tabular-nums" aria-live="polite">{position + 1} / {cards.length}</p>
     </div>
-    <article className="fc-card">
+    <article className="grid gap-4">
       <h1 className="sr-only" tabIndex="-1" ref={heading}>Review card {position + 1} of {cards.length}</h1>
-      <button key={`${card._id}-${position}`} className={`flashcard-flip ${shown ? "is-flipped" : ""}`} type="button" aria-pressed={shown} onClick={() => setShown((value) => !value)}>
-        <span className="flashcard-face flashcard-face--front" aria-hidden={shown}><span className="flashcard-face-label">Question</span><RichText>{card.front.text}</RichText>{card.front.image?.url && <ResponsiveImage image={card.front.image} sizes="(max-width: 600px) 80vw, 400px" />}</span>
-        <span className="flashcard-face flashcard-face--back" aria-hidden={!shown}><span className="flashcard-face-label">Answer</span><RichText>{card.back.text}</RichText>{card.back.image?.url && <ResponsiveImage image={card.back.image} sizes="(max-width: 600px) 80vw, 400px" />}</span>
-      </button>
-      {!shown
-        ? <p className="fc-hint">Tap the card or press Space to reveal</p>
-        : <>
-          <div className="fc-ratings" role="group" aria-label="How well did you know it?">
-            {RATINGS.map(([value, label, Icon], key) => <Button variant="secondary" key={value} disabled={saving} icon={Icon} onClick={() => rate(value)}><span className="exam-key" aria-hidden="true">{key + 1}</span>{label}</Button>)}
-          </div>
-          <p className="fc-hint" aria-live="polite">{saving ? "Saving your answer..." : "Keys 1, 2 and 3. A card you know comes back later."}</p>
-        </>}
-      {error && <p className="form-error" role="alert">{error}</p>}
+      <FlashCard key={`${card._id}-${position}`} card={card} shown={shown} onToggle={() => setShown((value) => !value)} />
+      <RatingTiles enabled={shown} saving={saving} onRate={rate} />
+      <p className="m-0 text-center text-sm text-muted-foreground" aria-live="polite">{saving ? "Saving your answer..." : shown ? "Keys 1, 2 and 3. A card you know comes back later." : "Tap the card or press Space to reveal"}</p>
+      {error && <p className="m-0 text-destructive" role="alert">{error}</p>}
     </article>
   </div>;
 }
