@@ -1,37 +1,46 @@
-import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
-import { CheckCircle2, Info, TriangleAlert, XCircle, X } from "lucide-react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { Toaster, toast as sonner } from "sonner";
 
 const ToastContext = createContext(null);
-const ICONS = { success: CheckCircle2, info: Info, warning: TriangleAlert, error: XCircle };
+const KIND = { success: sonner.success, info: sonner.info, warning: sonner.warning, error: sonner.error };
+
+// Sonner knows nothing about our data-theme attribute, so follow it here.
+function useAppTheme() {
+  const [theme, setTheme] = useState(() => (document.documentElement.dataset.theme === "dark" ? "dark" : "light"));
+  useEffect(() => {
+    const watcher = new MutationObserver(() => setTheme(document.documentElement.dataset.theme === "dark" ? "dark" : "light"));
+    watcher.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => watcher.disconnect();
+  }, []);
+  return theme;
+}
 
 // useToast().toast({ tone: "success", message: "Saved" }). Messages leave after 6 s or when closed.
+// Pass action: { label: "Undo", onClick } for an undo button (the destructive-action rule).
 export function ToastProvider({ children }) {
-  const [items, setItems] = useState([]);
-  const nextId = useRef(1);
-
-  const dismiss = useCallback((id) => setItems((list) => list.filter((item) => item.id !== id)), []);
-  const toast = useCallback(({ tone = "info", message }) => {
-    const id = nextId.current++;
-    setItems((list) => [...list, { id, tone, message }]);
-    window.setTimeout(() => dismiss(id), 6000);
-  }, [dismiss]);
+  const theme = useAppTheme();
+  const toast = useCallback(({ tone = "info", message, action }) => {
+    (KIND[tone] || sonner)(message, { duration: 6000, action });
+  }, []);
   const value = useMemo(() => ({ toast }), [toast]);
 
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="ui-toasts" role="status" aria-live="polite">
-        {items.map((item) => {
-          const Icon = ICONS[item.tone] || Info;
-          return (
-            <div key={item.id} className={`ui-toast ui-toast--${item.tone}`}>
-              <Icon size={20} aria-hidden="true" />
-              <p>{item.message}</p>
-              <button type="button" className="ui-toast-close" aria-label="Dismiss message" onClick={() => dismiss(item.id)}><X size={16} aria-hidden="true" /></button>
-            </div>
-          );
-        })}
-      </div>
+      <Toaster
+        theme={theme}
+        position="bottom-center"
+        closeButton
+        offset={{ bottom: 24 }}
+        mobileOffset={{ bottom: 88 }}
+        toastOptions={{
+          classNames: {
+            toast: "!rounded-lg !border !border-border !bg-popover !font-sans !text-sm !text-popover-foreground !shadow-lg",
+            actionButton: "!rounded-pill !bg-primary !font-semibold !text-primary-foreground",
+            closeButton: "!border-border !bg-popover !text-popover-foreground"
+          }
+        }}
+      />
     </ToastContext.Provider>
   );
 }

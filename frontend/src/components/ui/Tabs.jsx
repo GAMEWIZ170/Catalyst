@@ -1,45 +1,32 @@
-import { useId, useRef } from "react";
+import { useId } from "react";
+import * as TabsPrimitive from "@radix-ui/react-tabs";
+import { motion } from "motion/react";
 
-// Accessible tabs. Left and Right arrows, Home and End move between tabs (roving tabindex).
-// tabs: [{ id, label, panel }]. Controlled: value + onChange.
+// Tabs (Radix: arrow keys, Home and End, roving focus). The active underline slides between tabs.
+// tabs: [{ id, label, panel }]. Controlled: value + onChange. The row scrolls sideways instead of wrapping.
 export default function Tabs({ tabs, value, onChange, label }) {
-  const base = useId();
-  const refs = useRef({});
-
-  function onKeyDown(event, index) {
-    const last = tabs.length - 1;
-    const keys = { ArrowRight: index === last ? 0 : index + 1, ArrowLeft: index === 0 ? last : index - 1, Home: 0, End: last };
-    if (!(event.key in keys)) return;
-    event.preventDefault();
-    const next = tabs[keys[event.key]];
-    onChange(next.id);
-    refs.current[next.id]?.focus();
-  }
-
+  const group = useId();
   return (
-    <div className="ui-tabs">
-      <div className="ui-tablist" role="tablist" aria-label={label}>
-        {tabs.map((tab, index) => (
-          <button
+    <TabsPrimitive.Root value={value} onValueChange={onChange}>
+      <TabsPrimitive.List aria-label={label} className="flex gap-1 overflow-x-auto border-b border-border [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {tabs.map((tab) => (
+          <TabsPrimitive.Trigger
             key={tab.id}
-            ref={(node) => { refs.current[tab.id] = node; }}
-            role="tab"
-            type="button"
-            id={`${base}-tab-${tab.id}`}
-            aria-selected={value === tab.id}
-            aria-controls={`${base}-panel-${tab.id}`}
-            tabIndex={value === tab.id ? 0 : -1}
-            className="ui-tab"
-            onClick={() => onChange(tab.id)}
-            onKeyDown={(event) => onKeyDown(event, index)}
-          >{tab.label}</button>
+            value={tab.id}
+            className="relative min-h-11 shrink-0 cursor-pointer border-0 bg-transparent px-4 font-sans text-sm font-semibold whitespace-nowrap text-muted-foreground transition-colors duration-150 hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring data-[state=active]:text-foreground"
+          >
+            {tab.label}
+            {value === tab.id ? (
+              <motion.span layoutId={`${group}-underline`} className="absolute inset-x-3 -bottom-px h-0.5 rounded-pill bg-primary" transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }} />
+            ) : null}
+          </TabsPrimitive.Trigger>
         ))}
-      </div>
+      </TabsPrimitive.List>
       {tabs.map((tab) => (
-        <div key={tab.id} role="tabpanel" id={`${base}-panel-${tab.id}`} aria-labelledby={`${base}-tab-${tab.id}`} hidden={value !== tab.id} className="ui-tabpanel" tabIndex={0}>
-          {value === tab.id ? tab.panel : null}
-        </div>
+        <TabsPrimitive.Content key={tab.id} value={tab.id} className="pt-4 focus-visible:outline-2 focus-visible:outline-ring">
+          {tab.panel}
+        </TabsPrimitive.Content>
       ))}
-    </div>
+    </TabsPrimitive.Root>
   );
 }

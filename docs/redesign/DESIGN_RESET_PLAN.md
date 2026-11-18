@@ -4,7 +4,7 @@
 The owner added StudyFetch reference shots in `docs/expansion/references/`. The old UI was built by Copilot: plain CSS (top-level styles 1.5k lines + `styles/global/` 4.1k lines) plus Astryx loaded as prebuilt CSS. There is no StyleX Vite plugin. The owner allows tearing the old UI down. The owner also passed on Gemini's AI-feature ideas and asked for: the plan saved in the repo, research on the project and UI, the ui-ux-pro-max skill, and full use of the design and animation skills. The decisions below come from two quiz rounds (2026-11-18) and four research tracks.
 
 ## Owner decisions, 18 November 2026 (second round)
-- **Fonts:** Fraunces (variable serif, Google Fonts, OFL) for display headings and flashcard faces. Atkinson Hyperlegible Next stays for UI and body.
+- **Fonts:** Atkinson Hyperlegible Next only. Fraunces was chosen first, then dropped on 18 November 2026 after the owner saw it in the shell.
 - **Brand colour:** a gold brand accent, starting value `oklch(0.80 0.16 80)` with near-black text on it. The neutrals are warm, and only light and dark modes remain.
   - **Why gold:** it does not clash with the three rating tiles (rust red, purple, green), it nods to Ghana, and it stands out from StudyFetch's lime and Quizlet's blue.
   - **Contrast:** check AA on both modes in phase 1. Text on gold must be dark.
@@ -35,7 +35,7 @@ The owner added StudyFetch reference shots in `docs/expansion/references/`. The 
 | Shell | StudyFetch layout: slim left rail, breadcrumb top bar (timer chip, share), right tutor panel docked at ≥1024 px that collapses to a button. Phones get bottom tabs and a slide-up tutor sheet. |
 | Colour | Calm neutral base with bold solid accents on ratings, set covers, mastery and the heatmap. |
 | Palettes | One brand palette, light and dark. Remove `data-palette`, `applyPalette` in `utils/appearance.js`, and the Settings swatches. Students can pick a small accent (timer colour). |
-| Type | Fraunces for display headings and card faces. Atkinson for UI and body. |
+| Type | Atkinson Hyperlegible Next only, heavier weights for headings and card faces. |
 | Shape/motion | Pill buttons, 16–24 px radii, Motion (`motion/react`) with `MotionConfig reducedMotion="user"`. CSS transitions for hover and press. |
 | Flashcards | Top tracker strip (mode chip, card dots, shuffle, ⋯, pager). Thumbs up/down and bookmark. Prev / SPACE Flip / Next keycap pills. **3 colourful rating tiles** (keys 1–3, fixed positions), each showing its next review time. Thumbs down = "report / fix card". |
 | Quiz | Immediate feedback with an "Explain more" button that opens the tutor on that question. Small "Finish test" pill under the feedback, not a full-width bar. |
@@ -68,10 +68,10 @@ direction (impeccable leads, frontend-design for the look) → palette and font 
 
 ## Phases (one per session)
 0. Step 0 above (done).
-1. **Design docs (done 18 November 2026):** rewrite `PRODUCT.md` and `DESIGN.md` with impeccable plus the ui-ux-pro-max lookup, using Fraunces, Atkinson and the gold brand. Update CLAUDE.md (stack, themes, Astryx lines, Gemini model, free-tier rule) and `frontend/README.md`.
+1. **Design docs (done 18 November 2026):** rewrite `PRODUCT.md` and `DESIGN.md` with impeccable plus the ui-ux-pro-max lookup, using Atkinson and the gold brand. Update CLAUDE.md (stack, themes, Astryx lines, Gemini model, free-tier rule) and `frontend/README.md`.
 2. **Foundation (done 18 November 2026):** Tailwind + shadcn install, tokens file, legacy layer, fonts, Motion. Build passes, and old screens look unchanged.
-3. **Shell:** new `components/layout/AppShell.jsx`. Remove XP (`LevelUpDialog`, `useXp`) and palette UI. Hidden routes stay unmounted from the nav. Tutor dock reuses `components/lab/CompanionDrawer.jsx` and `components/learn/Companion.jsx`.
-4. **Core components:** shadcn Button, Dialog, Popover, DropdownMenu, Tabs, Toast/Sonner, Tooltip, plus our own Segmented, Stepper, Keycap and ProgressDots. Swap the internals of `components/ui/*` (Button, Field, Dialog, Tabs, Toast…) behind the same props so pages keep working.
+3. **Shell (done 18 November 2026):** new `components/layout/AppShell.jsx`. Remove XP (`LevelUpDialog`, `useXp`) and palette UI. Hidden routes stay unmounted from the nav. Tutor dock reuses `components/lab/CompanionDrawer.jsx` and `components/learn/Companion.jsx`.
+4. **Core components (done 18 November 2026):** shadcn Button, Dialog, Popover, DropdownMenu, Tabs, Toast/Sonner, Tooltip, plus our own Segmented, Stepper, Keycap and ProgressDots. Swap the internals of `components/ui/*` (Button, Field, Dialog, Tabs, Toast…) behind the same props so pages keep working.
 5. **Screens, in order:** flashcards (`pages/learn/Flashcards.jsx`) → quiz (`pages/lab/LabQuiz.jsx`, `pages/learn/Test.jsx`) → Library (`pages/lab/Lab.jsx`) → set outline and lesson (`pages/lab/LabSet.jsx`) → Home (`pages/learn/Courses.jsx`) → Me and Progress (`pages/learn/Progress.jsx`, heatmap) → build flow (`components/lab/NewSetDialog.jsx`) → editors → settings → auth. Each port deletes that screen's old CSS file in `styles/global/`.
 6. **Cleanup:** remove `@astryxdesign/*`, `@stylexjs/stylex` and `components/astryx/`, delete the legacy layer, turn on Preflight, run `graphify update .`.
 7. **Achievements:**

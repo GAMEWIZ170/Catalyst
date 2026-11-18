@@ -4,9 +4,9 @@ The Catalyst frontend is a React application powered by Vite. It provides the st
 
 ## Design reset (in progress)
 
-The UI is being rebuilt screen by screen (plan: `docs/redesign/DESIGN_RESET_PLAN.md`). `DESIGN.md` in the repo root is the source of truth for the new look: one gold brand palette in light and dark, Fraunces for headings and flashcard faces, Atkinson Hyperlegible Next for everything else, Tailwind v4 and shadcn/ui, and Motion for animation.
+The UI is being rebuilt screen by screen (plan: `docs/redesign/DESIGN_RESET_PLAN.md`). `DESIGN.md` in the repo root is the source of truth for the new look: one gold brand palette in light and dark, Atkinson Hyperlegible Next as the only font, Tailwind v4 and shadcn/ui, and Motion for animation.
 
-Until a screen is ported, it keeps the old system described below (plain CSS layers, Astryx, the five palettes). Phase 2 (done) added Tailwind v4, shadcn config (`components.json`, `@/` alias), Motion, Fraunces, and moved the old CSS into `@layer legacy`. `src/styles/app.css` is the only stylesheet entry: layer order is Astryx, Tailwind theme, legacy, new tokens, utilities. New tokens are in `src/styles/tokens.new.css`; four names carry a `-ui` suffix (`--muted-ui`, `--success-ui`, `--warning-ui`, `--info-ui`, `--accent-ui`) because the old `tokens.css` uses the plain names. Preflight is off until phase 6. New styles go in utilities, never in the legacy files. Phase 6 removes Astryx, the palettes and the legacy layer. Notes below that mention palettes or Astryx describe the old system and are removed as each part goes.
+Until a screen is ported, it keeps the old system described below (plain CSS layers, Astryx, the five palettes). Phase 2 (done) added Tailwind v4, shadcn config (`components.json`, `@/` alias), Motion, and moved the old CSS into `@layer legacy`. `src/styles/app.css` is the only stylesheet entry: layer order is Astryx, Tailwind theme, legacy, new tokens, utilities. New tokens are in `src/styles/tokens.new.css`; four names carry a `-ui` suffix (`--muted-ui`, `--success-ui`, `--warning-ui`, `--info-ui`, `--accent-ui`) because the old `tokens.css` uses the plain names. Preflight is off until phase 6. New styles go in utilities, never in the legacy files. Phase 6 removes Astryx, the palettes and the legacy layer. Notes below that mention palettes or Astryx describe the old system and are removed as each part goes.
 
 ## Requirements
 
@@ -230,6 +230,12 @@ frontend/
 ## Design system
 
 The look is described in `DESIGN.md` at the repository root. Shared components live in `src/components/ui/` and use `lucide-react` for icons. While the dev server runs, `/dev/components` shows every component in every state (it is not in the production build). Five palettes (`data-palette`: lagoon, indigo, ember, orchid, graphite) and two themes (`data-theme`: light, dark) are chosen in Settings and saved in the browser (`catalyst-palette`, `catalyst-theme`). Colours come only from tokens in `tokens.css`; never write a colour value in a component. Palettes change only the accent; neutrals and status colours are shared. Text must reach WCAG 2.1 AA contrast in all ten palette and theme combinations: run `node scripts/contrast.mjs` in `frontend/` after any change to `tokens.css`. Chemical formulas use KaTeX with mhchem, loaded only when a lesson contains one.
+
+Phase 3 (done) replaced `components/layout/AppShell.jsx` with the new shell: a slim left rail (bottom tabs below 768 px), a breadcrumb top bar with the timer chip, and a tutor panel. A page opts in with `useTutorTarget("set", id)` from `context/TutorContext.jsx`; the panel docks on the right at 1024 px and up and is a bottom sheet below that. XP and level UI is gone from the shell and Me, and the palette pickers are gone from the gear panel and Settings. The old shell CSS (`.topbar`, `.sidebar`, `.tabbar`) is now unused and is removed in phase 6.
+
+## Core components (design reset phase 4)
+
+`components/ui` now sits on Radix primitives and Tailwind tokens. Button, Dialog, Tabs and Toast keep their old props, so pages did not change. New: `Popover`, `DropdownMenu` (the "..." menu), `Tooltip`, `Segmented`, `Stepper`, `Keycap` / `KeycapButton` and `ProgressDots`. All come from `components/ui` (index). Toasts use Sonner behind the same `useToast()`; pass `action: { label: "Undo", onClick }` for undo. Screens that import Astryx directly keep it until they are ported (phase 5). Old `.ui-dialog`, `.ui-tab*` and `.ui-toast*` CSS is now unused and goes in phase 6.
 
 ## Authentication behavior
 

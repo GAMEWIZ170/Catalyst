@@ -20,10 +20,11 @@ Structure: course > unit > lesson. Tests can belong to a lesson, a unit or a cou
 
 - Backend: Node 24, Express 5, MongoDB with Mongoose 9, Joi (via the `validateWith` helper), bcrypt, jsonwebtoken (httpOnly cookie named `token`), cookie-parser, cors, helmet, express-rate-limit, multer (memory storage), cloudinary, ms. All CommonJS.
 - Frontend: React and Vite, react-router data router (`createBrowserRouter`, `useBlocker`), KaTeX plus mhchem loaded lazily (`RichText`), `Avatar.jsx` for profile pictures.
-- Design reset in progress (`docs/redesign/DESIGN_RESET_PLAN.md`, one phase per session). `DESIGN.md` is the source of truth for the new look. New UI: Tailwind v4 (`@tailwindcss/vite`) and shadcn/ui in JavaScript, Motion (`motion/react`) inside `MotionConfig reducedMotion="user"`, Fraunces for display headings and flashcard faces, Atkinson Hyperlegible Next for everything else.
+- Design reset in progress (`docs/redesign/DESIGN_RESET_PLAN.md`, one phase per session). `DESIGN.md` is the source of truth for the new look. New UI: Tailwind v4 (`@tailwindcss/vite`) and shadcn/ui in JavaScript, Motion (`motion/react`) inside `MotionConfig reducedMotion="user"`, Atkinson Hyperlegible Next as the only font (the original font; Fraunces was tried and dropped on 18 November 2026).
 - AI: Gemini (`backend/src/config/ai.js`). Free tiers only until production; never add a paid model or billing before students pay. Free-tier inputs may be used by Google, so the privacy page and the upload screen must say so. Keep the per-student and platform daily caps.
 - Themes: one gold brand palette with `data-theme` (light, dark), storage key `catalyst-theme`. Text on gold is always dark. No colour literals outside the tokens file and `Avatar.jsx`. Old screens still use `data-palette` (five palettes, key `catalyst-palette`) until ported; phase 6 removes it.
-- UI library: shadcn/ui for new and ported screens. Astryx (through `AstryxTheme` in `main.jsx`) and the plain CSS layers stay only on screens not yet ported; there, keep using `components/ui/Button.jsx` and `SelectField`. Do not build new UI on Astryx. Phase 6 removes it.
+
+- UI library: shadcn/ui for new and ported screens. Astryx (through `AstryxTheme` in `main.jsx`) and the plain CSS layers stay only on screens not yet ported; there, keep using `components/ui/Button.jsx` and `SelectField`. Do not build new UI on Astryx. Phase 6 removes it.
 
 ## Layout and naming
 
@@ -113,8 +114,8 @@ Study Hall is cut. Do not rebuild it. Use shadcn/ui components wherever shadcn h
 - Backend v2 done and pushed: tests, questions, flashcards, materials, uploads, avatars, admin course tree (`GET /admin/courses/:id`) and reorder routes.
 - Frontend done and pushed on `feature/frontend-v2`: palettes, top bar and profile menu, settings, admin course list, course editor, lesson editor, test editor, rich text and formulas, student course list, outline, lesson hub, test flow, flashcard study flow, progress page.
 - Not yet verified on a real backend: student screens, flashcard flow, progress page, the latest visual fixes, the lesson editor load time, image upload, and the full responsive matrix.
-- Current work: study-companion pivot and design reset on `feature/study-companion`, following `docs/redesign/DESIGN_RESET_PLAN.md`. One phase per session. Phases 1 (docs) and 2 (foundation) done 18 November 2026.
-- Next: phase 3 (shell), then the later phases, then the unverified checks above, then merge into `main` when the owner says so.
+- Current work: study-companion pivot and design reset on `feature/study-companion`, following `docs/redesign/DESIGN_RESET_PLAN.md`. One phase per session. Phases 1 (docs), 2 (foundation), 3 (shell) and 4 (core components) done 18 November 2026.
+- Next: phase 5 (screens, flashcards first), then the later phases, then the unverified checks above, then merge into `main` when the owner says so.
 
 ## Roadmap (owner may do some himself)
 
