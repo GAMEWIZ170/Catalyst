@@ -36,7 +36,7 @@ Free alternatives (YouTube, WhatsApp study groups, past-question PDFs) give stud
 
 ## Capabilities and Constraints
 
-- Frontend: React and Vite. Moving from plain CSS and Astryx to Tailwind v4 and shadcn/ui, screen by screen (see `docs/redesign/DESIGN_RESET_PLAN.md`). One brand palette, light and dark.
+- Frontend: React and Vite. Moving from plain CSS to Tailwind v4 and shadcn/ui, screen by screen (see `docs/redesign/DESIGN_RESET_PLAN.md`). One brand palette, light and dark.
 - AI: Gemini, free tier only until production. No paid model until students pay. Google may use free-tier inputs to improve its products; the privacy page and the upload screen must say so plainly, and beta testers must agree to it.
 - Every student has a daily AI cap, and the platform has one too. AI cost is logged per student.
 - Grading is server-side only. Students never see the correct answer or explanation before they answer.

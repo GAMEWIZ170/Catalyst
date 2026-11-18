@@ -6,7 +6,6 @@ import App from "./App";
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./components/ui";
 import { TimerProvider } from "./context/TimerContext";
-import AstryxTheme from "./components/astryx/AstryxTheme";
 import "./styles/app.css";
 import { registerServiceWorker } from "./utils/offline";
 
@@ -15,7 +14,7 @@ registerServiceWorker();
 const router = createBrowserRouter([
   {
     path: "*",
-    element: <AstryxTheme><AuthProvider><TimerProvider><ToastProvider><App /></ToastProvider></TimerProvider></AuthProvider></AstryxTheme>
+    element: <AuthProvider><TimerProvider><ToastProvider><App /></ToastProvider></TimerProvider></AuthProvider>
   }
 ]);
 

@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 
 // Click-to-edit text (rule 2: no Save button). Enter or leaving the field saves, Esc cancels.
 // `heading` draws it as the page title (an h1) with a pencil button. `startEditing` opens it in edit mode (a new item).
-// Same props as the Astryx ClickToEdit, so screens can switch one at a time.
 export default function EditableTitle({ value, onSave, label, placeholder, heading = false, startEditing = false, allowEmpty = false, className }) {
   const [editing, setEditing] = useState(startEditing);
   const [draft, setDraft] = useState(value);

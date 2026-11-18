@@ -3,8 +3,7 @@ import { AlertCircle, CheckCircle2, Info, MoreHorizontal, Search, Users, X } fro
 import { api } from "../../api/client";
 import { useAuth } from "../../context/AuthContext";
 import AdminLayout from "../../components/admin/AdminLayout";
-import ConfirmAstryx from "../../components/astryx/ConfirmAstryx";
-import { Badge, Button, Dialog, DropdownMenu, EmptyState } from "../../components/ui";
+import { Badge, Button, Confirm, Dialog, DropdownMenu, EmptyState } from "../../components/ui";
 import { formatDate } from "../../utils/dates";
 import { Loading } from "../learn/Courses";
 
@@ -142,7 +141,7 @@ export default function AdminUsers() {
       </div>}
     </div>
 
-    <ConfirmAstryx open={Boolean(confirm)} title={confirm?.title} description={confirm?.description} confirmLabel={confirm?.confirmLabel} tone={confirm?.tone}
+    <Confirm open={Boolean(confirm)} title={confirm?.title} description={confirm?.description} confirmLabel={confirm?.confirmLabel} tone={confirm?.tone}
       onCancel={() => setConfirm(null)} onConfirm={() => { const { target, body, success } = confirm; setConfirm(null); update(target, body, success); }} />
 
     <Dialog open={Boolean(dateTarget)} onClose={() => setDateTarget(null)} title="Set end date"

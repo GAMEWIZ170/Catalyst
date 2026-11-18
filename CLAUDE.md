@@ -24,7 +24,7 @@ Structure: course > unit > lesson. Tests can belong to a lesson, a unit or a cou
 - AI: Gemini (`backend/src/config/ai.js`). Free tiers only until production; never add a paid model or billing before students pay. Free-tier inputs may be used by Google, so the privacy page and the upload screen must say so. Keep the per-student and platform daily caps.
 - Themes: one gold brand palette with `data-theme` (light, dark), storage key `catalyst-theme`. Text on gold is always dark. No colour literals outside the tokens file and `Avatar.jsx`. Old screens still use `data-palette` (five palettes, key `catalyst-palette`) until ported; phase 6 removes it.
 
-- UI library: shadcn/ui for new and ported screens. Astryx (through `AstryxTheme` in `main.jsx`) and the plain CSS layers stay only on screens not yet ported; there, keep using `components/ui/Button.jsx` and `SelectField`. Do not build new UI on Astryx. Phase 6 removes it.
+- UI library: `components/ui` (Radix, Sonner, Motion, Tailwind tokens) and shadcn/ui. Astryx and StyleX were removed (18 November 2026). The old plain CSS layers (`@layer legacy`) still style screens that use old class names (auth pages, admin editors, community pages, lesson hub, some panels) until each is moved to Tailwind; do not add new rules there.
 
 ## Layout and naming
 
