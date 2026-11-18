@@ -245,6 +245,10 @@ Phase 3 (done) replaced `components/layout/AppShell.jsx` with the new shell: a s
 
 The question screen of `pages/learn/Test.jsx` uses `components/learn/QuizOption.jsx` (tick or cross plus words, wrong = warning colour), `ProgressDots`, and a feedback panel under the options. The main button is a normal pill; on the last question it reads "Finish test". Intro, results, timed exam (`Exam.jsx`), the other answer types (`QuestionInputs.jsx`) and the editor `LabQuiz.jsx` are still old. Not built: "Explain more" (the AI tutor only knows set and lesson contexts, and the tutor panel is hidden on test screens).
 
+## Library (design reset phase 5, third screen)
+
+`pages/lab/Lab.jsx` is plain Tailwind plus `components/ui` (Tabs, Button, EmptyState, Badge). Set covers are one solid token colour picked from the title (`rate-again`, `rate-hard`, `rate-good`, `info`), so a set keeps its colour. Processing and issue sets stay as small cards. `NewSetDialog` is still Astryx and keeps its `AstryxTheme` wrapper until the build-flow screen is ported. Not built: progress rings on covers, because the list API has no progress number per set.
+
 ## Authentication behavior
 
 The frontend does not store JWTs in local storage. Login and registration receive an HTTP-only `token` cookie from the backend, and API requests include credentials automatically. On startup, `AuthContext` calls `/auth/me` to restore the current session.

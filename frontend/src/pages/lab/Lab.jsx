@@ -1,20 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { CheckCircle2, FlaskConical, Plus, Users } from "lucide-react";
-import { Badge } from "@astryxdesign/core/Badge";
-import { Button } from "@astryxdesign/core/Button";
-import { Card } from "@astryxdesign/core/Card";
-import { ClickableCard } from "@astryxdesign/core/ClickableCard";
-import { EmptyState } from "@astryxdesign/core/EmptyState";
-import { Grid } from "@astryxdesign/core/Grid";
-import { Heading } from "@astryxdesign/core/Heading";
-import { Spinner } from "@astryxdesign/core/Spinner";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Tab, TabList } from "@astryxdesign/core/TabList";
-import { Text } from "@astryxdesign/core/Text";
-import { TextInput } from "@astryxdesign/core/TextInput";
+import { Link } from "react-router-dom";
+import { CheckCircle2, FlaskConical, Loader2, Plus, Search, Users, X } from "lucide-react";
 import { api } from "../../api/client";
 import AstryxTheme from "../../components/astryx/AstryxTheme";
 import NewSetDialog from "../../components/lab/NewSetDialog";
+import { Badge, Button, EmptyState, Tabs } from "../../components/ui";
 import { ErrorState, Loading } from "../learn/Courses";
 import { t } from "../../i18n";
 
@@ -42,7 +32,6 @@ const EMPTY_TAB = {
 };
 
 // The Study Lab: a student's own study sets. A set is made by dropping in notes or a PDF; the AI builds drafts to review.
-// Built with Astryx (UI library trial, branch feature/astryx-trial).
 export default function Lab() {
   const [sets, setSets] = useState(null);
   const [query, setQuery] = useState("");
@@ -76,82 +65,86 @@ export default function Lab() {
     try { await api.retrySetBuild(set.id); await load(); } catch (err) { setError(err.message); }
   }
 
-  const counts = Object.fromEntries(TABS.map((item) => [item.id, (sets || []).filter(item.match).length]));
-  const shown = (sets || []).filter(TABS.find((item) => item.id === tab).match);
+// Set covers carry the one bold colour on this screen. The colour comes from the title, so a set keeps its colour.
+const COVERS = ["bg-rate-again", "bg-rate-hard", "bg-rate-good", "bg-info"];
+function coverOf(title) {
+  let sum = 0;
+  for (const ch of String(title)) sum += ch.codePointAt(0);
+  return COVERS[sum % COVERS.length];
+}
 
-  function card(set) {
-    const meta = [set.course?.code, set.topic].filter(Boolean).join(" · ");
-    if (set.build.status === "processing") {
-      return <Card key={set.id}>
-        <VStack gap={2}>
-          <HStack gap={2} align="center"><Spinner size="sm" label="" aria-label="Making your set" /><Text weight="semibold">Making your set…</Text></HStack>
-          <Text type="supporting" color="secondary">The AI is reading your material. You can leave this page.</Text>
-        </VStack>
-      </Card>;
-    }
-    if (set.build.status === "issue") {
-      return <Card key={set.id}>
-        <VStack gap={2}>
-          <HStack gap={2} align="center"><Badge variant="warning" label="Issue" /><Text weight="semibold" maxLines={1}>{set.title}</Text></HStack>
-          <Text type="supporting" color="secondary">{set.build.message || "The AI could not help this time."}</Text>
-          <HStack gap={2} wrap="wrap">
-            <Button label="Try again" size="sm" onClick={() => retry(set)} />
-            <Button label="Start empty" size="sm" variant="ghost" onClick={() => finishEmpty(set)} />
-          </HStack>
-        </VStack>
-      </Card>;
-    }
-    const ready = set.build.status === "ready";
-    return <ClickableCard key={set.id} label={ready ? `${set.title}, drafts ready to review` : set.title} href={ready ? `/lab/${set.id}/review` : `/lab/${set.id}`}>
-      <VStack gap={1}>
-        <Text weight="semibold" display="block" maxLines={2}>{set.title}</Text>
-        {meta && <Text type="supporting" color="secondary" display="block" maxLines={1}>{meta}</Text>}
-        {ready
-          ? <HStack gap={1} align="center"><CheckCircle2 size={14} aria-hidden="true" /><Text type="supporting" color="accent">Drafts ready to review</Text></HStack>
-          : <>
-            <Text type="supporting" color="secondary" display="block">{plural(set.cardCount, "card")} · {plural(set.quizCount, "quiz", "quizzes")}</Text>
-            <Text type="supporting" color="secondary" display="block">{studied(set.lastStudiedAt)}</Text>
-          </>}
-      </VStack>
-    </ClickableCard>;
+const tile = "grid overflow-hidden rounded-lg border border-border bg-card";
+const open = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+
+function SetCard({ set, onRetry, onEmpty }) {
+  if (set.build.status === "processing") {
+    return <div className={`${tile} content-start gap-2 p-4`}>
+      <p className="m-0 flex items-center gap-2 font-semibold"><Loader2 size={16} className="animate-spin motion-reduce:animate-none" aria-hidden="true" />Making your set…</p>
+      <p className="m-0 text-sm text-muted-foreground">The AI is reading your material. You can leave this page.</p>
+    </div>;
   }
+  if (set.build.status === "issue") {
+    return <div className={`${tile} content-start gap-2 p-4`}>
+      <p className="m-0 flex items-center gap-2"><Badge tone="warning">Issue</Badge><strong className="min-w-0 truncate">{set.title}</strong></p>
+      <p className="m-0 text-sm text-muted-foreground">{set.build.message || "The AI could not help this time."}</p>
+      <div className="flex flex-wrap gap-2"><Button size="sm" onClick={() => onRetry(set)}>Try again</Button><Button size="sm" variant="tertiary" onClick={() => onEmpty(set)}>Start empty</Button></div>
+    </div>;
+  }
+  const meta = [set.course?.code, set.topic].filter(Boolean).join(" · ");
+  const ready = set.build.status === "ready";
+  return <Link to={ready ? `/lab/${set.id}/review` : `/lab/${set.id}`} aria-label={ready ? `${set.title}, drafts ready to review` : set.title} className={`${tile} grid-rows-[auto_1fr] text-foreground no-underline transition-transform duration-150 hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 ${open}`}>
+    <span aria-hidden="true" className={`flex h-16 items-end px-4 pb-1 text-3xl font-semibold text-on-rate ${coverOf(set.title)}`}>{String(set.title).trim().charAt(0).toUpperCase()}</span>
+    <span className="grid content-start gap-1 p-4">
+      <strong className="line-clamp-2 text-base leading-snug">{set.title}</strong>
+      {meta && <span className="truncate text-sm text-muted-foreground">{meta}</span>}
+      {ready
+        ? <span className="flex items-center gap-1.5 text-sm font-semibold text-brand-ink"><CheckCircle2 size={14} aria-hidden="true" />Drafts ready to review</span>
+        : <>
+          <span className="text-sm text-muted-foreground">{plural(set.cardCount, "card")} · {plural(set.quizCount, "quiz", "quizzes")}</span>
+          <span className="text-sm text-muted-foreground">{studied(set.lastStudiedAt)}</span>
+        </>}
+    </span>
+  </Link>;
+}
+
+  const counts = Object.fromEntries(TABS.map((item) => [item.id, (sets || []).filter(item.match).length]));
+  const shownFor = (id) => (sets || []).filter(TABS.find((item) => item.id === id).match);
+
+  const panelFor = (id) => {
+    const shown = shownFor(id);
+    if (shown.length > 0) return <div className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-4">{shown.map((set) => <SetCard key={set.id} set={set} onRetry={retry} onEmpty={finishEmpty} />)}</div>;
+    if (query) return <EmptyState icon={FlaskConical} title="No sets match" description="Try a different word." />;
+    return <EmptyState icon={FlaskConical} title={(EMPTY_TAB[id] || ["Nothing here"])[0]} description={(EMPTY_TAB[id] || [])[1]} />;
+  };
 
   const none = sets && sets.length === 0;
-  return <AstryxTheme>
-    <div className="content student-page lab-page">
-      <VStack gap={5}>
-        <HStack gap={3} justify="between" align="center" wrap="wrap">
-          <VStack gap={1}>
-            <Heading level={1}>{t("lab.title")}</Heading>
-            <Text color="secondary">Your own notes, flashcards and quizzes. Only you can see them.</Text>
-          </VStack>
-          <HStack gap={2} wrap="wrap">
-            <Button label="Community sets" variant="ghost" icon={<Users size={18} aria-hidden="true" />} href="/community" />
-            <Button label="New set" variant="primary" icon={<Plus size={18} aria-hidden="true" />} onClick={() => setCreating(true)} />
-          </HStack>
-        </HStack>
-        {error && !sets && <ErrorState message={error} onRetry={() => setQuery((q) => q + " ")} />}
-        {error && sets && <Text color="secondary" role="alert">{error}</Text>}
-        {!sets && !error && <Loading />}
-        {none && !query && <EmptyState icon={<FlaskConical size={32} aria-hidden="true" />} title="Drop in your notes or a PDF and let AI build a set"
-          description="You check the notes, flashcards and quiz before anything is saved."
-          actions={<Button label="New set" variant="primary" onClick={() => setCreating(true)} />} />}
-        {sets && (sets.length > 0 || query) && <>
-          <HStack gap={3} justify="between" align="center" wrap="wrap">
-            <TabList role="tablist" value={tab} onChange={setTab} hasDivider>
-              {TABS.map((item) => <Tab key={item.id} value={item.id} label={item.id !== "all" && counts[item.id] ? `${item.label} (${counts[item.id]})` : item.label} panelId="lab-sets" />)}
-            </TabList>
-            <TextInput type="search" label="Search my sets" isLabelHidden placeholder="Search my sets" size="sm" width={240} value={query} onChange={setQuery} hasClear />
-          </HStack>
-          <div id="lab-sets" role="tabpanel">
-            {shown.length === 0
-              ? (query ? <EmptyState icon={<FlaskConical size={32} aria-hidden="true" />} title="No sets match" description="Try a different word." />
-                : <EmptyState isCompact icon={<FlaskConical size={28} aria-hidden="true" />} title={(EMPTY_TAB[tab] || ["Nothing here"])[0]} description={(EMPTY_TAB[tab] || [])[1]} />)
-              : <Grid columns={{ minWidth: 260 }} gap={4}>{shown.map(card)}</Grid>}
-          </div>
-        </>}
-      </VStack>
-      <NewSetDialog isOpen={creating} onOpenChange={setCreating} onStarted={() => { setCreating(false); setTab("all"); load().catch(() => {}); }} />
+  return <div className="content mx-auto grid max-w-5xl gap-6">
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="grid gap-1">
+        <h1 className="m-0 text-3xl leading-tight font-bold">{t("lab.title")}</h1>
+        <p className="m-0 text-muted-foreground">Your own notes, flashcards and quizzes. Only you can see them.</p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button as={Link} to="/community" variant="tertiary" icon={Users}>Community sets</Button>
+        <Button icon={Plus} onClick={() => setCreating(true)}>New set</Button>
+      </div>
     </div>
-  </AstryxTheme>;
+    {error && !sets && <ErrorState message={error} onRetry={() => setQuery((q) => q + " ")} />}
+    {error && sets && <p className="m-0 text-muted-foreground" role="alert">{error}</p>}
+    {!sets && !error && <Loading />}
+    {none && !query && <EmptyState icon={FlaskConical} title="Drop in your notes or a PDF and let AI build a set"
+      description="You check the notes, flashcards and quiz before anything is saved."
+      action={<Button onClick={() => setCreating(true)}>New set</Button>} />}
+    {sets && (sets.length > 0 || query) && <div className="grid gap-4">
+      <div className="relative">
+        <Search size={16} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+        <input type="search" aria-label="Search my sets" placeholder="Search my sets" value={query} onChange={(event) => setQuery(event.target.value)}
+          className="min-h-11 w-full rounded-pill border border-input bg-card pr-11 pl-10 font-sans text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:max-w-sm [&::-webkit-search-cancel-button]:hidden" />
+        {query && <button type="button" aria-label="Clear search" onClick={() => setQuery("")} className="absolute top-1/2 right-1 grid size-9 -translate-y-1/2 cursor-pointer place-items-center rounded-pill border-0 bg-transparent text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"><X size={16} aria-hidden="true" /></button>}
+      </div>
+      <Tabs label="My sets" value={tab} onChange={setTab}
+        tabs={TABS.map((item) => ({ id: item.id, label: item.id !== "all" && counts[item.id] ? `${item.label} (${counts[item.id]})` : item.label, panel: panelFor(item.id) }))} />
+    </div>}
+    <AstryxTheme><NewSetDialog isOpen={creating} onOpenChange={setCreating} onStarted={() => { setCreating(false); setTab("all"); load().catch(() => {}); }} /></AstryxTheme>
+  </div>;
 }
