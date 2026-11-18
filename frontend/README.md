@@ -261,6 +261,10 @@ The question screen of `pages/learn/Test.jsx` uses `components/learn/QuizOption.
 
 `pages/account/Me.jsx` (header, `Tabs`, link list) and `pages/learn/Progress.jsx` (stat tiles, unit bars, scores) are Tailwind and `components/ui`. The year heatmap is not built: it needs a per-day activity endpoint in the backend. The unit mastery labels (Not started, Familiar, Proficient, Mastered) wait for a rule from the owner.
 
+## New-set dialog (design reset phase 5)
+
+`components/lab/NewSetDialog.jsx` is on `ui/Dialog` and the new `ui/FileDrop` (one PDF, type and size checked). It now says plainly that the free beta sends what you add to Google's AI and Google may use it. `Lab.jsx` no longer needs Astryx at all.
+
 ## Authentication behavior
 
 The frontend does not store JWTs in local storage. Login and registration receive an HTTP-only `token` cookie from the backend, and API requests include credentials automatically. On startup, `AuthContext` calls `/auth/me` to restore the current session.

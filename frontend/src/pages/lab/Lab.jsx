@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FlaskConical, Plus, Search, Users, X } from "lucide-react";
 import { api } from "../../api/client";
-import AstryxTheme from "../../components/astryx/AstryxTheme";
 import NewSetDialog from "../../components/lab/NewSetDialog";
 import SetCard from "../../components/lab/SetCard";
 import { Button, EmptyState, Tabs } from "../../components/ui";
@@ -93,6 +92,6 @@ export default function Lab() {
       <Tabs label="My sets" value={tab} onChange={setTab}
         tabs={TABS.map((item) => ({ id: item.id, label: item.id !== "all" && counts[item.id] ? `${item.label} (${counts[item.id]})` : item.label, panel: panelFor(item.id) }))} />
     </div>}
-    <AstryxTheme><NewSetDialog isOpen={creating} onOpenChange={setCreating} onStarted={() => { setCreating(false); setTab("all"); load().catch(() => {}); }} /></AstryxTheme>
+    <NewSetDialog isOpen={creating} onOpenChange={setCreating} onStarted={() => { setCreating(false); setTab("all"); load().catch(() => {}); }} />
   </div>;
 }

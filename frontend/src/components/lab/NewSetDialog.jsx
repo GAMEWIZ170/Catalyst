@@ -1,12 +1,7 @@
 import { useEffect, useState } from "react";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
-import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
-import { FileInput } from "@astryxdesign/core/FileInput";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Text } from "@astryxdesign/core/Text";
-import { TextArea } from "@astryxdesign/core/TextArea";
+import { AlertCircle } from "lucide-react";
 import { api } from "../../api/client";
+import { Button, Dialog, FileDrop } from "../ui";
 
 const MAX_PDF = 10 * 1024 * 1024;
 
@@ -37,22 +32,19 @@ export default function NewSetDialog({ isOpen, onOpenChange, onStarted }) {
     }
   }
 
-  return <Dialog isOpen={isOpen} onOpenChange={onOpenChange} purpose="form" width={520}>
-    <DialogHeader title="New study set" onOpenChange={onOpenChange} />
-    <VStack gap={4} padding={4}>
-      {error && <Banner status="error" title={error} container="section" />}
-      {!pasting && <FileInput label="Upload a PDF" isLabelHidden mode="dropzone" accept="application/pdf" maxSize={MAX_PDF}
-        value={file} onChange={(next) => setFile(Array.isArray(next) ? next[0] || null : next)}
-        placeholder="Drop a PDF here, or click to choose one (up to 10 MB)" />}
-      {pasting && <TextArea label="Paste your notes" isLabelHidden placeholder="Paste your notes or lesson text here" value={text} onChange={setText} rows={8} hasAutoFocus />}
-      <Text type="supporting" color="secondary">The AI names your set and drafts notes, flashcards and a quiz for you to check. Only add things you may copy for your own study.</Text>
-      <HStack gap={2} justify="between" align="center" wrap="wrap">
-        <Button label={pasting ? "Upload a PDF instead" : "Paste text instead"} variant="ghost" onClick={() => { setPasting(!pasting); setError(""); }} />
-        <HStack gap={2}>
-          <Button label="Cancel" variant="ghost" onClick={() => onOpenChange(false)} />
-          <Button label="Make my set" variant="primary" isDisabled={!ready} isLoading={busy} onClick={start} />
-        </HStack>
-      </HStack>
-    </VStack>
+  return <Dialog open={Boolean(isOpen)} onClose={() => onOpenChange(false)} title="New study set"
+    actions={<>
+      <Button variant="tertiary" className="mr-auto" onClick={() => { setPasting(!pasting); setError(""); }}>{pasting ? "Upload a PDF instead" : "Paste text instead"}</Button>
+      <Button variant="tertiary" onClick={() => onOpenChange(false)}>Cancel</Button>
+      <Button disabled={!ready} loading={busy} onClick={start}>Make my set</Button>
+    </>}>
+    <div className="grid gap-4">
+      {error && <p className="m-0 flex items-center gap-2 text-destructive" role="alert"><AlertCircle size={16} aria-hidden="true" />{error}</p>}
+      {!pasting && <FileDrop label="Upload a PDF" hint="Drop a PDF here, or click to choose one (up to 10 MB)" accept="application/pdf" maxSize={MAX_PDF} value={file} onChange={setFile} onError={setError} />}
+      {pasting && <textarea aria-label="Paste your notes" autoFocus rows={8} placeholder="Paste your notes or lesson text here" value={text} onChange={(event) => setText(event.target.value)}
+        className="w-full resize-y rounded-lg border border-input bg-card p-3 font-sans text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" />}
+      <p className="m-0 text-sm text-muted-foreground">The AI names your set and drafts notes, flashcards and a quiz for you to check. Only add things you may copy for your own study.</p>
+      <p className="m-0 text-sm text-muted-foreground">Free beta: what you add is sent to Google's AI, and Google may use it to improve its products. Do not add anything private.</p>
+    </div>
   </Dialog>;
 }
