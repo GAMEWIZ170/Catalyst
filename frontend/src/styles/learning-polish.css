@@ -52,11 +52,8 @@
 .fc-ratings .button:nth-child(2) { background: var(--warning-tint); border-color: var(--warning); color: var(--warning); }
 .fc-ratings .button:nth-child(3) { background: var(--success-tint); border-color: var(--success); color: var(--success); }
 .fc-ratings .button:hover:not(:disabled) { filter: brightness(0.97); }
-.fc-ratings .button .exam-key { border-color: currentColor; color: inherit; }
 
 /* ---- Tests: option buttons ---- */
-.exam .exam-option { transition: background-color 150ms ease-out, border-color 150ms ease-out, transform 120ms ease-out; }
-.exam-option:active:not(:disabled) { transform: scale(0.99); }
 
 @media (prefers-reduced-motion: reduce) {
   .app-shell .notification-panel, .app-shell .profile-panel, .app-shell .quick-panel { animation: none; }

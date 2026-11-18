@@ -97,7 +97,7 @@ h1, h2, h3 { text-wrap: balance; }
   }
 
   .ui-toast { animation-duration: var(--dur-pop); animation-timing-function: var(--ease-out); }
-  .exam-feedback { animation-timing-function: var(--ease-out); }
+  
 
   .admin-more .more-chevron { transition: transform var(--dur-pop) var(--ease-out); }
   .admin-more button[aria-expanded="true"] .more-chevron { transform: rotate(180deg); }

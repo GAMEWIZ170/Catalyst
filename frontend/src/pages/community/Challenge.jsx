@@ -30,12 +30,12 @@ export default function Challenge() {
   }
   useEffect(load, [id]);
 
-  if (state.loading && !state.data) return <div className="content student-page"><Loading /></div>;
+  if (state.loading && !state.data) return <div className="content"><Loading /></div>;
   if (state.error) {
     // 404, 409 and 410 are normal situations with a clear message, not failures to retry.
     const calm = [404, 409, 410].includes(state.status);
-    return <div className="content student-page">
-      {calm ? <><h1>{t("challenges.title")}</h1><p role="status">{state.error}</p><Button as={Link} variant="secondary" to="/challenges">{t("challenges.all")}</Button></> : <ErrorState message={state.error} onRetry={load} />}
+    return <div className="content mx-auto grid max-w-2xl gap-4">
+      {calm ? <><h1 className="m-0 text-3xl leading-tight font-bold">{t("challenges.title")}</h1><p className="m-0" role="status">{state.error}</p><Button as={Link} variant="secondary" to="/challenges">{t("challenges.all")}</Button></> : <ErrorState message={state.error} onRetry={load} />}
     </div>;
   }
 
@@ -44,18 +44,18 @@ export default function Challenge() {
 
   if (data.played || data.result) {
     const done = Boolean(data.comparison);
-    return <div className="content student-page challenge-page">
-      <h1>{data.title}</h1>
-      <p className="muted">{fill("challenges.from", { name: data.from })}</p>
-      <p className="exam-correct">{fill("challenges.yourScore", { correct: data.result.correct, total: data.result.total })}</p>
-      {done ? <section className="settings-section" aria-labelledby="cmp-heading">
-        <h2 id="cmp-heading">{t("challenges.comparison")}</h2>
-        <p>{fill("challenges.you", { correct: data.comparison.you.correct, total: data.comparison.you.total })}</p>
-        <p>{fill("challenges.them", { name: data.comparison.them.name, correct: data.comparison.them.correct, total: data.comparison.them.total })}</p>
-        <p role="status"><strong>{t(`challenges.${data.comparison.outcome}`)}</strong></p>
+    return <div className="content mx-auto grid max-w-2xl gap-4">
+      <h1 className="m-0 text-3xl leading-tight font-bold">{data.title}</h1>
+      <p className="m-0 text-muted-foreground">{fill("challenges.from", { name: data.from })}</p>
+      <p className="m-0 text-lg">{fill("challenges.yourScore", { correct: data.result.correct, total: data.result.total })}</p>
+      {done ? <section className="grid gap-2 rounded-lg border border-border bg-card p-5" aria-labelledby="cmp-heading">
+        <h2 id="cmp-heading" className="m-0 text-xl font-semibold">{t("challenges.comparison")}</h2>
+        <p className="m-0">{fill("challenges.you", { correct: data.comparison.you.correct, total: data.comparison.you.total })}</p>
+        <p className="m-0">{fill("challenges.them", { name: data.comparison.them.name, correct: data.comparison.them.correct, total: data.comparison.them.total })}</p>
+        <p className="m-0" role="status"><strong>{t(`challenges.${data.comparison.outcome}`)}</strong></p>
       </section>
-        : <section className="settings-section">
-          <p role="status">{data.role === "creator" ? t("challenges.waitingFriend") : t("challenges.waitingCreator")}</p>
+        : <section className="grid gap-2 rounded-lg border border-border bg-card p-5">
+          <p className="m-0" role="status">{data.role === "creator" ? t("challenges.waitingFriend") : t("challenges.waitingCreator")}</p>
           {data.role === "creator" && !data.expired && <ShareButton url={link} title={data.title} text={fill("challenges.shareText", { name: data.from })} />}
         </section>}
       <Button as={Link} variant="secondary" to="/challenges">{t("challenges.all")}</Button>
@@ -83,16 +83,16 @@ export default function Challenge() {
     }
   }
 
-  return <div className="content student-page challenge-page">
-    <h1>{data.title}</h1>
-    <p className="muted">{fill("challenges.from", { name: data.from })} · {fill("challenges.progress", { number: index + 1, total: questions.length })}</p>
-    <div className="exam-question"><RichText>{question.text}</RichText></div>
-    {question.image?.url && <ResponsiveImage className="exam-image" image={question.image} sizes="(max-width: 600px) 100vw, 600px" />}
+  return <div className="content mx-auto grid max-w-2xl gap-4">
+    <h1 className="m-0 text-3xl leading-tight font-bold">{data.title}</h1>
+    <p className="m-0 text-muted-foreground">{fill("challenges.from", { name: data.from })} · {fill("challenges.progress", { number: index + 1, total: questions.length })}</p>
+    <div className="text-xl leading-snug font-semibold sm:text-2xl"><RichText>{question.text}</RichText></div>
+    {question.image?.url && <ResponsiveImage className="max-h-72 rounded-lg" image={question.image} sizes="(max-width: 600px) 100vw, 600px" />}
     {question.type === "mcq" || question.type === "true_false"
       ? <ChoiceInput key={question._id} question={question} onAnswer={setChosen} />
       : <QuestionInput key={question._id} question={question} onAnswer={setChosen} onEnter={next} />}
-    <p className="muted">{t("challenges.noFeedback")}</p>
-    <p className="settings-status" role="alert">{problem}</p>
-    <Button onClick={next} disabled={sending}>{last ? t("challenges.finish") : t("challenges.next")}</Button>
+    <p className="m-0 text-sm text-muted-foreground">{t("challenges.noFeedback")}</p>
+    <p className="m-0 text-destructive" role="alert">{problem}</p>
+    <div><Button onClick={next} disabled={sending}>{last ? t("challenges.finish") : t("challenges.next")}</Button></div>
   </div>;
 }

@@ -25,11 +25,6 @@
   }
 }
 
-.results-illustration {
-  margin: 0 auto var(--space-4);
-  width: 8rem;
-}
-
 .ui-empty .illustration {
   margin: 0 auto var(--space-3);
   width: 8rem;
