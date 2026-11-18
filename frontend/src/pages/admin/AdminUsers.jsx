@@ -1,22 +1,10 @@
 import { useEffect, useState } from "react";
-import { Users } from "lucide-react";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Badge } from "@astryxdesign/core/Badge";
-import { Button } from "@astryxdesign/core/Button";
-import { DateInput } from "@astryxdesign/core/DateInput";
-import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
-import { EmptyState } from "@astryxdesign/core/EmptyState";
-import { Heading } from "@astryxdesign/core/Heading";
-import { List, ListItem } from "@astryxdesign/core/List";
-import { MoreMenu } from "@astryxdesign/core/MoreMenu";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Text } from "@astryxdesign/core/Text";
-import { TextInput } from "@astryxdesign/core/TextInput";
+import { AlertCircle, CheckCircle2, Info, MoreHorizontal, Search, Users, X } from "lucide-react";
 import { api } from "../../api/client";
 import { useAuth } from "../../context/AuthContext";
 import AdminLayout from "../../components/admin/AdminLayout";
-import AstryxTheme from "../../components/astryx/AstryxTheme";
 import ConfirmAstryx from "../../components/astryx/ConfirmAstryx";
+import { Badge, Button, Dialog, DropdownMenu, EmptyState } from "../../components/ui";
 import { formatDate } from "../../utils/dates";
 import { Loading } from "../learn/Courses";
 
@@ -29,7 +17,7 @@ function subscriptionText(user) {
   return ends > new Date() ? `Subscribed until ${formatDate(ends)}` : `Subscription ended ${formatDate(ends)}`;
 }
 
-// Filters are chips (rule 3). Confirmations and the end-date picker are Astryx dialogs. Wide, so no width cap here.
+// Filters are chips (rule 3). Confirmations and the end-date picker are dialogs. Wide, so no width cap here.
 export default function AdminUsers() {
   const { user: me } = useAuth();
   const [search, setSearch] = useState("");
@@ -43,7 +31,7 @@ export default function AdminUsers() {
   const [message, setMessage] = useState("");
   const [confirm, setConfirm] = useState(null);
   const [dateTarget, setDateTarget] = useState(null);
-  const [endDate, setEndDate] = useState(undefined);
+  const [endDate, setEndDate] = useState("");
 
   // Typing in the search box filters after a short pause, from the first page.
   useEffect(() => {
@@ -81,7 +69,7 @@ export default function AdminUsers() {
 
   const changeFilter = (name, value) => { setFilters((current) => ({ ...current, [name]: value })); setPage(1); };
   const ask = (target, title, description, confirmLabel, body, success, tone = "primary") => setConfirm({ target, title, description, confirmLabel, body, success, tone });
-  const openDate = (target) => { setDateTarget(target); setEndDate(target.subscriptionEndsAt ? new Date(target.subscriptionEndsAt).toISOString().slice(0, 10) : undefined); };
+  const openDate = (target) => { setDateTarget(target); setEndDate(target.subscriptionEndsAt ? new Date(target.subscriptionEndsAt).toISOString().slice(0, 10) : ""); };
 
   async function saveDate() {
     const target = dateTarget;
@@ -92,16 +80,16 @@ export default function AdminUsers() {
   function itemsFor(user) {
     const items = [];
     if (user.role === "student") {
-      items.push({ label: "Add 3 months", onClick: () => update(user, { extendMonths: 3 }, `Added 3 months for ${user.name}`) });
-      items.push({ label: "Set end date", onClick: () => openDate(user) });
-      if (user.subscriptionEndsAt) items.push({ label: "Clear subscription", onClick: () => ask(user, "Clear subscription?", `${user.name} will have no subscription.`, "Clear subscription", { subscriptionEndsAt: null }, `Cleared the subscription for ${user.name}`, "danger") });
-      items.push({ label: "Make admin", onClick: () => ask(user, "Make admin?", `${user.name} will be able to manage all content and users.`, "Make admin", { role: "admin" }, `${user.name} is now an admin`) });
+      items.push({ label: "Add 3 months", onSelect: () => update(user, { extendMonths: 3 }, `Added 3 months for ${user.name}`) });
+      items.push({ label: "Set end date", onSelect: () => openDate(user) });
+      if (user.subscriptionEndsAt) items.push({ label: "Clear subscription", onSelect: () => ask(user, "Clear subscription?", `${user.name} will have no subscription.`, "Clear subscription", { subscriptionEndsAt: null }, `Cleared the subscription for ${user.name}`, "danger") });
+      items.push({ label: "Make admin", onSelect: () => ask(user, "Make admin?", `${user.name} will be able to manage all content and users.`, "Make admin", { role: "admin" }, `${user.name} is now an admin`) });
     } else {
-      items.push({ label: "Make student", onClick: () => ask(user, "Make student?", `${user.name} will lose admin access.`, "Make student", { role: "student" }, `${user.name} is now a student`) });
+      items.push({ label: "Make student", onSelect: () => ask(user, "Make student?", `${user.name} will lose admin access.`, "Make student", { role: "student" }, `${user.name} is now a student`) });
     }
-    items.push({ type: "divider" });
-    if (user.isActive) items.push({ label: "Deactivate", variant: "destructive", onClick: () => ask(user, "Deactivate account?", `${user.name} will be signed out and cannot log in until you reactivate the account.`, "Deactivate", { isActive: false }, `Deactivated ${user.name}`, "danger") });
-    else items.push({ label: "Reactivate", onClick: () => update(user, { isActive: true }, `Reactivated ${user.name}`) });
+    items.push({ separator: true });
+    if (user.isActive) items.push({ label: "Deactivate", danger: true, onSelect: () => ask(user, "Deactivate account?", `${user.name} will be signed out and cannot log in until you reactivate the account.`, "Deactivate", { isActive: false }, `Deactivated ${user.name}`, "danger") });
+    else items.push({ label: "Reactivate", onSelect: () => update(user, { isActive: true }, `Reactivated ${user.name}`) });
     return items;
   }
 
@@ -111,49 +99,61 @@ export default function AdminUsers() {
   const filtered = Boolean(filters.q || filters.role || filters.status);
 
   return <AdminLayout>
-    <AstryxTheme>
-      <VStack gap={4}>
-        <Heading level={1}>Users</Heading>
-        {required === false && <Banner status="info" title="Subscriptions are not enforced yet" description="Every student has access whether or not they have a subscription. Turn on REQUIRE_SUBSCRIPTION in the backend when you are ready." container="section" />}
-        <VStack gap={2}>
-          <TextInput type="search" label="Search users" isLabelHidden placeholder="Search by name or email" value={search} onChange={setSearch} hasClear width={320} />
-          <HStack gap={4} wrap="wrap">{chips("Filter by role", ROLES, filters.role, "role")}{chips("Filter by status", STATUSES, filters.status, "status")}</HStack>
-        </VStack>
-        {message && !error && <Banner status="success" title={message} container="section" isDismissable onDismiss={() => setMessage("")} />}
-        {error && <Banner status="error" title={error} container="section" />}
-        {loading && <Loading />}
-        {!loading && error && !users.length && <div><Button label="Retry" variant="secondary" onClick={load} /></div>}
-        {!loading && !users.length && !error && <EmptyState icon={<Users size={32} aria-hidden="true" />} title={filtered ? "No user matches these filters" : "No users yet"}
-          actions={filtered ? <Button label="Clear filters" variant="secondary" onClick={() => { setSearch(""); setFilters({ q: "", role: "", status: "" }); }} /> : undefined} />}
-        {!loading && users.length > 0 && <List hasDividers>
-          {users.map((user) => {
-            const isMe = me && String(me.id) === String(user._id);
-            return <ListItem key={user._id} label={<HStack gap={2} align="center" wrap="wrap"><Text weight="semibold">{user.name}{isMe ? " (you)" : ""}</Text>
-              <Badge variant={user.role === "admin" ? "info" : "neutral"} label={user.role === "admin" ? "Admin" : "Student"} />{!user.isActive && <Badge variant="warning" label="Deactivated" />}</HStack>}
-              description={[user.email, user.role === "student" ? subscriptionText(user) : ""].filter(Boolean).join(" · ")}
-              endContent={<HStack gap={2} align="center">
-                {user.role === "student" && <Button label="Add 1 month" size="sm" variant="secondary" onClick={() => update(user, { extendMonths: 1 }, `Added 1 month for ${user.name}`)} />}
-                {!isMe && <MoreMenu label={`Options for ${user.name}`} alignment="end" items={itemsFor(user)} />}
-              </HStack>} />;
-          })}
-        </List>}
-        {pagination && pagination.totalPages > 1 && <HStack gap={3} align="center" justify="center">
-          <Button label="Previous" variant="secondary" isDisabled={page <= 1} onClick={() => setPage(page - 1)} />
-          <Text color="secondary">Page {pagination.currentPage} of {pagination.totalPages} ({pagination.totalUsers} users)</Text>
-          <Button label="Next" variant="secondary" isDisabled={page >= pagination.totalPages} onClick={() => setPage(page + 1)} />
-        </HStack>}
-      </VStack>
+    <div className="grid gap-4">
+      <h1 className="m-0 text-3xl leading-tight font-bold">Users</h1>
+      {required === false && <p className="m-0 flex items-start gap-2 rounded-lg bg-info/15 p-4" role="status"><Info size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
+        <span><strong>Subscriptions are not enforced yet.</strong> Every student has access whether or not they have a subscription. Turn on REQUIRE_SUBSCRIPTION in the backend when you are ready.</span></p>}
+      <div className="grid gap-2">
+        <div className="relative max-w-sm">
+          <Search size={16} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <input type="search" aria-label="Search users" placeholder="Search by name or email" value={search} onChange={(event) => setSearch(event.target.value)}
+            className="min-h-11 w-full rounded-pill border border-input bg-card pr-11 pl-10 font-sans text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-search-cancel-button]:hidden" />
+          {search && <button type="button" aria-label="Clear search" onClick={() => setSearch("")} className="absolute top-1/2 right-1 grid size-9 -translate-y-1/2 cursor-pointer place-items-center rounded-pill border-0 bg-transparent text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"><X size={16} aria-hidden="true" /></button>}
+        </div>
+        <div className="flex flex-wrap gap-4">{chips("Filter by role", ROLES, filters.role, "role")}{chips("Filter by status", STATUSES, filters.status, "status")}</div>
+      </div>
+      {message && !error && <p className="m-0 flex items-center gap-2 rounded-lg bg-success/15 p-3" role="status"><CheckCircle2 size={18} aria-hidden="true" /><span className="min-w-0 flex-1">{message}</span>
+        <button type="button" aria-label="Dismiss message" onClick={() => setMessage("")} className="grid size-8 shrink-0 cursor-pointer place-items-center rounded-pill border-0 bg-transparent hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"><X size={16} aria-hidden="true" /></button></p>}
+      {error && <p className="m-0 flex items-center gap-2 text-destructive" role="alert"><AlertCircle size={16} aria-hidden="true" />{error}</p>}
+      {loading && <Loading />}
+      {!loading && error && !users.length && <div><Button variant="secondary" onClick={load}>Retry</Button></div>}
+      {!loading && !users.length && !error && <EmptyState icon={Users} title={filtered ? "No user matches these filters" : "No users yet"}
+        action={filtered ? <Button variant="secondary" onClick={() => { setSearch(""); setFilters({ q: "", role: "", status: "" }); }}>Clear filters</Button> : undefined} />}
+      {!loading && users.length > 0 && <ul className="m-0 grid list-none p-0">
+        {users.map((user) => {
+          const isMe = me && String(me.id) === String(user._id);
+          return <li key={user._id} className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border py-3 last:border-b-0">
+            <div className="grid min-w-0 flex-[1_1_16rem] gap-0.5">
+              <span className="flex flex-wrap items-center gap-2"><strong>{user.name}{isMe ? " (you)" : ""}</strong>
+                <Badge tone={user.role === "admin" ? "info" : "neutral"}>{user.role === "admin" ? "Admin" : "Student"}</Badge>{!user.isActive && <Badge tone="warning">Deactivated</Badge>}</span>
+              <span className="text-sm text-muted-foreground">{[user.email, user.role === "student" ? subscriptionText(user) : ""].filter(Boolean).join(" · ")}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {user.role === "student" && <Button size="sm" variant="secondary" onClick={() => update(user, { extendMonths: 1 }, `Added 1 month for ${user.name}`)}>Add 1 month</Button>}
+              {!isMe && <DropdownMenu trigger={<Button variant="tertiary" size="sm" aria-label={`Options for ${user.name}`}><MoreHorizontal size={18} aria-hidden="true" /></Button>} items={itemsFor(user)} />}
+            </div>
+          </li>;
+        })}
+      </ul>}
+      {pagination && pagination.totalPages > 1 && <div className="flex items-center justify-center gap-3">
+        <Button variant="secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</Button>
+        <span className="text-muted-foreground">Page {pagination.currentPage} of {pagination.totalPages} ({pagination.totalUsers} users)</span>
+        <Button variant="secondary" disabled={page >= pagination.totalPages} onClick={() => setPage(page + 1)}>Next</Button>
+      </div>}
+    </div>
 
-      <ConfirmAstryx open={Boolean(confirm)} title={confirm?.title} description={confirm?.description} confirmLabel={confirm?.confirmLabel} tone={confirm?.tone}
-        onCancel={() => setConfirm(null)} onConfirm={() => { const { target, body, success } = confirm; setConfirm(null); update(target, body, success); }} />
+    <ConfirmAstryx open={Boolean(confirm)} title={confirm?.title} description={confirm?.description} confirmLabel={confirm?.confirmLabel} tone={confirm?.tone}
+      onCancel={() => setConfirm(null)} onConfirm={() => { const { target, body, success } = confirm; setConfirm(null); update(target, body, success); }} />
 
-      <Dialog isOpen={Boolean(dateTarget)} onOpenChange={(open) => { if (!open) setDateTarget(null); }} purpose="form" width={420}>
-        <DialogHeader title="Set end date" subtitle={dateTarget ? `The last day ${dateTarget.name} has access.` : ""} onOpenChange={(open) => { if (!open) setDateTarget(null); }} />
-        <VStack gap={4} padding={4}>
-          <DateInput label="Access ends on" value={endDate} onChange={setEndDate} />
-          <HStack gap={2} justify="end"><Button label="Cancel" variant="ghost" onClick={() => setDateTarget(null)} /><Button label="Save date" variant="primary" isDisabled={!endDate} onClick={saveDate} /></HStack>
-        </VStack>
-      </Dialog>
-    </AstryxTheme>
+    <Dialog open={Boolean(dateTarget)} onClose={() => setDateTarget(null)} title="Set end date"
+      actions={<><Button variant="tertiary" onClick={() => setDateTarget(null)}>Cancel</Button><Button disabled={!endDate} onClick={saveDate}>Save date</Button></>}>
+      <div className="grid gap-3">
+        {dateTarget && <p className="m-0 text-muted-foreground">The last day {dateTarget.name} has access.</p>}
+        <label className="grid gap-1.5 font-semibold">Access ends on
+          <input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)}
+            className="min-h-11 rounded-pill border border-input bg-card px-4 font-sans text-sm font-semibold text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" />
+        </label>
+      </div>
+    </Dialog>
   </AdminLayout>;
 }
