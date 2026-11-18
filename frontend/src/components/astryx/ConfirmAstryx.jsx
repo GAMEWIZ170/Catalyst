@@ -1,19 +1,10 @@
-import { Button } from "@astryxdesign/core/Button";
-import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Text } from "@astryxdesign/core/Text";
+import { Button, Dialog } from "../ui";
 
-// A small "are you sure?" dialog. Must be rendered inside AstryxTheme. `tone="danger"` makes the confirm button red.
+// A small "are you sure?" dialog. It no longer needs Astryx (the file name stays until its callers are ported).
+// `tone="danger"` makes the confirm button red.
 export default function ConfirmAstryx({ open, title, description, confirmLabel = "Delete", cancelLabel = "Cancel", tone = "danger", onConfirm, onCancel }) {
-  const close = (isOpen) => { if (!isOpen) onCancel(); };
-  return <Dialog isOpen={Boolean(open)} onOpenChange={close} width={420}>
-    <DialogHeader title={title || ""} onOpenChange={close} />
-    <VStack gap={4} padding={4}>
-      <Text>{description}</Text>
-      <HStack gap={2} justify="end">
-        <Button label={cancelLabel} variant="ghost" onClick={onCancel} />
-        <Button label={confirmLabel} variant={tone === "danger" ? "destructive" : "primary"} onClick={onConfirm} />
-      </HStack>
-    </VStack>
+  return <Dialog open={Boolean(open)} onClose={onCancel} title={title || ""}
+    actions={<><Button variant="tertiary" onClick={onCancel}>{cancelLabel}</Button><Button variant={tone === "danger" ? "danger" : "primary"} onClick={onConfirm}>{confirmLabel}</Button></>}>
+    <p className="m-0">{description}</p>
   </Dialog>;
 }

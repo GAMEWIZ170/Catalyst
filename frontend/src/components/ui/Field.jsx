@@ -3,6 +3,8 @@ import { AlertCircle } from "lucide-react";
 import Picker from "./Picker";
 
 // Labels sit above the control, hint and error text below. Errors are text plus an icon, never colour alone.
+const CONTROL = "min-h-11 w-full rounded-md border border-input bg-card px-3 font-sans text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50";
+
 function FieldShell({ id, label, hint, error, children, className = "" }) {
   return (
     <div className={`ui-field ${error ? "ui-field--error" : ""} ${className}`}>
@@ -23,7 +25,7 @@ export function TextField({ label, hint, error, id, className, ...input }) {
   const fieldId = id || auto;
   return (
     <FieldShell id={fieldId} label={label} hint={hint} error={error} className={className}>
-      <input className="ui-control" id={fieldId} aria-invalid={error ? true : undefined} aria-describedby={describedBy(fieldId, hint, error)} {...input} />
+      <input className={CONTROL} id={fieldId} aria-invalid={error ? true : undefined} aria-describedby={describedBy(fieldId, hint, error)} {...input} />
     </FieldShell>
   );
 }
@@ -33,7 +35,7 @@ export function TextArea({ label, hint, error, id, className, ...input }) {
   const fieldId = id || auto;
   return (
     <FieldShell id={fieldId} label={label} hint={hint} error={error} className={className}>
-      <textarea className="ui-control ui-textarea" id={fieldId} aria-invalid={error ? true : undefined} aria-describedby={describedBy(fieldId, hint, error)} {...input} />
+      <textarea className={`${CONTROL} min-h-24 resize-y py-3`} id={fieldId} aria-invalid={error ? true : undefined} aria-describedby={describedBy(fieldId, hint, error)} {...input} />
     </FieldShell>
   );
 }

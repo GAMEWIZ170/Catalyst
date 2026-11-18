@@ -19,3 +19,5 @@ export { default as ProgressDots } from "./ProgressDots";
 export { default as EditableTitle } from "./EditableTitle";
 export { default as FileDrop } from "./FileDrop";
 export { default as Picker } from "./Picker";
+export { default as Switch } from "./Switch";
+export { default as SettingRow, SaveState, useAutosave } from "./SettingRow";
