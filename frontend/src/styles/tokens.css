@@ -1,9 +1,9 @@
 /*
   Catalyst design tokens. Every colour, size and space in the app comes from here.
   Three colour layers:
-    1. Neutrals: shared by every palette (warm paper and ink). Light and dark.
-    2. Accent: the ONLY thing a palette changes (--accent, --accent-hover, --accent-soft, --on-accent).
-    3. Status: success, warning, error, info. Fixed across palettes.
+    1. Neutrals: shared by light and dark (warm paper and ink). Light and dark.
+    2. Accent (--accent, --accent-hover, --accent-soft, --on-accent).
+    3. Status: success, warning, error, info. Fixed.
   Contrast for every text and UI pair is checked by the dev script in frontend/scripts/contrast.mjs.
 */
 
@@ -94,36 +94,7 @@
 
   --focus: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
 
-  /* Palette previews in Settings */
-  --preview-paper: var(--paper);
-  --preview-surface: var(--surface);
-  --preview-ink: var(--ink);
-
   color-scheme: light;
-}
-
-:root[data-palette="indigo"] {
-  --accent: #2B5CE6;
-  --accent-hover: #1F46BF;
-  --accent-soft: #E7EDFD;
-}
-
-:root[data-palette="ember"] {
-  --accent: #B63A08;
-  --accent-hover: #932F0D;
-  --accent-soft: #FBEADF;
-}
-
-:root[data-palette="orchid"] {
-  --accent: #7E3FC4;
-  --accent-hover: #6430A0;
-  --accent-soft: #F0E8FA;
-}
-
-:root[data-palette="graphite"] {
-  --accent: #334155;
-  --accent-hover: #1E293B;
-  --accent-soft: #E7EAEE;
 }
 
 /* Dark mode: raise surfaces with a lighter background, not a shadow. */
@@ -158,43 +129,3 @@
   color-scheme: dark;
 }
 
-:root[data-palette="indigo"][data-theme="dark"] {
-  --accent: #8FA8FF;
-  --accent-hover: #B3C4FF;
-  --accent-soft: #1E2A52;
-  --on-accent: #0E1530;
-}
-
-:root[data-palette="ember"][data-theme="dark"] {
-  --accent: #FF9B78;
-  --accent-hover: #FFB79D;
-  --accent-soft: #4A2616;
-  --on-accent: #2A1208;
-}
-
-:root[data-palette="orchid"][data-theme="dark"] {
-  --accent: #C19BEA;
-  --accent-hover: #D5B9F2;
-  --accent-soft: #3A2457;
-  --on-accent: #1F1030;
-}
-
-:root[data-palette="graphite"][data-theme="dark"] {
-  --accent: #A9B9D2;
-  --accent-hover: #C5D1E3;
-  --accent-soft: #2B3544;
-  --on-accent: #10151C;
-}
-
-/* Settings palette swatches show only each palette's accent. */
-[data-palette-preview="lagoon"] { --preview-accent: #0E7490; }
-[data-palette-preview="indigo"] { --preview-accent: #2B5CE6; }
-[data-palette-preview="ember"] { --preview-accent: #B63A08; }
-[data-palette-preview="orchid"] { --preview-accent: #7E3FC4; }
-[data-palette-preview="graphite"] { --preview-accent: #334155; }
-
-:root[data-theme="dark"] [data-palette-preview="lagoon"] { --preview-accent: #5DD3EE; }
-:root[data-theme="dark"] [data-palette-preview="indigo"] { --preview-accent: #8FA8FF; }
-:root[data-theme="dark"] [data-palette-preview="ember"] { --preview-accent: #FF9B78; }
-:root[data-theme="dark"] [data-palette-preview="orchid"] { --preview-accent: #C19BEA; }
-:root[data-theme="dark"] [data-palette-preview="graphite"] { --preview-accent: #A9B9D2; }

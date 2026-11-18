@@ -1,14 +1,6 @@
 import { syncThemeColor } from "./themeColor";
 
-// Theme, palette and text size are saved on this device. Shared by the quick-settings panel and the Settings page.
-export const palettes = [
-  { key: "lagoon", name: "Lagoon" },
-  { key: "indigo", name: "Indigo" },
-  { key: "ember", name: "Ember" },
-  { key: "orchid", name: "Orchid" },
-  { key: "graphite", name: "Graphite" }
-];
-
+// Theme and text size are saved on this device. Shared by the quick-settings panel and the Settings page.
 export const textSizes = [
   { key: "standard", name: "Standard" },
   { key: "large", name: "Large" },
@@ -28,13 +20,6 @@ export function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
   syncThemeColor();
   save("catalyst-theme", theme);
-}
-
-export const currentPalette = () => (palettes.some(({ key }) => key === document.documentElement.dataset.palette) ? document.documentElement.dataset.palette : "lagoon");
-export function applyPalette(palette) {
-  document.documentElement.dataset.palette = palette;
-  syncThemeColor();
-  save("catalyst-palette", palette);
 }
 
 export function currentTextSize() {

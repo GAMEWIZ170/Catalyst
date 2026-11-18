@@ -5,8 +5,6 @@ import {
   SelectField, Skeleton, SkeletonGroup, Tabs, TextArea, TextField, useToast
 } from "../components/ui";
 
-const PALETTES = ["lagoon", "indigo", "ember", "orchid", "graphite"];
-
 function Section({ title, children }) {
   return <section className="dev-section"><h2>{title}</h2>{children}</section>;
 }
@@ -14,17 +12,11 @@ function Section({ title, children }) {
 // Hidden page, only built in development: every shared component in every state. Not linked from the app.
 export default function DevComponents() {
   const { toast } = useToast();
-  const [palette, setPalette] = useState(document.documentElement.dataset.palette || "lagoon");
   const [theme, setTheme] = useState(document.documentElement.dataset.theme === "dark" ? "dark" : "light");
   const [tab, setTab] = useState("one");
   const [open, setOpen] = useState(false);
   const [agree, setAgree] = useState(false);
   const [choice, setChoice] = useState("a");
-
-  function changePalette(value) {
-    setPalette(value);
-    document.documentElement.dataset.palette = value;
-  }
   function changeTheme(value) {
     setTheme(value);
     document.documentElement.dataset.theme = value;
@@ -34,9 +26,6 @@ export default function DevComponents() {
     <main className="dev-page">
       <header className="dev-bar">
         <h1>Components</h1>
-        <SelectField label="Palette" value={palette} onChange={(event) => changePalette(event.target.value)}>
-          {PALETTES.map((name) => <option key={name} value={name}>{name}</option>)}
-        </SelectField>
         <SelectField label="Mode" value={theme} onChange={(event) => changeTheme(event.target.value)}>
           <option value="light">light</option>
           <option value="dark">dark</option>

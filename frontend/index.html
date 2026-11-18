@@ -12,12 +12,9 @@
     <script>
       try {
         const validThemes = ["light", "dark"];
-        const validPalettes = ["lagoon", "indigo", "ember", "orchid", "graphite"];
         const savedTheme = localStorage.getItem("catalyst-theme");
-        const savedPalette = localStorage.getItem("catalyst-palette");
         const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
         document.documentElement.dataset.theme = validThemes.includes(savedTheme) ? savedTheme : (systemDark ? "dark" : "light");
-        document.documentElement.dataset.palette = validPalettes.includes(savedPalette) ? savedPalette : "lagoon";
         const savedText = localStorage.getItem("catalyst-text");
         if (savedText === "large" || savedText === "xlarge") document.documentElement.dataset.text = savedText;
         // Low-data mode: the student's own choice wins. With no choice yet, follow the browser's Save-Data setting.
@@ -26,7 +23,6 @@
         if (savedLowData === "1" || (savedLowData === null && saveData)) document.documentElement.dataset.lowdata = "1";
       } catch {
         document.documentElement.dataset.theme = "light";
-        document.documentElement.dataset.palette = "lagoon";
       }
     </script>
   </head>

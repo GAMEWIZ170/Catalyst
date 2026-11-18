@@ -93,19 +93,6 @@
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr));
 }
 
-.palette-card {
-  flex-direction: row;
-  justify-content: flex-start;
-}
-
-.palette-swatch {
-  background: var(--preview-accent);
-  border-radius: 50%;
-  flex: none;
-  height: 24px;
-  width: 24px;
-}
-
 .settings-avatar-grid {
   grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
 }

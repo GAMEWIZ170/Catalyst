@@ -16,7 +16,6 @@ const en = {
   "tools.profile": "Open profile menu",
   "quick.title": "Quick settings",
   "quick.theme": "Dark mode",
-  "quick.palette": "Colour theme",
   "quick.text": "Text size",
   "quick.lowdata": "Low-data mode",
   "quick.notifyReview": "Review reminders",
