@@ -1,23 +1,15 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Check, Trash2 } from "lucide-react";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
-import { Heading } from "@astryxdesign/core/Heading";
-import { IconButton } from "@astryxdesign/core/IconButton";
-import { Selector } from "@astryxdesign/core/Selector";
-import { Spinner } from "@astryxdesign/core/Spinner";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Text } from "@astryxdesign/core/Text";
-import { TextArea } from "@astryxdesign/core/TextArea";
-import { TextInput } from "@astryxdesign/core/TextInput";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { AlertCircle, ArrowLeft, Check, Info, Loader2, Trash2 } from "lucide-react";
 import { api } from "../../api/client";
-import AstryxTheme from "../../components/astryx/AstryxTheme";
-import ClickToEdit from "../../components/astryx/ClickToEdit";
+import { Button, EditableTitle, Picker } from "../../components/ui";
 import { ErrorState, Loading } from "../learn/Courses";
 import { appendToDoc, draftToNodes, notesToDraft } from "../../utils/draftToDoc";
 
-const icon = (Icon) => <Icon size={18} aria-hidden="true" />;
+const field = "w-full resize-y rounded-lg border border-input bg-card p-3 font-sans text-base text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+const input = "min-h-11 w-full min-w-0 rounded-md border border-input bg-card px-3 font-sans text-base text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+const iconButton = "grid size-11 shrink-0 cursor-pointer place-items-center rounded-pill border-0 bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring";
+const h2 = "m-0 text-xl font-semibold";
 let keyCounter = 0;
 const withKey = (item) => ({ ...item, key: `d${keyCounter++}` });
 
@@ -119,74 +111,74 @@ export default function LabReview() {
   if (error && !build) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
   if (!build) return <Loading />;
 
-  const back = <div><Button label="Study Lab" variant="ghost" size="sm" icon={icon(ArrowLeft)} href="/lab" /></div>;
+  const back = <div><Button as={Link} to="/lab" variant="tertiary" size="sm" icon={ArrowLeft}>Study Lab</Button></div>;
+  const wrap = "content mx-auto grid max-w-3xl gap-5";
 
   if (build.status === "processing") {
-    return <AstryxTheme><div className="content student-page lab-set"><VStack gap={4}>{back}
-      <HStack gap={3} align="center"><Spinner label="" aria-label="Making your set" /><VStack gap={1}><Heading level={2}>Making your set…</Heading><Text color="secondary">The AI is reading your material. You can leave this page.</Text></VStack></HStack>
-    </VStack></div></AstryxTheme>;
+    return <div className={wrap}>{back}
+      <div className="flex items-center gap-3"><Loader2 size={28} className="shrink-0 animate-spin motion-reduce:animate-none" aria-label="Making your set" />
+        <div className="grid gap-1"><h2 className={h2}>Making your set…</h2><p className="m-0 text-muted-foreground">The AI is reading your material. You can leave this page.</p></div></div>
+    </div>;
   }
 
   if (build.status === "issue") {
-    return <AstryxTheme><div className="content student-page lab-set"><VStack gap={4}>{back}
-      <Banner status="warning" title="The AI could not build this set" description={build.message} container="section" />
-      <HStack gap={2}><Button label="Try again" variant="primary" onClick={retry} /><Button label="Start empty" variant="ghost" isLoading={busy} onClick={startEmpty} /></HStack>
-    </VStack></div></AstryxTheme>;
+    return <div className={wrap}>{back}
+      <div className="grid gap-1 rounded-lg bg-warning/15 p-4" role="status"><strong>The AI could not build this set</strong><span>{build.message}</span></div>
+      <div className="flex gap-2"><Button onClick={retry}>Try again</Button><Button variant="tertiary" loading={busy} onClick={startEmpty}>Start empty</Button></div>
+    </div>;
   }
 
   const total = cards.length + questions.length + (notes.trim() ? 1 : 0);
-  return <AstryxTheme>
-    <div className="content student-page lab-set">
-      <VStack gap={5}>
-        {back}
-        <VStack gap={1} align="start">
-          <ClickToEdit heading label="Title" value={build.title} placeholder="Untitled set" onSave={(title) => patchSet({ title })} />
-          <HStack gap={2} wrap="wrap" align="center">
-            <ClickToEdit label="Topic" value={build.topic} placeholder="Add a topic" onSave={(topic) => patchSet({ topic })} />
-            <Selector label="Course" isLabelHidden variant="ghost" size="sm" hasClear placeholder="Add a course" value={set?.course?.id || ""}
-              onChange={(value) => patchSet({ course: value || null })} options={courses.map((course) => ({ value: course._id, label: `${course.code}: ${course.title}` }))} />
-          </HStack>
-        </VStack>
-        {build.message && <Banner status="info" title={build.message} container="section" />}
-        {error && <Banner status="error" title={error} container="section" />}
-        <Text color="secondary">Check what the AI drafted. Change or delete anything, then save.</Text>
-
-        {cards.length > 0 && <VStack gap={3}>
-          <Heading level={2}>Flashcards ({cards.length})</Heading>
-          {cards.map((row, index) => <HStack key={row.key} gap={2} align="start">
-            <VStack gap={2} style={{ flex: 1 }}>
-              <TextArea label={`Card ${index + 1} front`} isLabelHidden rows={2} value={row.front} onChange={(value) => change(setCards)(index, { front: value })} />
-              <TextArea label={`Card ${index + 1} back`} isLabelHidden rows={2} value={row.back} onChange={(value) => change(setCards)(index, { back: value })} />
-            </VStack>
-            <IconButton label={`Delete card ${index + 1}`} variant="ghost" icon={icon(Trash2)} onClick={() => remove(setCards)(index)} />
-          </HStack>)}
-        </VStack>}
-
-        {questions.length > 0 && <VStack gap={3}>
-          <Heading level={2}>Quiz questions ({questions.length})</Heading>
-          {questions.map((row, index) => <HStack key={row.key} gap={2} align="start">
-            <VStack gap={2} style={{ flex: 1 }}>
-              <TextArea label={`Question ${index + 1}`} isLabelHidden rows={2} value={row.text} onChange={(value) => change(setQuestions)(index, { text: value })} />
-              {row.options.map((option, at) => <HStack key={at} gap={2} align="center">
-                <IconButton label={row.correctIndex === at ? `Option ${at + 1} is the correct answer` : `Mark option ${at + 1} as the correct answer`} tooltip="Correct answer"
-                  variant={row.correctIndex === at ? "primary" : "secondary"} size="sm" icon={icon(Check)} onClick={() => change(setQuestions)(index, { correctIndex: at })} />
-                <div style={{ flex: 1 }}><TextInput label={`Option ${at + 1}`} isLabelHidden value={option} onChange={(value) => change(setQuestions)(index, { options: row.options.map((item, i) => (i === at ? value : item)) })} /></div>
-              </HStack>)}
-            </VStack>
-            <IconButton label={`Delete question ${index + 1}`} variant="ghost" icon={icon(Trash2)} onClick={() => remove(setQuestions)(index)} />
-          </HStack>)}
-        </VStack>}
-
-        {notes.trim() && <VStack gap={3}>
-          <HStack justify="between" align="center"><Heading level={2}>Notes</Heading><Button label="Delete notes" variant="ghost" size="sm" icon={icon(Trash2)} onClick={() => setNotes("")} /></HStack>
-          <TextArea label="Notes draft" isLabelHidden rows={12} value={notes} onChange={setNotes} />
-        </VStack>}
-
-        <HStack gap={2} wrap="wrap">
-          <Button label="Save to my set" variant="primary" isDisabled={!total} isLoading={busy} onClick={save} />
-          <Button label="Start empty" variant="ghost" isDisabled={busy} onClick={startEmpty} tooltip="Skip the drafts and open the empty set" />
-        </HStack>
-      </VStack>
+  return <div className={wrap}>
+    {back}
+    <div className="grid gap-1">
+      <EditableTitle heading label="Title" value={build.title} placeholder="Untitled set" onSave={(title) => patchSet({ title })} />
+      <div className="flex flex-wrap items-center gap-2">
+        <EditableTitle label="Topic" value={build.topic} placeholder="Add a topic" onSave={(topic) => patchSet({ topic })} />
+        <Picker label="Course" placeholder="Add a course" clearLabel="No course" value={set?.course?.id || ""} onChange={(value) => patchSet({ course: value || null })}
+          options={courses.map((course) => ({ value: course._id, label: course.code + ": " + course.title }))} />
+      </div>
     </div>
-  </AstryxTheme>;
+    {build.message && <p className="m-0 flex items-start gap-2 rounded-lg bg-info/15 p-4" role="status"><Info size={18} className="mt-0.5 shrink-0" aria-hidden="true" />{build.message}</p>}
+    {error && <p className="m-0 flex items-center gap-2 text-destructive" role="alert"><AlertCircle size={16} aria-hidden="true" />{error}</p>}
+    <p className="m-0 text-muted-foreground">Check what the AI drafted. Change or delete anything, then save.</p>
+
+    {cards.length > 0 && <section className="grid gap-3" aria-label="Flashcards">
+      <h2 className={h2}>Flashcards ({cards.length})</h2>
+      {cards.map((row, index) => <div key={row.key} className="flex items-start gap-2">
+        <div className="grid min-w-0 flex-1 gap-2">
+          <textarea aria-label={"Card " + (index + 1) + " front"} rows={2} className={field} value={row.front} onChange={(event) => change(setCards)(index, { front: event.target.value })} />
+          <textarea aria-label={"Card " + (index + 1) + " back"} rows={2} className={field} value={row.back} onChange={(event) => change(setCards)(index, { back: event.target.value })} />
+        </div>
+        <button type="button" aria-label={"Delete card " + (index + 1)} className={iconButton} onClick={() => remove(setCards)(index)}><Trash2 size={18} aria-hidden="true" /></button>
+      </div>)}
+    </section>}
+
+    {questions.length > 0 && <section className="grid gap-3" aria-label="Quiz questions">
+      <h2 className={h2}>Quiz questions ({questions.length})</h2>
+      {questions.map((row, index) => <div key={row.key} className="flex items-start gap-2">
+        <div className="grid min-w-0 flex-1 gap-2">
+          <textarea aria-label={"Question " + (index + 1)} rows={2} className={field} value={row.text} onChange={(event) => change(setQuestions)(index, { text: event.target.value })} />
+          {row.options.map((option, at) => <div key={at} className="flex items-center gap-2">
+            <button type="button" aria-pressed={row.correctIndex === at} title="Correct answer"
+              aria-label={row.correctIndex === at ? "Option " + (at + 1) + " is the correct answer" : "Mark option " + (at + 1) + " as the correct answer"}
+              onClick={() => change(setQuestions)(index, { correctIndex: at })}
+              className={"grid size-11 shrink-0 cursor-pointer place-items-center rounded-pill border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring " + (row.correctIndex === at ? "border-transparent bg-primary text-primary-foreground" : "border-input bg-card text-muted-foreground hover:bg-muted")}><Check size={16} aria-hidden="true" /></button>
+            <input aria-label={"Option " + (at + 1)} className={input} value={option} onChange={(event) => change(setQuestions)(index, { options: row.options.map((item, i) => (i === at ? event.target.value : item)) })} />
+          </div>)}
+        </div>
+        <button type="button" aria-label={"Delete question " + (index + 1)} className={iconButton} onClick={() => remove(setQuestions)(index)}><Trash2 size={18} aria-hidden="true" /></button>
+      </div>)}
+    </section>}
+
+    {notes.trim() && <section className="grid gap-3" aria-label="Notes">
+      <div className="flex items-center justify-between gap-3"><h2 className={h2}>Notes</h2><Button variant="tertiary" size="sm" icon={Trash2} onClick={() => setNotes("")}>Delete notes</Button></div>
+      <textarea aria-label="Notes draft" rows={12} className={field} value={notes} onChange={(event) => setNotes(event.target.value)} />
+    </section>}
+
+    <div className="flex flex-wrap gap-2">
+      <Button disabled={!total} loading={busy} onClick={save}>Save to my set</Button>
+      <Button variant="tertiary" disabled={busy} tooltip="Skip the drafts and open the empty set" onClick={startEmpty}>Start empty</Button>
+    </div>
+  </div>;
 }
