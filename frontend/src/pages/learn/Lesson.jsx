@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useMatch, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Bookmark, CheckCircle2, Circle, ExternalLink, FileText, Flag, Link2, Play, Share2 } from "lucide-react";
-import { Heading } from "@astryxdesign/core/Heading";
-import { MoreMenu } from "@astryxdesign/core/MoreMenu";
+import { ArrowLeft, Bookmark, CheckCircle2, Circle, ExternalLink, FileText, Flag, Link2, MoreHorizontal, Play, Share2 } from "lucide-react";
 import { t } from "../../i18n";
 import { api } from "../../api/client";
 import { nearToPrefetch, prefetchLesson } from "../../api/prefetch";
@@ -12,7 +10,7 @@ import ReadAloud from "../../components/learn/ReadAloud";
 import ReportButton from "../../components/shared/ReportButton";
 import Companion from "../../components/learn/Companion";
 import { PreviewBanner, PreviewCards } from "../../components/learn/PreviewBits";
-import { Badge, Button, SelectField, Skeleton, SkeletonGroup, TextArea, useToast } from "../../components/ui";
+import { Badge, Button, DropdownMenu, SelectField, Skeleton, SkeletonGroup, TextArea, useToast } from "../../components/ui";
 import ResponsiveImage from "../../components/shared/ResponsiveImage";
 import { recallCourse } from "../../utils/courseCache";
 import { isLowData } from "../../utils/lowData";
@@ -220,7 +218,7 @@ export default function Lesson() {
       </aside>}
       <div className="lesson-main">
         <article className="reading-column">
-          <Heading level={1}>{lesson.title}</Heading>
+          <h1 className="m-0 text-3xl leading-tight font-bold">{lesson.title}</h1>
           {(unit || completed || savedLesson) && <p className="lesson-meta">
             {unit && <span>{unit.title}</span>}
             {completed && <Badge tone="success" icon={CheckCircle2}>Completed</Badge>}
@@ -228,12 +226,14 @@ export default function Lesson() {
           </p>}
           <div className="lesson-tools">
             <ReadAloud text={lesson.explanation} />
-            {!preview && <MoreMenu label="More for this lesson" alignment="start" items={[
-              { label: savedLesson ? "Remove from saved" : "Save for later", icon: <Bookmark size={18} aria-hidden="true" />, onClick: toggleSaved },
-              { label: "Share this lesson", icon: <Share2 size={18} aria-hidden="true" />, onClick: shareLesson },
-              { type: "divider" },
-              { label: "Report a problem", icon: <Flag size={18} aria-hidden="true" />, onClick: () => setReporting(true) }
-            ]} />}
+            {!preview && <DropdownMenu align="start"
+              trigger={<Button variant="tertiary" aria-label="More for this lesson"><MoreHorizontal size={18} aria-hidden="true" /></Button>}
+              items={[
+                { label: savedLesson ? "Remove from saved" : "Save for later", icon: Bookmark, onSelect: toggleSaved },
+                { label: "Share this lesson", icon: Share2, onSelect: shareLesson },
+                { separator: true },
+                { label: "Report a problem", icon: Flag, onSelect: () => setReporting(true) }
+              ]} />}
           </div>
           <div className="lesson-explanation"><RichText math={lesson.explanationMath}>{lesson.explanation}</RichText></div>
           {lesson.explanationImage?.url && <figure className="lesson-figure">
