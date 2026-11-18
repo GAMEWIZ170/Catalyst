@@ -257,6 +257,10 @@ The question screen of `pages/learn/Test.jsx` uses `components/learn/QuizOption.
 
 `pages/learn/Courses.jsx`: one Continue card, today and weekly goal bars, the small legacy panels (due, plan, mistakes, topics, exam), a "Your sets" row of cover cards, and the course list. `components/lab/SetCard.jsx` is shared with the Library. `ui/Progress` (gold fill) and `ui/Badge` now use tokens, so every screen that uses them changed colour. Not built: progress rings on set covers (no progress number in the sets API).
 
+## Me and Progress (design reset phase 5, sixth screen)
+
+`pages/account/Me.jsx` (header, `Tabs`, link list) and `pages/learn/Progress.jsx` (stat tiles, unit bars, scores) are Tailwind and `components/ui`. The year heatmap is not built: it needs a per-day activity endpoint in the backend. The unit mastery labels (Not started, Familiar, Proficient, Mastered) wait for a rule from the owner.
+
 ## Authentication behavior
 
 The frontend does not store JWTs in local storage. Login and registration receive an HTTP-only `token` cookie from the backend, and API requests include credentials automatically. On startup, `AuthContext` calls `/auth/me` to restore the current session.
