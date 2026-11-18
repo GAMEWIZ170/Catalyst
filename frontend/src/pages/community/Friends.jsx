@@ -1,27 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { Copy, Share2, UserMinus, UserPlus } from "lucide-react";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
-import { Heading } from "@astryxdesign/core/Heading";
-import { IconButton } from "@astryxdesign/core/IconButton";
-import { List, ListItem } from "@astryxdesign/core/List";
-import { MoreMenu } from "@astryxdesign/core/MoreMenu";
-import { Popover } from "@astryxdesign/core/Popover";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Switch } from "@astryxdesign/core/Switch";
-import { Text } from "@astryxdesign/core/Text";
-import { TextInput } from "@astryxdesign/core/TextInput";
+import { Link, useSearchParams } from "react-router-dom";
+import { AlertCircle, Copy, MoreHorizontal, Share2, UserMinus, UserPlus, X } from "lucide-react";
 import { api } from "../../api/client";
 import Avatar from "../../components/profile/Avatar";
-import AstryxTheme from "../../components/astryx/AstryxTheme";
-import ClickToEdit from "../../components/astryx/ClickToEdit";
-import SettingRow from "../../components/astryx/SettingRow";
-import { useToast } from "../../components/ui";
+import { Button, DropdownMenu, EditableTitle, Popover, SettingRow, Switch, Tooltip, useToast } from "../../components/ui";
 import { ErrorState, Loading } from "../learn/Courses";
 import { t } from "../../i18n";
 
-const icon = (Icon) => <Icon size={18} aria-hidden="true" />;
+const iconButton = "grid size-11 shrink-0 cursor-pointer place-items-center rounded-pill border-0 bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring";
+const h2 = "m-0 text-xl font-semibold";
+const listRow = "flex items-center gap-3 border-b border-border py-3 last:border-b-0";
 
 // Friends: your code as a chip with copy and share, "Add friend" in a small popover, and the friends list first.
 // Other students only ever see a display name and an avatar. Nobody can look students up by name.
@@ -87,72 +75,77 @@ export default function Friends() {
   const { me, friends, incoming, outgoing } = state.data;
   const person = (item) => <Avatar avatar={item.avatar} name={item.name} size={36} />;
 
-  return <AstryxTheme>
-    <div className="content student-page friends-astryx">
-      <VStack gap={5}>
-        <HStack justify="between" align="center" wrap="wrap" gap={3}>
-          <VStack gap={1}>
-            <Heading level={1}>{t("friends.title")}</Heading>
-            <Text color="secondary">{t("friends.intro")}</Text>
-          </VStack>
-          <Popover isOpen={adding} onOpenChange={setAdding} alignment="end" dialogLabel="Add friend" content={
-            <VStack gap={3} padding={4} style={{ width: 280 }}>
-              <TextInput label={t("friends.theirCode")} value={code} onChange={(value) => setCode(value.toUpperCase())} autoCapitalize="characters" autoComplete="off" maxLength={12}
-                hasAutoFocus onEnter={() => { if (code.trim().length >= 6 && !busy) addFriend(); }} />
-              <Button label={t("friends.send")} variant="primary" isDisabled={busy || code.trim().length < 6} onClick={addFriend} />
-            </VStack>}>
-            <Button label="Add friend" variant="primary" icon={icon(UserPlus)} />
-          </Popover>
-        </HStack>
-
-        {problem && <Banner status="error" title={problem} container="section" isDismissable onDismiss={() => setProblem("")} />}
-
-        <HStack gap={2} align="center" wrap="wrap">
-          <Text type="supporting" color="secondary">{t("friends.yourCode")}</Text>
-          <span className="friend-chip" aria-label={t("friends.yourCode")}>{me.code}</span>
-          <IconButton label={t("friends.copy")} tooltip={t("friends.copy")} variant="ghost" icon={icon(Copy)} onClick={copyCode} />
-          <IconButton label="Share invite link" tooltip="Share invite link" variant="ghost" icon={icon(Share2)} onClick={shareInvite} />
-        </HStack>
-
-        {incoming.length > 0 && <VStack gap={2}>
-          <Heading level={2}>{t("friends.requests")}</Heading>
-          <List hasDividers>
-            {incoming.map((item) => <ListItem key={item.id} label={item.name} startContent={person(item)} endContent={<HStack gap={2}>
-              <Button label={t("friends.accept")} size="sm" variant="primary" isDisabled={busy} onClick={() => run(() => api.acceptFriend(item.id), t("friends.accepted"))} />
-              <Button label={t("friends.decline")} size="sm" variant="ghost" isDisabled={busy} tooltip={`${t("friends.decline")} ${item.name}`} onClick={() => run(() => api.removeFriend(item.id))} />
-            </HStack>} />)}
-          </List>
-        </VStack>}
-
-        <VStack gap={2}>
-          <Heading level={2}>{t("friends.list")}</Heading>
-          {friends.length === 0
-            ? <Text color="secondary">{t("friends.empty")}</Text>
-            : <List hasDividers>
-              {friends.map((item) => <ListItem key={item.id} label={item.name} description={item.level ? t("xp.level").replace("{level}", item.level) : undefined} startContent={person(item)}
-                endContent={<MoreMenu label={`Options for ${item.name}`} alignment="end" items={[{ label: t("friends.remove"), icon: icon(UserMinus), variant: "destructive", onClick: () => run(() => api.removeFriend(item.id), t("friends.removed")) }]} />} />)}
-            </List>}
-          <HStack gap={2}><Button label={t("challenges.title")} variant="ghost" size="sm" href="/challenges" /><Button label={t("circles.title")} variant="ghost" size="sm" href="/circles" /></HStack>
-        </VStack>
-
-        {outgoing.length > 0 && <VStack gap={2}>
-          <Heading level={2}>{t("friends.waiting")}</Heading>
-          <List hasDividers>
-            {outgoing.map((item) => <ListItem key={item.id} label={item.name} startContent={person(item)}
-              endContent={<Button label={t("friends.cancel")} size="sm" variant="ghost" isDisabled={busy} tooltip={`${t("friends.cancel")} ${item.name}`} onClick={() => run(() => api.removeFriend(item.id))} />} />)}
-          </List>
-        </VStack>}
-
-        <VStack gap={0}>
-          <Heading level={2}>{t("friends.privacy")}</Heading>
-          <SettingRow label={t("friends.displayName")} help={t("friends.displayHint").replace("{name}", me.defaultName)}>
-            <ClickToEdit label="Display name" value={me.displayName} placeholder={me.defaultName} allowEmpty onSave={(name) => run(() => api.updateFriendSettings({ displayName: name }), t("friends.saved"))} />
-          </SettingRow>
-          <SettingRow label={t("friends.hide")} help={t("friends.hideHint")}>
-            <Switch label={t("friends.hide")} isLabelHidden value={me.hideActivity} isDisabled={busy} onChange={(on) => run(() => api.updateFriendSettings({ hideActivity: on }), t("friends.saved"))} />
-          </SettingRow>
-        </VStack>
-      </VStack>
+  return <div className="content mx-auto grid max-w-3xl gap-5">
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="grid gap-1">
+        <h1 className="m-0 text-3xl leading-tight font-bold">{t("friends.title")}</h1>
+        <p className="m-0 text-muted-foreground">{t("friends.intro")}</p>
+      </div>
+      <Popover open={adding} onOpenChange={setAdding} trigger={<Button icon={UserPlus}>Add friend</Button>}>
+        <div className="grid gap-3">
+          <label className="grid gap-1.5 font-semibold">{t("friends.theirCode")}
+            <input value={code} onChange={(event) => setCode(event.target.value.toUpperCase())} autoCapitalize="characters" autoComplete="off" maxLength={12} autoFocus
+              onKeyDown={(event) => { if (event.key === "Enter" && code.trim().length >= 6 && !busy) addFriend(); }}
+              className="min-h-11 w-full rounded-md border border-input bg-card px-3 font-sans text-base tracking-wide text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" />
+          </label>
+          <Button disabled={busy || code.trim().length < 6} onClick={addFriend}>{t("friends.send")}</Button>
+        </div>
+      </Popover>
     </div>
-  </AstryxTheme>;
+
+    {problem && <p className="m-0 flex items-center gap-2 text-destructive" role="alert"><AlertCircle size={16} aria-hidden="true" />{problem}
+      <button type="button" aria-label="Dismiss error" onClick={() => setProblem("")} className="ml-auto grid size-8 cursor-pointer place-items-center rounded-pill border-0 bg-transparent hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"><X size={16} aria-hidden="true" /></button></p>}
+
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="text-sm text-muted-foreground">{t("friends.yourCode")}</span>
+      <span className="rounded-pill bg-muted px-3 py-1 font-semibold tracking-wide" aria-label={t("friends.yourCode")}>{me.code}</span>
+      <Tooltip label={t("friends.copy")}><button type="button" aria-label={t("friends.copy")} className={iconButton} onClick={copyCode}><Copy size={18} aria-hidden="true" /></button></Tooltip>
+      <Tooltip label="Share invite link"><button type="button" aria-label="Share invite link" className={iconButton} onClick={shareInvite}><Share2 size={18} aria-hidden="true" /></button></Tooltip>
+    </div>
+
+    {incoming.length > 0 && <section className="grid gap-2" aria-labelledby="requests-title">
+      <h2 id="requests-title" className={h2}>{t("friends.requests")}</h2>
+      <ul className="m-0 grid list-none p-0">
+        {incoming.map((item) => <li key={item.id} className={listRow}>
+          {person(item)}<span className="min-w-0 flex-1 truncate font-semibold">{item.name}</span>
+          <Button size="sm" disabled={busy} onClick={() => run(() => api.acceptFriend(item.id), t("friends.accepted"))}>{t("friends.accept")}</Button>
+          <Button size="sm" variant="tertiary" disabled={busy} title={`${t("friends.decline")} ${item.name}`} onClick={() => run(() => api.removeFriend(item.id))}>{t("friends.decline")}</Button>
+        </li>)}
+      </ul>
+    </section>}
+
+    <section className="grid gap-2" aria-labelledby="friends-title">
+      <h2 id="friends-title" className={h2}>{t("friends.list")}</h2>
+      {friends.length === 0
+        ? <p className="m-0 text-muted-foreground">{t("friends.empty")}</p>
+        : <ul className="m-0 grid list-none p-0">
+          {friends.map((item) => <li key={item.id} className={listRow}>
+            {person(item)}<span className="min-w-0 flex-1 truncate font-semibold">{item.name}</span>
+            <DropdownMenu trigger={<Button variant="tertiary" size="sm" aria-label={`Options for ${item.name}`}><MoreHorizontal size={18} aria-hidden="true" /></Button>}
+              items={[{ label: t("friends.remove"), icon: UserMinus, danger: true, onSelect: () => run(() => api.removeFriend(item.id), t("friends.removed")) }]} />
+          </li>)}
+        </ul>}
+      <div className="flex gap-2"><Button as={Link} to="/challenges" variant="tertiary" size="sm">{t("challenges.title")}</Button><Button as={Link} to="/circles" variant="tertiary" size="sm">{t("circles.title")}</Button></div>
+    </section>
+
+    {outgoing.length > 0 && <section className="grid gap-2" aria-labelledby="waiting-title">
+      <h2 id="waiting-title" className={h2}>{t("friends.waiting")}</h2>
+      <ul className="m-0 grid list-none p-0">
+        {outgoing.map((item) => <li key={item.id} className={listRow}>
+          {person(item)}<span className="min-w-0 flex-1 truncate font-semibold">{item.name}</span>
+          <Button size="sm" variant="tertiary" disabled={busy} title={`${t("friends.cancel")} ${item.name}`} onClick={() => run(() => api.removeFriend(item.id))}>{t("friends.cancel")}</Button>
+        </li>)}
+      </ul>
+    </section>}
+
+    <section className="grid" aria-labelledby="privacy-title">
+      <h2 id="privacy-title" className={h2}>{t("friends.privacy")}</h2>
+      <SettingRow label={t("friends.displayName")} help={t("friends.displayHint").replace("{name}", me.defaultName)}>
+        <EditableTitle label="Display name" value={me.displayName} placeholder={me.defaultName} allowEmpty onSave={(name) => run(() => api.updateFriendSettings({ displayName: name }), t("friends.saved"))} />
+      </SettingRow>
+      <SettingRow label={t("friends.hide")} help={t("friends.hideHint")}>
+        <Switch label={t("friends.hide")} value={me.hideActivity} disabled={busy} onChange={(on) => run(() => api.updateFriendSettings({ hideActivity: on }), t("friends.saved"))} />
+      </SettingRow>
+    </section>
+  </div>;
 }
