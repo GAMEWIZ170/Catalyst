@@ -241,6 +241,10 @@ Phase 3 (done) replaced `components/layout/AppShell.jsx` with the new shell: a s
 
 `pages/learn/Flashcards.jsx` uses `components/learn/FlashCard.jsx` (flip card) and `RatingTiles.jsx` (three tiles, keys 1 to 3, fixed positions). Tracker strip: mode chip, card dots, shuffle, "..." menu. Keys: Space flips, arrows move, 1 to 3 rate. Not built yet: thumbs up/down, bookmark and the next-review time on each tile, because the API has no endpoint for them (the tile time needs a preview of the three FSRS outcomes).
 
+## Quiz player (design reset phase 5, second screen)
+
+The question screen of `pages/learn/Test.jsx` uses `components/learn/QuizOption.jsx` (tick or cross plus words, wrong = warning colour), `ProgressDots`, and a feedback panel under the options. The main button is a normal pill; on the last question it reads "Finish test". Intro, results, timed exam (`Exam.jsx`), the other answer types (`QuestionInputs.jsx`) and the editor `LabQuiz.jsx` are still old. Not built: "Explain more" (the AI tutor only knows set and lesson contexts, and the tutor panel is hidden on test screens).
+
 ## Authentication behavior
 
 The frontend does not store JWTs in local storage. Login and registration receive an HTTP-only `token` cookie from the backend, and API requests include credentials automatically. On startup, `AuthContext` calls `/auth/me` to restore the current session.

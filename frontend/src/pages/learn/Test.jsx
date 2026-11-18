@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useMatch, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Bookmark, Check, CheckCircle2, TriangleAlert, X } from "lucide-react";
+import { ArrowLeft, Bookmark, CheckCircle2, TriangleAlert, X } from "lucide-react";
 import ConfirmDialog from "../../components/admin/ConfirmDialog";
 import RichText from "../../components/shared/RichText";
 import ReportButton from "../../components/shared/ReportButton";
 import { PreviewBanner } from "../../components/learn/PreviewBits";
 import WorkedSolution from "../../components/learn/WorkedSolution";
 import { Correct, QuestionInput } from "../../components/learn/QuestionInputs";
-import { Button, Card, EmptyState, Illustration } from "../../components/ui";
+import { Button, Card, EmptyState, Illustration, ProgressDots } from "../../components/ui";
+import QuizOption from "../../components/learn/QuizOption";
 import useUnsavedChanges from "../../hooks/useUnsavedChanges";
 import { api } from "../../api/client";
 import { useAuth } from "../../context/AuthContext";
@@ -283,63 +284,51 @@ export default function Test() {
     if (feedback && chosen === value && !feedback.isCorrect) return "wrong";
     return chosen === value ? "selected" : "";
   };
-  const mark = (state) => state === "correct" ? <Check size={16} aria-hidden="true" /> : state === "wrong" ? <X size={16} aria-hidden="true" /> : null;
-  const srState = (state) => state === "correct" ? <span className="sr-only"> (correct answer)</span> : state === "wrong" ? <span className="sr-only"> (your answer, not correct)</span> : null;
-  const optionClass = (state) => `exam-option ${state ? `exam-option--${state}` : ""}`;
+  const legend = "mb-3 p-0 text-sm font-semibold text-muted-foreground";
 
-  return <div className="exam">
-    <header className="exam-top">
-      <button className="exam-close" type="button" aria-label="Close test" onClick={() => navigate(backTo, { state: backState })}><X size={20} aria-hidden="true" /></button>
-      <div className="exam-progress" role="progressbar" aria-label="Test progress" aria-valuemin="0" aria-valuemax={total} aria-valuenow={index + (feedback ? 1 : 0)} style={{ "--progress": `${((index + (feedback ? 1 : 0)) / total) * 100}%` }} />
-      <p className="exam-count">{index + 1} / {total}</p>
+  return <div className="mx-auto grid max-w-2xl content-start gap-5 px-4 py-4 pb-24">
+    <header className="flex items-center gap-3">
+      <button type="button" aria-label="Close test" onClick={() => navigate(backTo, { state: backState })} className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-pill border-0 bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"><X size={20} aria-hidden="true" /></button>
+      <ProgressDots className="min-w-0 flex-1 justify-center overflow-hidden" total={total} current={index} seen={feedback ? [index] : []} max={9} noun="Question" />
+      <p className="m-0 shrink-0 text-sm text-muted-foreground tabular-nums">{index + 1} / {total}</p>
     </header>
-    <div className="exam-body">
+    <div className="grid gap-5">
       <h1 className="sr-only">{test.title}</h1>
       {preview && <PreviewBanner published={test.isPublished} visible={test.visibleToStudents} />}
-      <div className="exam-question"><RichText>{question.text}</RichText></div>
-      {question.image?.url && <ResponsiveImage className="exam-image" image={question.image} sizes="(max-width: 600px) 100vw, 600px" />}
+      <div className="text-xl leading-snug font-semibold sm:text-2xl"><RichText>{question.text}</RichText></div>
+      {question.image?.url && <ResponsiveImage className="max-h-72 rounded-lg" image={question.image} sizes="(max-width: 600px) 100vw, 600px" />}
       {question.type !== "mcq" && question.type !== "true_false"
         ? <QuestionInput key={question._id} question={question} disabled={Boolean(feedback)} onAnswer={setChosen} onEnter={checkAnswer} />
         : question.type === "mcq"
-        ? <fieldset className="exam-options"><legend>Choose an answer. Keys 1 to {question.options.length}.</legend>
-          {question.options.map((option, position) => {
-            const state = stateOf(option._id, correct?._id === option._id);
-            return <button className={optionClass(state)} type="button" aria-pressed={chosen === option._id} disabled={Boolean(feedback)} key={option._id} onClick={() => selectAnswer(option._id)}>
-              <span className="exam-key" aria-hidden="true">{position + 1}</span>
-              <span className="exam-option-text"><RichText>{option.text}</RichText>{option.image?.url && <ResponsiveImage image={option.image} sizes="(max-width: 600px) 80vw, 300px" />}{srState(state)}</span>
-              {mark(state)}
-            </button>;
-          })}
+        ? <fieldset className="m-0 grid gap-2.5 border-0 p-0"><legend className={legend}>Choose an answer. Keys 1 to {question.options.length}.</legend>
+          {question.options.map((option, position) => <QuizOption key={option._id} keyLabel={position + 1} state={stateOf(option._id, correct?._id === option._id)} pressed={chosen === option._id} disabled={Boolean(feedback)} onClick={() => selectAnswer(option._id)}>
+            <RichText>{option.text}</RichText>{option.image?.url && <ResponsiveImage image={option.image} sizes="(max-width: 600px) 80vw, 300px" />}
+          </QuizOption>)}
         </fieldset>
-        : <fieldset className="exam-options exam-options--two"><legend>Choose an answer. Keys 1 and 2.</legend>
-          {["true", "false"].map((value, position) => {
-            const state = stateOf(value, correct === value);
-            return <button className={optionClass(state)} type="button" aria-pressed={chosen === value} disabled={Boolean(feedback)} key={value} onClick={() => selectAnswer(value)}>
-              <span className="exam-key" aria-hidden="true">{position + 1}</span>
-              <span className="exam-option-text">{value === "true" ? "True" : "False"}{srState(state)}</span>
-              {mark(state)}
-            </button>;
-          })}
+        : <fieldset className="m-0 grid grid-cols-2 gap-2.5 border-0 p-0"><legend className={`${legend} col-span-2`}>Choose an answer. Keys 1 and 2.</legend>
+          {["true", "false"].map((value, position) => <QuizOption key={value} keyLabel={position + 1} state={stateOf(value, correct === value)} pressed={chosen === value} disabled={Boolean(feedback)} onClick={() => selectAnswer(value)}>
+            {value === "true" ? "True" : "False"}
+          </QuizOption>)}
         </fieldset>}
       {!feedback && question.hint && (hintFor === question._id
-        ? <aside className="exam-hint" aria-label="Hint"><strong>Hint</strong><RichText>{question.hint}</RichText></aside>
-        : <Button variant="tertiary" onClick={() => setHintFor(question._id)}>Show hint</Button>)}
-      {feedback && <section className={`exam-feedback exam-feedback--${feedback.isCorrect ? "correct" : "wrong"}`} aria-live="polite">
-        <h2 tabIndex="-1" ref={feedbackHeading}>{feedback.isCorrect ? <CheckCircle2 size={20} aria-hidden="true" /> : <TriangleAlert size={20} aria-hidden="true" />}{feedback.isCorrect ? "Correct" : "Not quite"}</h2>
-        {feedback.unitWrong && <p>The number is right, but the unit is not.</p>}
+        ? <aside className="grid gap-1 rounded-lg bg-muted p-4 text-sm" aria-label="Hint"><strong>Hint</strong><RichText>{question.hint}</RichText></aside>
+        : <div><Button variant="tertiary" onClick={() => setHintFor(question._id)}>Show hint</Button></div>)}
+      {feedback && <section className={`grid gap-3 rounded-lg border p-4 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-200 ${feedback.isCorrect ? "border-success/60 bg-success/10" : "border-warning/60 bg-warning/10"}`} aria-live="polite">
+        <h2 tabIndex="-1" ref={feedbackHeading} className="m-0 flex items-center gap-2 text-lg font-semibold">{feedback.isCorrect ? <CheckCircle2 size={20} className="text-success" aria-hidden="true" /> : <TriangleAlert size={20} className="text-warning" aria-hidden="true" />}{feedback.isCorrect ? "Correct" : "Not quite"}</h2>
+        {feedback.unitWrong && <p className="m-0">The number is right, but the unit is not.</p>}
         {!feedback.isCorrect && <div className="qi-correct"><strong>Correct answer:</strong> <Correct question={question} correct={correct} /></div>}
         <RichText>{feedback.explanation}</RichText>
-        {!preview && <Button variant="tertiary" icon={Bookmark} aria-pressed={savedQuestions.has(question._id)} onClick={() => toggleSavedQuestion(question._id)}>{savedQuestions.has(question._id) ? "Saved" : "Save question"}</Button>}
         {feedback.explanationImage?.url && <ResponsiveImage image={feedback.explanationImage} sizes="(max-width: 600px) 100vw, 600px" />}
         <WorkedSolution steps={feedback.workedSolution} />
+        {!preview && <div><Button variant="tertiary" size="sm" icon={Bookmark} aria-pressed={savedQuestions.has(question._id)} onClick={() => toggleSavedQuestion(question._id)}>{savedQuestions.has(question._id) ? "Saved" : "Save question"}</Button></div>}
       </section>}
-      {!preview && <ReportButton key={question._id} kind="question" target={question._id} />}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>{!preview && <ReportButton key={question._id} kind="question" target={question._id} />}</div>
+        {!feedback
+          ? <Button disabled={chosen === null} loading={busy} onClick={checkAnswer}>Check</Button>
+          : <Button loading={busy} onClick={continueQuestion}>{isLast ? "Finish test" : "Continue"}</Button>}
+      </div>
       {error && <p className="form-error" role="alert">{error}</p>}
-    </div>
-    <div className="exam-bar">
-      {!feedback
-        ? <Button block disabled={chosen === null} loading={busy} onClick={checkAnswer}>Check</Button>
-        : <Button block loading={busy} onClick={continueQuestion}>{isLast ? "Finish test" : "Continue"}</Button>}
     </div>
     <ConfirmDialog open={blocking} title="Leave this test?" description="Your answers will not be saved." confirmLabel="Leave" cancelLabel="Stay" onConfirm={leave} onCancel={() => { setBlocking(false); blocker.reset?.(); }} />
   </div>;
