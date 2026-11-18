@@ -1,14 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation, useSearchParams, useParams } from "react-router-dom";
-import { ArrowLeft, Check, CircleHelp, Layers, RotateCcw } from "lucide-react";
+import { Link, useLocation, useNavigate, useSearchParams, useParams } from "react-router-dom";
+import { ArrowLeft, Layers, MoreHorizontal, RotateCcw, Shuffle } from "lucide-react";
 import DeckSummary from "../../components/learn/DeckSummary";
-import RichText from "../../components/shared/RichText";
-import { Button, EmptyState } from "../../components/ui";
+import FlashCard from "../../components/learn/FlashCard";
+import RatingTiles, { RATINGS } from "../../components/learn/RatingTiles";
+import { Button, DropdownMenu, EmptyState, KeycapButton, ProgressDots, Tooltip } from "../../components/ui";
 import { api } from "../../api/client";
-import ResponsiveImage from "../../components/shared/ResponsiveImage";
 import { ErrorState, Loading } from "./Courses";
-
-const RATINGS = [["unknown", "Don't know", RotateCcw], ["unsure", "Unsure", CircleHelp], ["confident", "Confident", Check]];
 
 // One deck player for a lesson's flashcards (/lessons/:id/flashcards) and for a student's own study set (/lab/:setId/study).
 export default function Flashcards({ setMode = false }) {
@@ -18,6 +16,7 @@ export default function Flashcards({ setMode = false }) {
   const homeLabel = setMode ? "Back to my set" : "Back to lesson";
   const reviewPath = setMode ? `/lab/${id}/study?filter=review` : `/lessons/${id}/flashcards?filter=review`;
   const location = useLocation();
+  const navigate = useNavigate();
   const lessonState = location.state?.courseFrom ? { from: location.state.courseFrom } : undefined;
   const [params] = useSearchParams();
   const filter = params.get("filter") === "review" ? "review" : "";
@@ -68,18 +67,43 @@ export default function Flashcards({ setMode = false }) {
     api.savePosition({ lessonId: id, kind: "flashcards", position, total: queue.length }).catch(() => {});
   }, [id, position, queue.length, filter]);
 
-  // Space reveals the card. Keys 1, 2 and 3 rate it once the answer shows.
+  // Space flips the card, left and right arrows move, keys 1 to 3 rate once the answer shows.
   useEffect(() => {
     if (finished || !queue[position]) return undefined;
     function onKey(event) {
       if (event.ctrlKey || event.metaKey || event.altKey) return;
-      if (event.target.closest?.("input, textarea, select, button, a")) return;
-      if (event.key === " ") { event.preventDefault(); setShown((value) => !value); }
-      else if (shown && ["1", "2", "3"].includes(event.key)) rate(RATINGS[Number(event.key) - 1][0]);
+      if (event.target.closest?.("input, textarea, select, [role=menu], [role=dialog]")) return;
+      if (event.key === " ") {
+        if (event.target.closest?.("button, a")) return; // a focused button already toggles itself
+        event.preventDefault();
+        setShown((value) => !value);
+      } else if (event.key === "ArrowLeft") go(-1);
+      else if (event.key === "ArrowRight") go(1);
+      else if (shown && ["1", "2", "3"].includes(event.key)) rate(RATINGS[Number(event.key) - 1].value);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   });
+
+  // Move without rating. Rated cards can be looked at again.
+  function go(step) {
+    const next = position + step;
+    if (next < 0 || next > queue.length - 1) return;
+    setPosition(next);
+    setShown(false);
+  }
+
+  // Shuffle only the cards still ahead, so the one on screen stays put.
+  function shuffle() {
+    setQueue((items) => {
+      const ahead = items.slice(position + 1);
+      for (let i = ahead.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [ahead[i], ahead[j]] = [ahead[j], ahead[i]];
+      }
+      return [...items.slice(0, position + 1), ...ahead];
+    });
+  }
 
   async function rate(confidence) {
     if (saving) return;
@@ -129,27 +153,32 @@ export default function Flashcards({ setMode = false }) {
     </div>;
   }
   const card = queue[position];
-  return <div className="content fc-page">
+  const menu = [
+    { label: "Shuffle the rest", icon: Shuffle, onSelect: shuffle },
+    { label: "Start again", icon: RotateCcw, onSelect: load },
+    { separator: true },
+    { label: homeLabel, icon: ArrowLeft, onSelect: () => navigate(home, { state: lessonState }) }
+  ];
+  return <div className="content mx-auto grid max-w-2xl gap-5">
     {back}
-    <div className="fc-top">
-      <div className="exam-progress" role="progressbar" aria-label="Deck progress" aria-valuemin="0" aria-valuemax={queue.length} aria-valuenow={position + 1} style={{ "--progress": `${((position + 1) / queue.length) * 100}%` }} />
-      <p className="exam-count" aria-live="polite">{position + 1} / {queue.length}</p>
+    <div className="flex items-center gap-3 rounded-pill border border-border bg-card py-1 pr-1 pl-4">
+      <span className="rounded-pill bg-muted px-3 py-1 text-sm font-semibold">{filter ? "Review" : "All cards"}</span>
+      <ProgressDots className="min-w-0 flex-1 justify-center overflow-hidden"  total={queue.length} current={position} max={7} onSelect={(index) => { setPosition(index); setShown(false); }} />
+      <p className="m-0 hidden shrink-0 text-sm text-muted-foreground tabular-nums sm:block" aria-live="polite">{position + 1} / {queue.length}</p>
+      <Tooltip label="Shuffle the rest"><Button variant="tertiary" size="sm" className="hidden sm:inline-flex" aria-label="Shuffle the rest" onClick={shuffle}><Shuffle size={16} aria-hidden="true" /></Button></Tooltip>
+      <DropdownMenu items={menu} trigger={<Button variant="tertiary" size="sm" aria-label="More options"><MoreHorizontal size={16} aria-hidden="true" /></Button>} />
     </div>
-    <article className="fc-card">
+    <article className="grid gap-4">
       <h1 className="sr-only" tabIndex="-1" ref={headingRef}>Flashcard {position + 1} of {queue.length}</h1>
-      <button key={`${card._id}-${position}`} className={`flashcard-flip ${shown ? "is-flipped" : ""}`} type="button" aria-pressed={shown} onClick={() => setShown((value) => !value)}>
-        <span className="flashcard-face flashcard-face--front" aria-hidden={shown}><span className="flashcard-face-label">Question</span><RichText>{card.front.text}</RichText>{card.front.image?.url && <ResponsiveImage image={card.front.image} sizes="(max-width: 600px) 100vw, 600px" loading="lazy" />}</span>
-        <span className="flashcard-face flashcard-face--back" aria-hidden={!shown}><span className="flashcard-face-label">Answer</span><RichText>{card.back.text}</RichText>{card.back.image?.url && <ResponsiveImage image={card.back.image} sizes="(max-width: 600px) 100vw, 600px" loading="lazy" />}</span>
-      </button>
+      <FlashCard key={`${card._id}-${position}`} card={card} shown={shown} onToggle={() => setShown((value) => !value)} />
       <span className="sr-only" role="status">{shown ? "Answer shown" : ""}</span>
-      {!shown
-        ? <p className="fc-hint">Tap the card or press Space to reveal</p>
-        : <>
-          <div className="fc-ratings" role="group" aria-label="How well did you know it?">
-            {RATINGS.map(([value, label, Icon], key) => <Button variant="secondary" key={value} disabled={saving} icon={Icon} onClick={() => rate(value)}><span className="exam-key" aria-hidden="true">{key + 1}</span> {label}</Button>)}
-          </div>
-          <p className="fc-hint" aria-live="polite">{saving ? "Saving your answer..." : "Keys 1, 2 and 3. Cards you mark Unsure or Don't know go into your review list."}</p>
-        </>}
+      <div className="flex items-center justify-center gap-2">
+        <KeycapButton keyLabel="←" disabled={position === 0} onClick={() => go(-1)}>Prev</KeycapButton>
+        <KeycapButton keyLabel="Space" aria-pressed={shown} onClick={() => setShown((value) => !value)}>{shown ? "Question" : "Flip"}</KeycapButton>
+        <KeycapButton keyLabel="→" disabled={position === queue.length - 1} onClick={() => go(1)}>Next</KeycapButton>
+      </div>
+      <RatingTiles enabled={shown} saving={saving} onRate={rate} />
+      <p className="m-0 text-center text-sm text-muted-foreground" aria-live="polite">{saving ? "Saving your answer..." : shown ? "Keys 1, 2 and 3. Cards you mark Unsure or Don't know come back in your review list." : "Flip the card, then rate how well you knew it."}</p>
       {error && <p className="form-error" role="alert">{error}</p>}
     </article>
   </div>;

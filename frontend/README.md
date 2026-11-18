@@ -237,6 +237,10 @@ Phase 3 (done) replaced `components/layout/AppShell.jsx` with the new shell: a s
 
 `components/ui` now sits on Radix primitives and Tailwind tokens. Button, Dialog, Tabs and Toast keep their old props, so pages did not change. New: `Popover`, `DropdownMenu` (the "..." menu), `Tooltip`, `Segmented`, `Stepper`, `Keycap` / `KeycapButton` and `ProgressDots`. All come from `components/ui` (index). Toasts use Sonner behind the same `useToast()`; pass `action: { label: "Undo", onClick }` for undo. Screens that import Astryx directly keep it until they are ported (phase 5). Old `.ui-dialog`, `.ui-tab*` and `.ui-toast*` CSS is now unused and goes in phase 6.
 
+## Flashcards screen (design reset phase 5, first screen)
+
+`pages/learn/Flashcards.jsx` uses `components/learn/FlashCard.jsx` (flip card) and `RatingTiles.jsx` (three tiles, keys 1 to 3, fixed positions). Tracker strip: mode chip, card dots, shuffle, "..." menu. Keys: Space flips, arrows move, 1 to 3 rate. Not built yet: thumbs up/down, bookmark and the next-review time on each tile, because the API has no endpoint for them (the tile time needs a preview of the three FSRS outcomes).
+
 ## Authentication behavior
 
 The frontend does not store JWTs in local storage. Login and registration receive an HTTP-only `token` cookie from the backend, and API requests include credentials automatically. On startup, `AuthContext` calls `/auth/me` to restore the current session.
