@@ -15,6 +15,7 @@ export default function QuizOption({ keyLabel, state = "", disabled, pressed, on
     <button
       type="button"
       aria-pressed={pressed}
+      data-quiz-option=""
       disabled={disabled}
       onClick={onClick}
       className={cn(

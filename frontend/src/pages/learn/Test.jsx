@@ -7,7 +7,7 @@ import ReportButton from "../../components/shared/ReportButton";
 import { PreviewBanner } from "../../components/learn/PreviewBits";
 import WorkedSolution from "../../components/learn/WorkedSolution";
 import { Correct, QuestionInput } from "../../components/learn/QuestionInputs";
-import { Button, Card, EmptyState, Illustration, ProgressDots } from "../../components/ui";
+import { Button, EmptyState, Illustration, ProgressDots } from "../../components/ui";
 import QuizOption from "../../components/learn/QuizOption";
 import useUnsavedChanges from "../../hooks/useUnsavedChanges";
 import { api } from "../../api/client";
@@ -95,7 +95,7 @@ export default function Test() {
       if (event.target.closest?.("input, textarea, select")) return;
       if (event.key === "Enter") {
         // On a focused button or link, Enter already activates it; do not do it twice.
-        if ((event.target.closest?.("button, a") && !event.target.closest?.(".exam-option")) || event.repeat) return;
+        if ((event.target.closest?.("button, a") && !event.target.closest?.(".exam-option, [data-quiz-option]")) || event.repeat) return;
         event.preventDefault();
         enterAction.current?.();
         return;
@@ -197,35 +197,35 @@ export default function Test() {
   // Only lesson tests can complete a lesson, so only they show a pass percent.
   const needsPass = !practice && test.scope === "lesson" && test.passPercent != null;
 
-  if (test.timed) return <div className="exam exam--page">
-    <Link className="back-link" to={backTo} state={backState}><ArrowLeft size={16} aria-hidden="true" />{backLabel}</Link>
-    <Card className="exam-intro">
-      <h1>{test.title}</h1>
+  if (test.timed) return <div className="mx-auto grid max-w-2xl gap-5 px-4 py-6">
+    <div><Button as={Link} to={backTo} state={backState} variant="tertiary" size="sm" icon={ArrowLeft}>{backLabel}</Button></div>
+    <section className="grid gap-3 rounded-xl border border-border bg-card p-6">
+      <h1 className="m-0 text-3xl leading-tight font-bold">{test.title}</h1>
       <p>A timed mock exam: {test.questionCount} {test.questionCount === 1 ? "question" : "questions"} in {test.timeLimitMinutes} {test.timeLimitMinutes === 1 ? "minute" : "minutes"}.</p>
-      <p className="muted">There is no feedback until you hand it in. You can flag questions and jump between them. The timer is kept by the server and keeps running if you leave. When it reaches zero, your answers are handed in for you.</p>
-      {needsPass && <p className="muted">You need at least {test.passPercent}% to complete the lesson.</p>}
+      <p className="m-0 text-sm text-muted-foreground">There is no feedback until you hand it in. You can flag questions and jump between them. The timer is kept by the server and keeps running if you leave. When it reaches zero, your answers are handed in for you.</p>
+      {needsPass && <p className="m-0 text-sm text-muted-foreground">You need at least {test.passPercent}% to complete the lesson.</p>}
       <div><Button as={Link} to={`/tests/${test._id}/exam`} state={location.state}>Start exam</Button></div>
-    </Card>
+    </section>
   </div>;
-  if (isTopic && test.questions.length === 0) return <div className="exam exam--page">
-    <Link className="back-link" to={backTo} state={backState}><ArrowLeft size={16} aria-hidden="true" />{backLabel}</Link>
+  if (isTopic && test.questions.length === 0) return <div className="mx-auto grid max-w-2xl gap-5 px-4 py-6">
+    <div><Button as={Link} to={backTo} state={backState} variant="tertiary" size="sm" icon={ArrowLeft}>{backLabel}</Button></div>
     <EmptyState illustration={<Illustration name="done" />} title="No questions for this choice" description="Try another topic, source or year." action={<Button as={Link} variant="secondary" to={backTo} state={backState}>{backLabel}</Button>} />
   </div>;
-  if (isMistakes && test.questions.length === 0) return <div className="exam exam--page">
-    <Link className="back-link" to={backTo} state={backState}><ArrowLeft size={16} aria-hidden="true" />{backLabel}</Link>
+  if (isMistakes && test.questions.length === 0) return <div className="mx-auto grid max-w-2xl gap-5 px-4 py-6">
+    <div><Button as={Link} to={backTo} state={backState} variant="tertiary" size="sm" icon={ArrowLeft}>{backLabel}</Button></div>
     <EmptyState illustration={<Illustration name="done" />} title="No mistakes to practise" description="Questions you get wrong will appear here until you answer them right on two different days." action={<Button as={Link} variant="secondary" to={backTo} state={backState}>{backLabel}</Button>} />
   </div>;
 
-  if (phase === "intro") return <div className="exam exam--page">
-    <Link className="back-link" to={backTo} state={backState}><ArrowLeft size={16} aria-hidden="true" />{backLabel}</Link>
-    <Card className="exam-intro">
+  if (phase === "intro") return <div className="mx-auto grid max-w-2xl gap-5 px-4 py-6">
+    <div><Button as={Link} to={backTo} state={backState} variant="tertiary" size="sm" icon={ArrowLeft}>{backLabel}</Button></div>
+    <section className="grid gap-3 rounded-xl border border-border bg-card p-6">
       {preview && <PreviewBanner published={test.isPublished} visible={test.visibleToStudents} />}
-      <h1>{test.title}</h1>
+      <h1 className="m-0 text-3xl leading-tight font-bold">{test.title}</h1>
       <p>{test.questions.length} {test.questions.length === 1 ? "question" : "questions"}{isMistakes ? " you got wrong before" : ""}. Pick an answer, check it, then continue.</p>
-      {needsPass && <p className="muted">You need at least {test.passPercent}% to complete the lesson.</p>}
-      <div className="button-row"><Button onClick={start}>Start test</Button>{!practice && test.questions.length > 0 && <Button as={Link} variant="secondary" to={`/tests/${test._id}/exam?timed=1`} state={location.state}>Take it timed</Button>}</div>
-      {!practice && test.questions.length > 0 && <p className="muted">Timed: one minute a question, with no feedback until you hand in.{user?.extraTime ? ` Your extra time of ${user.extraTime}% is added.` : ""}</p>}
-    </Card>
+      {needsPass && <p className="m-0 text-sm text-muted-foreground">You need at least {test.passPercent}% to complete the lesson.</p>}
+      <div className="flex flex-wrap gap-2"><Button onClick={start}>Start test</Button>{!practice && test.questions.length > 0 && <Button as={Link} variant="secondary" to={`/tests/${test._id}/exam?timed=1`} state={location.state}>Take it timed</Button>}</div>
+      {!practice && test.questions.length > 0 && <p className="m-0 text-sm text-muted-foreground">Timed: one minute a question, with no feedback until you hand in.{user?.extraTime ? ` Your extra time of ${user.extraTime}% is added.` : ""}</p>}
+    </section>
   </div>;
 
   async function challengeFriend() {
@@ -240,32 +240,32 @@ export default function Test() {
 
   if (phase === "results") {
     const passed = needsPass && result.passed;
-    return <div className="exam exam--page">
-      <section className="exam-results" aria-labelledby="score-heading">
+    return <div className="mx-auto grid max-w-2xl gap-5 px-4 py-6">
+      <section className="grid justify-items-center gap-3 text-center" aria-labelledby="score-heading">
         <h1 className="sr-only">{test.title}: results</h1>
-        <Illustration name="done" className="results-illustration" />
-        <p className="exam-score" id="score-heading"><span className="sr-only">Your score: </span>{result.score}%</p>
-        <p className="exam-correct">{result.correct} of {result.total} correct. {scoreMessage(result.score)}</p>
-        {!result.practice && <p className="muted">Best score {result.bestScore}% · Attempts {result.attempts}</p>}
-        {needsPass && <p className={`exam-verdict ${result.passed ? "exam-verdict--passed" : ""}`} role="status">
+        <Illustration name="done" className="w-40 text-foreground" />
+        <p className="m-0 text-6xl leading-none font-bold tabular-nums" id="score-heading"><span className="sr-only">Your score: </span>{result.score}%</p>
+        <p className="m-0 text-lg">{result.correct} of {result.total} correct. {scoreMessage(result.score)}</p>
+        {!result.practice && <p className="m-0 text-sm text-muted-foreground">Best score {result.bestScore}% · Attempts {result.attempts}</p>}
+        {needsPass && <p className={`m-0 flex items-center gap-2 rounded-pill px-4 py-2 font-semibold ${result.passed ? "bg-success/15" : "bg-warning/15"}`} role="status">
           {result.passed ? <CheckCircle2 size={16} aria-hidden="true" /> : <TriangleAlert size={16} aria-hidden="true" />}
           {result.passed ? "Passed. This lesson is complete." : `Not yet. You need ${result.passPercent}% to pass.`}
         </p>}
-        {challengeProblem && <p className="settings-status" role="alert">{challengeProblem}</p>}
-        <div className="button-row button-row--stack">
+        {challengeProblem && <p className="m-0 text-destructive" role="alert">{challengeProblem}</p>}
+        <div className="flex flex-wrap justify-center gap-2">
           {missed.length > 0 && !practice && <Button variant="secondary" onClick={practiseMissed}>Practise the ones I missed</Button>}
           {missed.length > 0 && !showMissed && <Button variant="secondary" onClick={reviewMistakes}>Review mistakes</Button>}
           {!practice && !result.practice && <Button variant="secondary" onClick={challengeFriend}>{t("challenges.create")}</Button>}
           <Button variant={passed || missed.length === 0 ? "secondary" : "tertiary"} onClick={tryAgain}>Try again</Button>
           <Button as={Link} variant={passed || !needsPass ? "primary" : "secondary"} to={backTo} state={backState}>{backLabel}</Button>
         </div>
-        {missed.length > 0 && showMissed && <div className="exam-missed" ref={missedRef} tabIndex="-1">
-          <h2>{missed.length} to review</h2>
-          {missed.map((item) => <details key={item.id} open>
-            <summary>Question {item.number}</summary>
-            <div className="exam-missed-body">
-              <div className="exam-question"><RichText>{item.text}</RichText></div>
-              <div className="qi-correct"><strong>Correct answer:</strong> <Correct question={item.question} correct={item.correct} /></div>
+        {missed.length > 0 && showMissed && <div className="grid w-full gap-2 text-left" ref={missedRef} tabIndex="-1">
+          <h2 className="m-0 text-xl font-semibold">{missed.length} to review</h2>
+          {missed.map((item) => <details key={item.id} open className="rounded-lg border border-border bg-card p-4">
+            <summary className="cursor-pointer font-semibold">Question {item.number}</summary>
+            <div className="mt-3 grid gap-2">
+              <div className="text-lg font-semibold"><RichText>{item.text}</RichText></div>
+              <div className="rounded-md bg-card/60 p-3"><strong>Correct answer:</strong> <Correct question={item.question} correct={item.correct} /></div>
               {item.explanation && <RichText>{item.explanation}</RichText>}
               <WorkedSolution steps={item.workedSolution} />
             </div>
@@ -316,7 +316,7 @@ export default function Test() {
       {feedback && <section className={`grid gap-3 rounded-lg border p-4 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-200 ${feedback.isCorrect ? "border-success/60 bg-success/10" : "border-warning/60 bg-warning/10"}`} aria-live="polite">
         <h2 tabIndex="-1" ref={feedbackHeading} className="m-0 flex items-center gap-2 text-lg font-semibold">{feedback.isCorrect ? <CheckCircle2 size={20} className="text-success" aria-hidden="true" /> : <TriangleAlert size={20} className="text-warning" aria-hidden="true" />}{feedback.isCorrect ? "Correct" : "Not quite"}</h2>
         {feedback.unitWrong && <p className="m-0">The number is right, but the unit is not.</p>}
-        {!feedback.isCorrect && <div className="qi-correct"><strong>Correct answer:</strong> <Correct question={question} correct={correct} /></div>}
+        {!feedback.isCorrect && <div className="rounded-md bg-card/60 p-3"><strong>Correct answer:</strong> <Correct question={question} correct={correct} /></div>}
         <RichText>{feedback.explanation}</RichText>
         {feedback.explanationImage?.url && <ResponsiveImage image={feedback.explanationImage} sizes="(max-width: 600px) 100vw, 600px" />}
         <WorkedSolution steps={feedback.workedSolution} />

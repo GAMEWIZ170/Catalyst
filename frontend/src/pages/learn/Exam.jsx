@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, CheckCircle2, Flag, TriangleAlert } from "lucide-react";
-import ConfirmDialog from "../../components/admin/ConfirmDialog";
 import RichText from "../../components/shared/RichText";
 import ResponsiveImage from "../../components/shared/ResponsiveImage";
 import WorkedSolution from "../../components/learn/WorkedSolution";
 import { ChoiceInput, Correct, QuestionInput } from "../../components/learn/QuestionInputs";
-import { Button, Card, Illustration } from "../../components/ui";
+import { Button, Confirm, Illustration } from "../../components/ui";
 import { api } from "../../api/client";
 import { ErrorState, Loading } from "./Courses";
 
@@ -114,25 +113,25 @@ export default function Exam() {
   if (error && !attempt && !result) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
   if (!attempt && !result) return <Loading />;
 
-  if (result) return <div className="exam exam--page">
-    <section className="exam-results" aria-labelledby="exam-score">
+  if (result) return <div className="mx-auto grid max-w-2xl gap-5 px-4 py-6">
+    <section className="grid justify-items-center gap-3 text-center" aria-labelledby="exam-score">
       <h1 className="sr-only">Mock exam results</h1>
-      <Illustration name="done" className="results-illustration" />
-      <p className="exam-score" id="exam-score"><span className="sr-only">Your score: </span>{result.score}%</p>
-      <p className="exam-correct">{result.correct} of {result.total} correct.</p>
-      <p className="muted">Best score {result.bestScore}% · Attempts {result.attempts}</p>
-      <div className="button-row button-row--stack">
+      <Illustration name="done" className="w-40 text-foreground" />
+      <p className="m-0 text-6xl leading-none font-bold tabular-nums" id="exam-score"><span className="sr-only">Your score: </span>{result.score}%</p>
+      <p className="m-0 text-lg">{result.correct} of {result.total} correct.</p>
+      <p className="m-0 text-sm text-muted-foreground">Best score {result.bestScore}% · Attempts {result.attempts}</p>
+      <div className="flex flex-wrap justify-center gap-2">
         <Button as={Link} variant="primary" to="/home">Back to home</Button>
       </div>
-      <div className="exam-missed">
-        <h2>Review</h2>
-        {result.review.map((item, position) => <details key={item.question._id} open={!item.isCorrect}>
-          <summary>Question {position + 1}: {item.yourAnswer === null ? "not answered" : item.isCorrect ? "correct" : "not correct"}{item.flagged ? " (flagged)" : ""}</summary>
-          <div className="exam-missed-body">
-            <div className="exam-question"><RichText>{item.question.text}</RichText></div>
-            {item.question.image?.url && <ResponsiveImage className="exam-image" image={item.question.image} sizes="(max-width: 600px) 100vw, 600px" />}
+      <div className="grid w-full gap-2 text-left">
+        <h2 className="m-0 text-xl font-semibold">Review</h2>
+        {result.review.map((item, position) => <details key={item.question._id} open={!item.isCorrect} className="rounded-lg border border-border bg-card p-4">
+          <summary className="cursor-pointer font-semibold">Question {position + 1}: {item.yourAnswer === null ? "not answered" : item.isCorrect ? "correct" : "not correct"}{item.flagged ? " (flagged)" : ""}</summary>
+          <div className="mt-3 grid gap-2">
+            <div className="text-lg font-semibold"><RichText>{item.question.text}</RichText></div>
+            {item.question.image?.url && <ResponsiveImage className="max-h-72 rounded-lg" image={item.question.image} sizes="(max-width: 600px) 100vw, 600px" />}
             {item.unitWrong && <p>The number was right, but the unit was not.</p>}
-            {!item.isCorrect && <div className="qi-correct"><strong>Correct answer:</strong> <Correct question={item.question} correct={item.correctAnswer} /></div>}
+            {!item.isCorrect && <div className="rounded-md bg-muted p-3"><strong>Correct answer:</strong> <Correct question={item.question} correct={item.correctAnswer} /></div>}
             {item.explanation && <RichText>{item.explanation}</RichText>}
             {item.explanationImage?.url && <ResponsiveImage image={item.explanationImage} sizes="(max-width: 600px) 100vw, 600px" />}
             <WorkedSolution steps={item.workedSolution} />
@@ -144,41 +143,41 @@ export default function Exam() {
 
   const question = questions[index];
   const lowTime = remaining !== null && remaining <= 5 * 60 * 1000;
-  return <div className="exam exam--mock">
-    <header className="exam-top">
-      <Link className="exam-close" to="/home" aria-label="Leave exam (the timer keeps running)"><ArrowLeft size={20} aria-hidden="true" /></Link>
-      <p className="exam-count" aria-live="off">{index + 1} / {questions.length}</p>
-      <p className={`exam-timer ${lowTime ? "exam-timer--low" : ""}`} role="timer" aria-label="Time left">{remaining === null ? "" : clock(remaining)}</p>
+  return <div className="mx-auto grid max-w-2xl content-start gap-5 px-4 py-4 pb-24">
+    <header className="flex items-center gap-3">
+      <Link to="/home" aria-label="Leave exam (the timer keeps running)" className="grid size-11 shrink-0 place-items-center rounded-pill text-muted-foreground no-underline hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"><ArrowLeft size={20} aria-hidden="true" /></Link>
+      <p className="m-0 flex-1 text-sm text-muted-foreground tabular-nums" aria-live="off">{index + 1} / {questions.length}</p>
+      <p className={`m-0 rounded-pill px-3 py-1 text-lg font-semibold tabular-nums ${lowTime ? "bg-warning/20" : "bg-muted"}`} role="timer" aria-label="Time left">{remaining === null ? "" : clock(remaining)}</p>
     </header>
     <p className="sr-only" role="status">{remaining !== null && remaining <= 60000 && remaining > 0 ? "Less than one minute left" : lowTime && remaining > 60000 ? "Less than five minutes left" : ""}</p>
-    <nav className="exam-grid" aria-label="Questions">
+    <nav className="flex flex-wrap gap-1.5" aria-label="Questions">
       {questions.map((item, position) => {
         const answered = Boolean(answers[item._id]);
         const flagged = flags.includes(item._id);
-        return <button key={item._id} type="button" className={`exam-grid-cell ${position === index ? "is-current" : ""} ${answered ? "is-answered" : ""} ${flagged ? "is-flagged" : ""}`} aria-current={position === index ? "true" : undefined} aria-label={`Question ${position + 1}, ${answered ? "answered" : "not answered"}${flagged ? ", flagged for review" : ""}`} onClick={() => setIndex(position)}>{position + 1}</button>;
+        return <button key={item._id} type="button" className={`grid size-11 cursor-pointer place-items-center rounded-lg border font-sans text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${position === index ? "border-2 border-foreground" : "border-input"} ${answered ? "bg-primary text-primary-foreground" : "bg-card text-foreground"} ${flagged ? "outline-2 outline-offset-2 outline-warning" : ""}`} aria-current={position === index ? "true" : undefined} aria-label={`Question ${position + 1}, ${answered ? "answered" : "not answered"}${flagged ? ", flagged for review" : ""}`} onClick={() => setIndex(position)}>{position + 1}</button>;
       })}
     </nav>
-    <div className="exam-body">
-      {questions.map((item, position) => <section key={item._id} hidden={position !== index} aria-label={`Question ${position + 1}`}>
-        <div className="exam-question"><RichText>{item.text}</RichText></div>
-        {item.image?.url && <ResponsiveImage className="exam-image" image={item.image} sizes="(max-width: 600px) 100vw, 600px" />}
+    <div className="grid gap-5">
+      {questions.map((item, position) => <section key={item._id} hidden={position !== index} aria-label={`Question ${position + 1}`} className="grid gap-4">
+        <div className="text-xl leading-snug font-semibold sm:text-2xl"><RichText>{item.text}</RichText></div>
+        {item.image?.url && <ResponsiveImage className="max-h-72 rounded-lg" image={item.image} sizes="(max-width: 600px) 100vw, 600px" />}
         {item.type === "mcq" || item.type === "true_false"
           ? <ChoiceInput question={item} initial={answers[item._id]} onAnswer={answerFor(item._id)} />
           : <QuestionInput question={item} onAnswer={answerFor(item._id)} />}
-        {answers[item._id] && !touched[item._id] && <p className="muted">You answered this before the page reloaded. Choose again to change it.</p>}
+        {answers[item._id] && !touched[item._id] && <p className="m-0 text-sm text-muted-foreground">You answered this before the page reloaded. Choose again to change it.</p>}
       </section>)}
-      <div className="button-row">
+      <div>
         <Button variant={flags.includes(question._id) ? "secondary" : "tertiary"} icon={Flag} aria-pressed={flags.includes(question._id)} onClick={() => toggleFlag(question._id)}>{flags.includes(question._id) ? "Flagged for review" : "Flag for review"}</Button>
       </div>
-      {error && <p className="form-error" role="alert">{error}</p>}
+      {error && <p className="m-0 text-destructive" role="alert">{error}</p>}
     </div>
-    <div className="exam-bar exam-bar--split">
+    <div className="flex flex-wrap items-center justify-between gap-2">
       <Button variant="secondary" disabled={index === 0} onClick={() => setIndex(index - 1)}>Previous</Button>
       {index < questions.length - 1
         ? <Button onClick={() => setIndex(index + 1)}>Next</Button>
         : <Button loading={submitting} onClick={() => setConfirming(true)}>Submit exam</Button>}
       {index < questions.length - 1 && <Button variant="tertiary" loading={submitting} onClick={() => setConfirming(true)}>Submit</Button>}
     </div>
-    <ConfirmDialog open={confirming} title="Submit your exam?" description={`${unanswered ? `${unanswered} ${unanswered === 1 ? "question is" : "questions are"} not answered. ` : ""}${flags.length ? `${flags.length} flagged for review. ` : ""}You cannot change your answers after you submit.`} confirmLabel="Submit exam" cancelLabel="Keep working" onConfirm={submit} onCancel={() => setConfirming(false)} />
+    <Confirm tone="primary" open={confirming} title="Submit your exam?" description={`${unanswered ? `${unanswered} ${unanswered === 1 ? "question is" : "questions are"} not answered. ` : ""}${flags.length ? `${flags.length} flagged for review. ` : ""}You cannot change your answers after you submit.`} confirmLabel="Submit exam" cancelLabel="Keep working" onConfirm={submit} onCancel={() => setConfirming(false)} />
   </div>;
 }

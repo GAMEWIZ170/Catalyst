@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { Button, SelectField } from "../ui";
+import QuizOption from "./QuizOption";
 import RichText from "../shared/RichText";
 import ResponsiveImage from "../shared/ResponsiveImage";
 
 // Chemical formula text from the admin, shown with mhchem. A "$" is dropped so it cannot break out of the formula.
+const INPUT = "min-h-11 w-full rounded-md border border-input bg-card px-3 font-sans text-base text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-60";
+const LEGEND = "mb-3 p-0 text-sm font-semibold text-muted-foreground";
+const FIELD = "grid gap-1.5 font-semibold";
 const ce = (formula) => `$\\ce{${String(formula).replace(/\$/g, "")}}$`;
 
 // The answer area for every type except mcq and true_false (Test.jsx draws those).
@@ -26,12 +30,12 @@ function NumericInput({ question, onAnswer, disabled, enter }) {
   const [value, setValue] = useState("");
   const [unit, setUnit] = useState("");
   const send = (nextValue, nextUnit) => onAnswer(nextValue.trim() === "" ? null : JSON.stringify({ value: nextValue, unit: nextUnit }));
-  return <div className="qi-row">
-    <label className="qi-field">Your answer
-      <input className="ui-input" inputMode="decimal" autoComplete="off" value={value} disabled={disabled} onKeyDown={enter} onChange={(event) => { setValue(event.target.value); send(event.target.value, unit); }} />
+  return <div className="flex flex-wrap gap-3">
+    <label className={`${FIELD} min-w-40 flex-1`}>Your answer
+      <input className={INPUT} inputMode="decimal" autoComplete="off" value={value} disabled={disabled} onKeyDown={enter} onChange={(event) => { setValue(event.target.value); send(event.target.value, unit); }} />
     </label>
-    {question.askUnit && <label className="qi-field">Unit
-      <input className="ui-input" autoComplete="off" value={unit} disabled={disabled} onKeyDown={enter} onChange={(event) => { setUnit(event.target.value); send(value, event.target.value); }} />
+    {question.askUnit && <label className={`${FIELD} min-w-28 flex-1`}>Unit
+      <input className={INPUT} autoComplete="off" value={unit} disabled={disabled} onKeyDown={enter} onChange={(event) => { setUnit(event.target.value); send(value, event.target.value); }} />
     </label>}
   </div>;
 }
@@ -43,17 +47,17 @@ function MultiSelectInput({ question, onAnswer, disabled }) {
     setPicked(next);
     onAnswer(next.length ? JSON.stringify(next) : null);
   }
-  return <fieldset className="exam-options"><legend>Choose every correct answer.</legend>
-    {question.options.map((option) => <button className={`exam-option ${picked.includes(option._id) ? "exam-option--selected" : ""}`} type="button" aria-pressed={picked.includes(option._id)} disabled={disabled} key={option._id} onClick={() => toggle(option._id)}>
-      <span className="exam-option-text"><RichText>{option.text}</RichText>{option.image?.url && <ResponsiveImage image={option.image} sizes="(max-width: 600px) 80vw, 300px" />}</span>
-    </button>)}
+  return <fieldset className="m-0 grid gap-2.5 border-0 p-0"><legend className={LEGEND}>Choose every correct answer.</legend>
+    {question.options.map((option) => <QuizOption key={option._id} state={picked.includes(option._id) ? "selected" : ""} pressed={picked.includes(option._id)} disabled={disabled} onClick={() => toggle(option._id)}>
+      <RichText>{option.text}</RichText>{option.image?.url && <ResponsiveImage image={option.image} sizes="(max-width: 600px) 80vw, 300px" />}
+    </QuizOption>)}
   </fieldset>;
 }
 
 function FillBlankInput({ onAnswer, disabled, enter }) {
   const [value, setValue] = useState("");
-  return <label className="qi-field">Your answer
-    <input className="ui-input" autoComplete="off" value={value} disabled={disabled} onKeyDown={enter} onChange={(event) => { setValue(event.target.value); onAnswer(event.target.value.trim() ? event.target.value : null); }} />
+  return <label className={FIELD}>Your answer
+    <input className={INPUT} autoComplete="off" value={value} disabled={disabled} onKeyDown={enter} onChange={(event) => { setValue(event.target.value); onAnswer(event.target.value.trim() ? event.target.value : null); }} />
   </label>;
 }
 
@@ -64,9 +68,9 @@ function MatchingInput({ question, onAnswer, disabled }) {
     setPicks(next);
     onAnswer(next.every((item) => item !== "") ? JSON.stringify(next.map(Number)) : null);
   }
-  return <fieldset className="qi-matching"><legend>Match each item on the left with one on the right.</legend>
-    {question.left.map((left, index) => <div className="qi-match-row" key={index}>
-      <span className="qi-match-left"><RichText>{left}</RichText></span>
+  return <fieldset className="m-0 grid gap-3 border-0 p-0"><legend className={LEGEND}>Match each item on the left with one on the right.</legend>
+    {question.left.map((left, index) => <div className="grid items-center gap-2 sm:grid-cols-2" key={index}>
+      <span className="font-semibold"><RichText>{left}</RichText></span>
       <SelectField label={`Match for ${left}`} isLabelHidden value={picks[index]} disabled={disabled} onChange={(event) => pick(index, event.target.value)}>
         <option value="">Choose…</option>
         {question.right.map((right, rightIndex) => <option value={rightIndex} key={rightIndex}>{right}</option>)}
@@ -86,15 +90,14 @@ function OrderingInput({ question, onAnswer, disabled }) {
     const at = sequence.indexOf(index);
     update(at === -1 ? [...sequence, index] : sequence.slice(0, at));
   }
-  return <fieldset className="exam-options"><legend>Tap the items in the right order. Tap a chosen item to undo from there.</legend>
+  return <fieldset className="m-0 grid gap-2.5 border-0 p-0"><legend className={LEGEND}>Tap the items in the right order. Tap a chosen item to undo from there.</legend>
     {question.items.map((item, index) => {
       const at = sequence.indexOf(index);
-      return <button className={`exam-option ${at !== -1 ? "exam-option--selected" : ""}`} type="button" aria-pressed={at !== -1} disabled={disabled} key={index} onClick={() => tap(index)}>
-        <span className="exam-key" aria-hidden="true">{at !== -1 ? at + 1 : ""}</span>
-        <span className="exam-option-text"><RichText>{item}</RichText>{at !== -1 && <span className="sr-only"> (position {at + 1})</span>}</span>
-      </button>;
+      return <QuizOption key={index} keyLabel={at !== -1 ? at + 1 : ""} state={at !== -1 ? "selected" : ""} pressed={at !== -1} disabled={disabled} onClick={() => tap(index)}>
+        <RichText>{item}</RichText>{at !== -1 && <span className="sr-only"> (position {at + 1})</span>}
+      </QuizOption>;
     })}
-    <Button variant="tertiary" disabled={disabled || !sequence.length} onClick={() => update([])}>Start over</Button>
+    <div><Button variant="tertiary" disabled={disabled || !sequence.length} onClick={() => update([])}>Start over</Button></div>
   </fieldset>;
 }
 
@@ -106,15 +109,15 @@ function BalancingInput({ question, onAnswer, disabled, enter }) {
     const numbers = next.map((item) => (/^\d{1,2}$/.test(item.trim()) ? Number(item) : NaN));
     onAnswer(numbers.every((item) => Number.isInteger(item) && item >= 1) ? JSON.stringify(numbers) : null);
   }
-  const part = (item, index) => <span className="qi-species" key={index}>
-    <input className="ui-input qi-coefficient" inputMode="numeric" maxLength="2" aria-label={`Coefficient for ${item.formula}`} value={values[index]} disabled={disabled} onKeyDown={enter} onChange={(event) => change(index, event.target.value)} />
+  const part = (item, index) => <span className="inline-flex items-center gap-1.5" key={index}>
+    <input className={`${INPUT} w-14 text-center`} inputMode="numeric" maxLength="2" aria-label={`Coefficient for ${item.formula}`} value={values[index]} disabled={disabled} onKeyDown={enter} onChange={(event) => change(index, event.target.value)} />
     <RichText>{ce(item.formula)}</RichText>
   </span>;
   const reactants = question.species.map((item, index) => ({ item, index })).filter(({ item }) => item.side === "reactant");
   const products = question.species.map((item, index) => ({ item, index })).filter(({ item }) => item.side === "product");
-  const join = (list) => list.map(({ item, index }, position) => <span key={index}>{position > 0 && <span className="qi-plus" aria-hidden="true">+</span>}{part(item, index)}</span>);
-  return <fieldset className="qi-equation"><legend>Balance the equation. Use the smallest whole numbers.</legend>
-    <div className="qi-equation-row">{join(reactants)}<span className="qi-arrow" aria-label="yields">→</span>{join(products)}</div>
+  const join = (list) => list.map(({ item, index }, position) => <span key={index}>{position > 0 && <span className="mx-1.5 text-muted-foreground" aria-hidden="true">+</span>}{part(item, index)}</span>);
+  return <fieldset className="m-0 grid gap-3 border-0 p-0"><legend className={LEGEND}>Balance the equation. Use the smallest whole numbers.</legend>
+    <div className="flex flex-wrap items-center gap-y-3 text-lg">{join(reactants)}<span className="mx-3 text-muted-foreground" aria-label="yields">→</span>{join(products)}</div>
   </fieldset>;
 }
 
@@ -125,11 +128,8 @@ export function ChoiceInput({ question, onAnswer, initial = null }) {
     ? question.options.map((option) => ({ value: option._id, content: <><RichText>{option.text}</RichText>{option.image?.url && <ResponsiveImage image={option.image} sizes="(max-width: 600px) 80vw, 300px" />}</> }))
     : [{ value: "true", content: "True" }, { value: "false", content: "False" }];
   function pick(value) { setChosen(value); onAnswer(value); }
-  return <fieldset className="exam-options"><legend>Choose an answer.</legend>
-    {options.map((option, position) => <button className={`exam-option ${chosen === option.value ? "exam-option--selected" : ""}`} type="button" aria-pressed={chosen === option.value} key={option.value} onClick={() => pick(option.value)}>
-      <span className="exam-key" aria-hidden="true">{position + 1}</span>
-      <span className="exam-option-text">{option.content}</span>
-    </button>)}
+  return <fieldset className="m-0 grid gap-2.5 border-0 p-0"><legend className={LEGEND}>Choose an answer.</legend>
+    {options.map((option, position) => <QuizOption key={option.value} keyLabel={position + 1} state={chosen === option.value ? "selected" : ""} pressed={chosen === option.value} onClick={() => pick(option.value)}>{option.content}</QuizOption>)}
   </fieldset>;
 }
 
@@ -145,11 +145,11 @@ export function CorrectAnswer({ type, correct }) {
   switch (type) {
     case "mcq": return <RichText>{correct.text}</RichText>;
     case "true_false": return correct === "true" ? "True" : "False";
-    case "multi_select": return <ul className="qi-list">{correct.map((option) => <li key={option._id}><RichText>{option.text}</RichText></li>)}</ul>;
+    case "multi_select": return <ul className="m-0 grid list-none gap-1 p-0">{correct.map((option) => <li key={option._id}><RichText>{option.text}</RichText></li>)}</ul>;
     case "numeric": return <span>{correct.value}{correct.unit ? ` ${correct.unit}` : ""}{correct.tolerance ? ` (± ${correct.tolerance}${correct.toleranceKind === "percent" ? "%" : ""})` : ""}</span>;
     case "fill_blank": return <span>{correct.join(" or ")}</span>;
-    case "matching": return <ul className="qi-list">{correct.map((pair, index) => <li key={index}><RichText>{`${pair.left} → ${pair.right}`}</RichText></li>)}</ul>;
-    case "ordering": return <ol className="qi-list">{correct.map((item, index) => <li key={index}><RichText>{item}</RichText></li>)}</ol>;
+    case "matching": return <ul className="m-0 grid list-none gap-1 p-0">{correct.map((pair, index) => <li key={index}><RichText>{`${pair.left} → ${pair.right}`}</RichText></li>)}</ul>;
+    case "ordering": return <ol className="m-0 grid gap-1 pl-5">{correct.map((item, index) => <li key={index}><RichText>{item}</RichText></li>)}</ol>;
     default: return null;
   }
 }
