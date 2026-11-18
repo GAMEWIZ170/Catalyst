@@ -58,15 +58,6 @@
 }
 
 /* Progress (Phase 3.6) */
-.progress-page h2 {
-  font-size: var(--text-xl);
-  margin: 0;
-}
-
-.progress-page {
-  grid-template-columns: minmax(0, 1fr); /* without this a long unit or test title stretches the page past a 320 px screen */
-  max-width: 48rem;
-}
 
 .progress-unit-head span:first-child,
 .score-list li span {
@@ -74,45 +65,11 @@
   overflow-wrap: anywhere;
 }
 
-.progress-units {
-  display: grid;
-  gap: var(--space-4);
-}
-
 .progress-unit-head {
   display: flex;
   gap: var(--space-3);
   justify-content: space-between;
   margin-bottom: var(--space-2);
-}
-
-.progress-num {
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.score-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.score-list li {
-  align-items: baseline;
-  border-top: 1px solid var(--line);
-  display: flex;
-  gap: var(--space-3);
-  justify-content: space-between;
-  padding: var(--space-3) 0;
-}
-
-.score-list li:first-child {
-  border-top: 0;
-}
-
-.stats-grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
-  margin-bottom: 0;
 }
 
 /* Login and register (Phase 3.7) */
@@ -163,10 +120,6 @@
 .streak-indicator svg {
   height: 16px;
   width: 16px;
-}
-
-.progress-units {
-  margin-top: var(--space-3);
 }
 
 .settings-radio-grid {

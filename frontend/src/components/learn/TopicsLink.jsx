@@ -12,5 +12,5 @@ export default function TopicsLink() {
     return () => { live = false; };
   }, []);
   if (!any) return null;
-  return <div className="button-row"><Button as={Link} variant="secondary" to="/topics">Practise by topic</Button></div>;
+  return <div><Button as={Link} variant="secondary" to="/topics">Practise by topic</Button></div>;
 }

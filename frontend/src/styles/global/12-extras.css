@@ -293,7 +293,7 @@
 }
 .chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: var(--weight-strong); }
 .course-byline { display: block; font-size: var(--text-sm); }
-.ol-authors { display: grid; font-size: var(--text-sm); gap: var(--space-1); list-style: none; margin: 0; padding: 0; }
+
 .me-header { align-items: center; display: flex; gap: var(--space-4); margin-bottom: var(--space-5); }
 .me-header h1, .me-header p { margin: 0; }
 .me-links { display: grid; gap: var(--space-3); max-width: 32rem; }

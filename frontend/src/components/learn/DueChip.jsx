@@ -14,7 +14,7 @@ export default function DueChip() {
     return () => { live = false; };
   }, []);
   if (!due || due.cards + due.mistakes === 0) return null;
-  return <Link className="due-chip" to="/review" aria-label={`Start review. Due today: ${plural(due.cards, "card")}, ${plural(due.mistakes, "mistake")}`}>
+  return <Link className="justify-self-start rounded-pill no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" to="/review" aria-label={`Start review. Due today: ${plural(due.cards, "card")}, ${plural(due.mistakes, "mistake")}`}>
     <Badge tone="accent">Due today: {plural(due.cards, "card")}, {plural(due.mistakes, "mistake")}</Badge>
   </Link>;
 }
