@@ -1,18 +1,9 @@
 import { useEffect, useState } from "react";
-import { Inbox } from "lucide-react";
-import { Badge } from "@astryxdesign/core/Badge";
-import { Banner } from "@astryxdesign/core/Banner";
-import { Button } from "@astryxdesign/core/Button";
-import { Divider } from "@astryxdesign/core/Divider";
-import { EmptyState } from "@astryxdesign/core/EmptyState";
-import { Heading } from "@astryxdesign/core/Heading";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Tab, TabList } from "@astryxdesign/core/TabList";
-import { Text } from "@astryxdesign/core/Text";
-import { TextArea } from "@astryxdesign/core/TextArea";
+import { Link } from "react-router-dom";
+import { AlertCircle, CheckCircle2, Inbox } from "lucide-react";
 import { api } from "../../api/client";
 import AdminLayout from "../../components/admin/AdminLayout";
-import AstryxTheme from "../../components/astryx/AstryxTheme";
+import { Badge, Button, EmptyState, Tabs } from "../../components/ui";
 import { formatDate } from "../../utils/dates";
 import { Loading } from "../learn/Courses";
 
@@ -35,29 +26,30 @@ function ReportRow({ report, onResolved, onError }) {
     }
   }
 
-  return <VStack gap={2} paddingBlock={4}>
-    <HStack gap={2} align="center" wrap="wrap">
-      <Badge variant="neutral" label={KIND[report.kind] || "Question"} />
-      <Badge variant="warning" label={CATEGORY_LABELS[report.category] || report.category} />
-      <Text type="supporting" color="secondary">{report.student} · {formatDate(report.createdAt)}</Text>
-    </HStack>
-    <Text weight="semibold">{report.title}</Text>
-    {report.note && <Text>{report.note}</Text>}
-    {report.kind === "ai" && <VStack gap={1}>
-      <Text type="supporting"><strong>Student asked:</strong> {report.aiQuestion}</Text>
-      <Text type="supporting"><strong>AI answered:</strong> {report.aiAnswer}</Text>
-    </VStack>}
-    <HStack gap={2}>
-      {report.editorLink && <Button label="Open in the editor" size="sm" variant="ghost" href={report.editorLink} />}
-      {report.kind === "set" && <Button label="Review in Community sets" size="sm" variant="ghost" href="/admin/community?view=reported" />}
-    </HStack>
+  return <li className="grid gap-2 border-b border-border py-4 last:border-b-0">
+    <div className="flex flex-wrap items-center gap-2">
+      <Badge>{KIND[report.kind] || "Question"}</Badge>
+      <Badge tone="warning">{CATEGORY_LABELS[report.category] || report.category}</Badge>
+      <span className="text-sm text-muted-foreground">{report.student} · {formatDate(report.createdAt)}</span>
+    </div>
+    <strong>{report.title}</strong>
+    {report.note && <p className="m-0">{report.note}</p>}
+    {report.kind === "ai" && <div className="grid gap-1 text-sm">
+      <span><strong>Student asked:</strong> {report.aiQuestion}</span>
+      <span><strong>AI answered:</strong> {report.aiAnswer}</span>
+    </div>}
+    <div className="flex flex-wrap gap-2">
+      {report.editorLink && <Button as="a" href={report.editorLink} size="sm" variant="tertiary">Open in the editor</Button>}
+      {report.kind === "set" && <Button as={Link} to="/admin/community?view=reported" size="sm" variant="tertiary">Review in Community sets</Button>}
+    </div>
     {report.status === "open"
-      ? <VStack gap={2}>
-        <TextArea label="Reply to the student" isLabelHidden placeholder="Reply to the student (optional). Empty sends a short thank-you." maxLength={1000} rows={2} value={reply} onChange={setReply} />
-        <div><Button label="Mark as resolved" variant="primary" isLoading={busy} onClick={resolve} /></div>
-      </VStack>
-      : <Text type="supporting" color="secondary">Resolved {formatDate(report.resolvedAt)}. {report.reply ? `Reply: ${report.reply}` : "No reply was written."}</Text>}
-  </VStack>;
+      ? <div className="grid gap-2">
+        <textarea aria-label="Reply to the student" placeholder="Reply to the student (optional). Empty sends a short thank-you." maxLength={1000} rows={2} value={reply} onChange={(event) => setReply(event.target.value)}
+          className="w-full resize-y rounded-lg border border-input bg-card p-3 font-sans text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" />
+        <div><Button loading={busy} onClick={resolve}>Mark as resolved</Button></div>
+      </div>
+      : <p className="m-0 text-sm text-muted-foreground">Resolved {formatDate(report.resolvedAt)}. {report.reply ? `Reply: ${report.reply}` : "No reply was written."}</p>}
+  </li>;
 }
 
 export default function AdminReports() {
@@ -83,32 +75,29 @@ export default function AdminReports() {
     setData((current) => current && ({ ...current, counts: { open: Math.max(0, current.counts.open - 1), resolved: current.counts.resolved + 1 }, items: current.items.filter((item) => item.id !== report.id) }));
   };
 
+  const body = <div className="grid gap-2">
+    {message && !error && <p className="m-0 flex items-center gap-2 rounded-lg bg-success/15 p-3" role="status"><CheckCircle2 size={18} aria-hidden="true" />{message}</p>}
+    {error && <p className="m-0 flex items-center gap-2 text-destructive" role="alert"><AlertCircle size={16} aria-hidden="true" />{error}</p>}
+    {!data && !error && <Loading />}
+    {data && data.items.length === 0 && <EmptyState icon={Inbox} title={status === "open" ? "No open reports" : "Nothing resolved yet"} description={status === "open" ? "When a student reports a problem it will appear here." : "Resolved reports are kept here."} />}
+    {data && data.items.length > 0 && <ul className="m-0 grid list-none p-0">{data.items.map((report) => <ReportRow key={report.id} report={report} onResolved={resolved} onError={setError} />)}</ul>}
+    {data && data.pages > 1 && <div className="flex items-center justify-center gap-3 py-3">
+      <Button variant="secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</Button>
+      <span className="text-muted-foreground">Page {data.page} of {data.pages}</span>
+      <Button variant="secondary" disabled={page >= data.pages} onClick={() => setPage(page + 1)}>Next</Button>
+    </div>}
+  </div>;
+
   return <AdminLayout>
-    <AstryxTheme>
-      <div className="admin-astryx">
-        <VStack gap={4}>
-          <VStack gap={1}>
-            <Heading level={1}>Reports</Heading>
-            <Text color="secondary">Problems students found. Resolving a report notifies the student.</Text>
-          </VStack>
-          <TabList role="tablist" value={status} onChange={(next) => { setStatus(next); setPage(1); setMessage(""); }} hasDivider>
-            <Tab value="open" label={`Open${data ? ` (${data.counts.open})` : ""}`} panelId="reports-panel" />
-            <Tab value="resolved" label={`Resolved${data ? ` (${data.counts.resolved})` : ""}`} panelId="reports-panel" />
-          </TabList>
-          <div id="reports-panel" role="tabpanel">
-            {message && !error && <Banner status="success" title={message} container="section" isDismissable onDismiss={() => setMessage("")} />}
-            {error && <Banner status="error" title={error} container="section" />}
-            {!data && !error && <Loading />}
-            {data && data.items.length === 0 && <EmptyState isCompact icon={<Inbox size={28} aria-hidden="true" />} title={status === "open" ? "No open reports" : "Nothing resolved yet"} description={status === "open" ? "When a student reports a problem it will appear here." : "Resolved reports are kept here."} />}
-            {data && data.items.map((report, index) => <div key={report.id}>{index > 0 && <Divider />}<ReportRow report={report} onResolved={resolved} onError={setError} /></div>)}
-            {data && data.pages > 1 && <HStack gap={3} align="center" justify="center" paddingBlock={3}>
-              <Button label="Previous" variant="secondary" isDisabled={page <= 1} onClick={() => setPage(page - 1)} />
-              <Text color="secondary">Page {data.page} of {data.pages}</Text>
-              <Button label="Next" variant="secondary" isDisabled={page >= data.pages} onClick={() => setPage(page + 1)} />
-            </HStack>}
-          </div>
-        </VStack>
+    <div className="grid gap-4">
+      <div className="grid gap-1">
+        <h1 className="m-0 text-3xl leading-tight font-bold">Reports</h1>
+        <p className="m-0 text-muted-foreground">Problems students found. Resolving a report notifies the student.</p>
       </div>
-    </AstryxTheme>
+      <Tabs label="Report status" value={status} onChange={(next) => { setStatus(next); setPage(1); setMessage(""); }} tabs={[
+        { id: "open", label: `Open${data ? ` (${data.counts.open})` : ""}`, panel: body },
+        { id: "resolved", label: `Resolved${data ? ` (${data.counts.resolved})` : ""}`, panel: body }
+      ]} />
+    </div>
   </AdminLayout>;
 }
