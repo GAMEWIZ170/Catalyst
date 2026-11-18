@@ -1,18 +1,11 @@
 import { useEffect, useState } from "react";
 import { FileText, Plus, Trash2 } from "lucide-react";
-import { Button } from "@astryxdesign/core/Button";
-import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
-import { FileInput } from "@astryxdesign/core/FileInput";
-import { Heading } from "@astryxdesign/core/Heading";
-import { IconButton } from "@astryxdesign/core/IconButton";
-import { HStack, VStack } from "@astryxdesign/core/Stack";
-import { Text } from "@astryxdesign/core/Text";
-import { TextArea } from "@astryxdesign/core/TextArea";
-import { TextInput } from "@astryxdesign/core/TextInput";
 import { api } from "../../api/client";
+import { Button, Dialog, FileDrop, Tooltip } from "../ui";
 
 const megabytes = (bytes) => `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 const MAX_PDF = 10 * 1024 * 1024;
+const field = "w-full rounded-lg border border-input bg-card p-3 font-sans text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
 // Sources for a set: a PDF or pasted text. Private to the student, and the AI drafts are made from them.
 // "Add source" opens one dialog with a drop zone; there is no always-open form.
@@ -52,51 +45,45 @@ export default function SetMaterials({ setId }) {
   }
 
   const ready = pasting ? text.text.trim().length >= 20 : Boolean(file);
-  return <VStack gap={3}>
-    <HStack justify="between" align="center" wrap="wrap" gap={2}>
-      <Heading level={2}>Sources</Heading>
-      <Button label="Add source" variant="secondary" icon={<Plus size={18} aria-hidden="true" />} onClick={() => setOpen(true)} />
-    </HStack>
-    {error && <Text color="secondary" role="alert">{error}</Text>}
-    {data && data.items.length === 0 && <Text color="secondary">Add a PDF or some text. The AI drafts notes, cards and questions from your sources.</Text>}
-    {data && data.items.map((item) => <HStack key={item.id} gap={2} align="center" justify="between">
-      <HStack gap={2} align="center">
-        <FileText size={18} aria-hidden="true" />
-        <VStack gap={0}>
-          <Text weight="semibold">{item.title}</Text>
-          <Text type="supporting" color="secondary">{item.kind === "pdf" ? `PDF, ${item.pages} ${item.pages === 1 ? "page" : "pages"}, ${megabytes(item.bytes)}` : "Pasted text"} · {item.characters.toLocaleString()} characters</Text>
-        </VStack>
-      </HStack>
-      <IconButton label={`Delete ${item.title}`} tooltip="Delete source" variant="ghost" icon={<Trash2 size={18} aria-hidden="true" />} onClick={() => setRemoving(item)} />
-    </HStack>)}
+  return <section className="grid gap-3" aria-labelledby="sources-title">
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <h2 id="sources-title" className="m-0 text-xl font-semibold">Sources</h2>
+      <Button variant="secondary" icon={Plus} onClick={() => setOpen(true)}>Add source</Button>
+    </div>
+    {error && <p className="m-0 text-muted-foreground" role="alert">{error}</p>}
+    {data && data.items.length === 0 && <p className="m-0 text-muted-foreground">Add a PDF or some text. The AI drafts notes, cards and questions from your sources.</p>}
+    {data && data.items.map((item) => <div key={item.id} className="flex items-center justify-between gap-2">
+      <div className="flex min-w-0 items-center gap-3">
+        <FileText size={18} className="shrink-0 text-muted-foreground" aria-hidden="true" />
+        <div className="grid min-w-0 gap-0.5">
+          <strong className="truncate">{item.title}</strong>
+          <span className="text-sm text-muted-foreground">{item.kind === "pdf" ? `PDF, ${item.pages} ${item.pages === 1 ? "page" : "pages"}, ${megabytes(item.bytes)}` : "Pasted text"} · {item.characters.toLocaleString()} characters</span>
+        </div>
+      </div>
+      <Tooltip label="Delete source"><Button variant="tertiary" size="sm" aria-label={`Delete ${item.title}`} onClick={() => setRemoving(item)}><Trash2 size={18} aria-hidden="true" /></Button></Tooltip>
+    </div>)}
 
-    <Dialog isOpen={open} onOpenChange={(next) => { if (!next) close(); }} purpose="form" width={520}>
-      <DialogHeader title="Add source" onOpenChange={(next) => { if (!next) close(); }} />
-      <VStack gap={4} padding={4}>
-        {problem && <Text color="secondary" role="alert">{problem}</Text>}
-        {!pasting && <FileInput label="Upload a PDF" isLabelHidden mode="dropzone" accept="application/pdf" maxSize={MAX_PDF} value={file}
-          onChange={(next) => setFile(Array.isArray(next) ? next[0] || null : next)} placeholder="Drop a PDF here, or click to choose one (up to 10 MB)" />}
+    <Dialog open={open} onClose={close} title="Add source"
+      actions={<>
+        <Button variant="tertiary" className="mr-auto" onClick={() => { setPasting(!pasting); setProblem(""); }}>{pasting ? "Upload a PDF instead" : "Paste text instead"}</Button>
+        <Button variant="tertiary" onClick={close}>Cancel</Button>
+        <Button disabled={!ready} loading={busy} onClick={add}>Add</Button>
+      </>}>
+      <div className="grid gap-4">
+        {problem && <p className="m-0 text-destructive" role="alert">{problem}</p>}
+        {!pasting && <FileDrop label="Upload a PDF" hint="Drop a PDF here, or click to choose one (up to 10 MB)" accept="application/pdf" maxSize={MAX_PDF} value={file} onChange={setFile} onError={setProblem} />}
         {pasting && <>
-          <TextInput label="Name" isLabelHidden placeholder="Name (optional)" value={text.title} maxLength={120} onChange={(title) => setText({ ...text, title })} />
-          <TextArea label="Text" isLabelHidden placeholder="Paste your text here" rows={8} value={text.text} onChange={(value) => setText({ ...text, text: value })} hasAutoFocus />
+          <input aria-label="Name" placeholder="Name (optional)" maxLength={120} value={text.title} onChange={(event) => setText({ ...text, title: event.target.value })} className={`${field} min-h-11`} />
+          <textarea aria-label="Text" placeholder="Paste your text here" rows={8} autoFocus value={text.text} onChange={(event) => setText({ ...text, text: event.target.value })} className={`${field} resize-y`} />
         </>}
-        <Text type="supporting" color="secondary">Only add things you may copy for your own study. Only you can see your sources.</Text>
-        <HStack gap={2} justify="between" align="center" wrap="wrap">
-          <Button label={pasting ? "Upload a PDF instead" : "Paste text instead"} variant="ghost" onClick={() => { setPasting(!pasting); setProblem(""); }} />
-          <HStack gap={2}>
-            <Button label="Cancel" variant="ghost" onClick={close} />
-            <Button label="Add" variant="primary" isDisabled={!ready} isLoading={busy} onClick={add} />
-          </HStack>
-        </HStack>
-      </VStack>
+        <p className="m-0 text-sm text-muted-foreground">Only add things you may copy for your own study. Only you can see your sources.</p>
+        <p className="m-0 text-sm text-muted-foreground">Free beta: what you add is sent to Google's AI, and Google may use it to improve its products. Do not add anything private.</p>
+      </div>
     </Dialog>
 
-    <Dialog isOpen={Boolean(removing)} onOpenChange={(next) => { if (!next) setRemoving(null); }} width={400}>
-      <DialogHeader title="Delete this source?" onOpenChange={(next) => { if (!next) setRemoving(null); }} />
-      <VStack gap={4} padding={4}>
-        <Text>Its saved text and file are removed.</Text>
-        <HStack gap={2} justify="end"><Button label="Cancel" variant="ghost" onClick={() => setRemoving(null)} /><Button label="Delete" variant="destructive" onClick={remove} /></HStack>
-      </VStack>
+    <Dialog open={Boolean(removing)} onClose={() => setRemoving(null)} title="Delete this source?"
+      actions={<><Button variant="tertiary" onClick={() => setRemoving(null)}>Cancel</Button><Button variant="danger" onClick={remove}>Delete</Button></>}>
+      <p className="m-0">Its saved text and file are removed.</p>
     </Dialog>
-  </VStack>;
+  </section>;
 }

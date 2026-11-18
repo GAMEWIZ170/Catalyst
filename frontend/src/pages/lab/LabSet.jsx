@@ -2,7 +2,6 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { AlertCircle, ArrowLeft, MoreHorizontal, Share2, Sparkles, Trash2 } from "lucide-react";
 import { api } from "../../api/client";
-import AstryxTheme from "../../components/astryx/AstryxTheme";
 import { Button, Dialog, DropdownMenu, EditableTitle, Tabs } from "../../components/ui";
 import { ErrorState, Loading } from "../learn/Courses";
 import SetCards from "../../components/lab/SetCards";
@@ -17,8 +16,7 @@ const SetNotes = lazy(() => import("../../components/lab/SetNotes"));
 
 const TAB_IDS = ["notes", "cards", "quizzes"];
 
-// One study set. The frame (title, tabs, menu, dialogs) is Tailwind; the tab contents are still Astryx until each is ported,
-// so they sit inside AstryxTheme.
+// One study set: title, tabs (notes, flashcards, quizzes), menu and dialogs. Tailwind and components/ui only.
 // Tabs are Notes, Flashcards and Quizzes. Each tab shows its content first, with "Generate more" and "Add" that work in place.
 // The tutor lives in the shell (useTutorTarget). Click the title to rename; Delete is in the ⋯ menu.
 export default function LabSet() {
@@ -66,11 +64,11 @@ export default function LabSet() {
   const close = () => setDialog(null);
 
   const panels = {
-    notes: <AstryxTheme><div className="grid gap-5">
+    notes: <div className="grid gap-5">
       <div className="flex justify-end"><Button variant="secondary" icon={Sparkles} onClick={() => setGenerating(true)}>Generate more</Button></div>
       <Suspense fallback={<Loading />}><SetNotes key={notesKey} setId={id} /></Suspense>
       <SetMaterials setId={id} />
-    </div></AstryxTheme>,
+    </div>,
     cards: <SetCards setId={id} />,
     quizzes: <SetQuizzes setId={id} />
   };
