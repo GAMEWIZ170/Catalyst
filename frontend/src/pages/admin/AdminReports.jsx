@@ -15,7 +15,6 @@ import AdminLayout from "../../components/admin/AdminLayout";
 import AstryxTheme from "../../components/astryx/AstryxTheme";
 import { formatDate } from "../../utils/dates";
 import { Loading } from "../learn/Courses";
-import "../../styles/admin-polish.css";
 
 const CATEGORY_LABELS = { wrong_answer: "Answer looks wrong", typo: "Typing mistake", unclear: "Hard to understand", other: "Something else" };
 const KIND = { lesson: "Lesson", ai: "AI answer", set: "Study set", question: "Question" };

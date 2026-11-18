@@ -16,7 +16,6 @@ import { api } from "../../api/client";
 import AdminLayout from "../../components/admin/AdminLayout";
 import AstryxTheme from "../../components/astryx/AstryxTheme";
 import { ErrorState, Loading } from "../learn/Courses";
-import "../../styles/admin-polish.css";
 
 const getCourses = (payload) => (Array.isArray(payload) ? payload : payload.data || []);
 const categoryOf = (course) => (typeof course.category === "string" ? course.category.trim() : "");

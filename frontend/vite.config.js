@@ -1,5 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import path from "node:path";
 
 // KaTeX's stylesheet lists woff2, woff and ttf for every font. Keep only woff2 (all current browsers
 // support it) so the build does not copy the other two formats.
@@ -31,7 +33,10 @@ const cacheHeaders = {
 };
 
 export default defineConfig({
-  plugins: [katexWoff2Only, cacheHeaders, react()],
+  plugins: [katexWoff2Only, cacheHeaders, react(), tailwindcss()],
+  resolve: {
+    alias: { "@": path.resolve(import.meta.dirname, "src") }
+  },
   server: {
     proxy: {
       "/api": {

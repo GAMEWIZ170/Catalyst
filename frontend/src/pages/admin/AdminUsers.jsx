@@ -19,7 +19,6 @@ import AstryxTheme from "../../components/astryx/AstryxTheme";
 import ConfirmAstryx from "../../components/astryx/ConfirmAstryx";
 import { formatDate } from "../../utils/dates";
 import { Loading } from "../learn/Courses";
-import "../../styles/admin-polish.css";
 
 const ROLES = [["", "All"], ["student", "Students"], ["admin", "Admins"]];
 const STATUSES = [["", "Any status"], ["active", "Active"], ["inactive", "Deactivated"], ["subscribed", "Subscribed"], ["expired", "No access"]];

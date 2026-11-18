@@ -13,7 +13,6 @@ import StatusBadge from "../../components/admin/StatusBadge";
 import StatusMessage from "../../components/admin/StatusMessage";
 import Switch from "../../components/admin/Switch";
 import CourseDetails from "../../components/admin/CourseDetails";
-import "../../styles/admin-polish.css";
 import MoveButton from "../../components/admin/MoveButton";
 
 function dataOf(payload) {

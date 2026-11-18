@@ -6,7 +6,7 @@ The Catalyst frontend is a React application powered by Vite. It provides the st
 
 The UI is being rebuilt screen by screen (plan: `docs/redesign/DESIGN_RESET_PLAN.md`). `DESIGN.md` in the repo root is the source of truth for the new look: one gold brand palette in light and dark, Fraunces for headings and flashcard faces, Atkinson Hyperlegible Next for everything else, Tailwind v4 and shadcn/ui, and Motion for animation.
 
-Until a screen is ported, it keeps the old system described below (plain CSS layers, Astryx, the five palettes). Phase 2 adds Tailwind and moves the old CSS into `@layer legacy`. Phase 6 removes Astryx, the palettes and the legacy layer. Notes below that mention palettes or Astryx describe the old system and are removed as each part goes.
+Until a screen is ported, it keeps the old system described below (plain CSS layers, Astryx, the five palettes). Phase 2 (done) added Tailwind v4, shadcn config (`components.json`, `@/` alias), Motion, Fraunces, and moved the old CSS into `@layer legacy`. `src/styles/app.css` is the only stylesheet entry: layer order is Astryx, Tailwind theme, legacy, new tokens, utilities. New tokens are in `src/styles/tokens.new.css`; four names carry a `-ui` suffix (`--muted-ui`, `--success-ui`, `--warning-ui`, `--info-ui`, `--accent-ui`) because the old `tokens.css` uses the plain names. Preflight is off until phase 6. New styles go in utilities, never in the legacy files. Phase 6 removes Astryx, the palettes and the legacy layer. Notes below that mention palettes or Astryx describe the old system and are removed as each part goes.
 
 ## Requirements
 

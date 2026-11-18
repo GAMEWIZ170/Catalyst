@@ -13,8 +13,6 @@ import useStudyTimer from "../../hooks/useStudyTimer";
 import { useOnline } from "../../utils/offline";
 import { t } from "../../i18n";
 import HeaderSearch from "./HeaderSearch";
-import "../../styles/topbar.css";
-import "../../styles/learning-polish.css";
 
 // The places a student goes. Laptops show them in a sidebar, phones in a bar along the bottom (never both).
 // "Me" also covers the pages inside it, so it stays highlighted on Progress, Saved and Settings.

@@ -113,8 +113,8 @@ Study Hall is cut. Do not rebuild it. Use shadcn/ui components wherever shadcn h
 - Backend v2 done and pushed: tests, questions, flashcards, materials, uploads, avatars, admin course tree (`GET /admin/courses/:id`) and reorder routes.
 - Frontend done and pushed on `feature/frontend-v2`: palettes, top bar and profile menu, settings, admin course list, course editor, lesson editor, test editor, rich text and formulas, student course list, outline, lesson hub, test flow, flashcard study flow, progress page.
 - Not yet verified on a real backend: student screens, flashcard flow, progress page, the latest visual fixes, the lesson editor load time, image upload, and the full responsive matrix.
-- Current work: study-companion pivot and design reset on `feature/study-companion`, following `docs/redesign/DESIGN_RESET_PLAN.md`. One phase per session. Phase 1 (PRODUCT.md, DESIGN.md, this file) done 18 November 2026.
-- Next: phase 2 (Tailwind, shadcn, tokens, legacy layer, fonts, Motion), then the later phases, then the unverified checks above, then merge into `main` when the owner says so.
+- Current work: study-companion pivot and design reset on `feature/study-companion`, following `docs/redesign/DESIGN_RESET_PLAN.md`. One phase per session. Phases 1 (docs) and 2 (foundation) done 18 November 2026.
+- Next: phase 3 (shell), then the later phases, then the unverified checks above, then merge into `main` when the owner says so.
 
 ## Roadmap (owner may do some himself)
 

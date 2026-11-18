@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { BookOpen, Clock, CornerDownLeft, FileText, Search, X } from "lucide-react";
 import { api } from "../../api/client";
-import "../../styles/header-search.css";
 
 const RECENT_KEY = "catalyst-recent-searches";
 const PAGES = [

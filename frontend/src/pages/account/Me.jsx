@@ -12,7 +12,6 @@ import AchievementsPanel from "../../components/profile/AchievementsPanel";
 import AstryxTheme from "../../components/astryx/AstryxTheme";
 import { useXp } from "../../components/profile/XpBits";
 import { t } from "../../i18n";
-import "../../styles/settings-astryx.css";
 
 const LINKS = [
   { to: "/progress", label: "me.progress", icon: BarChart3 },

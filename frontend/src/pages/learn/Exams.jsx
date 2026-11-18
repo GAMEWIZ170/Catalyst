@@ -16,7 +16,6 @@ import { TimeInput } from "@astryxdesign/core/TimeInput";
 import { api } from "../../api/client";
 import AstryxTheme from "../../components/astryx/AstryxTheme";
 import { ErrorState, Loading } from "./Courses";
-import "../../styles/settings-astryx.css";
 
 const TYPES = [
   { value: "mid_semester", label: "Mid-semester" },

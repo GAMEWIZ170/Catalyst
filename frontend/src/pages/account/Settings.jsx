@@ -21,7 +21,6 @@ import AstryxTheme from "../../components/astryx/AstryxTheme";
 import SettingRow, { SaveState, useAutosave } from "../../components/astryx/SettingRow";
 import Avatar, { AVATAR_KEYS, AVATAR_LABELS } from "../../components/profile/Avatar";
 import { t } from "../../i18n";
-import "../../styles/settings-astryx.css";
 
 const WEEK_GOALS = [{ value: "0", label: "No weekly goal" }, ...[3, 4, 5, 6].map((days) => ({ value: String(days), label: `${days} days a week` }))];
 const EXTRA_TIME = [{ value: "0", label: "None" }, { value: "25", label: "+25%" }, { value: "50", label: "+50%" }, { value: "100", label: "Double" }];

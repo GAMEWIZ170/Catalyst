@@ -20,7 +20,6 @@ import SettingRow from "../../components/astryx/SettingRow";
 import { useToast } from "../../components/ui";
 import { ErrorState, Loading } from "../learn/Courses";
 import { t } from "../../i18n";
-import "../../styles/settings-astryx.css";
 
 const icon = (Icon) => <Icon size={18} aria-hidden="true" />;
 

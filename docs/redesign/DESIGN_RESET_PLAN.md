@@ -69,7 +69,7 @@ direction (impeccable leads, frontend-design for the look) → palette and font 
 ## Phases (one per session)
 0. Step 0 above (done).
 1. **Design docs (done 18 November 2026):** rewrite `PRODUCT.md` and `DESIGN.md` with impeccable plus the ui-ux-pro-max lookup, using Fraunces, Atkinson and the gold brand. Update CLAUDE.md (stack, themes, Astryx lines, Gemini model, free-tier rule) and `frontend/README.md`.
-2. **Foundation:** Tailwind + shadcn install, tokens file, legacy layer, fonts, Motion. Build passes, and old screens look unchanged.
+2. **Foundation (done 18 November 2026):** Tailwind + shadcn install, tokens file, legacy layer, fonts, Motion. Build passes, and old screens look unchanged.
 3. **Shell:** new `components/layout/AppShell.jsx`. Remove XP (`LevelUpDialog`, `useXp`) and palette UI. Hidden routes stay unmounted from the nav. Tutor dock reuses `components/lab/CompanionDrawer.jsx` and `components/learn/Companion.jsx`.
 4. **Core components:** shadcn Button, Dialog, Popover, DropdownMenu, Tabs, Toast/Sonner, Tooltip, plus our own Segmented, Stepper, Keycap and ProgressDots. Swap the internals of `components/ui/*` (Button, Field, Dialog, Tabs, Toast…) behind the same props so pages keep working.
 5. **Screens, in order:** flashcards (`pages/learn/Flashcards.jsx`) → quiz (`pages/lab/LabQuiz.jsx`, `pages/learn/Test.jsx`) → Library (`pages/lab/Lab.jsx`) → set outline and lesson (`pages/lab/LabSet.jsx`) → Home (`pages/learn/Courses.jsx`) → Me and Progress (`pages/learn/Progress.jsx`, heatmap) → build flow (`components/lab/NewSetDialog.jsx`) → editors → settings → auth. Each port deletes that screen's old CSS file in `styles/global/`.
