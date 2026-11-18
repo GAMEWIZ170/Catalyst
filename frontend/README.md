@@ -253,6 +253,10 @@ The question screen of `pages/learn/Test.jsx` uses `components/learn/QuizOption.
 
 `pages/lab/LabSet.jsx`: editable title (`components/ui/EditableTitle.jsx`, same props as the Astryx `ClickToEdit`), `Tabs`, a "..." `DropdownMenu`, and `Dialog`s for share and delete. The tab contents and the share form are still Astryx and sit inside `AstryxTheme` until their own ports. The tutor panel is already in the shell.
 
+## Home (design reset phase 5, fifth screen)
+
+`pages/learn/Courses.jsx`: one Continue card, today and weekly goal bars, the small legacy panels (due, plan, mistakes, topics, exam), a "Your sets" row of cover cards, and the course list. `components/lab/SetCard.jsx` is shared with the Library. `ui/Progress` (gold fill) and `ui/Badge` now use tokens, so every screen that uses them changed colour. Not built: progress rings on set covers (no progress number in the sets API).
+
 ## Authentication behavior
 
 The frontend does not store JWTs in local storage. Login and registration receive an HTTP-only `token` cookie from the backend, and API requests include credentials automatically. On startup, `AuthContext` calls `/auth/me` to restore the current session.

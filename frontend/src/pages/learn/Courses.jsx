@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
-import { Heading } from "@astryxdesign/core/Heading";
 import { api, ACCESS_ENDED } from "../../api/client";
 import { nearToPrefetch, prefetchCourse, prefetchLesson } from "../../api/prefetch";
 import { useAuth } from "../../context/AuthContext";
@@ -10,7 +9,8 @@ import ExamCountdown from "../../components/learn/ExamCountdown";
 import TopicsLink from "../../components/learn/TopicsLink";
 import MistakesPanel from "../../components/learn/MistakesPanel";
 import CourseByline from "../../components/learn/CourseByline";
-import { Button, Card, EmptyState, Illustration, Progress, Skeleton, SkeletonGroup } from "../../components/ui";
+import SetCard from "../../components/lab/SetCard";
+import { Button, EmptyState, Illustration, Progress, Skeleton, SkeletonGroup } from "../../components/ui";
 
 const welcomeKey = "catalyst-welcome-seen";
 const welcomeSeen = () => { try { return window.localStorage.getItem(welcomeKey) === "1"; } catch { return false; } };
@@ -19,14 +19,14 @@ const welcomeSeen = () => { try { return window.localStorage.getItem(welcomeKey)
 const HOME_COURSES = 6;
 
 function Welcome({ onDone }) {
-  return <section className="welcome" aria-labelledby="welcome-title">
-    <h2 id="welcome-title">How Catalyst works</h2>
-    <ol>
+  return <section className="grid gap-3 rounded-xl bg-muted p-6" aria-labelledby="welcome-title">
+    <h2 id="welcome-title" className="m-0 text-xl font-semibold">How Catalyst works</h2>
+    <ol className="m-0 grid gap-1.5 pl-5">
       <li>Pick a course and work through its lessons in order.</li>
       <li>Each lesson has an explanation, then a test or flashcards. Pass the test or finish the deck to complete it.</li>
       <li>Study on any day to keep your streak going.</li>
     </ol>
-    <Button variant="secondary" onClick={onDone}>Got it</Button>
+    <div><Button variant="secondary" onClick={onDone}>Got it</Button></div>
   </section>;
 }
 
@@ -39,6 +39,7 @@ export default function Courses() {
   const [weekly, setWeekly] = useState(null);
   const [error, setError] = useState("");
   const [showWelcome, setShowWelcome] = useState(() => !welcomeSeen());
+  const [sets, setSets] = useState([]);
 
   function load() {
     setLoading(true);
@@ -48,6 +49,8 @@ export default function Courses() {
   }
 
   useEffect(load, []);
+  // The student's own sets, newest first. If this fails the section is simply left out.
+  useEffect(() => { api.getSets("").then(({ data }) => setSets((data || []).filter((set) => set.build.status !== "processing" && set.build.status !== "issue").slice(0, 4))).catch(() => {}); }, []);
 
   function dismissWelcome() {
     setShowWelcome(false);
@@ -75,47 +78,45 @@ export default function Courses() {
   const listed = (mine.length ? mine : courses).slice(0, HOME_COURSES);
   const percent = (course) => (course?.progress?.totalLessons ? Math.round((course.progress.completedLessons / course.progress.totalLessons) * 100) : 0);
 
-  return <div className="content student-page home-page">
-    <header className="home-header">
-      <Heading level={1}>Home</Heading>
-    </header>
-    {!loading && !error && goal && goal.kind !== "none" && <div className="home-goal">
-      <Progress value={Math.round((Math.min(goal.done, goal.target) / goal.target) * 100)} label="Today's goal" />
-      <p className="muted home-goal-text">{goal.kind === "minutes" ? `Today: ${goal.done} of ${goal.target} minutes` : `Today: ${goal.done} of 1 lesson`}{goal.met ? ". Goal met." : ""}</p>
-    </div>}
-    {!loading && !error && weekly && <div className="home-goal">
-      <Progress value={Math.round((Math.min(weekly.done, weekly.target) / weekly.target) * 100)} label="This week" />
-      <p className="muted home-goal-text">{`This week: ${weekly.done} of ${weekly.target} study days`}{weekly.met ? ". Weekly goal met. Enjoy your rest days." : ""}</p>
-    </div>}
-    {isStudent && user.hasAccess === false && <p className="notice" role="status">Your access has ended. You can still look around, but lessons, tests and flashcards are locked until your subscription is renewed.</p>}
+  const goalRow = (value, label, text) => <div className="grid gap-1.5"><Progress value={value} label={label} /><p className="m-0 text-sm text-muted-foreground">{text}</p></div>;
+  const ready = !loading && !error;
+  const tileClass = "grid content-start gap-1 rounded-lg border border-border bg-card p-4 text-foreground no-underline transition-colors duration-150 hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+
+  return <div className="content mx-auto grid max-w-4xl gap-6">
+    <h1 className="m-0 text-3xl leading-tight font-bold">Home</h1>
+    {isStudent && user.hasAccess === false && <p className="m-0 rounded-lg bg-muted p-4" role="status">Your access has ended. You can still look around, but lessons, tests and flashcards are locked until your subscription is renewed.</p>}
     {loading && <Loading />}
     {error && <ErrorState message={error} onRetry={load} />}
-    {!loading && !error && resume && next && <Card className="home-continue" aria-labelledby="continue-title">
-      <h2 id="continue-title">{resume.progress?.completedLessons > 0 ? "Continue where you left off" : "Start your first lesson"}</h2>
-      <p className="home-continue-copy"><strong>{resume.code}</strong> · Lesson {next.label}: {next.title}{where && `, ${where}`}</p>
+    {ready && resume && next && <section className="grid gap-3 rounded-xl border border-border bg-card p-6" aria-labelledby="continue-title">
+      <h2 id="continue-title" className="m-0 text-xl font-semibold">{resume.progress?.completedLessons > 0 ? "Continue where you left off" : "Start your first lesson"}</h2>
+      <p className="m-0 text-muted-foreground"><strong className="text-foreground">{resume.code}</strong> · Lesson {next.label}: {next.title}{where && `, ${where}`}</p>
       <Progress value={percent(resume)} label={`${resume.title} progress`} showLabel />
-      <div className="button-row button-row--stack"><Button as={Link} variant="primary" to={nextHref} state={nextState} {...nearToPrefetch(() => prefetchLesson(next.lessonId))}>{midDeck ? "Resume flashcards" : `${resume.progress?.completedLessons > 0 ? "Resume" : "Start"}: Lesson ${next.label}`}</Button></div>
-    </Card>}
-    {user && !loading && !error && <ExamCountdown />}
-    {user && !loading && !error && <TodayPlan />}
-    {user && !loading && !error && <DueChip />}
-    {user && !loading && !error && <MistakesPanel from="/home" />}
-    {user && !loading && !error && <TopicsLink />}
+      <div><Button as={Link} variant="primary" to={nextHref} state={nextState} {...nearToPrefetch(() => prefetchLesson(next.lessonId))}>{midDeck ? "Resume flashcards" : `${resume.progress?.completedLessons > 0 ? "Resume" : "Start"}: Lesson ${next.label}`}</Button></div>
+    </section>}
+    {ready && ((goal && goal.kind !== "none") || weekly) && <div className="grid gap-4 sm:grid-cols-2">
+      {goal && goal.kind !== "none" && goalRow(Math.round((Math.min(goal.done, goal.target) / goal.target) * 100), "Today's goal", `${goal.kind === "minutes" ? `Today: ${goal.done} of ${goal.target} minutes` : `Today: ${goal.done} of 1 lesson`}${goal.met ? ". Goal met." : ""}`)}
+      {weekly && goalRow(Math.round((Math.min(weekly.done, weekly.target) / weekly.target) * 100), "This week", `This week: ${weekly.done} of ${weekly.target} study days${weekly.met ? ". Weekly goal met. Enjoy your rest days." : ""}`)}
+    </div>}
+    {user && ready && <div className="grid gap-3"><ExamCountdown /><TodayPlan /><DueChip /><MistakesPanel from="/home" /><TopicsLink /></div>}
+    {ready && sets.length > 0 && <section aria-labelledby="sets-title" className="grid gap-3">
+      <div className="flex items-baseline justify-between gap-3"><h2 id="sets-title" className="m-0 text-xl font-semibold">Your sets</h2><Link to="/lab">All sets</Link></div>
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-4">{sets.map((set) => <SetCard key={set.id} set={set} onRetry={() => {}} onEmpty={() => {}} />)}</div>
+    </section>}
     {isStudent && showWelcome && <Welcome onDone={dismissWelcome} />}
-    {!loading && !error && !courses.length && <EmptyState illustration={<Illustration name="empty" />} title="No courses yet" description="Check back soon." />}
-    {!loading && !error && courses.length > 0 && <section aria-labelledby="courses-title">
-      <h2 id="courses-title">{mine.length ? "Your courses" : "Courses"}</h2>
-      <div className="home-courses">
-        {listed.map((course) =><Card as={Link} className="home-course" to={`/courses/${course._id}`} key={course._id} {...nearToPrefetch(() => prefetchCourse(course._id))}>
-          <span className="home-course-code">{course.code}{course.isFree && <span className="count-chip"> Free</span>}</span>
-          <strong className="home-course-title">{course.title}</strong>
+    {ready && !courses.length && <EmptyState illustration={<Illustration name="empty" />} title="No courses yet" description="Check back soon." />}
+    {ready && courses.length > 0 && <section aria-labelledby="courses-title" className="grid gap-3">
+      <h2 id="courses-title" className="m-0 text-xl font-semibold">{mine.length ? "Your courses" : "Courses"}</h2>
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-4">
+        {listed.map((course) => <Link className={tileClass} to={`/courses/${course._id}`} key={course._id} {...nearToPrefetch(() => prefetchCourse(course._id))}>
+          <span className="text-sm font-semibold text-brand-ink">{course.code}{course.isFree && <span className="count-chip"> Free</span>}</span>
+          <strong className="text-lg leading-snug">{course.title}</strong>
           <CourseByline course={course} />
-          {course.description && <span className="muted home-course-desc">{course.description}</span>}
+          {course.description && <span className="line-clamp-2 text-sm text-muted-foreground">{course.description}</span>}
           {course.progress?.completedLessons > 0 && <Progress value={percent(course)} label={`${course.code} progress`} />}
-        </Card>)}
+        </Link>)}
       </div>
-      {courses.length > listed.length && <p className="home-soon"><Link to="/courses">Browse all {courses.length} courses</Link></p>}
-      {courses.length <= 1 && <p className="muted home-soon">More subjects coming soon.</p>}
+      {courses.length > listed.length && <p className="m-0"><Link to="/courses">Browse all {courses.length} courses</Link></p>}
+      {courses.length <= 1 && <p className="m-0 text-muted-foreground">More subjects coming soon.</p>}
     </section>}
   </div>;
 }
