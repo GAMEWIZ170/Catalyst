@@ -72,7 +72,7 @@ export default function Companion({ kind, id }) {
   return <section className="flex h-full min-h-0 flex-col gap-3" aria-label="Study companion">
     <div className="min-h-0 flex-1 overflow-y-auto pr-1" role="log" aria-live="polite" aria-label="Conversation" ref={logRef} tabIndex={0}>
       <div className="grid gap-4">
-        {turns.length === 0 && <p className="m-0 text-muted-foreground">Ask about something you are stuck on, or paste a question you are working on and I will help you think it through. I read only this {kind === "lesson" ? "lesson" : "set"}, and I give hints, not final answers.</p>}
+        {turns.length === 0 && <p className="m-0 text-muted-foreground">Ask me anything. Ask about something you are stuck on, or paste a question you are working on and I will help you think it through. {kind === "general" ? "Open a lesson or set to chat about it with the text in view. " : `I use this ${kind === "lesson" ? "lesson" : "set"} when it helps. `}I give hints, not final answers, on graded questions.</p>}
         {turns.map((turn, index) => turn.role === "user"
           ? <p key={index} className="m-0 ml-8 justify-self-end rounded-2xl bg-muted px-4 py-2.5 whitespace-pre-wrap"><span className="sr-only">You: </span>{turn.content}</p>
           : <div key={index} className="grid gap-2">

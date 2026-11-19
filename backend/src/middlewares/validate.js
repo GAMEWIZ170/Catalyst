@@ -111,7 +111,8 @@ const validateGenerate = validateWith(Joi.object({
   part: Joi.number().integer().min(0).max(30).default(0)
 }));
 
-const aiContext = Joi.object({ kind: Joi.string().valid("lesson", "set").required(), id: objectId.required() }).required();
+// "general" is a chat that is not tied to a lesson or set, so it has no id.
+const aiContext = Joi.object({ kind: Joi.string().valid("lesson", "set", "general").required(), id: Joi.when("kind", { is: "general", then: Joi.forbidden(), otherwise: objectId.required() }) }).required();
 const validateAiChat = validateWith(Joi.object({
   context: aiContext,
   messages: Joi.array().items(Joi.object({

@@ -48,12 +48,12 @@ export default function TutorPanel() {
     <div className="flex items-center justify-between px-4 pt-3 pb-2">
       <h2 className="font-display text-lg font-semibold">Tutor</h2>
       <div className="flex items-center">
-        {target && <button type="button" aria-label="New chat" onClick={() => setChat((n) => n + 1)} className="grid size-11 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"><Plus size={20} aria-hidden="true" /></button>}
+        <button type="button" aria-label="New chat" onClick={() => setChat((n) => n + 1)} className="grid size-11 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"><Plus size={20} aria-hidden="true" /></button>
         <button ref={closeRef} type="button" aria-label="Close tutor" onClick={() => setOpen(false)} className="grid size-11 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"><X size={20} aria-hidden="true" /></button>
       </div>
     </div>
     <div className="min-h-0 flex-1 px-4 pb-4">
-      {target ? <Companion key={`${target.kind}-${target.id}-${chat}`} kind={target.kind} id={target.id} /> : <p className="m-0 text-muted-foreground">Open a lesson or a study set, then ask me about it. I read only that lesson or set, and I give hints, not final answers.</p>}
+      <Companion key={`${target ? `${target.kind}-${target.id}` : "general"}-${chat}`} kind={target ? target.kind : "general"} id={target ? target.id : undefined} />
     </div>
   </>;
 

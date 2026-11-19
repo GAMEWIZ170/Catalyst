@@ -37,6 +37,7 @@ const getStatus = async (req, res, next) => {
 
 // The text the companion may use for a lesson or a set, as labelled sources. Null when the student may not use it.
 const sourcesFor = async (context, userId) => {
+  if (context.kind === "general") return { title: "", sources: [] };
   if (context.kind === "lesson") {
     const lesson = await findVisibleLesson(context.id);
     if (!lesson) return null;
@@ -69,8 +70,6 @@ const chat = async (req, res, next) => {
     }
     const found = await sourcesFor(context, req.user.id);
     if (!found) return res.status(404).json({ message: context.kind === "lesson" ? "Lesson not found" : "Study set not found" });
-    const hasText = found.sources.some((source) => source.text.trim().length >= 40);
-    if (!hasText) return res.status(400).json({ message: "There is nothing in this set yet for the companion to read. Add notes or material first." });
 
     const asked = cleanHistory(messages);
     const recent = asked.filter((message) => message.role === "user").slice(-2).map((message) => message.content).join(" ");
@@ -123,7 +122,10 @@ const flag = async (req, res, next) => {
     const { context, question, answer, category, note } = req.body;
     let title = "";
     let link = "";
-    if (context.kind === "lesson") {
+    if (context.kind === "general") {
+      title = "AI answer in general chat";
+      link = "/home";
+    } else if (context.kind === "lesson") {
       const lesson = await findVisibleLesson(context.id);
       if (!lesson) return res.status(404).json({ message: "Lesson not found" });
       title = `AI answer about "${lesson.title}"`;
@@ -134,7 +136,7 @@ const flag = async (req, res, next) => {
       title = `AI answer in set "${set.title}"`;
       link = `/lab/${set._id}`;
     }
-    await Report.create({ user: req.user.id, kind: "ai", target: new mongoose.Types.ObjectId(context.id), category, note: note || "", title: title.slice(0, 200), link, aiQuestion: question, aiAnswer: answer });
+    await Report.create({ user: req.user.id, kind: "ai", target: new mongoose.Types.ObjectId(context.id || req.user.id), category, note: note || "", title: title.slice(0, 200), link, aiQuestion: question, aiAnswer: answer });
     return res.status(201).json({ message: "Thank you. We will check this answer." });
   } catch (error) {
     next(error);
