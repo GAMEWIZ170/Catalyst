@@ -1,4 +1,4 @@
-// Dev-only. Prints the contrast ratio of every text and UI colour pair in all 10 palette and mode combinations.
+// Dev-only. Prints the contrast ratio of every text and UI colour pair in light and dark (old tokens.css only; the new oklch tokens in tokens.new.css are not checked here).
 // Run: node scripts/contrast.mjs   (exit code 1 if any pair fails WCAG AA)
 import { readFileSync } from "node:fs";
 
@@ -8,13 +8,11 @@ const blocks = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, sel, body]) =>
   vars: Object.fromEntries([...body.matchAll(/(--[\w-]+)\s*:\s*(#[0-9a-fA-F]{6})\s*;/g)].map((m) => [m[1], m[2]]))
 }));
 
-const palettes = ["lagoon", "indigo", "ember", "orchid", "graphite"];
+const palettes = ["lagoon"]; // the other palettes were removed in phase 6
 const resolve = (palette, theme) => {
   const picks = [
     (s) => s === ":root",
-    (s) => s === `:root[data-palette="${palette}"]`,
-    (s) => theme === "dark" && s === ':root[data-theme="dark"]',
-    (s) => theme === "dark" && s === `:root[data-palette="${palette}"][data-theme="dark"]`
+    (s) => theme === "dark" && s === ':root[data-theme="dark"]'
   ];
   const out = {};
   for (const pick of picks) for (const b of blocks) if (pick(b.sel)) Object.assign(out, b.vars);
@@ -57,5 +55,5 @@ for (const theme of ["light", "dark"]) {
     }
   }
 }
-console.log(`CHECK contrast => ${checks - fails}/${checks} pairs pass in 10 combinations (${fails} fail)`);
+console.log(`CHECK contrast => ${checks - fails}/${checks} pairs pass in 2 combinations (${fails} fail)`);
 process.exit(fails ? 1 : 0);
