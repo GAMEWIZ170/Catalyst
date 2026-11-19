@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUp, Flag } from "lucide-react";
+import { ArrowDown, ArrowUp, Flag } from "lucide-react";
+import ChatText from "./ChatText";
 import { api } from "../../api/client";
 import { Button, SelectField, TextArea, useToast } from "../ui";
 import { cn } from "@/lib/utils";
@@ -12,10 +13,10 @@ const CATEGORIES = [["wrong_answer", "It is wrong"], ["unclear", "It is unclear"
 // shows where each answer came from, and never gives the final answer to a test item. Nothing is kept on the server:
 // the last few turns are sent with each message. It is not placed on test or exam screens, and the server refuses it
 // while a timed quiz or exam is running.
-export default function Companion({ kind, id }) {
+export default function Companion({ kind, id, initialTurns = [], onTurns }) {
   const { toast } = useToast();
   const [status, setStatus] = useState(null);
-  const [turns, setTurns] = useState([]);          // { role, content, sources?, flagged? }
+  const [turns, setTurns] = useState(initialTurns);          // { role, content, sources?, flagged? }
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState("");
@@ -23,11 +24,14 @@ export default function Companion({ kind, id }) {
   const [category, setCategory] = useState("wrong_answer");
   const [flagNote, setFlagNote] = useState("");
   const logRef = useRef(null);
+  const [atBottom, setAtBottom] = useState(true);
 
   useEffect(() => {
     api.getAiStatus().then(({ data }) => setStatus(data)).catch(() => {});
   }, []);
   useEffect(() => { logRef.current?.scrollTo({ top: logRef.current.scrollHeight }); }, [turns, busy]);
+  useEffect(() => { if (turns.length) onTurns?.(turns); }, [turns]);
+  const onScroll = (event) => { const el = event.currentTarget; setAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 80); };
 
   async function send(event) {
     event.preventDefault();
@@ -70,13 +74,14 @@ export default function Companion({ kind, id }) {
   const onKey = (event) => { if (event.key === "Enter" && !event.shiftKey) send(event); };
 
   return <section className="flex h-full min-h-0 flex-col gap-3" aria-label="Study companion">
-    <div className="min-h-0 flex-1 overflow-y-auto pr-1" role="log" aria-live="polite" aria-label="Conversation" ref={logRef} tabIndex={0}>
+    <div className="relative min-h-0 flex-1">
+    <div className="h-full overflow-y-auto pr-1" onScroll={onScroll} role="log" aria-live="polite" aria-label="Conversation" ref={logRef} tabIndex={0}>
       <div className="grid gap-4">
         {turns.length === 0 && <p className="m-0 text-muted-foreground">Ask me anything. Ask about something you are stuck on, or paste a question you are working on and I will help you think it through. {kind === "general" ? "Open a lesson or set to chat about it with the text in view. " : `I use this ${kind === "lesson" ? "lesson" : "set"} when it helps. `}I give hints, not final answers, on graded questions.</p>}
         {turns.map((turn, index) => turn.role === "user"
           ? <p key={index} className="m-0 ml-8 justify-self-end rounded-2xl bg-muted px-4 py-2.5 whitespace-pre-wrap"><span className="sr-only">You: </span>{turn.content}</p>
           : <div key={index} className="grid gap-2">
-            <p className="m-0 whitespace-pre-wrap"><span className="sr-only">Tutor: </span>{turn.content}</p>
+            <div><span className="sr-only">Tutor: </span><ChatText text={turn.content} /></div>
             {turn.sources?.length > 0 && <p className="m-0 flex flex-wrap gap-1.5 text-sm">{turn.sources.map((source) => <Link key={source.n} to={source.link} className="rounded-pill border border-border px-2.5 py-0.5 hover:bg-muted">{source.label}{source.cited ? ` [${source.n}]` : ""}</Link>)}</p>}
             <p className="m-0 text-xs text-muted-foreground">{NOTE}</p>
             {turn.flagged
@@ -92,6 +97,8 @@ export default function Companion({ kind, id }) {
           </div>)}
         {busy && <p className="m-0 text-muted-foreground" role="status">Thinking…</p>}
       </div>
+    </div>
+    {!atBottom && <button type="button" onClick={() => logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" })} className="absolute bottom-2 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-pill border border-border bg-card px-3 py-1.5 text-sm font-semibold shadow-md hover:bg-muted"><ArrowDown size={14} aria-hidden="true" />Jump to latest</button>}
     </div>
     <p className="m-0 text-sm text-destructive empty:hidden" role="alert">{problem}</p>
     {resting ? <p className="m-0" role="status"><strong>AI is resting until tomorrow.</strong> Try again then.</p>
