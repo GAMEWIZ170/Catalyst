@@ -2,10 +2,6 @@
    Colours come from tokens.css only. Motion is 150 to 200 ms ease-out and is off when the device asks for reduced motion. */
 
 /* ---- Home: the Continue card lines up with the courses grid ---- */
-.home-page .home-continue { max-width: none; }
-.home-page .home-courses { margin-top: var(--space-4); }
-.home-page .ui-card.home-course { transition: border-color 150ms ease-out, transform 150ms ease-out, box-shadow 150ms ease-out; }
-.home-page .ui-card.home-course:hover { box-shadow: var(--shadow-sm); transform: translateY(-1px); }
 
 /* ---- Popovers: notifications and profile menu use the same surface, shadow and entrance as the search panel ---- */
 .app-shell .notification-panel,
@@ -33,30 +29,12 @@
 }
 
 /* ---- Flashcard review ---- */
-.fc-card { gap: var(--space-5); }
-.fc-card .flashcard-face { box-shadow: var(--shadow-sm); }
-@media (prefers-reduced-motion: no-preference) {
-  .fc-card .flashcard-face { transition: transform 480ms cubic-bezier(0.23, 1, 0.32, 1), border-color 150ms ease-out, box-shadow 150ms ease-out; }
-}
-.fc-card .flashcard-flip:hover .flashcard-face { box-shadow: var(--shadow-md); }
-.flashcard-flip:focus-visible { box-shadow: var(--focus); outline: 0; }
 
 /* Rating buttons: each has its own quiet tint, so Don't know, Unsure and Confident read at a glance. */
-.fc-ratings .button {
-  border-radius: var(--radius-panel);
-  min-height: 64px;
-  transition: background-color 150ms ease-out, border-color 150ms ease-out, transform 120ms ease-out;
-}
-.fc-ratings .button:active:not(:disabled) { transform: scale(0.98); }
-.fc-ratings .button:nth-child(1) { background: var(--error-tint); border-color: var(--error); color: var(--error); }
-.fc-ratings .button:nth-child(2) { background: var(--warning-tint); border-color: var(--warning); color: var(--warning); }
-.fc-ratings .button:nth-child(3) { background: var(--success-tint); border-color: var(--success); color: var(--success); }
-.fc-ratings .button:hover:not(:disabled) { filter: brightness(0.97); }
 
 /* ---- Tests: option buttons ---- */
 
 @media (prefers-reduced-motion: reduce) {
   .app-shell .notification-panel, .app-shell .profile-panel, .app-shell .quick-panel { animation: none; }
-  .home-page .ui-card.home-course, .fc-ratings .button, .exam .exam-option, .app-shell .notification-item, .app-shell .profile-panel a, .app-shell .profile-panel button { transition: none; }
-  .home-page .ui-card.home-course:hover { transform: none; }
+  .exam .exam-option, .app-shell .notification-item, .app-shell .profile-panel a, .app-shell .profile-panel button { transition: none; }
 }

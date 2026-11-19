@@ -90,22 +90,6 @@
   border-radius: 50%;
 }
 
-.streak-indicator {
-  align-items: center;
-  color: var(--accent);
-  display: inline-flex;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  gap: var(--space-1);
-  min-height: var(--control-height);
-  padding: 0 var(--space-1);
-}
-
-.streak-indicator svg {
-  height: 20px;
-  width: 20px;
-}
-
 .notification-menu,
 .profile-menu {
   position: relative;
@@ -206,10 +190,6 @@
 }
 
 .muted,
-.course-count,
-.outline-summary span,
-.unit-heading p,
-.lesson-score,
 .footer {
   color: var(--muted);
 }

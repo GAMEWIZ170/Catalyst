@@ -17,9 +17,6 @@ h1, h2, h3 { text-wrap: balance; }
   .button,
   .icon-button,
   .profile-button,
-  .place-link,
-  .sidebar-toggle,
-  .ui-tab,
   .admin-nav a,
   .admin-nav .admin-more > button,
   .profile-panel a,
@@ -33,21 +30,16 @@ h1, h2, h3 { text-wrap: balance; }
 
   .button:active:not(:disabled),
   .icon-button:active,
-  .profile-button:active,
-  .sidebar-toggle:active,
-  .tabbar .place-link:active {
+  .profile-button:active {
     transform: scale(0.97);
   }
 
-  .ui-card.home-course,
-  .course-card {
+  .ui-card.home-course {
     transition: border-color var(--dur-hover) var(--ease-out), transform var(--dur-press) var(--ease-out);
   }
 
   .switch-track { transition: background-color var(--dur-hover) var(--ease-out); }
-  .progress-track span { transition: width 300ms var(--ease-out); }
   .switch-thumb { transition: transform var(--dur-pop) var(--ease-out); }
-  .flashcard-face { transition: transform 400ms var(--ease-in-out); }
 
   /* Popovers grow out of the button that opened them, never from the centre. */
   .notification-panel,
@@ -65,38 +57,10 @@ h1, h2, h3 { text-wrap: balance; }
   }
 
   /* Tab panels and pages fade in. Exit is instant: the user already chose, so respond at once. */
-  .ui-tabpanel:not([hidden]) { animation: rise-in var(--dur-page) var(--ease-out); }
   .page-wrap > * { animation: rise-in var(--dur-page) var(--ease-out); }
   .app-shell--focus .page-wrap > * { animation: none; }
 
   /* Dialog: scales from 0.96 and fades in and out. Modals stay centred. */
-  .ui-dialog,
-  .confirm-dialog {
-    opacity: 0;
-    transform: scale(0.96);
-    transition:
-      opacity var(--dur-modal) var(--ease-out),
-      transform var(--dur-modal) var(--ease-out),
-      overlay var(--dur-modal) allow-discrete,
-      display var(--dur-modal) allow-discrete;
-  }
-  .ui-dialog[open],
-  .confirm-dialog[open] { opacity: 1; transform: none; }
-  .ui-dialog::backdrop,
-  .confirm-dialog::backdrop {
-    opacity: 0;
-    transition: opacity var(--dur-modal) var(--ease-out), overlay var(--dur-modal) allow-discrete, display var(--dur-modal) allow-discrete;
-  }
-  .ui-dialog[open]::backdrop,
-  .confirm-dialog[open]::backdrop { opacity: 1; }
-  @starting-style {
-    .ui-dialog[open],
-    .confirm-dialog[open] { opacity: 0; transform: scale(0.96); }
-    .ui-dialog[open]::backdrop,
-    .confirm-dialog[open]::backdrop { opacity: 0; }
-  }
-
-  .ui-toast { animation-duration: var(--dur-pop); animation-timing-function: var(--ease-out); }
   
 
   .admin-more .more-chevron { transition: transform var(--dur-pop) var(--ease-out); }

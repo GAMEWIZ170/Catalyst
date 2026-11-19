@@ -1,29 +1,4 @@
 /* Home and course list (Phase 3.5) */
-.home-header {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-4);
-  margin-bottom: var(--space-5);
-}
-
-.home-header h1 {
-  margin: 0;
-}
-
-.home-page h2 {
-  font-size: var(--text-xl);
-}
-
-.home-continue {
-  margin-bottom: var(--space-6);
-  max-width: 40rem;
-}
-
-.home-continue h2,
-.home-continue p {
-  margin: 0;
-}
 
 .home-courses {
   display: grid;
@@ -53,64 +28,14 @@
   overflow-wrap: break-word;
 }
 
-.home-soon {
-  margin: var(--space-4) 0 0;
-}
-
 /* Progress (Phase 3.6) */
 
-.progress-unit-head span:first-child,
-.score-list li span {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.progress-unit-head {
-  display: flex;
-  gap: var(--space-3);
-  justify-content: space-between;
-  margin-bottom: var(--space-2);
-}
-
 /* Login and register (Phase 3.7) */
-.auth-value {
-  color: var(--muted);
-  margin: calc(-1 * var(--space-3)) 0 var(--space-5);
-  text-align: center;
-}
-
-.auth-card h1 {
-  font-size: var(--text-2xl);
-  margin: 0 0 var(--space-1);
-}
-
-.auth-form .ui-field {
-  gap: var(--space-1);
-}
 
 /* Settings and top bar (Phase 3.8) */
-.settings-radio-grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr));
-}
 
 .settings-avatar-grid {
   grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
-}
-
-.streak-indicator {
-  background: var(--accent-soft);
-  border-radius: var(--radius-pill);
-  min-height: 40px;
-  padding: 0 var(--space-3);
-}
-
-.streak-indicator svg {
-  height: 16px;
-  width: 16px;
-}
-
-.settings-radio-grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
 }
 
 /* Phase 4: admin screens share the student components. */
@@ -130,11 +55,6 @@
   color: var(--error);
 }
 
-.ui-dialog {
-  max-height: calc(100dvh - var(--space-5));
-  overflow-y: auto;
-}
-
 .pass-percent-row {
   align-items: flex-start;
   flex-wrap: wrap;
@@ -146,15 +66,6 @@
 
 .pass-percent-row .button {
   margin-top: var(--space-6);
-}
-
-.filter-bar .ui-field,
-.course-search {
-  max-width: 28rem;
-}
-
-.admin-tabs-wrap .ui-tabpanel {
-  padding-top: var(--space-4);
 }
 
 .image-field .ui-field {

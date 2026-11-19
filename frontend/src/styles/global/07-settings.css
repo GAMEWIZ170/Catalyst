@@ -1,7 +1,3 @@
-.settings-page {
-  max-width: 900px;
-}
-
 .settings-section {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -14,14 +10,9 @@
   font-size: var(--text-xl);
 }
 
-.settings-radio-grid,
 .settings-avatar-grid {
   display: grid;
   gap: var(--space-3);
-}
-
-.settings-radio-grid {
-  grid-template-columns: 1fr;
 }
 
 .avatar-option {
@@ -46,16 +37,6 @@
   height: 1rem;
   margin: 0;
   width: 1rem;
-}
-
-@media (min-width: 340px) {
-  .settings-radio-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-.settings-help {
-  margin: var(--space-4) 0 0;
 }
 
 .settings-avatar-grid {

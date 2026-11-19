@@ -36,60 +36,6 @@ textarea {
   border-bottom-color: var(--accent);
 }
 
-.admin-stats {
-  display: grid;
-  gap: var(--space-3);
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-  margin: 0 0 var(--space-5);
-}
-
-.admin-stats > div {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-panel);
-  display: grid;
-  gap: var(--space-1);
-  padding: var(--space-3) var(--space-4);
-}
-
-.admin-stats dt {
-  color: var(--muted);
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-
-.admin-stats dd {
-  margin: 0;
-}
-
-.admin-stats dd:first-of-type {
-  font-size: var(--text-xl);
-  font-weight: 600;
-  line-height: 1.2;
-}
-
-.admin-stats dd.muted {
-  font-size: var(--text-sm);
-}
-
-.admin-course-main strong {
-  color: var(--muted);
-  font-size: var(--text-sm);
-}
-
-.course-search {
-  margin-bottom: var(--space-4);
-  max-width: 24rem;
-}
-
-.filter-bar {
-  display: grid;
-  gap: var(--space-3);
-  grid-template-columns: minmax(0, 1fr);
-  margin-bottom: var(--space-4);
-}
-
-.user-list,
 .trash-list {
   display: grid;
   gap: var(--space-2);
@@ -98,7 +44,6 @@ textarea {
   padding: 0;
 }
 
-.user-row,
 .trash-row {
   align-items: center;
   background: var(--surface);
@@ -109,7 +54,6 @@ textarea {
   padding: var(--space-4);
 }
 
-.user-main,
 .trash-main {
   display: grid;
   gap: var(--space-1);
@@ -117,27 +61,9 @@ textarea {
   min-width: 0;
 }
 
-.user-main strong,
-.user-main span,
 .trash-main strong {
   max-width: 100%;
   overflow-wrap: anywhere;
-}
-
-.user-subscription {
-  font-size: var(--text-sm);
-}
-
-.user-tags,
-.user-actions {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.status-badge--wrong {
-  color: var(--warning);
 }
 
 .trash-note {
@@ -197,13 +123,6 @@ textarea {
 }
 
 @media (min-width: 768px) {
-  .filter-bar {
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
-  }
-
-  .user-row {
-    grid-template-columns: minmax(0, 1fr) auto auto;
-  }
 
   .trash-row {
     grid-template-columns: minmax(0, 1fr) auto;

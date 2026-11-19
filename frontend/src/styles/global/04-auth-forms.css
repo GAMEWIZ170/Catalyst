@@ -1,76 +1,5 @@
-.auth-page {
-  align-items: center;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  position: relative;
-  min-height: 100dvh;
-  padding: var(--space-6) var(--space-4);
-}
-
-.auth-page > .theme-toggle {
-  position: absolute;
-  right: 1rem;
-  top: 1rem;
-}
-
 .auth-brand {
   margin-bottom: var(--space-5);
-}
-
-.auth-card {
-  padding: var(--space-6);
-  width: min(100%, 400px);
-}
-
-.auth-subtitle {
-  color: var(--muted);
-  margin-bottom: var(--space-5);
-}
-
-.auth-form {
-  display: grid;
-  gap: var(--space-4);
-}
-
-.auth-form label,
-.admin-field {
-  color: var(--muted);
-  display: grid;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  gap: var(--space-1);
-}
-
-.auth-form input,
-.admin-field input,
-.admin-field select,
-.delete-form input {
-  background: var(--surface);
-  border: 1px solid var(--control-line);
-  border-radius: var(--radius-control);
-  color: var(--ink);
-  min-height: var(--control-height);
-  padding: var(--space-3) var(--space-3);
-  font-size: var(--text-md);
-  width: 100%;
-}
-
-.button-wide {
-  margin-top: var(--space-1);
-  width: 100%;
-}
-
-.auth-switch {
-  color: var(--muted);
-  font-size: var(--text-sm);
-  margin: var(--space-5) 0 0;
-  text-align: center;
-}
-
-.auth-switch a {
-  color: var(--accent);
-  font-weight: 600;
 }
 
 .form-error {
@@ -80,15 +9,6 @@
   color: var(--error);
   margin: 0;
   padding: var(--space-3) var(--space-3);
-}
-
-.form-success {
-  background: var(--success-tint);
-  border: 1px solid var(--success);
-  border-radius: var(--radius-control);
-  color: var(--ink);
-  margin: 0;
-  padding: var(--space-3);
 }
 
 .verify-banner {
@@ -146,7 +66,6 @@
   width: 20px;
 }
 
-.empty-state,
 .error-state {
   border: 1px dashed var(--line);
   border-radius: var(--radius-panel);
