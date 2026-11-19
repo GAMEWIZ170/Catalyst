@@ -13,25 +13,9 @@
 }
 
 /* Admin dashboard (Expansion X3) */
-.stat-grid { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr)); margin-bottom: var(--space-5); }
-.ui-card.stat-tile { display: grid; gap: var(--space-1); }
-.ui-card.stat-tile--link { color: inherit; text-decoration: none; }
-.stat-label { color: var(--muted); font-size: var(--text-sm); }
-.stat-value { font-size: var(--text-2xl); font-variant-numeric: tabular-nums; line-height: 1.1; }
-.stat-note { font-size: var(--text-xs); }
 .trend { display: block; height: auto; max-width: 100%; width: 100%; }
-.trend-axis { stroke: var(--control-line); }
-.trend-grid { stroke: var(--line); stroke-dasharray: 3 3; }
-.trend-text, .trend-label { fill: var(--muted); font-size: var(--text-xs); }
-.trend-label { font-weight: 600; }
-.trend-line { stroke-linejoin: round; stroke-width: 2; }
-.trend-line--dau { stroke: var(--accent); stroke-width: 3; }
-.trend-line--wau { stroke: var(--info); }
-.trend-line--mau { stroke: var(--muted); stroke-dasharray: 5 3; }
-.trend-table summary { cursor: pointer; margin-top: var(--space-2); min-height: 44px; display: flex; align-items: center; }
-.trend-table table, .stat-table { border-collapse: collapse; width: 100%; }
-.trend-table th, .trend-table td, .stat-table th, .stat-table td { border-bottom: 1px solid var(--line); padding: var(--space-2) var(--space-3); text-align: left; font-variant-numeric: tabular-nums; }
-.stat-columns { display: grid; gap: var(--space-5); grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); }
+.stat-table { border-collapse: collapse; width: 100%; }
+.stat-table th, .stat-table td { border-bottom: 1px solid var(--line); padding: var(--space-2) var(--space-3); text-align: left; font-variant-numeric: tabular-nums; }
 .stat-list { display: grid; gap: var(--space-2); margin: var(--space-2) 0 0; padding-left: var(--space-5); }
 .stat-list li span:last-child { display: block; font-size: var(--text-sm); }
 
