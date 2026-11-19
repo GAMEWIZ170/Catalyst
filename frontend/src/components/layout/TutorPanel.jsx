@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { MessageCircle, X } from "lucide-react";
+import { MessageCircle, Plus, X } from "lucide-react";
 import Companion from "../learn/Companion";
 import { useTutor } from "../../context/TutorContext";
 import { cn } from "@/lib/utils";
@@ -34,6 +34,7 @@ export default function TutorPanel() {
   const { target, open, setOpen } = useTutor();
   const wide = useWide();
   const closeRef = useRef(null);
+  const [chat, setChat] = useState(0); // a new number starts a fresh chat
 
   useEffect(() => {
     if (!open) return undefined;
@@ -44,26 +45,27 @@ export default function TutorPanel() {
   }, [open, setOpen]);
 
   const body = <>
-    <div className="flex items-center justify-between px-4 pt-3">
+    <div className="flex items-center justify-between px-4 pt-3 pb-2">
       <h2 className="font-display text-lg font-semibold">Tutor</h2>
-      <button ref={closeRef} type="button" aria-label="Close tutor" onClick={() => setOpen(false)} className="grid size-11 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
-        <X size={20} aria-hidden="true" />
-      </button>
+      <div className="flex items-center">
+        {target && <button type="button" aria-label="New chat" onClick={() => setChat((n) => n + 1)} className="grid size-11 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"><Plus size={20} aria-hidden="true" /></button>}
+        <button ref={closeRef} type="button" aria-label="Close tutor" onClick={() => setOpen(false)} className="grid size-11 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"><X size={20} aria-hidden="true" /></button>
+      </div>
     </div>
-    <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
-      {target ? <Companion kind={target.kind} id={target.id} embedded /> : <p className="m-0 text-muted-foreground">Open a lesson or a study set, then ask me about it. I read only that lesson or set, and I give hints, not final answers.</p>}
+    <div className="min-h-0 flex-1 px-4 pb-4">
+      {target ? <Companion key={`${target.kind}-${target.id}-${chat}`} kind={target.kind} id={target.id} /> : <p className="m-0 text-muted-foreground">Open a lesson or a study set, then ask me about it. I read only that lesson or set, and I give hints, not final answers.</p>}
     </div>
   </>;
 
   if (wide) {
     return <>
       <AnimatePresence initial={false}>
-      {open && <motion.aside key="dock" aria-label="Tutor" className="flex h-full shrink-0 flex-col overflow-hidden border-l border-border bg-card"
-        initial={{ width: 0, opacity: 0 }} animate={{ width: 380, opacity: 1 }} exit={{ width: 0, opacity: 0 }} transition={{ duration: 0.2, ease: "easeOut" }}>
-        <div className="flex h-full w-[380px] flex-col">{body}</div>
+      {open && <motion.aside key="dock" aria-label="Tutor" className="my-2 flex shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card"
+        initial={{ width: 0, opacity: 0 }} animate={{ width: 400, opacity: 1 }} exit={{ width: 0, opacity: 0 }} transition={{ duration: 0.2, ease: "easeOut" }}>
+        <div className="flex h-full w-[400px] flex-col">{body}</div>
       </motion.aside>}
     </AnimatePresence>
-      <div className="flex w-20 shrink-0 flex-col items-center justify-end border-l border-border bg-card pb-6">
+      <div className="m-2 flex w-20 shrink-0 flex-col items-center justify-end rounded-2xl border border-border bg-card pb-6">
         <SideButton />
       </div>
     </>;

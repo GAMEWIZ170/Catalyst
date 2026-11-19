@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Flag, MessageCircle, Send } from "lucide-react";
+import { ArrowUp, Flag } from "lucide-react";
 import { api } from "../../api/client";
 import { Button, SelectField, TextArea, useToast } from "../ui";
+import { cn } from "@/lib/utils";
 
 const NOTE = "AI can make mistakes. Check with your lesson.";
 const CATEGORIES = [["wrong_answer", "It is wrong"], ["unclear", "It is unclear"], ["other", "Something else"]];
@@ -11,9 +12,8 @@ const CATEGORIES = [["wrong_answer", "It is wrong"], ["unclear", "It is unclear"
 // shows where each answer came from, and never gives the final answer to a test item. Nothing is kept on the server:
 // the last few turns are sent with each message. It is not placed on test or exam screens, and the server refuses it
 // while a timed quiz or exam is running.
-export default function Companion({ kind, id, defaultOpen = false, embedded = false }) {
+export default function Companion({ kind, id }) {
   const { toast } = useToast();
-  const [open, setOpen] = useState(defaultOpen || embedded);
   const [status, setStatus] = useState(null);
   const [turns, setTurns] = useState([]);          // { role, content, sources?, flagged? }
   const [text, setText] = useState("");
@@ -25,9 +25,8 @@ export default function Companion({ kind, id, defaultOpen = false, embedded = fa
   const logRef = useRef(null);
 
   useEffect(() => {
-    if (!open) return;
     api.getAiStatus().then(({ data }) => setStatus(data)).catch(() => {});
-  }, [open]);
+  }, []);
   useEffect(() => { logRef.current?.scrollTo({ top: logRef.current.scrollHeight }); }, [turns, busy]);
 
   async function send(event) {
@@ -68,44 +67,42 @@ export default function Companion({ kind, id, defaultOpen = false, embedded = fa
 
   const resting = Boolean(status?.resting);
   const noneLeft = status && status.messagesLeft === 0;
-  if (!open) return <section className="companion companion--closed" aria-label="Study companion">
-    <Button variant="secondary" icon={MessageCircle} onClick={() => setOpen(true)}>Ask the study companion</Button>
-  </section>;
+  const onKey = (event) => { if (event.key === "Enter" && !event.shiftKey) send(event); };
 
-  return <section className="companion" aria-labelledby={`companion-${id}`}>
-    <header className="companion-head">
-      <h2 id={`companion-${id}`}>Study companion</h2>
-      {!embedded && <Button variant="tertiary" onClick={() => setOpen(false)}>Close</Button>}
-    </header>
-    <p className="muted">Free beta, fair-use limits apply.{status && !resting ? ` ${status.messagesLeft} of ${status.limits.messages} messages left today.` : ""} It reads only this {kind === "lesson" ? "lesson" : "set"}, asks what you tried, and gives hints, not final answers.</p>
-    <div className="companion-log" role="log" aria-live="polite" aria-label="Conversation" ref={logRef} tabIndex={0}>
-      {turns.length === 0 && <p className="muted">Ask about something you are stuck on, or paste a question you are working on and I will help you think it through.</p>}
-      {turns.map((turn, index) => <div key={index} className={`companion-msg companion-msg--${turn.role}`}>
-        <strong className="companion-who">{turn.role === "user" ? "You" : "Companion"}</strong>
-        <p>{turn.content}</p>
-        {turn.role === "assistant" && <>
-          {turn.sources?.length > 0 && <p className="companion-sources">Based on: {turn.sources.map((source, at) => <span key={source.n}>{at > 0 ? " · " : ""}<Link to={source.link}>{source.label}</Link>{source.cited ? ` [${source.n}]` : ""}</span>)}</p>}
-          <p className="muted companion-note">{NOTE}</p>
-          {turn.flagged
-            ? <span className="muted">Flagged. Thank you.</span>
-            : <Button variant="tertiary" icon={Flag} onClick={() => setFlagging(index)}>Flag this answer</Button>}
-          {flagging === index && <form className="companion-flag" onSubmit={sendFlag}>
-            <SelectField label="What is wrong with this answer?" value={category} onChange={(event) => setCategory(event.target.value)}>
-              {CATEGORIES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-            </SelectField>
-            <TextArea label="Tell us more (optional)" rows={2} maxLength={500} value={flagNote} onChange={(event) => setFlagNote(event.target.value)} />
-            <div className="button-row"><Button type="submit">Send flag</Button><Button variant="secondary" onClick={() => setFlagging(null)}>Cancel</Button></div>
-          </form>}
-        </>}
-      </div>)}
-      {busy && <p className="muted" role="status">Thinking…</p>}
+  return <section className="flex h-full min-h-0 flex-col gap-3" aria-label="Study companion">
+    <div className="min-h-0 flex-1 overflow-y-auto pr-1" role="log" aria-live="polite" aria-label="Conversation" ref={logRef} tabIndex={0}>
+      <div className="grid gap-4">
+        {turns.length === 0 && <p className="m-0 text-muted-foreground">Ask about something you are stuck on, or paste a question you are working on and I will help you think it through. I read only this {kind === "lesson" ? "lesson" : "set"}, and I give hints, not final answers.</p>}
+        {turns.map((turn, index) => turn.role === "user"
+          ? <p key={index} className="m-0 ml-8 justify-self-end rounded-2xl bg-muted px-4 py-2.5 whitespace-pre-wrap"><span className="sr-only">You: </span>{turn.content}</p>
+          : <div key={index} className="grid gap-2">
+            <p className="m-0 whitespace-pre-wrap"><span className="sr-only">Tutor: </span>{turn.content}</p>
+            {turn.sources?.length > 0 && <p className="m-0 flex flex-wrap gap-1.5 text-sm">{turn.sources.map((source) => <Link key={source.n} to={source.link} className="rounded-pill border border-border px-2.5 py-0.5 hover:bg-muted">{source.label}{source.cited ? ` [${source.n}]` : ""}</Link>)}</p>}
+            <p className="m-0 text-xs text-muted-foreground">{NOTE}</p>
+            {turn.flagged
+              ? <span className="text-sm text-muted-foreground">Flagged. Thank you.</span>
+              : <div><Button variant="tertiary" size="sm" icon={Flag} onClick={() => setFlagging(index)}>Flag this answer</Button></div>}
+            {flagging === index && <form className="grid gap-2 rounded-xl border border-border p-3" onSubmit={sendFlag}>
+              <SelectField label="What is wrong with this answer?" value={category} onChange={(event) => setCategory(event.target.value)}>
+                {CATEGORIES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+              </SelectField>
+              <TextArea label="Tell us more (optional)" rows={2} maxLength={500} value={flagNote} onChange={(event) => setFlagNote(event.target.value)} />
+              <div className="flex gap-2"><Button type="submit">Send flag</Button><Button variant="secondary" onClick={() => setFlagging(null)}>Cancel</Button></div>
+            </form>}
+          </div>)}
+        {busy && <p className="m-0 text-muted-foreground" role="status">Thinking…</p>}
+      </div>
     </div>
-    <p className="settings-status" role="alert">{problem}</p>
-    {resting ? <p role="status"><strong>AI is resting until tomorrow.</strong> Try again then.</p>
-      : noneLeft ? <p role="status"><strong>You have used today's messages.</strong> They come back tomorrow.</p>
-      : <form className="companion-form" onSubmit={send}>
-        <TextArea label="Your question" rows={3} maxLength={1000} value={text} onChange={(event) => setText(event.target.value)} />
-        <Button type="submit" icon={Send} disabled={busy || !text.trim()}>Send</Button>
+    <p className="m-0 text-sm text-destructive empty:hidden" role="alert">{problem}</p>
+    {resting ? <p className="m-0" role="status"><strong>AI is resting until tomorrow.</strong> Try again then.</p>
+      : noneLeft ? <p className="m-0" role="status"><strong>You have used today's messages.</strong> They come back tomorrow.</p>
+      : <form className="grid gap-1 rounded-2xl border border-input bg-background p-2 focus-within:border-ring" onSubmit={send}>
+        <textarea aria-label="Your question" placeholder="Ask your AI tutor anything..." rows={2} maxLength={1000} value={text} onChange={(event) => setText(event.target.value)} onKeyDown={onKey}
+          className="max-h-40 min-h-12 w-full resize-none bg-transparent px-2 py-1 outline-none placeholder:text-muted-foreground" />
+        <div className="flex items-center justify-between gap-2 px-1">
+          <span className="text-xs text-muted-foreground">{status && !resting ? `${status.messagesLeft} of ${status.limits.messages} left today` : "Free beta"}</span>
+          <button type="submit" aria-label="Send" disabled={busy || !text.trim()} className={cn("grid size-9 place-items-center rounded-full bg-primary text-primary-foreground transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring", (busy || !text.trim()) && "opacity-40")}><ArrowUp size={18} aria-hidden="true" /></button>
+        </div>
       </form>}
   </section>;
 }

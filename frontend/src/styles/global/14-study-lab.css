@@ -31,16 +31,7 @@
 .board-head { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-3); justify-content: space-between; }
 .board-you { background: var(--accent-soft); }
 .companion { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-panel); display: grid; gap: var(--space-3); margin-top: var(--space-5); padding: var(--space-4); }
-.companion--closed { background: none; border: 0; padding: 0; }
-.companion-head { align-items: center; display: flex; justify-content: space-between; }
 .companion h2, .companion p { margin: 0; }
-.companion-log { background: var(--sunken); border-radius: var(--radius-control); display: grid; gap: var(--space-3); max-height: 26rem; overflow-y: auto; padding: var(--space-3); }
-.companion-msg { display: grid; gap: var(--space-2); justify-items: start; }
-.companion-msg p { overflow-wrap: anywhere; white-space: pre-wrap; }
-.companion-who { font-size: var(--text-sm); }
-.companion-sources { font-size: var(--text-sm); }
-.companion-note { font-size: var(--text-sm); }
-.companion-flag, .companion-form { display: grid; gap: var(--space-3); max-width: 100%; }
 .ai-drafts { display: grid; gap: var(--space-4); margin-top: var(--space-5); }
 .ai-drafts h2, .ai-drafts h3, .ai-drafts p { margin: 0; }
 .ai-form { align-items: end; display: grid; gap: var(--space-3); max-width: 36rem; }
