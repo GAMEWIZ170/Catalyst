@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { X } from "lucide-react";
+import { MessageCircle, X } from "lucide-react";
 import Companion from "../learn/Companion";
 import { useTutor } from "../../context/TutorContext";
 import { cn } from "@/lib/utils";
@@ -20,6 +20,16 @@ export function useWide() {
   return wide;
 }
 
+// The always-visible Chat button on the right edge (floating on small screens). It opens the tutor for the page the student is on.
+function SideButton({ round = false }) {
+  const { open, setOpen } = useTutor();
+  return <button type="button" aria-expanded={open} aria-label={open ? "Close tutor" : "Open tutor"} onClick={() => setOpen(!open)}
+    className={cn("group flex flex-col items-center gap-1 text-xs font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring", round && "rounded-full bg-card p-1 shadow-lg ring-1 ring-border")}>
+    <span className={cn("grid size-12 place-items-center rounded-full bg-primary text-primary-foreground transition-transform group-hover:scale-105 group-active:scale-95", open && "ring-2 ring-foreground")}><MessageCircle size={24} aria-hidden="true" /></span>
+    {!round && <span>Chat</span>}
+  </button>;
+}
+
 export default function TutorPanel() {
   const { target, open, setOpen } = useTutor();
   const wide = useWide();
@@ -33,7 +43,6 @@ export default function TutorPanel() {
     return () => document.removeEventListener("keydown", onKey);
   }, [open, setOpen]);
 
-  if (!target) return null;
   const body = <>
     <div className="flex items-center justify-between px-4 pt-3">
       <h2 className="font-display text-lg font-semibold">Tutor</h2>
@@ -42,20 +51,27 @@ export default function TutorPanel() {
       </button>
     </div>
     <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
-      <Companion kind={target.kind} id={target.id} embedded />
+      {target ? <Companion kind={target.kind} id={target.id} embedded /> : <p className="m-0 text-muted-foreground">Open a lesson or a study set, then ask me about it. I read only that lesson or set, and I give hints, not final answers.</p>}
     </div>
   </>;
 
   if (wide) {
-    return <AnimatePresence initial={false}>
+    return <>
+      <AnimatePresence initial={false}>
       {open && <motion.aside key="dock" aria-label="Tutor" className="flex h-full shrink-0 flex-col overflow-hidden border-l border-border bg-card"
         initial={{ width: 0, opacity: 0 }} animate={{ width: 380, opacity: 1 }} exit={{ width: 0, opacity: 0 }} transition={{ duration: 0.2, ease: "easeOut" }}>
         <div className="flex h-full w-[380px] flex-col">{body}</div>
       </motion.aside>}
-    </AnimatePresence>;
+    </AnimatePresence>
+      <div className="flex w-20 shrink-0 flex-col items-center justify-end border-l border-border bg-card pb-6">
+        <SideButton />
+      </div>
+    </>;
   }
 
-  return <AnimatePresence>
+  return <>
+    <div className="fixed right-3 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-30"><SideButton round /></div>
+    <AnimatePresence>
     {open && <>
       <motion.div key="scrim" className="fixed inset-0 z-40 bg-foreground/40" aria-hidden="true" onClick={() => setOpen(false)}
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} />
@@ -65,5 +81,6 @@ export default function TutorPanel() {
         {body}
       </motion.aside>
     </>}
-  </AnimatePresence>;
+  </AnimatePresence>
+  </>;
 }

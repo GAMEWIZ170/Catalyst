@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useMatch, useNavigate } from "react-router-dom";
-import { Bell, ChevronRight, FlaskConical, House, Layers, MessageCircle, Settings, Shield, UserRound, Zap } from "lucide-react";
+import { Bell, ChevronRight, FlaskConical, House, Layers, Settings, Shield, UserRound, Zap } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import { TutorProvider, useTutor } from "../../context/TutorContext";
+import { TutorProvider } from "../../context/TutorContext";
 import { useTimer } from "../../context/TimerContext";
 import useStudyTimer from "../../hooks/useStudyTimer";
 import { useOnline } from "../../utils/offline";
@@ -59,15 +59,6 @@ function Breadcrumb({ places, pathname }) {
     {first && place.to !== "/home" && <><ChevronRight size={16} className="text-muted-foreground" aria-hidden="true" /><span className={second ? "text-muted-foreground" : "font-semibold"} aria-current={second ? undefined : "page"}>{first}</span></>}
     {second && <><ChevronRight size={16} className="text-muted-foreground" aria-hidden="true" /><span className="truncate font-semibold" aria-current="page">{second}</span></>}
   </nav>;
-}
-
-function TutorToggle() {
-  const { target, open, setOpen } = useTutor();
-  if (!target) return null;
-  return <button type="button" aria-expanded={open} aria-label={open ? "Close tutor" : "Open tutor"} onClick={() => setOpen(!open)}
-    className={cn("inline-flex min-h-11 items-center gap-2 rounded-full border border-input px-4 text-sm font-semibold transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring", open && "border-transparent bg-primary text-primary-foreground hover:bg-primary")}>
-    <MessageCircle size={18} aria-hidden="true" /><span className="hidden sm:inline">Tutor</span>
-  </button>;
 }
 
 function Shell({ children }) {
@@ -148,7 +139,6 @@ function Shell({ children }) {
         <div className="ml-auto flex min-w-0 items-center gap-2">
           <HeaderSearch />
           <div className="topbar-tools flex shrink-0 items-center gap-1">
-            <TutorToggle />
             <div className="timer-menu popover-host">
               <TimerButton buttonRef={(node) => { buttons.current.timer = node; }} open={open === "timer"} onClick={() => toggle("timer")} />
               {open === "timer" && <TimerPanel onNavigate={() => setOpen(null)} />}
