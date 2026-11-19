@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AlertCircle, BookOpen, MoreHorizontal, Plus, Search, Trash2, X } from "lucide-react";
+import { chip, chipRow } from "../../components/admin/adminStyles";
 import { api } from "../../api/client";
 import AdminLayout from "../../components/admin/AdminLayout";
 import { Button, Dialog, DropdownMenu, EmptyState, Switch } from "../../components/ui";
@@ -84,7 +85,7 @@ export default function AdminCourses() {
   }
 
   const newButton = <Button icon={Plus} loading={creating} onClick={createCourse}>New course</Button>;
-  const chip = "chip";
+  
   return <AdminLayout>
     <div className="grid gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -106,7 +107,7 @@ export default function AdminCourses() {
       {!loading && courses.length > 0 && <>
         <div className="flex flex-wrap items-center justify-between gap-3">
           {categories.length > 0
-            ? <div className="chip-row" role="group" aria-label="Filter by category" style={{ margin: 0 }}>
+            ? <div className={chipRow} role="group" aria-label="Filter by category" style={{ margin: 0 }}>
               <button type="button" className={chip} aria-pressed={!category} onClick={() => setCategory("")}>All</button>
               {categories.map((name) => <button type="button" className={chip} key={name} aria-pressed={category === name} onClick={() => setCategory(name)}>{name}</button>)}
               {hasGeneral && <button type="button" className={chip} aria-pressed={category === "__general"} onClick={() => setCategory("__general")}>General</button>}

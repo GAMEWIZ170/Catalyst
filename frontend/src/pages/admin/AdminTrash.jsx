@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
+import { adminHeading } from "../../components/admin/adminStyles";
 import { api } from "../../api/client";
 import AdminLayout from "../../components/admin/AdminLayout";
 import StatusMessage from "../../components/admin/StatusMessage";
@@ -48,7 +49,7 @@ export default function AdminTrash() {
   }
 
   return <AdminLayout>
-    <div className="admin-heading">
+    <div className={adminHeading}>
       <div>
         <h1>Trash</h1>
         <p className="muted">Deleted content waits here until you restore it. Restored items come back unpublished, at the end of their list.</p>
@@ -58,13 +59,13 @@ export default function AdminTrash() {
     {loading && <Loading />}
     {!loading && error && !items.length && <Button variant="secondary" onClick={load}>Retry</Button>}
     {!loading && !items.length && !error && <EmptyState icon={Trash2} title="The Trash is empty" description="Anything you delete will appear here." />}
-    {!loading && items.length > 0 && <ul className="trash-list">
-      {items.map((item) => <li className="trash-row" key={`${item.type}-${item.id}`}>
-        <div className="trash-main">
+    {!loading && items.length > 0 && <ul className="m-0 grid list-none gap-2 p-0">
+      {items.map((item) => <li className="grid items-center gap-3 rounded-md border border-border bg-card p-4 md:grid-cols-[minmax(0,1fr)_auto]" key={`${item.type}-${item.id}`}>
+        <div className="grid min-w-0 justify-items-start gap-1 [&_strong]:max-w-full [&_strong]:[overflow-wrap:anywhere]">
           <Badge>{TYPE_LABELS[item.type]}</Badge>
           <strong>{item.title}</strong>
           <span className="muted">{item.parentTitle ? `In ${TYPE_LABELS[item.parentType].toLowerCase()} "${item.parentTitle}" · ` : ""}Deleted {formatDate(item.deletedAt)}</span>
-          {item.blocked && <span className="trash-note">Restore the {TYPE_LABELS[item.parentType].toLowerCase()} first.</span>}
+          {item.blocked && <span className="text-sm font-semibold text-warning">Restore the {TYPE_LABELS[item.parentType].toLowerCase()} first.</span>}
         </div>
         <Button variant="secondary" disabled={item.blocked} loading={busy === String(item.id)} onClick={() => restore(item)}>{busy === String(item.id) ? "Restoring..." : "Restore"}</Button>
       </li>)}

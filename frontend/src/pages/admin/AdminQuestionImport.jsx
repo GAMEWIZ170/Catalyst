@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
+import { adminHeading, analyticsTable, backLink, tableScroll } from "../../components/admin/adminStyles";
 import { api } from "../../api/client";
 import AdminLayout from "../../components/admin/AdminLayout";
 import StatusMessage from "../../components/admin/StatusMessage";
@@ -93,38 +94,38 @@ export default function AdminQuestionImport() {
   const ready = report && report.errors.length === 0;
 
   return <AdminLayout nav={false}>
-    <p><Link className="back-link" to={back}>Back to the test</Link></p>
-    <div className="admin-heading">
+    <p><Link className={backLink} to={back}>Back to the test</Link></p>
+    <div className={adminHeading}>
       <div>
         <h1>Import questions from a CSV file</h1>
         <p className="muted">Questions are added at the end of this test. Nothing is saved until you check the file and press Import. If any row has a problem, nothing is imported.</p>
       </div>
     </div>
-    <section className="admin-editor-section import-step">
+    <section className="mb-4 grid gap-3 [&_h2]:mt-0">
       <h2>1. Get the template</h2>
       <p>It has one example row for each question type. Fill it in with a spreadsheet program and save it as CSV (UTF-8). Pictures cannot be imported this way: add them in the editor afterwards.</p>
       <div><Button variant="secondary" onClick={download}>Download the template</Button></div>
-      <details className="import-help">
+      <details className="[&_dd]:m-0 [&_dd]:[overflow-wrap:anywhere] [&_dl]:my-3 [&_dl]:grid [&_dl]:gap-2 [&_dt]:font-semibold">
         <summary>What goes in each column</summary>
         <dl>{COLUMN_HELP.map(([name, text]) => <div key={name}><dt><code>{name}</code></dt><dd>{text}</dd></div>)}</dl>
         <p className="muted">At most 200 questions per file.</p>
       </details>
     </section>
-    <section className="admin-editor-section import-step">
+    <section className="mb-4 grid gap-3 [&_h2]:mt-0">
       <h2>2. Choose your file and check it</h2>
       <FileDrop label="CSV file" hint="Drop a CSV file here, or click to choose one (up to 1 MB)" accept=".csv,text/csv" maxSize={MAX_BYTES} value={picked} onChange={(next) => choose(next)} onError={(message) => { if (message) setError(message); }} />
       <div><Button disabled={!file} loading={busy === "check"} onClick={check}>Check the file</Button></div>
     </section>
     <StatusMessage message={error || done} error={Boolean(error)} />
     {done && <p><Link to={back}>See the questions in the test</Link></p>}
-    {report && <section className="admin-editor-section import-step" aria-live="polite">
+    {report && <section className="mb-4 grid gap-3 [&_h2]:mt-0" aria-live="polite">
       <h2>3. Result</h2>
       <p>
         <strong>{report.total}</strong> {report.total === 1 ? "row" : "rows"} read: <strong>{report.valid}</strong> good
         {report.errors.length > 0 ? <>, <strong>{report.errors.length}</strong> with a problem.</> : "."}
       </p>
-      <div className="table-scroll" tabIndex="0" role="region" aria-label="Rows in the file">
-        <table className="analytics-table">
+      <div className={tableScroll} tabIndex="0" role="region" aria-label="Rows in the file">
+        <table className={analyticsTable}>
           <caption className="sr-only">Every row in the file and whether it can be imported</caption>
           <thead><tr><th scope="col">Row</th><th scope="col">Type</th><th scope="col">Question</th><th scope="col">Result</th></tr></thead>
           <tbody>

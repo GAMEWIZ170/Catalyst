@@ -45,28 +45,7 @@
   margin-top: var(--space-3);
 }
 
-.pass-percent-row {
-  align-items: flex-start;
-  flex-wrap: wrap;
-}
-
-.pass-percent-row .ui-field {
-  flex: 0 1 28rem;
-}
-
-.pass-percent-row .button {
-  margin-top: var(--space-6);
-}
-
 .pass-percent {
   max-width: 32rem;
-}
-
-.pass-percent-row {
-  flex-wrap: nowrap;
-}
-
-.pass-percent-row .ui-field {
-  flex: 1 1 auto;
 }
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { BarChart3 } from "lucide-react";
+import { adminHeading, analyticsTable, chip, chipRow, tableScroll } from "../../components/admin/adminStyles";
 import { api } from "../../api/client";
 import AdminLayout from "../../components/admin/AdminLayout";
 import StatusMessage from "../../components/admin/StatusMessage";
@@ -35,21 +36,21 @@ export default function AdminAnalytics() {
   }, [minAttempts]);
 
   return <AdminLayout>
-    <div className="admin-heading">
+    <div className={adminHeading}>
       <div>
         <h1>Question analytics</h1>
         <p className="muted">Questions students get wrong most often, lowest percent correct first. Counting started when this page was added, and includes practice runs and mock exams. Numbers are anonymous.</p>
       </div>
     </div>
-    <div className="chip-row" role="group" aria-label="Only questions answered at least this many times">
-      {["1", "5", "10", "20", "50"].map((value) => <button type="button" className="chip" key={value} aria-pressed={minAttempts === value} onClick={() => setMinAttempts(value)}>{value === "1" ? "Any" : `${value}+ times`}</button>)}
+    <div className={`${chipRow} my-4`} role="group" aria-label="Only questions answered at least this many times">
+      {["1", "5", "10", "20", "50"].map((value) => <button type="button" className={chip} key={value} aria-pressed={minAttempts === value} onClick={() => setMinAttempts(value)}>{value === "1" ? "Any" : `${value}+ times`}</button>)}
     </div>
     <StatusMessage message={error} error />
     {!data && !error && <Loading />}
     {error && !data && <Button variant="secondary" onClick={load}>Retry</Button>}
     {data && data.rows.length === 0 && <EmptyState icon={BarChart3} title="Nothing to show yet" description="Questions appear here once students have answered them enough times. Try a lower number above." />}
-    {data && data.rows.length > 0 && <div className="table-scroll" tabIndex="0" role="region" aria-label="Questions by percent correct">
-      <table className="analytics-table">
+    {data && data.rows.length > 0 && <div className={tableScroll} tabIndex="0" role="region" aria-label="Questions by percent correct">
+      <table className={analyticsTable}>
         <caption className="sr-only">Questions sorted by lowest percent correct</caption>
         <thead><tr><th scope="col">Question</th><th scope="col">Test</th><th scope="col">Answered</th><th scope="col">Correct</th><th scope="col">Most common wrong answer</th></tr></thead>
         <tbody>

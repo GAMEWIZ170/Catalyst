@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { AlertCircle, CheckCircle2, Info, MoreHorizontal, Search, Users, X } from "lucide-react";
+import { chip, chipRow } from "../../components/admin/adminStyles";
 import { api } from "../../api/client";
 import { useAuth } from "../../context/AuthContext";
 import AdminLayout from "../../components/admin/AdminLayout";
@@ -92,8 +93,8 @@ export default function AdminUsers() {
     return items;
   }
 
-  const chips = (label, options, value, name) => <div className="chip-row" role="group" aria-label={label} style={{ margin: 0 }}>
-    {options.map(([key, text]) => <button type="button" className="chip" key={key || "all"} aria-pressed={value === key} onClick={() => changeFilter(name, key)}>{text}</button>)}
+  const chips = (label, options, value, name) => <div className={chipRow} role="group" aria-label={label} style={{ margin: 0 }}>
+    {options.map(([key, text]) => <button type="button" className={chip} key={key || "all"} aria-pressed={value === key} onClick={() => changeFilter(name, key)}>{text}</button>)}
   </div>;
   const filtered = Boolean(filters.q || filters.role || filters.status);
 

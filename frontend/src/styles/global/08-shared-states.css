@@ -93,23 +93,6 @@ h3 {
   max-width: 28rem;
 }
 
-.pass-percent-row {
-  align-items: center;
-  display: flex;
-  gap: var(--space-2);
-}
-
-.pass-percent-row input {
-  background: var(--surface);
-  border: 1px solid var(--control-line);
-  border-radius: var(--radius-control);
-  color: var(--ink);
-  font-size: var(--text-md);
-  min-height: var(--control-height);
-  padding: var(--space-3) var(--space-3);
-  width: 7rem;
-}
-
 .pass-percent p {
   margin: 0;
 }

@@ -13,6 +13,7 @@ import ConfirmDialog from "../../components/admin/ConfirmDialog";
 import InlineRename from "../../components/admin/InlineRename";
 import StatusBadge from "../../components/admin/StatusBadge";
 import StatusMessage from "../../components/admin/StatusMessage";
+import { adminHeading, adminSection, chip, chipRow, editorActions, headingActions, optionRow, sectionHeading, uiLabel } from "../../components/admin/adminStyles";
 import Switch from "../../components/admin/Switch";
 import useUnsavedChanges from "../../hooks/useUnsavedChanges";
 import MoveButton from "../../components/admin/MoveButton";
@@ -225,51 +226,51 @@ export default function AdminTestEditor() {
   }
 
   if (loading) return <AdminLayout nav={false}><Loading /></AdminLayout>;
-  if (!test) return <div className="admin-layout"><div className="admin-layout-inner"><StatusMessage message={error || "Test not found"} error /></div></div>;
+  if (!test) return <div className="min-h-[calc(100dvh-72px)] px-4 pt-6 pb-12"><div className="mx-auto max-w-[960px]"><StatusMessage message={error || "Test not found"} error /></div></div>;
 
-  return <div className="admin-layout"><div className="admin-layout-inner">
+  return <div className="min-h-[calc(100dvh-72px)] px-4 pt-6 pb-12"><div className="mx-auto max-w-[960px]">
     <Breadcrumbs items={trail} />
-    <div className="admin-heading">
+    <div className={adminHeading}>
       <div><InlineRename as="h1" name={test.title} onSave={rename} /><p className="muted">{test.scope === "true_false" ? "True or false" : `${test.scope[0].toUpperCase()}${test.scope.slice(1)} test`} · {plural(questions.length, "question")}</p></div>
-      <div className="heading-actions">
+      <div className={headingActions}>
         <Button as={Link} variant="secondary" to={`/admin/preview/tests/${id}`} state={{ from: location.pathname }}>Preview as student</Button>
         <Button as={Link} variant="secondary" to={`/admin/tests/${id}/import`} state={{ from: location.pathname }}>Import CSV</Button>
         <Switch checked={test.isPublished} onChange={publish} label={test.isPublished ? "Published" : "Publish"} />
       </div>
     </div>
-    {test.scope === "lesson" && <form className="pass-percent" onSubmit={savePassPercent}>
-      <div className="pass-percent-row">
+    {test.scope === "lesson" && <form className="mb-4 grid max-w-[32rem] gap-1 [&_p]:m-0" onSubmit={savePassPercent}>
+      <div className="flex items-start gap-2 [&>*:first-child]:flex-auto [&>button]:mt-8">
         <TextField label="Pass percent" id="pass-percent" type="number" inputMode="numeric" min="0" max="100" step="1" placeholder="None" value={passDraft} onChange={(event) => setPassDraft(event.target.value)} onBlur={() => { if (String(passDraft) !== String(test.passPercent ?? "")) savePassPercent(); }} hint="A student needs at least this score to complete the lesson. Leave it empty for no requirement." />
       </div>
     </form>}
-    <form className="pass-percent" onSubmit={saveTimeLimit}>
-      <div className="pass-percent-row">
+    <form className="mb-4 grid max-w-[32rem] gap-1 [&_p]:m-0" onSubmit={saveTimeLimit}>
+      <div className="flex items-start gap-2 [&>*:first-child]:flex-auto [&>button]:mt-8">
         <TextField label="Time limit (minutes)" id="time-limit" type="number" inputMode="numeric" min="1" max="360" step="1" placeholder="None" value={timeDraft} onChange={(event) => setTimeDraft(event.target.value)} onBlur={() => { if (String(timeDraft) !== String(test.timeLimitMinutes ?? "")) saveTimeLimit(); }} hint="Set a limit to make this a timed mock exam: no feedback until the end, and handed in automatically when time runs out. Leave it empty for an ordinary test." />
       </div>
     </form>
     <StatusMessage message={error || message} error={Boolean(error)} />
     {!questions.length && <p className="notice">A test with no questions gives no credit and stays hidden from students until it has at least one.</p>}
-    <section className="admin-editor-section">
-      <div className="section-heading"><h2>Questions</h2><Button variant="primary" type="button" onClick={addQuestion}>Add question</Button></div>
+    <section className={adminSection}>
+      <div className={sectionHeading}><h2>Questions</h2><Button variant="primary" type="button" onClick={addQuestion}>Add question</Button></div>
       <div className="question-list">
-        {questions.map((item, index) => <div className="question-row" key={idOf(item)}>
-          <button className="question-row-main" type="button" onClick={() => openQuestion(item)}><span>{index + 1}</span><span className="question-preview"><RichText>{item.text}</RichText></span><Badge>{TYPE_LABELS[item.type] || item.type}</Badge>{(item.image || item.options?.some((option) => option.image)) && <span aria-label="Has image">Image</span>}</button>
+        {questions.map((item, index) => <div className="grid gap-2 border-t border-border py-2 first:border-t-0 md:grid-cols-[minmax(0,1fr)_auto]" key={idOf(item)}>
+          <button className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-[6px] border-0 bg-transparent p-2 text-left text-inherit hover:bg-background [&>span:first-child]:min-w-6 [&>span:first-child]:font-semibold [&>span:first-child]:text-muted-foreground" type="button" onClick={() => openQuestion(item)}><span>{index + 1}</span><span className="min-w-0 flex-1"><RichText>{item.text}</RichText></span><Badge>{TYPE_LABELS[item.type] || item.type}</Badge>{(item.image || item.options?.some((option) => option.image)) && <span aria-label="Has image">Image</span>}</button>
           <div className="row-actions"><MoveButton direction="up" disabled={index === 0} onClick={() => moveQuestion(item, -1)} /><MoveButton direction="down" disabled={index === questions.length - 1} onClick={() => moveQuestion(item, 1)} /><Button variant="tertiary" type="button" onClick={() => setDeleteTarget(item)}>Delete</Button></div>
         </div>)}
       </div>
     </section>
-    {question && <aside className="question-editor admin-editor-section">
-      <div className="section-heading"><h2>{question._id ? "Edit question" : "Add question"}</h2><Button variant="tertiary" type="button" onClick={() => { setQuestion(null); setOriginalQuestion(null); }}>Close</Button></div>
-      <fieldset className="ui-fieldset" disabled={Boolean(question._id)}><div className="field"><span className="ui-label">Question type</span><div className="chip-row" role="radiogroup" aria-label="Question type" style={{ margin: 0 }}>{Object.entries(TYPE_LABELS).map(([value, label]) => <button type="button" role="radio" aria-checked={question.type === value} className="chip" aria-pressed={question.type === value} key={value} onClick={() => setQuestion({ ...question, type: value, ...typeDefaults(value) })}>{label}</button>)}</div></div>{question._id && <p className="muted">A question's type cannot be changed.</p>}</fieldset>
+    {question && <aside className={adminSection}>
+      <div className={sectionHeading}><h2>{question._id ? "Edit question" : "Add question"}</h2><Button variant="tertiary" type="button" onClick={() => { setQuestion(null); setOriginalQuestion(null); }}>Close</Button></div>
+      <fieldset className="ui-fieldset" disabled={Boolean(question._id)}><div className="field"><span className={uiLabel}>Question type</span><div className={chipRow} role="radiogroup" aria-label="Question type" style={{ margin: 0 }}>{Object.entries(TYPE_LABELS).map(([value, label]) => <button type="button" role="radio" aria-checked={question.type === value} className={chip} aria-pressed={question.type === value} key={value} onClick={() => setQuestion({ ...question, type: value, ...typeDefaults(value) })}>{label}</button>)}</div></div>{question._id && <p className="muted">A question's type cannot be changed.</p>}</fieldset>
       <TextArea label="Question text" maxLength="1500" rows="5" value={question.text} onChange={(event) => setQuestion({ ...question, text: event.target.value })} hint={`${question.text.length}/1500`} />
       <FormulaHelp /><div className="preview-box"><RichText>{question.text}</RichText></div>
       <ImageField label="Question image" value={question.image} onChange={(image) => setQuestion({ ...question, image })} />
-      {!["mcq", "true_false"].includes(question.type) ? <QuestionTypeFields question={question} setQuestion={setQuestion} /> : question.type === "mcq" ? <div className="option-editor"><h3>Options</h3>{question.options.map((option, index) => <div className="option-row" key={index}><TextField label={`Option ${index + 1}`} maxLength="300" value={option.text || ""} onChange={(event) => updateOption(index, { text: event.target.value })} /><Radio name="correct-option" label="Correct answer" checked={question.correctIndex === index} onChange={() => setQuestion({ ...question, correctIndex: index })} /><ImageField compact label={`Option ${index + 1} image`} value={option.image} onChange={(image) => updateOption(index, { image })} /><Button variant="tertiary" type="button" disabled={question.options.length <= 2} onClick={() => setQuestion({ ...question, options: question.options.filter((_, optionIndex) => optionIndex !== index), correctIndex: question.correctIndex === index ? 0 : question.correctIndex > index ? question.correctIndex - 1 : question.correctIndex })}>Remove</Button></div>)}<Button variant="secondary" type="button" disabled={question.options.length >= 6} onClick={() => setQuestion({ ...question, options: [...question.options, { text: "", image: null }] })}>Add option</Button></div> : <RadioGroup legend="Correct answer"><Radio name="correct-answer" label="True" checked={question.correctAnswer === "true"} onChange={() => setQuestion({ ...question, correctAnswer: "true" })} /><Radio name="correct-answer" label="False" checked={question.correctAnswer === "false"} onChange={() => setQuestion({ ...question, correctAnswer: "false" })} /></RadioGroup>}
+      {!["mcq", "true_false"].includes(question.type) ? <QuestionTypeFields question={question} setQuestion={setQuestion} /> : question.type === "mcq" ? <div className="option-editor"><h3>Options</h3>{question.options.map((option, index) => <div className={optionRow} key={index}><TextField label={`Option ${index + 1}`} maxLength="300" value={option.text || ""} onChange={(event) => updateOption(index, { text: event.target.value })} /><Radio name="correct-option" label="Correct answer" checked={question.correctIndex === index} onChange={() => setQuestion({ ...question, correctIndex: index })} /><ImageField compact label={`Option ${index + 1} image`} value={option.image} onChange={(image) => updateOption(index, { image })} /><Button variant="tertiary" type="button" disabled={question.options.length <= 2} onClick={() => setQuestion({ ...question, options: question.options.filter((_, optionIndex) => optionIndex !== index), correctIndex: question.correctIndex === index ? 0 : question.correctIndex > index ? question.correctIndex - 1 : question.correctIndex })}>Remove</Button></div>)}<Button variant="secondary" type="button" disabled={question.options.length >= 6} onClick={() => setQuestion({ ...question, options: [...question.options, { text: "", image: null }] })}>Add option</Button></div> : <RadioGroup legend="Correct answer"><Radio name="correct-answer" label="True" checked={question.correctAnswer === "true"} onChange={() => setQuestion({ ...question, correctAnswer: "true" })} /><Radio name="correct-answer" label="False" checked={question.correctAnswer === "false"} onChange={() => setQuestion({ ...question, correctAnswer: "false" })} /></RadioGroup>}
       <TextArea label="Explanation" maxLength="4000" rows="5" value={question.explanation || ""} onChange={(event) => setQuestion({ ...question, explanation: event.target.value })} /><FormulaHelp /><div className="preview-box"><RichText>{question.explanation || ""}</RichText></div><ImageField label="Explanation image" value={question.explanationImage} onChange={(explanationImage) => setQuestion({ ...question, explanationImage })} />
-      <div className="option-row"><TextField label="Topic (optional)" maxLength="60" value={question.topic || ""} onChange={(event) => setQuestion({ ...question, topic: event.target.value })} hint="Students can practise a topic across lessons." /><TextField label="Source (optional)" maxLength="60" value={question.source || ""} onChange={(event) => setQuestion({ ...question, source: event.target.value })} hint="For example a past paper." /><TextField label="Year (optional)" inputMode="numeric" maxLength="4" value={question.year ?? ""} onChange={(event) => setQuestion({ ...question, year: event.target.value })} /></div>
+      <div className={optionRow}><TextField label="Topic (optional)" maxLength="60" value={question.topic || ""} onChange={(event) => setQuestion({ ...question, topic: event.target.value })} hint="Students can practise a topic across lessons." /><TextField label="Source (optional)" maxLength="60" value={question.source || ""} onChange={(event) => setQuestion({ ...question, source: event.target.value })} hint="For example a past paper." /><TextField label="Year (optional)" inputMode="numeric" maxLength="4" value={question.year ?? ""} onChange={(event) => setQuestion({ ...question, year: event.target.value })} /></div>
       <TextArea label="Hint (optional)" maxLength="500" rows="2" value={question.hint || ""} onChange={(event) => setQuestion({ ...question, hint: event.target.value })} hint="Students can open it before they answer. Do not give the answer away." /><div className="preview-box"><RichText>{question.hint || ""}</RichText></div>
       <TextArea label="Worked solution (optional)" rows="6" value={(question.workedSolution || []).join("\n")} onChange={(event) => setQuestion({ ...question, workedSolution: event.target.value.split("\n") })} hint="One step per line, up to 12. Students see it as numbered steps after they answer." /><div className="preview-box"><WorkedSolution steps={question.workedSolution} /></div>
-      <div className="editor-actions"><Button variant="secondary" type="button" disabled={!dirty} onClick={() => setQuestion(JSON.parse(JSON.stringify(originalQuestion)))}>Discard</Button><Button variant="secondary" type="button" onClick={() => saveQuestion(true)} disabled={Boolean(question._id)}>Save and add another</Button><Button variant="primary" type="button" onClick={() => saveQuestion(false)}>Save</Button></div>
+      <div className={editorActions}><Button variant="secondary" type="button" disabled={!dirty} onClick={() => setQuestion(JSON.parse(JSON.stringify(originalQuestion)))}>Discard</Button><Button variant="secondary" type="button" onClick={() => saveQuestion(true)} disabled={Boolean(question._id)}>Save and add another</Button><Button variant="primary" type="button" onClick={() => saveQuestion(false)}>Save</Button></div>
     </aside>}
     <ConfirmDialog open={Boolean(deleteTarget)} title="Delete question?" description="This question will be removed from the test. You can restore it later from the Trash." confirmLabel="Delete question" onCancel={() => setDeleteTarget(null)} onConfirm={deleteQuestion} />
     <ConfirmDialog open={blocker.state === "blocked"} title="Leave without saving?" description="Your question changes will be lost." confirmLabel="Leave" cancelLabel="Stay" onCancel={() => blocker.reset()} onConfirm={() => blocker.proceed()} />

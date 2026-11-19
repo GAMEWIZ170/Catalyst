@@ -139,7 +139,7 @@ function Shell({ children }) {
         <Breadcrumb places={places} pathname={pathname} />
         <div className="ml-auto flex min-w-0 items-center gap-2">
           <HeaderSearch />
-          <div className="flex min-w-0 shrink-0 items-center gap-3 max-[640px]:gap-1 max-[359px]:gap-1">
+          <div className="flex min-w-0 shrink-0 items-center gap-1">
             <div className={popoverHost}>
               <TimerButton buttonRef={(node) => { buttons.current.timer = node; }} open={open === "timer"} onClick={() => toggle("timer")} />
               {open === "timer" && <TimerPanel onNavigate={() => setOpen(null)} />}

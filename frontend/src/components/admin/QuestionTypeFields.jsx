@@ -1,4 +1,5 @@
 import { Button, Checkbox, TextArea, TextField } from "../ui";
+import { chip, chipRow, optionRow, uiLabel } from "./adminStyles";
 import RichText from "../shared/RichText";
 
 export const TYPE_LABELS = {
@@ -91,7 +92,7 @@ export default function QuestionTypeFields({ question, setQuestion }) {
     const picked = question.correctIndexes || [];
     return <div className="option-editor"><h3>Options</h3>
       <p className="muted">Tick every correct option. A student must pick exactly those to get it right.</p>
-      {question.options.map((option, index) => <div className="option-row" key={index}>
+      {question.options.map((option, index) => <div className={optionRow} key={index}>
         <TextField label={`Option ${index + 1}`} maxLength="300" value={option.text || ""} onChange={(event) => set({ options: move(question.options, index, (item) => ({ ...item, text: event.target.value })) })} />
         <Checkbox label="Correct" checked={picked.includes(index)} onChange={() => set({ correctIndexes: picked.includes(index) ? picked.filter((item) => item !== index) : [...picked, index] })} />
         <Button variant="tertiary" type="button" disabled={question.options.length <= 2} onClick={() => set({ options: question.options.filter((_, i) => i !== index), correctIndexes: picked.filter((item) => item !== index).map((item) => (item > index ? item - 1 : item)) })}>Remove</Button>
@@ -106,7 +107,7 @@ export default function QuestionTypeFields({ question, setQuestion }) {
     return <div className="option-editor"><h3>Numeric answer</h3>
       <TextField label="Correct value" inputMode="decimal" value={numeric.value} onChange={(event) => change({ value: event.target.value })} hint="A number such as 2.5 or 1.2e-3." />
       <TextField label="Tolerance" inputMode="decimal" value={numeric.tolerance} onChange={(event) => change({ tolerance: event.target.value })} hint="How far from the correct value still counts. 0 means exact." />
-      <div className="field"><span className="ui-label">Tolerance is</span><div className="chip-row" role="radiogroup" aria-label="Tolerance is" style={{ margin: 0 }}>{[["absolute","An amount"],["percent","A percent"]].map(([value, text]) => <button type="button" role="radio" aria-checked={numeric.toleranceKind === value} className="chip" aria-pressed={numeric.toleranceKind === value} key={value} onClick={() => change({ toleranceKind: value })}>{text}</button>)}</div></div>
+      <div className="field"><span className={uiLabel}>Tolerance is</span><div className={chipRow} role="radiogroup" aria-label="Tolerance is" style={{ margin: 0 }}>{[["absolute","An amount"],["percent","A percent"]].map(([value, text]) => <button type="button" role="radio" aria-checked={numeric.toleranceKind === value} className={chip} aria-pressed={numeric.toleranceKind === value} key={value} onClick={() => change({ toleranceKind: value })}>{text}</button>)}</div></div>
       <TextField label="Unit (optional)" maxLength="30" value={numeric.unit} onChange={(event) => change({ unit: event.target.value })} hint="If set, students must type this unit too. Case and extra spaces are ignored. A right number with a wrong unit gets its own message." />
     </div>;
   }
@@ -120,7 +121,7 @@ export default function QuestionTypeFields({ question, setQuestion }) {
   if (question.type === "matching") {
     return <div className="option-editor"><h3>Pairs</h3>
       <p className="muted">Students see the left items and a shuffled list of the right items.</p>
-      {question.pairs.map((pair, index) => <div className="option-row" key={index}>
+      {question.pairs.map((pair, index) => <div className={optionRow} key={index}>
         <TextField label={`Left ${index + 1}`} maxLength="200" value={pair.left} onChange={(event) => set({ pairs: move(question.pairs, index, (item) => ({ ...item, left: event.target.value })) })} />
         <TextField label={`Right ${index + 1}`} maxLength="200" value={pair.right} onChange={(event) => set({ pairs: move(question.pairs, index, (item) => ({ ...item, right: event.target.value })) })} />
         <Button variant="tertiary" type="button" disabled={question.pairs.length <= 2} onClick={() => set({ pairs: question.pairs.filter((_, i) => i !== index) })}>Remove</Button>
@@ -132,7 +133,7 @@ export default function QuestionTypeFields({ question, setQuestion }) {
   if (question.type === "ordering") {
     return <div className="option-editor"><h3>Items in the correct order</h3>
       <p className="muted">Enter them first to last. Students see them shuffled.</p>
-      {question.items.map((item, index) => <div className="option-row" key={index}>
+      {question.items.map((item, index) => <div className={optionRow} key={index}>
         <TextField label={`Item ${index + 1}`} maxLength="200" value={item} onChange={(event) => set({ items: question.items.map((value, i) => (i === index ? event.target.value : value)) })} />
         <Button variant="tertiary" type="button" disabled={question.items.length <= 2} onClick={() => set({ items: question.items.filter((_, i) => i !== index) })}>Remove</Button>
       </div>)}
@@ -146,9 +147,9 @@ export default function QuestionTypeFields({ question, setQuestion }) {
     const side = (name) => species.filter((item) => item.side === name).map((item) => `${Number(item.coefficient) === 1 ? "" : item.coefficient}${item.formula.replace(/\$/g, "")}`).join(" + ");
     return <div className="option-editor"><h3>Equation</h3>
       <p className="muted">Write each formula the way you would inside \ce{"{}"}, for example H2O or Fe2O3. Give the lowest whole-number coefficients. Students fill in the numbers.</p>
-      {species.map((item, index) => <div className="option-row" key={index}>
+      {species.map((item, index) => <div className={optionRow} key={index}>
         <TextField label={`Formula ${index + 1}`} maxLength="40" value={item.formula} onChange={(event) => change(index, { formula: event.target.value })} />
-        <div className="field"><span className="ui-label">Side</span><div className="chip-row" role="radiogroup" aria-label="Side" style={{ margin: 0 }}>{[["reactant","Reactant"],["product","Product"]].map(([value, text]) => <button type="button" role="radio" aria-checked={item.side === value} className="chip" aria-pressed={item.side === value} key={value} onClick={() => change(index, { side: value })}>{text}</button>)}</div></div>
+        <div className="field"><span className={uiLabel}>Side</span><div className={chipRow} role="radiogroup" aria-label="Side" style={{ margin: 0 }}>{[["reactant","Reactant"],["product","Product"]].map(([value, text]) => <button type="button" role="radio" aria-checked={item.side === value} className={chip} aria-pressed={item.side === value} key={value} onClick={() => change(index, { side: value })}>{text}</button>)}</div></div>
         <TextField label="Coefficient" inputMode="numeric" maxLength="2" value={item.coefficient} onChange={(event) => change(index, { coefficient: event.target.value })} />
         <Button variant="tertiary" type="button" disabled={species.length <= 2} onClick={() => set({ equation: { species: species.filter((_, i) => i !== index) } })}>Remove</Button>
       </div>)}
