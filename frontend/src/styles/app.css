@@ -1,13 +1,11 @@
 /*
   Single stylesheet entry (design reset, phase 2).
-  Layer order, lowest to highest: Tailwind's default theme variables, everything old (legacy),
-  then new tokens, components and utilities. Utilities sit above legacy, so a utility class on a ported screen
-  always beats an old rule. The theme layer is BELOW legacy on purpose: the old tokens.css reuses a few Tailwind
-  variable names (--text-lg, --shadow-sm, --ease-out ...), and the old value must keep winning until phase 6.
-  Preflight is NOT loaded. Phase 6 adds it after the legacy layer is deleted.
+  Layer order, lowest to highest: Tailwind theme variables, Preflight and base, the remaining old CSS (legacy), components, utilities.
+  Preflight sits below legacy on purpose: old rules keep winning, and only elements that relied on browser defaults change.
+  The theme layer is BELOW legacy because the old tokens.css reuses a few Tailwind variable names (--text-lg, --shadow-sm ...).
   New tokens live in styles/tokens.new.css. See DESIGN.md for the values.
 */
-@layer theme, legacy, base, components, utilities;
+@layer theme, base, legacy, components, utilities;
 
 /* Old CSS, in its old cascade order. Each ported screen deletes its file from this list. */
 @import "./tokens.css" layer(legacy);
@@ -19,8 +17,9 @@
 @import "./header-search.css" layer(legacy);
 @import "./admin-polish.css" layer(legacy);
 
-/* Tailwind v4: theme variables and utilities only (no preflight). */
+/* Tailwind v4: theme variables, Preflight (reset, layer base, BELOW legacy so old rules still win) and utilities. */
 @import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
 @import "tailwindcss/utilities.css" layer(utilities);
 @import "tw-animate-css";
 @source "../";
