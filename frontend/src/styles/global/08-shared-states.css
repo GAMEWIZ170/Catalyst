@@ -98,17 +98,6 @@ h3 {
   display: none;
 }
 
-.student-test-row span.row-action {
-  align-items: center;
-  border: 1px solid var(--control-line);
-  border-radius: var(--radius-control);
-  color: var(--accent);
-  display: inline-flex;
-  font-weight: 600;
-  min-height: var(--control-height);
-  padding: 0 var(--space-4);
-}
-
 /* Keeps the line's space while the course loads, so the text below does not jump. */
 .inline-rename h1 {
   font-size: var(--text-xl);
@@ -122,13 +111,6 @@ h3 {
   min-height: var(--control-height);
 }
 
-.material-row a {
-  align-items: center;
-  display: inline-flex;
-  min-height: var(--control-height);
-  padding: 0 var(--space-2);
-}
-
 /* The outline sidebar is one column. The older two-column summary rule must not apply to it. */
 
 .count-chip {
@@ -136,12 +118,6 @@ h3 {
 }
 
 /* A display formula in a lesson sits in a quiet panel, like a boxed line in a notebook. */
-.lesson-explanation .rich-formula--block {
-  background: var(--sunken);
-  border-radius: var(--radius-control);
-  margin: var(--space-4) 0;
-  padding: var(--space-3) var(--space-4);
-}
 
 /* Horizontal scrolling for wide formulas must not add a vertical scrollbar to short ones. */
 .rich-formula {

@@ -23,8 +23,8 @@ function formatBytes(bytes) {
 
 // Shown while the lesson loads, so the page has its shape before the text arrives.
 function LessonSkeleton() {
-  return <div className="content lesson-hub">
-    <div className="reading-column">
+  return <div className="content">
+    <div className="max-w-[68ch]">
       <SkeletonGroup label="Loading lesson">
         <Skeleton variant="title" />
         <Skeleton />
@@ -48,13 +48,13 @@ function LessonVideo({ title, videoId, lessonId }) {
     const timer = window.setTimeout(() => setStillWanted(true), 2000);
     return () => window.clearTimeout(timer);
   }, []);
-  return <div className="video-frame">
+  return <div className="mt-6 aspect-video max-w-[68ch] overflow-hidden rounded-md border border-border bg-muted [&_iframe]:size-full [&_iframe]:border-0">
     {playing
       ? <iframe title={`${title} video`} src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?autoplay=1`} allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
-      : <button type="button" className="video-play" onClick={() => { setPlaying(true); api.sendEvent({ type: "video_started", props: { lesson: lessonId } }); }}>
-        {stillWanted && !stillFailed && <img className="video-still" src={`https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/mqdefault.jpg`} alt="" width="320" height="180" loading="lazy" decoding="async" onError={() => setStillFailed(true)} />}
-        <span className="video-play-mark"><Play size={20} aria-hidden="true" /></span>
-        <span className="video-play-label">Play video</span>
+      : <button type="button" className="group relative flex size-full cursor-pointer flex-col items-center justify-center gap-2 border-0 bg-transparent font-semibold text-foreground" onClick={() => { setPlaying(true); api.sendEvent({ type: "video_started", props: { lesson: lessonId } }); }}>
+        {stillWanted && !stillFailed && <img className="absolute inset-0 size-full object-cover" src={`https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/mqdefault.jpg`} alt="" width="320" height="180" loading="lazy" decoding="async" onError={() => setStillFailed(true)} />}
+        <span className="relative inline-flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground group-hover:bg-primary/85"><Play size={20} aria-hidden="true" /></span>
+        <span className="relative rounded-[6px] bg-card px-3 py-1">Play video</span>
       </button>}
   </div>;
 }
@@ -86,10 +86,10 @@ function NoteBox({ lessonId, initial }) {
     return () => clearTimeout(timer);
   }, [text]);
 
-  return <section className="lesson-section lesson-note" aria-labelledby="note-heading">
+  return <section className="mt-8 border-t border-border pt-6" aria-labelledby="note-heading">
     <h2 id="note-heading">My note</h2>
     <TextArea label="Private note" hint="Only you can see this. It saves as you type." value={text} maxLength={2000} rows={4} onChange={(event) => setText(event.target.value)} onBlur={save} />
-    <p className="muted lesson-note-status" role="status">{status}</p>
+    <p className="m-0 mt-1 min-h-[1.55em] text-sm text-muted-foreground" role="status">{status}</p>
   </section>;
 }
 
@@ -99,7 +99,7 @@ export default function Lesson() {
   const navigate = useNavigate();
   // An admin looking at the lesson as a student. Drafts show, and nothing is saved: no position, bookmark, note or progress.
   const preview = Boolean(useMatch("/admin/preview/lessons/:id"));
-  // The tutor button in the top bar opens the tutor for this lesson (not in the admin preview).
+  // The Chat button on the right edge opens the tutor for this lesson (not in the admin preview).
   useTutorTarget(preview ? null : "lesson", id);
   const [lesson, setLesson] = useState(null);
   const [course, setCourse] = useState(null);
@@ -192,23 +192,23 @@ export default function Lesson() {
   const primaryLabel = { test: "Take the test", deck: "Practise flashcards", done: doneMessage || "Mark as done" }[nextStep];
 
   return <div className="content lesson-hub">
-    <Link className="back-link" to={from}><ArrowLeft size={16} aria-hidden="true" />{preview ? "Back to editor" : "Back to course"}</Link>
+    <Link className="mb-4 inline-flex min-h-11 items-center gap-1 py-2 font-semibold" to={from}><ArrowLeft size={16} aria-hidden="true" />{preview ? "Back to editor" : "Back to course"}</Link>
     {preview && <PreviewBanner published={lesson.isPublished} visible={lesson.visibleToStudents} />}
-    <div className={`lesson-layout ${unit ? "has-sidebar" : ""}`}>
-      {unit && <aside className="lesson-side">
-        <div className="lesson-picker">
+    <div className={`grid grid-cols-[minmax(0,1fr)] gap-6 ${unit ? "min-[60rem]:grid-cols-[16rem_minmax(0,1fr)] min-[60rem]:gap-x-12" : ""}`}>
+      {unit && <aside>
+        <div className="min-[60rem]:hidden">
           <SelectField label={`${unit.title}: lesson ${unitPosition + 1} of ${unit.lessons.length}`} value={String(id)} onChange={(event) => goTo(event.target.value)}>
             {unit.lessons.map((entry, index) => <option key={entry._id} value={entry._id}>{index + 1}. {entry.title}{entry.completed ? " (done)" : ""}</option>)}
           </SelectField>
         </div>
-        <nav className="lesson-nav" aria-label={`Lessons in ${unit.title}`}>
-          <p className="lesson-nav-title">{unit.title}</p>
-          <ol>
+        <nav className="hidden min-[60rem]:sticky min-[60rem]:top-5 min-[60rem]:block" aria-label={`Lessons in ${unit.title}`}>
+          <p className="m-0 mb-2 text-sm font-semibold text-muted-foreground">{unit.title}</p>
+          <ol className="m-0 grid list-none gap-1 border-l border-border p-0">
             {unit.lessons.map((entry) => {
               const current = String(entry._id) === String(id);
               const done = entry.completed || (current && completed);
               return <li key={entry._id}>
-                <Link to={`/lessons/${entry._id}`} state={{ from }} aria-current={current ? "page" : undefined} className={current ? "is-current" : ""} {...nearToPrefetch(() => prefetchLesson(entry._id))}>
+                <Link to={`/lessons/${entry._id}`} state={{ from }} aria-current={current ? "page" : undefined} className={`-ml-px flex min-h-11 items-start gap-2 border-l-2 px-3 py-2 no-underline [&_svg]:mt-0.5 [&_svg]:shrink-0 ${current ? "border-primary bg-primary/15 font-semibold [&_svg]:text-brand-ink" : "border-transparent hover:bg-muted [&_svg]:text-muted-foreground"}`} {...nearToPrefetch(() => prefetchLesson(entry._id))}>
                   {done ? <CheckCircle2 size={16} aria-hidden="true" /> : <Circle size={16} aria-hidden="true" />}
                   <span>{entry.title}</span>
                   {done && <span className="sr-only">(done)</span>}
@@ -218,15 +218,15 @@ export default function Lesson() {
           </ol>
         </nav>
       </aside>}
-      <div className="lesson-main">
-        <article className="reading-column">
+      <div className="min-w-0 [&>*]:mx-auto [&>*]:max-w-[68ch]">
+        <article className="max-w-[68ch]">
           <h1 className="m-0 text-3xl leading-tight font-bold">{lesson.title}</h1>
-          {(unit || completed || savedLesson) && <p className="lesson-meta">
+          {(unit || completed || savedLesson) && <p className="m-0 mb-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground empty:hidden">
             {unit && <span>{unit.title}</span>}
             {completed && <Badge tone="success" icon={CheckCircle2}>Completed</Badge>}
             {savedLesson && !preview && <Badge icon={Bookmark}>Saved</Badge>}
           </p>}
-          <div className="lesson-tools">
+          <div className="mb-4 flex flex-wrap items-center gap-3 [&>*]:m-0">
             <ReadAloud text={lesson.explanation} />
             {!preview && <DropdownMenu align="start"
               trigger={<Button variant="tertiary" aria-label="More for this lesson"><MoreHorizontal size={18} aria-hidden="true" /></Button>}
@@ -237,27 +237,27 @@ export default function Lesson() {
                 { label: "Report a problem", icon: Flag, onSelect: () => setReporting(true) }
               ]} />}
           </div>
-          <div className="lesson-explanation"><RichText math={lesson.explanationMath}>{lesson.explanation}</RichText></div>
-          {lesson.explanationImage?.url && <figure className="lesson-figure">
+          <div className="text-lg leading-[1.65] text-pretty [&_.rich-formula--block]:my-4 [&_.rich-formula--block]:rounded-[6px] [&_.rich-formula--block]:bg-muted [&_.rich-formula--block]:px-4 [&_.rich-formula--block]:py-3"><RichText math={lesson.explanationMath}>{lesson.explanation}</RichText></div>
+          {lesson.explanationImage?.url && <figure className="mx-0 mt-6 mb-0 [&_img]:block [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-[6px]">
             <ResponsiveImage image={lesson.explanationImage} loading="lazy" />
-            {lesson.explanationImage.alt && <figcaption>{lesson.explanationImage.alt}</figcaption>}
+            {lesson.explanationImage.alt && <figcaption className="mt-2 text-sm text-muted-foreground">{lesson.explanationImage.alt}</figcaption>}
           </figure>}
           {lesson.videoHost === "youtube" && lesson.videoId && <LessonVideo title={lesson.title} videoId={lesson.videoId} lessonId={lesson._id} />}
         </article>
-        {lesson.tests.length > 0 && <section className="lesson-section"><h2>Practice</h2><div className="student-test-list">{lesson.tests.map((test) => <Link className="student-test-row" to={preview ? `/admin/preview/tests/${test._id}` : `/tests/${test._id}`} state={preview ? { from: `/admin/preview/lessons/${id}` } : state} key={test._id}><span><strong>{test.title}</strong>{test.draft && <Badge>Draft</Badge>}<span className="muted">{test.questionCount} questions · {test.passPercent != null ? `Pass at ${test.passPercent}% · ` : ""}{test.bestScore === null ? "Not taken yet" : `Best score: ${test.bestScore}%`}</span></span><span className="row-action">{test.bestScore === null ? "Start" : "Retake"}</span></Link>)}</div></section>}
-        {lesson.flashcards.total > 0 && <section className="lesson-section"><h2>Flashcards</h2>{preview ? <PreviewCards cards={lesson.cards} /> : <DeckSummary summary={lesson.flashcards} />}{!preview && <div className="button-row button-row--stack"><Button as={Link} variant={nextStep === "deck" ? "primary" : "secondary"} to={`/lessons/${id}/flashcards`} state={{ courseFrom: from }}>Study all cards</Button>{lesson.flashcards.unsure + lesson.flashcards.unknown + lesson.flashcards.unrated > 0 && <Button as={Link} variant="secondary" to={`/lessons/${id}/flashcards?filter=review`} state={{ courseFrom: from }}>Review cards I'm not sure about</Button>}</div>}</section>}
-        {lesson.materialCount > 0 && <section className="lesson-section"><h2>Materials</h2><div className="material-list">{(lesson.materials || []).map((material) => <div className="material-row" key={material._id}>{material.kind === "file" ? <FileText size={20} aria-hidden="true" /> : <Link2 size={20} aria-hidden="true" />}<span><strong>{material.title}</strong><span className="muted">{material.description}{material.bytes ? ` · ${formatBytes(material.bytes)}` : ""}</span></span><a href={material.url} target="_blank" rel="noopener noreferrer" aria-label={`Open ${material.title}${material.kind === "file" ? " (PDF)" : ""}`}>Open<ExternalLink size={16} aria-hidden="true" /></a></div>)}</div></section>}
+        {lesson.tests.length > 0 && <section className="mt-8 border-t border-border pt-6"><h2>Practice</h2><div>{lesson.tests.map((test) => <Link className="flex min-h-16 items-center gap-4 rounded-[6px] border border-border p-4 text-inherit no-underline hover:border-primary" to={preview ? `/admin/preview/tests/${test._id}` : `/tests/${test._id}`} state={preview ? { from: `/admin/preview/lessons/${id}` } : state} key={test._id}><span className="grid min-w-0 gap-1"><strong>{test.title}</strong>{test.draft && <Badge>Draft</Badge>}<span className="text-muted-foreground">{test.questionCount} questions · {test.passPercent != null ? `Pass at ${test.passPercent}% · ` : ""}{test.bestScore === null ? "Not taken yet" : `Best score: ${test.bestScore}%`}</span></span><span className="inline-flex min-h-11 items-center rounded-[6px] border border-input px-4 font-semibold">{test.bestScore === null ? "Start" : "Retake"}</span></Link>)}</div></section>}
+        {lesson.flashcards.total > 0 && <section className="mt-8 border-t border-border pt-6"><h2>Flashcards</h2>{preview ? <PreviewCards cards={lesson.cards} /> : <DeckSummary summary={lesson.flashcards} />}{!preview && <div className="flex flex-wrap gap-3"><Button as={Link} variant={nextStep === "deck" ? "primary" : "secondary"} to={`/lessons/${id}/flashcards`} state={{ courseFrom: from }}>Study all cards</Button>{lesson.flashcards.unsure + lesson.flashcards.unknown + lesson.flashcards.unrated > 0 && <Button as={Link} variant="secondary" to={`/lessons/${id}/flashcards?filter=review`} state={{ courseFrom: from }}>Review cards I'm not sure about</Button>}</div>}</section>}
+        {lesson.materialCount > 0 && <section className="mt-8 border-t border-border pt-6"><h2>Materials</h2><div className="grid gap-2">{(lesson.materials || []).map((material) => <div className="flex min-h-16 items-center gap-4 rounded-[6px] border border-border p-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground" key={material._id}>{material.kind === "file" ? <FileText size={20} aria-hidden="true" /> : <Link2 size={20} aria-hidden="true" />}<span className="grid min-w-0 flex-1 gap-1"><strong>{material.title}</strong><span className="text-muted-foreground">{material.description}{material.bytes ? ` · ${formatBytes(material.bytes)}` : ""}</span></span><a className="inline-flex min-h-11 items-center gap-1 px-2 font-semibold" href={material.url} target="_blank" rel="noopener noreferrer" aria-label={`Open ${material.title}${material.kind === "file" ? " (PDF)" : ""}`}>Open<ExternalLink size={16} aria-hidden="true" /></a></div>)}</div></section>}
         {!preview && <NoteBox key={id} lessonId={id} initial={lesson.note} />}
         {!preview && <ReportButton key={`report-${id}`} kind="lesson" target={id} open={reporting} onOpenChange={setReporting} />}
         {/* The one next step stays in reach at the bottom of the screen while the student reads. */}
-        {nextStep && <div className="lesson-next">
+        {nextStep && <div className="sticky bottom-4 z-[3] mt-8 flex max-md:bottom-[calc(56px+env(safe-area-inset-bottom)+0.75rem)] [&>*]:shadow-md max-md:[&>*]:flex-auto">
           {nextStep === "test" && <Button as={Link} to={`/tests/${mainTest._id}`} state={state}>{primaryLabel}</Button>}
           {nextStep === "deck" && <Button as={Link} to={`/lessons/${id}/flashcards`} state={{ courseFrom: from }}>{primaryLabel}</Button>}
           {nextStep === "done" && <Button onClick={markDone} disabled={completed}>{primaryLabel}</Button>}
         </div>}
-        <section className="lesson-end" aria-label="Next steps">
+        <section className={`grid ${prevLesson || nextLesson ? "mt-8 gap-4 border-t border-border pt-6" : ""}`} aria-label="Next steps">
           <div className="sr-only" aria-live="polite">{doneMessage}</div>
-          {(prevLesson || nextLesson) && <div className="lesson-pager">
+          {(prevLesson || nextLesson) && <div className="flex flex-wrap justify-between gap-3 max-[479px]:[&>*]:flex-[1_1_100%]">
             {prevLesson ? <Button as={Link} variant="secondary" icon={ArrowLeft} to={`/lessons/${prevLesson._id}`} state={{ from }} {...nearToPrefetch(() => prefetchLesson(prevLesson._id))}>Previous lesson</Button> : <span />}
             {nextLesson && <Button as={Link} variant={nextStep ? "secondary" : "primary"} to={`/lessons/${nextLesson._id}`} state={{ from }} {...nearToPrefetch(() => prefetchLesson(nextLesson._id))}>Next lesson</Button>}
           </div>}

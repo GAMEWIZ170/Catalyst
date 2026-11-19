@@ -54,9 +54,6 @@
 /* Visual audit pass (unslop): quiet top bar, grouped page actions, one lesson tool row, bigger progress figures. */
 
 .lab-header { align-items: flex-start; }
-
-.lesson-tools { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-4); }
-.lesson-tools .share-row, .lesson-tools .read-aloud { margin: 0; }
 .lab-header { margin-bottom: var(--space-4); }
 
 /* Floating study companion button (set page). Above the phone tab bar. */
