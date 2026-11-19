@@ -45,16 +45,6 @@
   margin-top: var(--space-3);
 }
 
-.status-message {
-  align-items: center;
-  display: flex;
-  gap: var(--space-2);
-}
-
-.status-message--error {
-  color: var(--error);
-}
-
 .pass-percent-row {
   align-items: flex-start;
   flex-wrap: wrap;
@@ -66,10 +56,6 @@
 
 .pass-percent-row .button {
   margin-top: var(--space-6);
-}
-
-.image-field .ui-field {
-  margin-top: var(--space-3);
 }
 
 .pass-percent {

@@ -40,8 +40,7 @@
 
 @media (max-width: 359px) {
 
-  .theme-toggle,
-  .icon-button {
+  .theme-toggle {
     flex-shrink: 0;
   }
 }
@@ -71,32 +70,7 @@ h3 {
   border-radius: var(--radius-control);
 }
 
-.lesson-meta {
-  align-items: center;
-  color: var(--muted);
-  display: flex;
-  flex-wrap: wrap;
-  font-size: var(--text-sm);
-  gap: var(--space-2) var(--space-4);
-  margin: 0 0 var(--space-5);
-}
-
-.lesson-meta:empty {
-  display: none;
-}
-
 /* Keeps the line's space while the course loads, so the text below does not jump. */
-.inline-rename h1 {
-  font-size: var(--text-xl);
-  line-height: 1.2;
-  margin: 0;
-}
-
-.breadcrumbs a {
-  align-items: center;
-  display: inline-flex;
-  min-height: var(--control-height);
-}
 
 /* The outline sidebar is one column. The older two-column summary rule must not apply to it. */
 

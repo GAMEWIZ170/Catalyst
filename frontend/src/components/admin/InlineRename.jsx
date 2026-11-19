@@ -26,13 +26,13 @@ export default function InlineRename({ name, onSave, disabled = false, as: Title
     setEditing(false);
   }
 
-  if (!editing) return <span className="inline-rename">
+  if (!editing) return <span className="inline-flex flex-wrap items-center gap-2 [&_h1]:m-0 [&_h1]:text-[1.4375rem] [&_h1]:leading-[1.2]">
     <Title>{name}</Title>
     <Button variant="tertiary" type="button" onClick={() => setEditing(true)} disabled={disabled}>Rename</Button>
   </span>;
 
-  return <span className="inline-rename inline-rename--editing">
-    <input ref={inputRef} value={value} onChange={(event) => setValue(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") save(); if (event.key === "Escape") cancel(); }} aria-label={`Rename ${name}`} />
+  return <span className="inline-flex flex-wrap items-center gap-2">
+    <input className="min-h-11 rounded-[6px] border border-input bg-card p-2 text-foreground" ref={inputRef} value={value} onChange={(event) => setValue(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") save(); if (event.key === "Escape") cancel(); }} aria-label={`Rename ${name}`} />
     <Button variant="tertiary" type="button" onClick={save}>Save</Button>
     <Button variant="tertiary" type="button" onClick={cancel}>Cancel</Button>
   </span>;

@@ -8,14 +8,3 @@
   margin-bottom: var(--space-6);
   padding: 0;
 }
-
-.admin-layout .unit-card {
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  border-top: 1px solid var(--line);
-  margin: 0;
-  padding: var(--space-4) 0;
-}
-
-.admin-capped { margin-inline: auto; max-width: 900px; }

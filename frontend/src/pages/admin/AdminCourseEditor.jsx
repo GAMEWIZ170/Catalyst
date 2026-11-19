@@ -11,6 +11,7 @@ import ActionMenu from "../../components/admin/ActionMenu";
 import InlineRename from "../../components/admin/InlineRename";
 import StatusBadge from "../../components/admin/StatusBadge";
 import StatusMessage from "../../components/admin/StatusMessage";
+import { adminHeading, adminSection, countChip, rowActions } from "../../components/admin/adminStyles";
 import Switch from "../../components/admin/Switch";
 import CourseDetails from "../../components/admin/CourseDetails";
 import MoveButton from "../../components/admin/MoveButton";
@@ -188,37 +189,37 @@ export default function AdminCourseEditor() {
 
   const units = course.units || [];
   const courseTests = course.tests || course.courseTests || [];
-  return <div className="admin-layout"><div className="admin-layout-inner admin-capped">
+  return <div className="min-h-[calc(100dvh-72px)] px-4 pt-6 pb-12"><div className="mx-auto max-w-[900px]">
     <Breadcrumbs items={[{ label: "Courses", to: "/admin" }, { label: course.code }]} />
-    <div className="admin-heading"><h1>{course.title || course.code}</h1><Switch checked={course.isPublished} onChange={publish} label={course.isPublished ? "Published" : "Publish"} /><Switch checked={Boolean(course.isFree)} onChange={setFree} label={course.isFree ? "Free for everyone" : "Make free"} /></div>
+    <div className={adminHeading}><h1>{course.title || course.code}</h1><Switch checked={course.isPublished} onChange={publish} label={course.isPublished ? "Published" : "Publish"} /><Switch checked={Boolean(course.isFree)} onChange={setFree} label={course.isFree ? "Free for everyone" : "Make free"} /></div>
     <StatusMessage message={error || message} error={Boolean(error)} />
-    <section className="admin-editor-section">
+    <section className={adminSection}>
       <CourseDetails course={course} categoryNames={categoryNames} onSave={saveCourse} />
     </section>
-    <section className="admin-editor-section">
+    <section className={adminSection}>
       <h2>Units and lessons</h2>
-      <div className="admin-tree">
+      <div className="mb-4 grid gap-3">
         {units.map((unit, index) => {
           const unitId = idOf(unit);
           const lessons = unit.lessons || [];
-          return <article className="unit-card" key={unitId}>
-            <header className="tree-item-header"><InlineRename name={unit.title} autoEdit={justAdded === unitId} onSave={(title) => renameUnit(unit, title)} /><div className="tree-controls"><MoveButton buttonRef={(element) => { unitButtonRefs.current[`${unitId}-up`] = element; }} direction="up" disabled={index === 0} onClick={() => reorder("unit", id, units, index, -1)} /><MoveButton buttonRef={(element) => { unitButtonRefs.current[`${unitId}-down`] = element; }} direction="down" disabled={index === units.length - 1} onClick={() => reorder("unit", id, units, index, 1)} /><ActionMenu actions={[{ label: "Delete unit", onSelect: () => setConfirmTarget({ type: "unit", item: unit }) }]} /></div></header>
+          return <article className="border-t border-border bg-transparent py-4" key={unitId}>
+            <header className="flex flex-wrap items-center justify-between gap-3"><InlineRename name={unit.title} autoEdit={justAdded === unitId} onSave={(title) => renameUnit(unit, title)} /><div className={rowActions}><MoveButton buttonRef={(element) => { unitButtonRefs.current[`${unitId}-up`] = element; }} direction="up" disabled={index === 0} onClick={() => reorder("unit", id, units, index, -1)} /><MoveButton buttonRef={(element) => { unitButtonRefs.current[`${unitId}-down`] = element; }} direction="down" disabled={index === units.length - 1} onClick={() => reorder("unit", id, units, index, 1)} /><ActionMenu actions={[{ label: "Delete unit", onSelect: () => setConfirmTarget({ type: "unit", item: unit }) }]} /></div></header>
             {lessons.map((lesson, lessonIndex) => {
               const lessonId = idOf(lesson);
-              return <div className="lesson-row" key={lessonId}>
+              return <div className="mt-3 grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 border-y border-border pt-3 pb-2 [grid-template-areas:'title_controls'_'meta_controls'] max-[599px]:grid-cols-[minmax(0,1fr)] max-[599px]:[grid-template-areas:'title'_'meta'_'controls'] [&>*]:min-w-0 [&>a]:[grid-area:title] [&>div:nth-child(2)]:[grid-area:meta] [&>div:nth-child(3)]:[grid-area:controls]" key={lessonId}>
                 <Link to={`/admin/lessons/${lessonId}`} state={{ context: { courseCode: course.code || "", unitTitle: unit.title } }}><strong>{lesson.title}</strong></Link>
-                <div className="lesson-meta"><StatusBadge isPublished={lesson.isPublished} /><span className="count-chip">{plural(lesson.testCount || 0, "test")}</span><span className="count-chip">{plural(lesson.flashcardCount || 0, "flashcard")}</span><span className="count-chip">{plural(lesson.materialCount || 0, "material")}</span>{lesson.hasVideo && <span className="count-chip">Video</span>}</div>
-                <div className="tree-controls"><MoveButton buttonRef={(element) => { lessonButtonRefs.current[`${lessonId}-up`] = element; }} direction="up" disabled={lessonIndex === 0} onClick={() => reorder("lesson", unitId, lessons, lessonIndex, -1)} /><MoveButton buttonRef={(element) => { lessonButtonRefs.current[`${lessonId}-down`] = element; }} direction="down" disabled={lessonIndex === lessons.length - 1} onClick={() => reorder("lesson", unitId, lessons, lessonIndex, 1)} /><Switch checked={lesson.isPublished} onChange={(value) => api.updateLesson(lessonId, { isPublished: value }).then(load).catch((err) => setError(err.message))} label={lesson.isPublished ? "Published" : "Publish"} /><ActionMenu actions={[{ label: "Delete lesson", onSelect: () => setConfirmTarget({ type: "lesson", item: lesson }) }]} /></div>
+                <div className="m-0 mb-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground empty:hidden"><StatusBadge isPublished={lesson.isPublished} /><span className={countChip}>{plural(lesson.testCount || 0, "test")}</span><span className={countChip}>{plural(lesson.flashcardCount || 0, "flashcard")}</span><span className={countChip}>{plural(lesson.materialCount || 0, "material")}</span>{lesson.hasVideo && <span className={countChip}>Video</span>}</div>
+                <div className={rowActions}><MoveButton buttonRef={(element) => { lessonButtonRefs.current[`${lessonId}-up`] = element; }} direction="up" disabled={lessonIndex === 0} onClick={() => reorder("lesson", unitId, lessons, lessonIndex, -1)} /><MoveButton buttonRef={(element) => { lessonButtonRefs.current[`${lessonId}-down`] = element; }} direction="down" disabled={lessonIndex === lessons.length - 1} onClick={() => reorder("lesson", unitId, lessons, lessonIndex, 1)} /><Switch checked={lesson.isPublished} onChange={(value) => api.updateLesson(lessonId, { isPublished: value }).then(load).catch((err) => setError(err.message))} label={lesson.isPublished ? "Published" : "Publish"} /><ActionMenu actions={[{ label: "Delete lesson", onSelect: () => setConfirmTarget({ type: "lesson", item: lesson }) }]} /></div>
               </div>;
             })}
-            {unit.tests?.map((test) => <Link className="test-row" key={idOf(test)} to={`/admin/tests/${idOf(test)}`} state={{ trail: [{ label: "Courses", to: "/admin" }, { label: course.code || course.title, to: `/admin/courses/${id}` }, { label: unit.title, to: `/admin/courses/${id}` }, { label: test.title }] }}><span>{test.title}</span><StatusBadge isPublished={test.isPublished} /><span>{test.questionCount || test.questions?.length || 0} questions</span></Link>)}
-            <div className="tree-add-actions"><Button variant="secondary" type="button" onClick={() => createLesson(unit)}>Add lesson</Button><Button variant="secondary" type="button" onClick={() => createTest("unit", unitId)}>Add unit test</Button><Button variant="secondary" type="button" loading={summaryBusy === unitId} disabled={Boolean(summaryBusy) || lessons.length === 0} onClick={() => createSummary(unit)}>Create summary PDF</Button></div>
+            {unit.tests?.map((test) => <Link className="mt-3 flex flex-wrap items-center justify-start gap-3 border-t border-border pt-3 text-foreground [&>span:first-child]:flex-1 [&>span:first-child]:font-semibold" key={idOf(test)} to={`/admin/tests/${idOf(test)}`} state={{ trail: [{ label: "Courses", to: "/admin" }, { label: course.code || course.title, to: `/admin/courses/${id}` }, { label: unit.title, to: `/admin/courses/${id}` }, { label: test.title }] }}><span>{test.title}</span><StatusBadge isPublished={test.isPublished} /><span>{test.questionCount || test.questions?.length || 0} questions</span></Link>)}
+            <div className={rowActions}><Button variant="secondary" type="button" onClick={() => createLesson(unit)}>Add lesson</Button><Button variant="secondary" type="button" onClick={() => createTest("unit", unitId)}>Add unit test</Button><Button variant="secondary" type="button" loading={summaryBusy === unitId} disabled={Boolean(summaryBusy) || lessons.length === 0} onClick={() => createSummary(unit)}>Create summary PDF</Button></div>
           </article>;
         })}
       </div>
       <Button variant="secondary" type="button" onClick={createUnit}>Add unit</Button>
     </section>
-    <section className="admin-editor-section"><h2>Course tests</h2>{courseTests.map((test) => <Link className="test-row" key={idOf(test)} to={`/admin/tests/${idOf(test)}`} state={{ trail: [{ label: "Courses", to: "/admin" }, { label: course.code || course.title, to: `/admin/courses/${id}` }, { label: test.title }] }}><span>{test.title}</span><StatusBadge isPublished={test.isPublished} /><span>{test.questionCount || test.questions?.length || 0} questions</span></Link>)}<Button variant="secondary" type="button" onClick={() => createTest("course", id)}>Add course test</Button></section>
+    <section className={adminSection}><h2>Course tests</h2>{courseTests.map((test) => <Link className="mt-3 flex flex-wrap items-center justify-start gap-3 border-t border-border pt-3 text-foreground [&>span:first-child]:flex-1 [&>span:first-child]:font-semibold" key={idOf(test)} to={`/admin/tests/${idOf(test)}`} state={{ trail: [{ label: "Courses", to: "/admin" }, { label: course.code || course.title, to: `/admin/courses/${id}` }, { label: test.title }] }}><span>{test.title}</span><StatusBadge isPublished={test.isPublished} /><span>{test.questionCount || test.questions?.length || 0} questions</span></Link>)}<Button variant="secondary" type="button" onClick={() => createTest("course", id)}>Add course test</Button></section>
     <ConfirmDialog open={Boolean(confirmTarget)} title={`Delete ${confirmTarget?.type || "item"}?`} description="This content will be removed from the course. You can restore it later from the Trash." confirmLabel="Delete" onConfirm={removeTarget} onCancel={() => setConfirmTarget(null)} />
   </div></div>;
 }

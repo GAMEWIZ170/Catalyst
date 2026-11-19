@@ -23,23 +23,6 @@
   padding: var(--space-2) 0;
 }
 
-.unit-card {
-  border-bottom: 1px solid var(--line);
-}
-
-.lesson-row {
-  align-items: center;
-  border-bottom: 1px solid var(--line);
-  display: flex;
-  gap: var(--space-3);
-  min-height: 56px;
-  padding: var(--space-2) 0;
-}
-
-.lesson-row > * {
-  min-width: 0;
-}
-
 .choice {
   align-items: center;
   border: 1px solid var(--control-line);

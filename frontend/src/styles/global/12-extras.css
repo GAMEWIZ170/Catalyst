@@ -39,7 +39,6 @@
 .saved-list li a { flex: 1; min-height: 44px; }
 
 /* Notification bell (phase 4.3) */
-.icon-button { position: relative; }
 .notification-panel { gap: var(--space-2); max-height: min(70dvh, 28rem); overflow-y: auto; width: min(340px, calc(100vw - 2rem)); }
 
 /* Privacy and terms (phase 4.4) */

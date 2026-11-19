@@ -51,9 +51,9 @@ export default function ImageField({ label, value, onChange, onValidityChange, m
     if (value) notify({ ...value, alt: next });
   }
 
-  return <fieldset className={`image-field ${compact ? "image-field--compact" : ""}`}>
-    <legend>{label}</legend>
-    {value?.url && <img className="image-field-preview" src={imageUrl(value.url, 400)} alt={value.alt || ""} />}
+  return <fieldset className="grid gap-3 rounded-[6px] border border-border p-4">
+    <legend className="px-1 font-semibold">{label}</legend>
+    {value?.url && <img className="block max-w-[min(100%,400px)] object-contain" src={imageUrl(value.url, 400)} alt={value.alt || ""} />}
     <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(event) => event.target.files[0] && upload(event.target.files[0])} />
     <Button variant="secondary" type="button" disabled={uploading} onClick={() => inputRef.current?.click()}>{value ? "Replace" : "Choose image"}</Button>
     {value && <Button variant="secondary" type="button" disabled={uploading} onClick={() => notify(null)}>Remove</Button>}
