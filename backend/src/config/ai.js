@@ -17,7 +17,7 @@ const MODELS = [
   {
     id: "gemini-flash-lite",
     provider: "gemini",
-    model: "gemini-2.5-flash-lite",
+    model: "gemini-3.5-flash-lite",
     label: "Gemini Flash-Lite",
     maxInputChars: 300000,
     maxOutputTokens: 8192,
