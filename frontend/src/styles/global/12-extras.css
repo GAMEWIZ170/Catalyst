@@ -22,7 +22,6 @@
 
 /* Bottom tab bar: phones only. Each tab is at least 44 px tall and wide. */
 @media (max-width: 767px) {
-  .app-shell { padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
   /* Keep focused controls clear of the fixed tab bar. */
   html { scroll-padding-bottom: calc(56px + env(safe-area-inset-bottom) + var(--space-4)); }
 }
@@ -105,7 +104,6 @@
 
 /* App shell (Expansion X1.1): sidebar on laptops, bottom bar on phones, never both. */
 .popover-host { position: relative; }
-.sidebar { display: none; }
 
 /* The bottom bar keeps the same five places. */
 

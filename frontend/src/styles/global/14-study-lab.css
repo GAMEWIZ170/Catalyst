@@ -52,14 +52,6 @@
 .community-card { min-width: 0; }
 
 /* Visual audit pass (unslop): quiet top bar, grouped page actions, one lesson tool row, bigger progress figures. */
-.topbar .icon-button {
-  background: transparent;
-  border-color: transparent;
-  color: var(--muted);
-  transition: background-color var(--dur-hover) var(--ease-out), color var(--dur-hover) var(--ease-out);
-}
-.topbar .icon-button:hover { background: var(--sunken); color: var(--ink); }
-.topbar .icon-button:focus-visible { box-shadow: var(--focus); }
 
 .lab-header { align-items: flex-start; }
 
