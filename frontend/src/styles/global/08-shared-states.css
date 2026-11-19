@@ -116,45 +116,6 @@ h3 {
   padding: 0 var(--space-4);
 }
 
-.deck-summary {
-  display: grid;
-  gap: var(--space-2);
-  margin-bottom: var(--space-4);
-}
-
-.deck-total {
-  font-weight: 600;
-  margin: 0;
-}
-
-.deck-bar {
-  background: var(--line);
-  border-radius: 999px;
-  display: flex;
-  gap: 2px;
-  height: 0.5rem;
-  overflow: hidden;
-}
-
-.deck-legend {
-  color: var(--muted);
-  display: flex;
-  flex-wrap: wrap;
-  font-size: var(--text-sm);
-  gap: var(--space-1) var(--space-4);
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.deck-dot {
-  border-radius: 50%;
-  display: inline-block;
-  height: 0.75rem;
-  margin-right: var(--space-2);
-  width: 0.75rem;
-}
-
 /* Keeps the line's space while the course loads, so the text below does not jump. */
 .inline-rename h1 {
   font-size: var(--text-xl);

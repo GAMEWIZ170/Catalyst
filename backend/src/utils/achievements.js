@@ -8,7 +8,6 @@ const Mastery = require("../modules/assessments/mastery.models");
 const Lesson = require("../modules/courses/lesson.models");
 const StudySet = require("../modules/lab/studyset.models");
 const Report = require("../modules/community/report.models");
-const { levelFor } = require("./xp");
 const { shiftDay } = require("./day");
 
 // Every achievement is a learning milestone. None rewards hours spent, and none is about losing a streak.
@@ -30,11 +29,10 @@ const LIST = [
   { key: "correct_500", title: "500 right answers", text: "Answer 500 questions correctly.", test: (s) => s.correct >= 500 },
   { key: "study_days_7", title: "7 study days in a month", text: "Study on 7 different days in one calendar month.", test: (s) => s.bestMonthDays >= 7 },
   { key: "study_days_15", title: "15 study days in a month", text: "Study on 15 different days in one calendar month.", test: (s) => s.bestMonthDays >= 15 },
+  { key: "study_weeks_4", title: "Four weeks in a row", text: "Study at least once a week for four weeks in a row.", test: (s) => s.bestWeekRun >= 4 },
   { key: "first_focus", title: "First focus session", text: "Finish a focus session.", test: (s) => s.focus >= 1 },
   { key: "first_set", title: "First study set", text: "Create a study set.", test: (s) => s.sets >= 1 },
   { key: "set_studied_50", title: "Your set helped others", text: "Your study set was studied 50 times by other students.", test: (s) => s.setStudiedByOthers >= 50 },
-  { key: "level_5", title: "Level 5", text: "Reach level 5.", test: (s) => s.level >= 5 },
-  { key: "level_10", title: "Level 10", text: "Reach level 10.", test: (s) => s.level >= 10 },
   { key: "first_friend", title: "First friend", text: "Add a friend.", test: (s) => s.friends >= 1 },
   { key: "first_challenge", title: "First challenge", text: "Play a friend challenge.", test: (s) => s.challengesPlayed >= 1 },
   { key: "first_challenge_won", title: "First challenge won", text: "Win a friend challenge.", test: (s) => s.challengesWon >= 1 },
@@ -55,6 +53,15 @@ const hasComeback = (days) => {
   return false;
 };
 
+// Longest run of calendar weeks (Monday to Sunday, UTC) that each hold at least one study day. One day a week is enough.
+const bestWeekRun = (days) => {
+  const weeks = [...new Set(days.map((day) => Math.floor((Date.parse(day) / 86400000 + 3) / 7)))].sort((a, b) => a - b);
+  let best = 0;
+  let run = 0;
+  weeks.forEach((week, index) => { run = index && week === weeks[index - 1] + 1 ? run + 1 : 1; best = Math.max(best, run); });
+  return best;
+};
+
 const loadStats = async (userId, activeDays) => {
   const user = oid(userId);
   const months = new Map();
@@ -63,7 +70,7 @@ const loadStats = async (userId, activeDays) => {
   // Friends and challenges are looked up by name so this file works before those models exist.
   const Friendship = mongoose.models.Friendship;
   const Challenge = mongoose.models.Challenge;
-  const [lessons, tests, perfect, retried, reviews, cards, correct, focus, sets, reportsResolved, userDoc, mastered, mySets, friends, played, won] = await Promise.all([
+  const [lessons, tests, perfect, retried, reviews, cards, correct, focus, sets, reportsResolved, mastered, mySets, friends, played, won] = await Promise.all([
     Progress.countDocuments({ user, completed: true }),
     TestResult.countDocuments({ user }),
     TestResult.countDocuments({ user, bestScore: 100 }),
@@ -74,7 +81,6 @@ const loadStats = async (userId, activeDays) => {
     countEvents(user, "focus_session_completed"),
     StudySet.countDocuments({ owner: user, deletedAt: null }),
     Report.countDocuments({ user, status: "resolved" }),
-    User.findById(user).select("xp").lean(),
     Mastery.find({ user, level: { $gte: 3 } }).select("lesson").lean(),
     StudySet.find({ owner: user }).select("_id").lean(),
     Friendship ? Friendship.countDocuments({ status: "accepted", $or: [{ requester: user }, { recipient: user }] }) : 0,
@@ -101,7 +107,7 @@ const loadStats = async (userId, activeDays) => {
 
   return {
     lessons, tests, perfectTests: perfect, retriedAndPassed: retried > 0, reviews, cards, correct, focus, sets, reportsResolved,
-    level: levelFor(userDoc?.xp || 0).level, unitsMastered, setStudiedByOthers, friends, challengesPlayed: played, challengesWon: won,
+    unitsMastered, bestWeekRun: bestWeekRun([...new Set(activeDays)]), setStudiedByOthers, friends, challengesPlayed: played, challengesWon: won,
     bestMonthDays: Math.max(0, ...months.values()), comeback: hasComeback(activeDays)
   };
 };
@@ -127,6 +133,10 @@ const evaluate = async (userId, activeDays) => {
   }
 };
 
+// The colour family of a badge on the Achievements screen.
+const GROUPS = { lesson: "learn", lessons: "learn", first_unit: "learn", units: "learn", first_test: "tests", perfect: "tests", second_wind: "tests", first_review: "review", reviews: "review", cards: "review", correct: "review", study: "habit", first_focus: "habit", comeback: "habit", first_set: "create", set: "create", first_friend: "social", first_challenge: "social", challenges: "social", sharp_eyed: "social" };
+const groupOf = (key) => GROUPS[Object.keys(GROUPS).find((prefix) => key === prefix || key.startsWith(prefix + "_")) || ""] || "learn";
+
 const byKey = new Map(LIST.map((item) => [item.key, item]));
 
-module.exports = { LIST, byKey, evaluate };
+module.exports = { LIST, byKey, evaluate, groupOf };

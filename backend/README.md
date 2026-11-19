@@ -510,13 +510,13 @@ Not built yet because the features do not exist: weekly goals (X5.3), finishing 
 
 ### Achievements (Phase X5.2)
 
-`utils/achievements.js` holds the list: 28 learning milestones (3 of them hidden surprises). None rewards hours spent and none is about losing a streak. Earned ones are rows in `achievementunlocks` (unique on user and key, `seen` false until the student has been shown the message). The check works out the student's numbers from the events and progress collections and saves anything new. It never throws and is safe to repeat.
+`utils/achievements.js` holds the list: 27 learning milestones (3 of them hidden surprises; the level ones were dropped because levels stay hidden, and "Four weeks in a row" was added: one study day a week is enough). None rewards hours spent and none is about losing a streak. Earned ones are rows in `achievementunlocks` (unique on user and key, `seen` false until the student has been shown the message). The check works out the student's numbers from the events and progress collections and saves anything new. It never throws and is safe to repeat.
 
 It runs when `GET /achievements` is called, and from `GET /xp/me` at most once a minute per student (`User.achievementsCheckedAt`), because the app shell calls `/xp/me` on every page change.
 
 | Method | Path | Access | Notes |
 |---|---|---|---|
-| GET | `/achievements` | Student | Every achievement with `unlockedAt` (or null), `earned` and `total`. An unearned hidden one shows only "Hidden achievement" |
+| GET | `/achievements` | Student | Every achievement with `unlockedAt` (or null), a colour `group` (learn, tests, review, habit, create, social), `earned` and `total`. An unearned hidden one shows only "Hidden achievement" |
 | POST | `/achievements/seen` | Student | Marks the new ones as shown (204) |
 
 `GET /xp/me` also returns `newAchievements: [{ key, title }]` for the toast. "Your set helped others" counts `set_studied` events from other students, so it cannot be earned until community sets exist. The friend and challenge achievements count rows in the `Friendship` and `Challenge` collections once those exist.

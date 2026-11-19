@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Award, Lock } from "lucide-react";
 import { api } from "../../api/client";
-import { Skeleton, SkeletonGroup } from "../ui";
+import { Progress, Skeleton, SkeletonGroup } from "../ui";
+import AchievementBadge from "./AchievementBadge";
 import { t } from "../../i18n";
 
 // The Achievements tab on Me: earned ones first, then the ones still to find. Hidden ones show as locked until earned.
@@ -19,15 +19,18 @@ export default function AchievementsPanel() {
   if (state.loading) return <SkeletonGroup label="Loading achievements"><Skeleton /><Skeleton /><Skeleton /></SkeletonGroup>;
   if (state.error) return <p role="alert">{t("achievements.error")}</p>;
   const sorted = [...state.data].sort((a, b) => Number(Boolean(b.unlockedAt)) - Number(Boolean(a.unlockedAt)));
-  return <div className="achievements">
-    <p className="muted">{t("achievements.count").replace("{earned}", state.earned).replace("{total}", state.total)}</p>
-    <ul className="achievement-list">
-      {sorted.map((item) => <li key={item.key} className={`achievement${item.unlockedAt ? " achievement--earned" : ""}`}>
-        {item.unlockedAt ? <Award size={22} aria-hidden="true" /> : <Lock size={22} aria-hidden="true" />}
-        <div>
-          <strong>{item.title}</strong>
-          <p>{item.text}</p>
-          {item.unlockedAt && <span className="muted">{t("achievements.earned").replace("{date}", new Date(item.unlockedAt).toLocaleDateString())}</span>}
+  return <div className="mx-auto grid max-w-3xl gap-4">
+    <div className="grid gap-2">
+      <p className="m-0 font-semibold">{t("achievements.count").replace("{earned}", state.earned).replace("{total}", state.total)}</p>
+      <Progress value={state.total ? (state.earned / state.total) * 100 : 0} label="Achievements earned" />
+    </div>
+    <ul className="m-0 grid list-none gap-2 p-0 sm:grid-cols-2">
+      {sorted.map((item) => <li key={item.key} className={`flex items-center gap-3 rounded-lg border border-border p-3 ${item.unlockedAt ? "bg-card" : "opacity-80"}`}>
+        <AchievementBadge item={item} />
+        <div className="min-w-0">
+          <strong className="block">{item.title}</strong>
+          <p className="m-0 text-sm text-muted-foreground">{item.text}</p>
+          {item.unlockedAt && <span className="text-sm text-muted-foreground">{t("achievements.earned").replace("{date}", new Date(item.unlockedAt).toLocaleDateString())}</span>}
         </div>
       </li>)}
     </ul>
