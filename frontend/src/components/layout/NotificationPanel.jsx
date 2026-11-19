@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { popoverPanel } from "./topbarStyles";
 import { Link } from "react-router-dom";
 import { api } from "../../api/client";
 
@@ -52,23 +53,23 @@ const timeAgo = (iso) => {
 
 export default function NotificationPanel({ notifications, onNavigate }) {
   const { unread, items, loaded, markRead, markAllRead } = notifications;
-  return <section className="notification-panel" id="notification-panel" aria-label="Notifications">
-    <div className="notification-head">
+  return <section className={`${popoverPanel} grid max-h-[min(70dvh,28rem)] w-[min(340px,calc(100vw-2rem))] gap-2 overflow-y-auto p-3 [&_span]:text-sm [&_span]:text-muted-foreground`} id="notification-panel" aria-label="Notifications">
+    <div className="flex items-center justify-between gap-3">
       <strong>Notifications</strong>
-      <button className="notification-readall" type="button" onClick={markAllRead} disabled={unread === 0}>Mark all as read</button>
+      <button className="min-h-11 cursor-pointer border-0 bg-transparent px-2 text-sm font-semibold text-brand-ink disabled:cursor-default disabled:text-muted-foreground" type="button" onClick={markAllRead} disabled={unread === 0}>Mark all as read</button>
     </div>
-    {!loaded && <p className="notification-empty" role="status">Loading...</p>}
-    {loaded && items.length === 0 && <p className="notification-empty" role="status">
+    {!loaded && <p className="m-0 grid gap-1" role="status">Loading...</p>}
+    {loaded && items.length === 0 && <p className="m-0 grid gap-1" role="status">
       <strong>No notifications yet</strong>
       <span>New lessons and review reminders will appear here.</span>
     </p>}
-    {items.length > 0 && <ul className="notification-list">
+    {items.length > 0 && <ul className="m-0 grid list-none gap-1 p-0">
       {items.map((n) => <li key={n.id}>
-        <Link className={n.read ? "notification-item" : "notification-item notification-item--unread"} to={n.link || "/home"}
+        <Link className={`grid min-h-11 gap-0.5 rounded-[6px] px-3 py-2 text-inherit no-underline hover:bg-muted focus-visible:bg-muted ${n.read ? "" : "bg-primary/15"}`} to={n.link || "/home"}
           onClick={() => { markRead(n.id); onNavigate(); }}>
-          <span className="notification-title">{!n.read && <span className="sr-only">Unread: </span>}{n.title}</span>
-          {n.body && <span className="notification-body">{n.body}</span>}
-          <span className="notification-time">{timeAgo(n.createdAt)}</span>
+          <span className="!text-base font-semibold !text-foreground">{!n.read && <span className="sr-only">Unread: </span>}{n.title}</span>
+          {n.body && <span>{n.body}</span>}
+          <span>{timeAgo(n.createdAt)}</span>
         </Link>
       </li>)}
     </ul>}

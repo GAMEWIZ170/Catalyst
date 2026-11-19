@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { quickPanel } from "./topbarStyles";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Checkbox, SelectField } from "../ui";
@@ -23,8 +24,8 @@ export default function QuickSettings({ panelRef, onNavigate }) {
     }
   }
 
-  return <div className="quick-panel" id="quick-settings-panel" ref={panelRef} role="dialog" aria-label={t("quick.title")}>
-    <h2 className="quick-title">{t("quick.title")}</h2>
+  return <div className={quickPanel} id="quick-settings-panel" ref={panelRef} role="dialog" aria-label={t("quick.title")}>
+    <h2 className="m-0 text-base">{t("quick.title")}</h2>
     <Checkbox label={t("quick.theme")} checked={dark} onChange={(event) => { setDark(event.target.checked); applyTheme(event.target.checked ? "dark" : "light"); }} />
     <SelectField label={t("quick.text")} value={textSize} onChange={(event) => { setTextSize(event.target.value); applyTextSize(event.target.value); }}>
       {textSizes.map((item) => <option key={item.key} value={item.key}>{item.name}</option>)}
@@ -35,6 +36,6 @@ export default function QuickSettings({ panelRef, onNavigate }) {
       <Checkbox label={t("quick.notifyLesson")} checked={user.notify?.lesson !== false} onChange={(event) => toggleNotify("lesson", event.target.checked)} />
     </>
     {problem && <p className="settings-status" role="alert">{problem}</p>}
-    <Link className="quick-all" to="/settings" onClick={onNavigate}>{t("quick.all")}</Link>
+    <Link className="inline-flex min-h-11 items-center font-semibold text-brand-ink" to="/settings" onClick={onNavigate}>{t("quick.all")}</Link>
   </div>;
 }

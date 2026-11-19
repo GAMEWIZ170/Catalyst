@@ -15,6 +15,7 @@ import QuickSettings from "./QuickSettings";
 import ShortcutHelp from "./ShortcutHelp";
 import { TimerAnnouncer, TimerButton, TimerPanel } from "./TimerMenu";
 import TutorPanel from "./TutorPanel";
+import { iconButton, menuItem, popoverHost, popoverPanel } from "./topbarStyles";
 
 // The places a student goes. Laptops show them in a slim rail on the left, phones in tabs along the bottom (never both).
 // "Me" also covers the pages inside it, so it stays highlighted on Progress, Saved and Settings.
@@ -138,15 +139,15 @@ function Shell({ children }) {
         <Breadcrumb places={places} pathname={pathname} />
         <div className="ml-auto flex min-w-0 items-center gap-2">
           <HeaderSearch />
-          <div className="topbar-tools flex shrink-0 items-center gap-1">
-            <div className="timer-menu popover-host">
+          <div className="flex min-w-0 shrink-0 items-center gap-3 max-[640px]:gap-1 max-[359px]:gap-1">
+            <div className={popoverHost}>
               <TimerButton buttonRef={(node) => { buttons.current.timer = node; }} open={open === "timer"} onClick={() => toggle("timer")} />
               {open === "timer" && <TimerPanel onNavigate={() => setOpen(null)} />}
             </div>
-            <div className="notification-menu popover-host">
+            <div className={popoverHost}>
               <button
                 ref={(node) => { buttons.current.notifications = node; }}
-                className="icon-button"
+                className={iconButton}
                 type="button"
                 aria-label={notifications.unread > 0 ? `${t("tools.notifications")}, ${notifications.unread} unread` : t("tools.notifications")}
                 aria-expanded={open === "notifications"}
@@ -157,14 +158,14 @@ function Shell({ children }) {
                 }}
               >
                 <Bell size={20} aria-hidden="true" />
-                {notifications.unread > 0 && <span className="notification-badge" aria-hidden="true">{notifications.unread > 9 ? "9+" : notifications.unread}</span>}
+                {notifications.unread > 0 && <span className="absolute -top-1.5 -right-1.5 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-xs font-semibold text-primary-foreground" aria-hidden="true">{notifications.unread > 9 ? "9+" : notifications.unread}</span>}
               </button>
               {open === "notifications" && <NotificationPanel notifications={notifications} onNavigate={() => setOpen(null)} />}
             </div>
-            <div className="quick-menu popover-host">
+            <div className={popoverHost}>
               <button
                 ref={(node) => { buttons.current.quick = node; }}
-                className="icon-button"
+                className={iconButton}
                 type="button"
                 aria-label={t("tools.settings")}
                 title={t("tools.settings")}
@@ -179,10 +180,10 @@ function Shell({ children }) {
             {streak !== null && <span className="hidden min-h-11 items-center gap-1 px-2 text-sm font-semibold min-[460px]:inline-flex" aria-label={`Current streak: ${streak} ${streak === 1 ? "day" : "days"}`}>
               <Zap size={16} aria-hidden="true" /><span>{streak}</span>
             </span>}
-            <div className="profile-menu popover-host">
+            <div className="relative">
               <button
                 ref={(node) => { buttons.current.profile = node; }}
-                className="profile-button"
+                className="inline-flex size-11 shrink-0 items-center justify-center rounded-full border-0 bg-transparent p-0 transition-colors motion-safe:active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                 type="button"
                 aria-label={t("tools.profile")}
                 aria-haspopup="menu"
@@ -191,15 +192,15 @@ function Shell({ children }) {
               >
                 <Avatar avatar={user?.avatar} name={user?.name} size={32} />
               </button>
-              {open === "profile" && <div className="profile-panel" ref={profileMenuRef} role="menu" onKeyDown={moveProfileFocus}>
-                <div className="profile-header">
+              {open === "profile" && <div className="absolute top-[calc(100%+0.5rem)] right-0 z-[4] max-w-[calc(100vw-1rem)] min-w-[220px] origin-top-right rounded-[6px] border border-border bg-card p-2 shadow-md motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95 motion-safe:duration-150 max-[640px]:min-w-[200px]" ref={profileMenuRef} role="menu" onKeyDown={moveProfileFocus}>
+                <div className="grid gap-1 p-3 [&_span]:text-sm [&_span]:text-muted-foreground">
                   <strong>{user?.name}</strong>
                   <span>{user?.email}</span>
                 </div>
-                <Link role="menuitem" tabIndex="-1" to="/settings" onClick={() => setOpen(null)}>{t("me.settings")}</Link>
-                <Link role="menuitem" tabIndex="-1" to="/progress" onClick={() => setOpen(null)}>{t("me.progress")}</Link>
-                {isAdmin && <Link role="menuitem" tabIndex="-1" to="/admin" onClick={() => setOpen(null)}>Admin</Link>}
-                <button role="menuitem" tabIndex="-1" type="button" onClick={handleLogout}>Log out</button>
+                <Link className={menuItem} role="menuitem" tabIndex="-1" to="/settings" onClick={() => setOpen(null)}>{t("me.settings")}</Link>
+                <Link className={menuItem} role="menuitem" tabIndex="-1" to="/progress" onClick={() => setOpen(null)}>{t("me.progress")}</Link>
+                {isAdmin && <Link className={menuItem} role="menuitem" tabIndex="-1" to="/admin" onClick={() => setOpen(null)}>Admin</Link>}
+                <button className={`${menuItem} text-muted-foreground`} role="menuitem" tabIndex="-1" type="button" onClick={handleLogout}>Log out</button>
               </div>}
             </div>
           </div>

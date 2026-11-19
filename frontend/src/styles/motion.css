@@ -16,11 +16,8 @@ h1, h2, h3 { text-wrap: balance; }
   /* Press and hover feedback. Named properties only, never "all". */
   .button,
   .icon-button,
-  .profile-button,
   .admin-nav a,
-  .admin-nav .admin-more > button,
-  .profile-panel a,
-  .profile-panel button {
+  .admin-nav .admin-more > button {
     transition:
       background-color var(--dur-hover) var(--ease-out),
       border-color var(--dur-hover) var(--ease-out),
@@ -29,8 +26,7 @@ h1, h2, h3 { text-wrap: balance; }
   }
 
   .button:active:not(:disabled),
-  .icon-button:active,
-  .profile-button:active {
+  .icon-button:active {
     transform: scale(0.97);
   }
 
@@ -43,18 +39,11 @@ h1, h2, h3 { text-wrap: balance; }
 
   /* Popovers grow out of the button that opened them, never from the centre. */
   .notification-panel,
-  .profile-panel,
-  .quick-panel,
   .admin-more-panel {
     animation: pop-in var(--dur-pop) var(--ease-out);
     transform-origin: top right;
   }
   .admin-more-panel { transform-origin: top left; }
-
-  @media (max-width: 640px) {
-    .topbar-tools .quick-panel,
-    .topbar-tools .notification-panel { transform-origin: top center; }
-  }
 
   /* Tab panels and pages fade in. Exit is instant: the user already chose, so respond at once. */
   .page-wrap > * { animation: rise-in var(--dur-page) var(--ease-out); }

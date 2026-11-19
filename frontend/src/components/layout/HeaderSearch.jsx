@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { iconButton } from "./topbarStyles";
+import { cn } from "@/lib/utils";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { BookOpen, Clock, CornerDownLeft, FileText, Search, X } from "lucide-react";
@@ -30,6 +32,9 @@ const isTyping = (target) => Boolean(target?.closest?.("input, textarea, select,
 
 // The search field in the top bar (GitHub style). Lessons come from the existing search API; pages are matched on this device.
 // Under 640 px it is an icon that opens a full-screen search. It follows the ARIA combobox pattern.
+const FIELD = "flex items-center gap-2 rounded-[6px] border border-input bg-muted pr-2 pl-3 text-muted-foreground transition-colors hover:border-muted-foreground focus-within:border-primary focus-within:bg-card focus-within:outline-2 focus-within:-outline-offset-1 focus-within:outline-primary motion-reduce:transition-none [&_svg]:shrink-0";
+const FIELD_OPEN = "border-primary bg-card outline-2 -outline-offset-1 outline-primary";
+
 export default function HeaderSearch() {
   const navigate = useNavigate();
   const uid = useId();
@@ -143,7 +148,7 @@ export default function HeaderSearch() {
 
   const input = <input
     ref={inputRef}
-    className="hs-input"
+    className="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-foreground outline-0 placeholder:text-muted-foreground focus:shadow-none focus:outline-0 focus-visible:shadow-none focus-visible:outline-0 [.hs-overlay_&]:text-base"
     type="text"
     role="combobox"
     aria-label="Search lessons and pages"
@@ -168,9 +173,9 @@ export default function HeaderSearch() {
     else groups.push({ name: option.group, items: [{ option, index }] });
   });
 
-  const panel = <div className="hs-panel" id={listId} role="listbox" aria-label="Search results">
+  const panel = <div className="absolute inset-x-0 top-[calc(100%+0.5rem)] z-20 max-h-[min(70vh,480px)] origin-top overflow-y-auto rounded-md border border-border bg-card p-2 shadow-md motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95 motion-safe:duration-150 [.hs-overlay_&]:static [.hs-overlay_&]:max-h-none [.hs-overlay_&]:animate-none [.hs-overlay_&]:overflow-visible [.hs-overlay_&]:rounded-none [.hs-overlay_&]:border-0 [.hs-overlay_&]:p-0 [.hs-overlay_&]:shadow-none" id={listId} role="listbox" aria-label="Search results">
     {groups.map((group) => <div key={group.name || "all"} role="group" aria-labelledby={group.name ? `${uid}-${group.name}` : undefined} aria-label={group.name ? undefined : "More"}>
-      {group.name && <div className="hs-heading" id={`${uid}-${group.name}`} role="presentation">{group.name}</div>}
+      {group.name && <div className="px-2 pt-2 pb-1 text-xs font-semibold text-muted-foreground" id={`${uid}-${group.name}`} role="presentation">{group.name}</div>}
       {group.items.map(({ option, index }) => {
         const Icon = option.kind === "lesson" ? BookOpen : option.kind === "recent" ? Clock : option.kind === "all" ? CornerDownLeft : FileText;
         return <div
@@ -178,45 +183,45 @@ export default function HeaderSearch() {
           id={optionId(index)}
           role="option"
           aria-selected={active === index}
-          className={`hs-option${active === index ? " is-active" : ""}${option.kind === "all" ? " is-all" : ""}`}
+          className={`flex min-h-10 cursor-pointer items-center gap-2 px-2 py-1 [&_svg]:shrink-0 [&_svg]:text-muted-foreground ${option.kind === "all" ? "mt-1 rounded-b-[6px] border-t border-border" : "rounded-[6px]"} ${active === index ? "bg-primary/15" : ""}`}
           onPointerDown={(event) => event.preventDefault()}
           onClick={() => choose(option)}
           onMouseMove={() => { if (active !== index) setActive(index); }}
         >
           <Icon size={16} aria-hidden="true" />
-          <span className="hs-option-text">
-            <span className="hs-option-title">{option.title}</span>
-            {option.detail && <span className="hs-option-detail">{option.detail}</span>}
+          <span className="flex min-w-0 flex-col">
+            <span className="truncate text-sm">{option.title}</span>
+            {option.detail && <span className="truncate text-xs text-muted-foreground">{option.detail}</span>}
           </span>
         </div>;
       })}
     </div>)}
-    {ready && status === "loading" && <div className="hs-note" role="status">Searching lessons…</div>}
-    {ready && status === "error" && <div className="hs-note" role="status">Lessons could not be searched. Try again.</div>}
-    {ready && status === "done" && !lessons.length && <div className="hs-note" role="status">No lessons match “{text}”.</div>}
-    {!ready && <div className="hs-note">Type at least 2 letters to search lessons.</div>}
+    {ready && status === "loading" && <div className="p-2 text-sm text-muted-foreground" role="status">Searching lessons…</div>}
+    {ready && status === "error" && <div className="p-2 text-sm text-muted-foreground" role="status">Lessons could not be searched. Try again.</div>}
+    {ready && status === "done" && !lessons.length && <div className="p-2 text-sm text-muted-foreground" role="status">No lessons match “{text}”.</div>}
+    {!ready && <div className="p-2 text-sm text-muted-foreground">Type at least 2 letters to search lessons.</div>}
   </div>;
 
   if (narrow) {
     return <>
-      <button className="icon-button" type="button" aria-label="Search" title="Search" onClick={() => setOpen(true)}><Search size={20} aria-hidden="true" /></button>
-      {open && createPortal(<div className="hs-overlay" role="dialog" aria-modal="true" aria-label="Search">
-        <div className="hs-overlay-bar">
-          <div className="hs-field is-open"><Search size={16} aria-hidden="true" />{input}</div>
-          <button className="hs-cancel" type="button" onClick={close}>Cancel</button>
+      <button className={iconButton} type="button" aria-label="Search" title="Search" onClick={() => setOpen(true)}><Search size={20} aria-hidden="true" /></button>
+      {open && createPortal(<div className="hs-overlay fixed inset-0 z-[200] flex flex-col bg-card" role="dialog" aria-modal="true" aria-label="Search">
+        <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+          <div className={cn(FIELD, "h-10 flex-1", FIELD_OPEN)}><Search size={16} aria-hidden="true" />{input}</div>
+          <button className="min-h-11 border-0 bg-transparent px-1 font-semibold text-brand-ink" type="button" onClick={close}>Cancel</button>
         </div>
-        <div className="hs-overlay-body">{panel}</div>
+        <div className="flex-1 overflow-y-auto px-3 py-2">{panel}</div>
       </div>, document.body)}
     </>;
   }
 
-  return <div className="hs-root" ref={rootRef}>
-    <div className={`hs-field${open ? " is-open" : ""}`}>
+  return <div className="relative w-[320px] min-w-0 flex-[0_1_320px]" ref={rootRef}>
+    <div className={cn(FIELD, "h-[34px]", open && FIELD_OPEN)}>
       <Search size={16} aria-hidden="true" />
       {input}
       {query
-        ? <button className="hs-clear" type="button" aria-label="Clear search" onPointerDown={(event) => event.preventDefault()} onClick={() => { setQuery(""); inputRef.current?.focus(); }}><X size={14} aria-hidden="true" /></button>
-        : <kbd className="hs-key" aria-hidden="true">/</kbd>}
+        ? <button className="inline-flex size-6 items-center justify-center rounded-[6px] border-0 bg-transparent p-0 text-muted-foreground hover:bg-muted hover:text-foreground" type="button" aria-label="Clear search" onPointerDown={(event) => event.preventDefault()} onClick={() => { setQuery(""); inputRef.current?.focus(); }}><X size={14} aria-hidden="true" /></button>
+        : <kbd className="inline-flex size-5 items-center justify-center rounded-[4px] border border-input text-xs text-muted-foreground" aria-hidden="true">/</kbd>}
     </div>
     {open && panel}
   </div>;
