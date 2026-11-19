@@ -23,8 +23,8 @@ const MODELS = [
     maxOutputTokens: 8192,
     timeoutMs: 60000,
     files: true,
-    inputPrice: 0.10,
-    outputPrice: 0.40,
+    inputPrice: 0.30,
+    outputPrice: 2.50,
     default: true
   },
   {
