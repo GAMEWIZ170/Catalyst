@@ -6,6 +6,7 @@ import ResponsiveImage from "../../components/shared/ResponsiveImage";
 import WorkedSolution from "../../components/learn/WorkedSolution";
 import { ChoiceInput, Correct, QuestionInput } from "../../components/learn/QuestionInputs";
 import { Button, Confirm, Illustration } from "../../components/ui";
+import ScoreBar from "../../components/learn/ScoreBar";
 import { api } from "../../api/client";
 import { ErrorState, Loading } from "./Courses";
 
@@ -119,6 +120,7 @@ export default function Exam() {
       <Illustration name="done" className="w-40 text-foreground" />
       <p className="m-0 text-6xl leading-none font-bold tabular-nums" id="exam-score"><span className="sr-only">Your score: </span>{result.score}%</p>
       <p className="m-0 text-lg">{result.correct} of {result.total} correct.</p>
+      <ScoreBar correct={result.correct} total={result.total} />
       <p className="m-0 text-sm text-muted-foreground">Best score {result.bestScore}% · Attempts {result.attempts}</p>
       <div className="flex flex-wrap justify-center gap-2">
         <Button as={Link} variant="primary" to="/home">Back to home</Button>

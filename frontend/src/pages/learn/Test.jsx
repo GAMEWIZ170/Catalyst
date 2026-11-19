@@ -8,6 +8,7 @@ import { PreviewBanner } from "../../components/learn/PreviewBits";
 import WorkedSolution from "../../components/learn/WorkedSolution";
 import { Correct, QuestionInput } from "../../components/learn/QuestionInputs";
 import { Button, EmptyState, Illustration, ProgressDots } from "../../components/ui";
+import ScoreBar from "../../components/learn/ScoreBar";
 import QuizOption from "../../components/learn/QuizOption";
 import useUnsavedChanges from "../../hooks/useUnsavedChanges";
 import { api } from "../../api/client";
@@ -246,6 +247,7 @@ export default function Test() {
         <Illustration name="done" className="w-40 text-foreground" />
         <p className="m-0 text-6xl leading-none font-bold tabular-nums" id="score-heading"><span className="sr-only">Your score: </span>{result.score}%</p>
         <p className="m-0 text-lg">{result.correct} of {result.total} correct. {scoreMessage(result.score)}</p>
+        <ScoreBar correct={result.correct} total={result.total} />
         {!result.practice && <p className="m-0 text-sm text-muted-foreground">Best score {result.bestScore}% · Attempts {result.attempts}</p>}
         {needsPass && <p className={`m-0 flex items-center gap-2 rounded-pill px-4 py-2 font-semibold ${result.passed ? "bg-success/15" : "bg-warning/15"}`} role="status">
           {result.passed ? <CheckCircle2 size={16} aria-hidden="true" /> : <TriangleAlert size={16} aria-hidden="true" />}
