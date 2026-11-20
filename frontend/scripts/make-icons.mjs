@@ -1,7 +1,7 @@
 // Draws the app icons (a white "C" on the lagoon accent) as PNG files, with no packages: the PNG format is
 // written by hand using Node's built-in zlib. Run it again only if the icon design changes:
 //   node scripts/make-icons.mjs
-// The colour below is the default (lagoon) accent from tokens.css. A PNG cannot read CSS variables.
+// The colour below is a fixed teal (the old lagoon accent), not the gold brand colour. A PNG cannot read CSS variables, and tokens.css no longer exists. Change ACCENT by hand if the icons should turn gold.
 import { deflateSync } from "node:zlib";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
