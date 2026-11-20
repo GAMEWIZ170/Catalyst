@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowDown, ArrowUp, Flag } from "lucide-react";
+import { ArrowDown, ArrowUp, Flag, Mic, MicOff } from "lucide-react";
 import ChatText from "./ChatText";
 import { api } from "../../api/client";
 import { Button, SelectField, TextArea, useToast } from "../ui";
@@ -33,9 +33,9 @@ export default function Companion({ kind, id, initialTurns = [], onTurns }) {
   useEffect(() => { if (turns.length) onTurns?.(turns); }, [turns]);
   const onScroll = (event) => { const el = event.currentTarget; setAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 80); };
 
-  async function send(event) {
-    event.preventDefault();
-    const question = text.trim();
+  async function send(event, preset) {
+    event?.preventDefault();
+    const question = (preset ?? text).trim();
     if (!question || busy) return;
     const next = [...turns, { role: "user", content: question }];
     setTurns(next);
@@ -69,6 +69,24 @@ export default function Companion({ kind, id, initialTurns = [], onTurns }) {
     }
   }
 
+  // Dictation uses the browser's own speech recognition (free, nothing is sent to our server). Hidden where the browser has none.
+  const Recognition = typeof window !== "undefined" ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
+  const [listening, setListening] = useState(false);
+  const recogRef = useRef(null);
+  useEffect(() => () => recogRef.current?.abort(), []);
+  function toggleMic() {
+    if (listening) { recogRef.current?.stop(); return; }
+    const recog = new Recognition();
+    recog.lang = document.documentElement.lang || "en-US";
+    recog.interimResults = false;
+    recog.onresult = (event) => { const heard = Array.from(event.results).map((r) => r[0].transcript).join(" "); setText((current) => (current ? current + " " : "") + heard); };
+    recog.onerror = () => toast({ tone: "warning", message: "The microphone is not available. Check the browser permission." });
+    recog.onend = () => setListening(false);
+    recogRef.current = recog;
+    setListening(true);
+    recog.start();
+  }
+
   const resting = Boolean(status?.resting);
   const noneLeft = status && status.messagesLeft === 0;
   const onKey = (event) => { if (event.key === "Enter" && !event.shiftKey) send(event); };
@@ -77,7 +95,13 @@ export default function Companion({ kind, id, initialTurns = [], onTurns }) {
     <div className="relative min-h-0 flex-1">
     <div className="h-full overflow-y-auto pr-1" onScroll={onScroll} role="log" aria-live="polite" aria-label="Conversation" ref={logRef} tabIndex={0}>
       <div className="grid gap-4">
-        {turns.length === 0 && <p className="m-0 text-muted-foreground">Ask me anything. Ask about something you are stuck on, or paste a question you are working on and I will help you think it through. {kind === "general" ? "Open a lesson or set to chat about it with the text in view. " : `I use this ${kind === "lesson" ? "lesson" : "set"} when it helps. `}I give hints, not final answers, on graded questions.</p>}
+        {turns.length === 0 && <div className="grid justify-items-center gap-3 py-4 text-center">
+          <h3 className="m-0 font-display text-xl font-semibold">How can I help?</h3>
+          <p className="m-0 text-sm text-muted-foreground">{kind === "general" ? "Open a lesson or set to chat about it with the text in view." : `I use this ${kind === "lesson" ? "lesson" : "set"} when it helps.`} I give hints, not final answers, on graded questions.</p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {(kind === "general" ? ["Explain a topic simply", "Help me make a study plan"] : [`What is this ${kind === "lesson" ? "lesson" : "set"} about?`, "Quiz me with one question", "Create a study plan for me"]).map((label) => <button key={label} type="button" disabled={busy || resting || noneLeft} onClick={() => send(null, label)} className="rounded-pill border border-border px-3 py-1.5 text-sm hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring">{label}</button>)}
+          </div>
+        </div>}
         {turns.map((turn, index) => turn.role === "user"
           ? <p key={index} className="m-0 ml-8 justify-self-end rounded-2xl bg-muted px-4 py-2.5 whitespace-pre-wrap"><span className="sr-only">You: </span>{turn.content}</p>
           : <div key={index} className="grid gap-2">
@@ -108,7 +132,10 @@ export default function Companion({ kind, id, initialTurns = [], onTurns }) {
           className="max-h-40 min-h-12 w-full resize-none bg-transparent px-2 py-1 outline-none placeholder:text-muted-foreground" />
         <div className="flex items-center justify-between gap-2 px-1">
           <span className="text-xs text-muted-foreground">{status && !resting ? `${status.messagesLeft} of ${status.limits.messages} left today` : "Free beta"}</span>
+          <div className="flex items-center gap-1">
+          {Recognition && <button type="button" onClick={toggleMic} aria-pressed={listening} aria-label={listening ? "Stop dictation" : "Dictate your question"} className={cn("grid size-9 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring", listening && "bg-primary/15 text-foreground")}>{listening ? <MicOff size={18} aria-hidden="true" /> : <Mic size={18} aria-hidden="true" />}</button>}
           <button type="submit" aria-label="Send" disabled={busy || !text.trim()} className={cn("grid size-9 place-items-center rounded-full bg-primary text-primary-foreground transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring", (busy || !text.trim()) && "opacity-40")}><ArrowUp size={18} aria-hidden="true" /></button>
+          </div>
         </div>
       </form>}
   </section>;
