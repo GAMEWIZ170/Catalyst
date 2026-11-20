@@ -70,12 +70,12 @@ export default function Friends() {
     }
   }
 
-  if (state.loading && !state.data) return <div className="content student-page"><Loading /></div>;
-  if (state.error && !state.data) return <div className="content student-page"><ErrorState message={state.error} onRetry={load} /></div>;
+  if (state.loading && !state.data) return <div className="mx-auto max-w-4xl student-page"><Loading /></div>;
+  if (state.error && !state.data) return <div className="mx-auto max-w-4xl student-page"><ErrorState message={state.error} onRetry={load} /></div>;
   const { me, friends, incoming, outgoing } = state.data;
   const person = (item) => <Avatar avatar={item.avatar} name={item.name} size={36} />;
 
-  return <div className="content mx-auto grid max-w-3xl gap-5">
+  return <div className="mx-auto grid max-w-3xl gap-5">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="grid gap-1">
         <h1 className="m-0 text-3xl leading-tight font-bold">{t("friends.title")}</h1>

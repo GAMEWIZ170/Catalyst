@@ -54,11 +54,11 @@ export default function Onboarding() {
     }
   }
 
-  if (error && !courses) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
+  if (error && !courses) return <div className="mx-auto max-w-4xl"><ErrorState message={error} onRetry={load} /></div>;
   if (!courses) return <Loading />;
 
-  return <div className="content onboarding">
-    <p className="muted" aria-live="polite">Step {step} of 3</p>
+  return <div className="mx-auto max-w-4xl onboarding">
+    <p className="text-muted-foreground" aria-live="polite">Step {step} of 3</p>
     {step === 1 && <section aria-labelledby="ob-title">
       <h1 id="ob-title">Choose your course</h1>
       {courses.length === 0
@@ -66,28 +66,28 @@ export default function Onboarding() {
         : <RadioGroup legend="Course">
           {courses.map((course) => <Radio key={course._id} name="course" label={`${course.code}: ${course.title}`} checked={courseId === course._id} onChange={() => setCourseId(course._id)} />)}
         </RadioGroup>}
-      <div className="button-row button-row--stack">
+      <div className="flex flex-wrap gap-3 max-[479px]:*:basis-full">
         <Button disabled={courses.length > 0 && !courseId} onClick={() => setStep(2)}>Next</Button>
         <Button variant="tertiary" loading={busy} onClick={() => finish(true)}>Skip setup</Button>
       </div>
     </section>}
     {step === 2 && <section aria-labelledby="ob-title">
       <h1 id="ob-title">When is your exam?</h1>
-      <p className="muted">Optional. It helps us keep your plan in view.</p>
+      <p className="text-muted-foreground">Optional. It helps us keep your plan in view.</p>
       <TextField label="Exam date" type="date" value={examDate} onChange={(event) => setExamDate(event.target.value)} />
-      <div className="button-row button-row--stack">
+      <div className="flex flex-wrap gap-3 max-[479px]:*:basis-full">
         <Button onClick={() => setStep(3)}>{examDate ? "Next" : "Skip this step"}</Button>
         <Button variant="tertiary" onClick={() => setStep(1)}>Back</Button>
       </div>
     </section>}
     {step === 3 && <section aria-labelledby="ob-title">
       <h1 id="ob-title">Set a daily goal</h1>
-      <p className="muted">Optional. Your streak counts any study day, with or without a goal.</p>
+      <p className="text-muted-foreground">Optional. Your streak counts any study day, with or without a goal.</p>
       <RadioGroup legend="Daily goal">
         {GOALS.map((item) => <Radio key={item.key} name="goal" label={item.label} checked={goal === item.key} onChange={() => setGoal(item.key)} />)}
       </RadioGroup>
-      {error && <p className="form-error" role="alert">{error}</p>}
-      <div className="button-row button-row--stack">
+      {error && <p className="m-0 rounded-md border border-destructive bg-destructive/10 p-3 text-destructive" role="alert">{error}</p>}
+      <div className="flex flex-wrap gap-3 max-[479px]:*:basis-full">
         <Button loading={busy} onClick={() => finish(false)}>{courseId ? "Start my first lesson" : "Finish"}</Button>
         <Button variant="tertiary" disabled={busy} onClick={() => setStep(2)}>Back</Button>
       </div>

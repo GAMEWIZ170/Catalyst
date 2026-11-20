@@ -65,7 +65,7 @@ export default function Lab() {
   };
 
   const none = sets && sets.length === 0;
-  return <div className="content mx-auto grid max-w-5xl gap-6">
+  return <div className="mx-auto grid max-w-5xl gap-6">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="grid gap-1">
         <h1 className="m-0 text-3xl leading-tight font-bold">{t("lab.title")}</h1>

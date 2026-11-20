@@ -31,7 +31,7 @@ export default function ShareButton({ url, title, text }) {
     }
   }
 
-  return <div className="share-row">
+  return <div className="flex flex-wrap items-center gap-3">
     <Button variant="secondary" icon={Share2} onClick={share}>{t("share.button")}</Button>
     {fallback && <>
       <Button variant="secondary" icon={MessageCircle} href={`https://wa.me/?text=${encodeURIComponent(message)}`} target="_blank" rel="noopener noreferrer">{t("share.whatsapp")}</Button>

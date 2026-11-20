@@ -59,11 +59,11 @@ export default function Review() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  if (error && !cards) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
+  if (error && !cards) return <div className="mx-auto max-w-4xl"><ErrorState message={error} onRetry={load} /></div>;
   if (!cards) return <Loading />;
   const back = <div><Button as={Link} to="/home" variant="tertiary" size="sm" icon={ArrowLeft}>Back to home</Button></div>;
 
-  if (!card) return <div className="content mx-auto grid max-w-2xl gap-5">
+  if (!card) return <div className="mx-auto grid max-w-2xl gap-5">
     {back}
     {position === 0 && mistakes === 0
       ? <EmptyState as="h1" icon={Layers} title="Nothing due today" description="Cards and mistakes come back here when it is time to review them." action={<Button as={Link} variant="secondary" to="/home">Back to home</Button>} />
@@ -78,7 +78,7 @@ export default function Review() {
       </section>}
   </div>;
 
-  return <div className="content mx-auto grid max-w-2xl gap-5">
+  return <div className="mx-auto grid max-w-2xl gap-5">
     {back}
     <div className="flex items-center gap-3 rounded-pill border border-border bg-card px-4 py-1">
       <span className="rounded-pill bg-muted px-3 py-1 text-sm font-semibold">Review</span>

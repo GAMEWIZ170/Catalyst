@@ -128,11 +128,11 @@ function Shell({ children }) {
     }
   }
 
-  if (focusMode) return <div className="app-shell--focus"><a className="skip-link" href="#main">Skip to content</a><main className="page-wrap" id="main" tabIndex="-1">{children}</main><ShortcutHelp /></div>;
+  if (focusMode) return <div><a className="fixed top-2 left-2 z-10 -translate-y-[200%] rounded-md border-2 border-primary bg-card px-3 py-2 text-foreground focus:translate-y-0" href="#main">Skip to content</a><main className="mx-auto w-full flex-1" id="main" tabIndex="-1">{children}</main><ShortcutHelp /></div>;
 
   return (
     <div className="flex h-dvh flex-col bg-background text-foreground">
-      <a className="skip-link" href="#main">Skip to content</a>
+      <a className="fixed top-2 left-2 z-10 -translate-y-[200%] rounded-md border-2 border-primary bg-card px-3 py-2 text-foreground focus:translate-y-0" href="#main">Skip to content</a>
       <TimerAnnouncer />
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-card px-4">
         <Link to="/home" aria-label="Catalyst home" className="hidden size-9 place-items-center rounded-full bg-primary font-display text-lg font-semibold text-primary-foreground min-[400px]:grid sm:hidden">C</Link>
@@ -212,7 +212,7 @@ function Shell({ children }) {
           {places.map((place) => <PlaceLink key={place.to} place={place} pathname={pathname} variant="rail" />)}
         </nav>
         <div className="flex min-w-0 flex-1 flex-col overflow-y-auto pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
-          <main className="page-wrap" id="main" tabIndex="-1">{children}</main>
+          <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-8 pb-16 sm:pt-12 md:px-6 motion-safe:[&>*]:animate-[rise-in_200ms_cubic-bezier(0.23,1,0.32,1)]" id="main" tabIndex="-1">{children}</main>
           <ShortcutHelp />
           <footer className="mt-auto flex justify-center gap-4 px-4 py-6 text-sm text-muted-foreground"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link></footer>
         </div>

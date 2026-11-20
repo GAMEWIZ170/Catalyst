@@ -38,13 +38,13 @@ function AccountTab({ save }) {
   return <div className="grid gap-4">
     <div className="grid gap-2">
       <span className="font-semibold">Profile picture</span>
-      <div className="settings-avatar-grid" role="radiogroup" aria-label="Profile picture">
-        {AVATAR_KEYS.map((key) => <label className="avatar-option" key={key}>
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] gap-3" role="radiogroup" aria-label="Profile picture">
+        {AVATAR_KEYS.map((key) => <label className="relative flex min-h-16 cursor-pointer flex-col items-center justify-center gap-3 rounded-md border border-input p-3 text-center has-[input:checked]:border-primary has-[input:checked]:ring-2 has-[input:checked]:ring-ring [&_input]:m-0 [&_input]:size-4 [&_input]:accent-primary [&>span:last-child]:text-sm" key={key}>
           <input type="radio" name="avatar" value={key} checked={avatar === key} onChange={() => selectAvatar(key)} />
           <Avatar avatar={key} size={56} />
           <span>{AVATAR_LABELS[key]}</span>
         </label>)}
-        <label className="avatar-option">
+        <label className="relative flex min-h-16 cursor-pointer flex-col items-center justify-center gap-3 rounded-md border border-input p-3 text-center has-[input:checked]:border-primary has-[input:checked]:ring-2 has-[input:checked]:ring-ring [&_input]:m-0 [&_input]:size-4 [&_input]:accent-primary [&>span:last-child]:text-sm">
           <input type="radio" name="avatar" value="initials" checked={avatar === null} onChange={() => selectAvatar(null)} />
           <Avatar name={user?.name} size={56} />
           <span>Use my initials</span>
@@ -152,7 +152,7 @@ export default function Settings() {
     notifications: <NotificationsTab save={run} />,
     study: <StudyTab save={run} />
   };
-  return <div className="content mx-auto grid max-w-3xl gap-4">
+  return <div className="mx-auto grid max-w-3xl gap-4">
     <div className="flex flex-wrap items-center justify-between gap-2">
       <h1 className="m-0 text-3xl leading-tight font-bold">{t("settings.title")}</h1>
       <SaveState status={status} />

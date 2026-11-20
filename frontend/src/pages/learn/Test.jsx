@@ -193,7 +193,7 @@ export default function Test() {
     window.setTimeout(() => missedRef.current?.focus(), 0);
   }
 
-  if (error && !test) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
+  if (error && !test) return <div className="mx-auto max-w-4xl"><ErrorState message={error} onRetry={load} /></div>;
   if (!test) return <Loading />;
   // Only lesson tests can complete a lesson, so only they show a pass percent.
   const needsPass = !practice && test.scope === "lesson" && test.passPercent != null;
@@ -330,7 +330,7 @@ export default function Test() {
           ? <Button disabled={chosen === null} loading={busy} onClick={checkAnswer}>Check</Button>
           : <Button loading={busy} onClick={continueQuestion}>{isLast ? "Finish test" : "Continue"}</Button>}
       </div>
-      {error && <p className="form-error" role="alert">{error}</p>}
+      {error && <p className="m-0 rounded-md border border-destructive bg-destructive/10 p-3 text-destructive" role="alert">{error}</p>}
     </div>
     <ConfirmDialog open={blocking} title="Leave this test?" description="Your answers will not be saved." confirmLabel="Leave" cancelLabel="Stay" onConfirm={leave} onCancel={() => { setBlocking(false); blocker.reset?.(); }} />
   </div>;

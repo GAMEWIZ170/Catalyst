@@ -1,7 +1,0 @@
-/* Top bar polish (UI polish step 4): quiet borderless icon buttons, a timer pill, and the focus timer popover.
-   Selectors start with .topbar so they win over the older .icon-button rules. Colours come from tokens.css only. */
-
-/* Timer: icon when idle, a pill with the time left while it runs. */
-
-/* Popover */
-.timer-panel { gap: var(--space-3); justify-items: stretch; text-align: center; }

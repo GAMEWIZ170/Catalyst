@@ -19,7 +19,7 @@ export default function Progress() {
 
   useEffect(load, []);
 
-  if (error) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
+  if (error) return <div className="mx-auto max-w-4xl"><ErrorState message={error} onRetry={load} /></div>;
   if (!data) return <Loading />;
   const { progress, streak, trees } = data;
   const completed = progress.filter((item) => item.completed);
@@ -37,7 +37,7 @@ export default function Progress() {
   const row = "m-0 grid list-none gap-2 p-0";
   const rowItem = "flex items-baseline justify-between gap-3";
   const notStarted = trees.filter((tree) => !isStarted(tree));
-  return <div className="content mx-auto grid max-w-3xl gap-5">
+  return <div className="mx-auto grid max-w-3xl gap-5">
     <h1 className="m-0 text-3xl leading-tight font-bold">Your progress</h1>
     <div className="grid gap-3 sm:grid-cols-3">
       <Stat label="Current streak" value={`${streak.streak} ${streak.streak === 1 ? "day" : "days"}`} detail={streak.completedToday ? "Studied today" : "Not yet today"} icon={<Zap size={18} aria-hidden="true" />} />

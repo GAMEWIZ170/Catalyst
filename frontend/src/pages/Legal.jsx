@@ -3,14 +3,14 @@ import ThemeToggle from "../components/layout/ThemeToggle";
 
 // Privacy and terms are public: a student reads them before making an account.
 function LegalPage({ title, updated, children }) {
-  return <div className="legal-page">
+  return <div className="relative flex min-h-dvh flex-col items-center px-4 py-6 [&>.theme-toggle]:absolute [&>.theme-toggle]:top-4 [&>.theme-toggle]:right-4">
     <ThemeToggle />
-    <Link className="auth-brand" to="/" aria-label="Catalyst home"><span className="brand-mark">C</span><span>Catalyst</span></Link>
-    <main className="legal-card" id="main" tabIndex="-1">
+    <Link className="mb-5 flex min-h-11 items-center gap-2 text-lg font-semibold text-foreground no-underline" to="/" aria-label="Catalyst home"><span className="inline-flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">C</span><span>Catalyst</span></Link>
+    <main className="w-full max-w-2xl [&_a]:text-brand-ink [&_h1]:text-2xl [&_h2]:mt-5 [&_h2]:mb-2 [&_h2]:text-lg [&_li]:leading-relaxed [&_p]:leading-relaxed [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:pl-5" id="main" tabIndex="-1">
       <h1>{title}</h1>
-      <p className="muted">Last updated {updated}</p>
+      <p className="text-muted-foreground">Last updated {updated}</p>
       {children}
-      <nav className="legal-links" aria-label="Legal pages">
+      <nav className="mt-6 flex flex-wrap gap-4 border-t pt-4 [&_a]:inline-flex [&_a]:min-h-11 [&_a]:items-center" aria-label="Legal pages">
         <Link to="/privacy">Privacy</Link>
         <Link to="/terms">Terms</Link>
         <Link to="/">Back to Catalyst</Link>

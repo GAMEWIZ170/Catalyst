@@ -35,7 +35,7 @@ export default function QuickSettings({ panelRef, onNavigate }) {
       <Checkbox label={t("quick.notifyReview")} checked={user.notify?.review !== false} onChange={(event) => toggleNotify("review", event.target.checked)} />
       <Checkbox label={t("quick.notifyLesson")} checked={user.notify?.lesson !== false} onChange={(event) => toggleNotify("lesson", event.target.checked)} />
     </>
-    {problem && <p className="settings-status" role="alert">{problem}</p>}
+    {problem && <p className="mt-4 mb-0 min-h-6 font-semibold text-brand-ink" role="alert">{problem}</p>}
     <Link className="inline-flex min-h-11 items-center font-semibold text-brand-ink" to="/settings" onClick={onNavigate}>{t("quick.all")}</Link>
   </div>;
 }

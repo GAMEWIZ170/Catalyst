@@ -39,7 +39,7 @@ export default function AdminAnalytics() {
     <div className={adminHeading}>
       <div>
         <h1>Question analytics</h1>
-        <p className="muted">Questions students get wrong most often, lowest percent correct first. Counting started when this page was added, and includes practice runs and mock exams. Numbers are anonymous.</p>
+        <p className="text-muted-foreground">Questions students get wrong most often, lowest percent correct first. Counting started when this page was added, and includes practice runs and mock exams. Numbers are anonymous.</p>
       </div>
     </div>
     <div className={`${chipRow} my-4`} role="group" aria-label="Only questions answered at least this many times">
@@ -57,7 +57,7 @@ export default function AdminAnalytics() {
           {data.rows.map((row) => <tr key={row.questionId}>
             <th scope="row">
               <Link to={`/admin/tests/${row.testId}`}>{shorten(row.text)}</Link>
-              <span className="muted"> {TYPE_LABELS[row.type] || row.type}{row.topic ? ` · ${row.topic}` : ""}</span>
+              <span className="text-muted-foreground"> {TYPE_LABELS[row.type] || row.type}{row.topic ? ` · ${row.topic}` : ""}</span>
             </th>
             <td>{row.testTitle}</td>
             <td>{row.attempts}</td>

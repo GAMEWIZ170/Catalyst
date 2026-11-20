@@ -98,7 +98,7 @@ export default function AdminQuestionImport() {
     <div className={adminHeading}>
       <div>
         <h1>Import questions from a CSV file</h1>
-        <p className="muted">Questions are added at the end of this test. Nothing is saved until you check the file and press Import. If any row has a problem, nothing is imported.</p>
+        <p className="text-muted-foreground">Questions are added at the end of this test. Nothing is saved until you check the file and press Import. If any row has a problem, nothing is imported.</p>
       </div>
     </div>
     <section className="mb-4 grid gap-3 [&_h2]:mt-0">
@@ -108,7 +108,7 @@ export default function AdminQuestionImport() {
       <details className="[&_dd]:m-0 [&_dd]:[overflow-wrap:anywhere] [&_dl]:my-3 [&_dl]:grid [&_dl]:gap-2 [&_dt]:font-semibold">
         <summary>What goes in each column</summary>
         <dl>{COLUMN_HELP.map(([name, text]) => <div key={name}><dt><code>{name}</code></dt><dd>{text}</dd></div>)}</dl>
-        <p className="muted">At most 200 questions per file.</p>
+        <p className="text-muted-foreground">At most 200 questions per file.</p>
       </details>
     </section>
     <section className="mb-4 grid gap-3 [&_h2]:mt-0">
@@ -140,7 +140,7 @@ export default function AdminQuestionImport() {
       </div>
       {ready
         ? <div><Button loading={busy === "import"} onClick={run}>Import {report.valid} {report.valid === 1 ? "question" : "questions"}</Button></div>
-        : <p className="muted">Fix the rows marked Problem in your file, choose it again and check it again.</p>}
+        : <p className="text-muted-foreground">Fix the rows marked Problem in your file, choose it again and check it again.</p>}
     </section>}
   </AdminLayout>;
 }

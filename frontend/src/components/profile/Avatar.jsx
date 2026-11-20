@@ -158,7 +158,7 @@ export default function Avatar({ avatar, name, size = 40, className = "" }) {
   if (!shape) {
     return (
       <span
-        className={`avatar avatar--initials ${className}`.trim()}
+        className={`avatar inline-flex items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground ${className}`.trim()}
         style={{ width: size, height: size, fontSize: size * 0.4 }}
         role="img"
         aria-label={name ? `Profile picture of ${name}` : "Profile picture"}

@@ -84,7 +84,7 @@ function AdminPage({ children }) {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
-  if (user.role !== "admin") return <AppShell><AdminLayout nav={false}><div className="access-denied"><h1>You do not have access to this page</h1><p>Only administrators can manage Catalyst content.</p><Button as={Link} to="/home">Back to home</Button></div></AdminLayout></AppShell>;
+  if (user.role !== "admin") return <AppShell><AdminLayout nav={false}><div className="rounded-xl border bg-card p-6 [&_p]:text-muted-foreground"><h1>You do not have access to this page</h1><p>Only administrators can manage Catalyst content.</p><Button as={Link} to="/home">Back to home</Button></div></AdminLayout></AppShell>;
   return <AppShell><Suspense fallback={<PageFallback />}>{children}</Suspense></AppShell>;
 }
 

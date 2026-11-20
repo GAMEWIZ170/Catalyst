@@ -63,7 +63,7 @@ export default function LabQuiz() {
     try { await api.renameSetQuiz(testId, title); load(); } catch (err) { setError(err.message); }
   }
 
-  if (error && !quiz) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
+  if (error && !quiz) return <div className="mx-auto max-w-4xl"><ErrorState message={error} onRetry={load} /></div>;
   if (!quiz) return <Loading />;
   const set = (patch) => setForm({ ...form, ...patch });
   const mcq = form?.type === "mcq";
@@ -71,7 +71,7 @@ export default function LabQuiz() {
   const close = () => setForm(null);
   const typeCard = "grid min-h-28 cursor-pointer content-center justify-items-center gap-1 rounded-lg border border-input bg-card p-4 text-center font-sans text-foreground transition-colors duration-150 hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
-  return <div className="content mx-auto grid max-w-3xl gap-4">
+  return <div className="mx-auto grid max-w-3xl gap-4">
     <div><Button as={Link} to={`/lab/${quiz.set}?tab=quizzes`} variant="tertiary" size="sm" icon={ArrowLeft}>Back to my set</Button></div>
     <div className="flex flex-wrap items-center justify-between gap-3">
       <EditableTitle heading label="Quiz name" value={quiz.title} placeholder="Untitled quiz" onSave={rename} />

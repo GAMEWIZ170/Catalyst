@@ -38,13 +38,13 @@ export default function Community() {
   const reset = (setter) => (event) => { setter(event.target.value); setPage(1); };
   const { data } = state;
 
-  return <div className="content student-page community-page">
-    <header className="lab-header">
+  return <div className="mx-auto max-w-4xl student-page community-page">
+    <header className="mb-4 flex flex-wrap items-start justify-between gap-3 [&_h1]:m-0">
       <h1>Community sets</h1>
       <Button as={Link} variant="secondary" icon={Trophy} to="/community/boards">Top sets and creators</Button>
     </header>
-    <p className="muted">Study sets made by other students. They are not part of your official courses, so check what you learn against your lessons.</p>
-    <div className="community-filters">
+    <p className="text-muted-foreground">Study sets made by other students. They are not part of your official courses, so check what you learn against your lessons.</p>
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))] items-end gap-3">
       <TextField label="Search" type="search" value={query} onChange={reset(setQuery)} />
       <SelectField label="Sort by" value={sort} onChange={reset(setSort)}>
         <option value="new">Newest</option>
@@ -52,9 +52,9 @@ export default function Community() {
         <option value="saved">Most saved</option>
       </SelectField>
     </div>
-    <details className="community-more">
+    <details className="grid gap-3">
       <summary>More filters{category || course || topic || saved ? " (on)" : ""}</summary>
-      <div className="community-filters">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))] items-end gap-3">
         <SelectField label="Category" value={category} onChange={reset(setCategory)}>
           <option value="">Any category</option>
           {filters.categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
@@ -73,17 +73,17 @@ export default function Community() {
     {state.error && !data && <ErrorState message={state.error} onRetry={() => setPage((p) => p)} />}
     {state.loading && !data && <Loading />}
     {data && data.items.length === 0 && <EmptyState icon={Users} title={saved ? "No saved sets yet" : "No sets found"} description={saved ? "Save a set to find it here later." : "Try a different word or filter. You can share your own set from its page in the Study Lab."} />}
-    {data && data.items.length > 0 && <ul className="community-list" aria-busy={state.loading}>
-      {data.items.map((item) => <li key={item.id}><Card as={Link} to={`/community/${item.id}`} className="community-card">
+    {data && data.items.length > 0 && <ul className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),1fr))] gap-3 p-0" aria-busy={state.loading}>
+      {data.items.map((item) => <li key={item.id}><Card as={Link} to={`/community/${item.id}`} className="h-full min-w-0 gap-2 text-inherit no-underline [overflow-wrap:anywhere]">
         <strong>{item.title}</strong>
-        <span className="muted">by {item.author}{item.course ? ` · ${item.course.code}` : ""}{item.topic ? ` · ${item.topic}` : ""}</span>
-        {item.description && <span className="community-desc">{item.description}</span>}
-        <span className="muted">{item.studied} studied · {item.saved} saved</span>
+        <span className="text-muted-foreground">by {item.author}{item.course ? ` · ${item.course.code}` : ""}{item.topic ? ` · ${item.topic}` : ""}</span>
+        {item.description && <span className="[overflow-wrap:anywhere]">{item.description}</span>}
+        <span className="text-muted-foreground">{item.studied} studied · {item.saved} saved</span>
       </Card></li>)}
     </ul>}
-    {data && data.pages > 1 && <nav className="pager" aria-label="Pages">
+    {data && data.pages > 1 && <nav className="mt-4 flex flex-wrap items-center justify-between gap-3" aria-label="Pages">
       <Button variant="secondary" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</Button>
-      <span className="muted">Page {data.page} of {data.pages}</span>
+      <span className="text-muted-foreground">Page {data.page} of {data.pages}</span>
       <Button variant="secondary" disabled={page >= data.pages} onClick={() => setPage(page + 1)}>Next</Button>
     </nav>}
   </div>;

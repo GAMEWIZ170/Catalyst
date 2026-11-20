@@ -7,11 +7,11 @@ const CONTROL = "min-h-11 w-full rounded-md border border-input bg-card px-3 fon
 
 function FieldShell({ id, label, hint, error, children, className = "" }) {
   return (
-    <div className={`ui-field ${error ? "ui-field--error" : ""} ${className}`}>
-      <label className="ui-label" htmlFor={id}>{label}</label>
+    <div className={`grid min-w-0 content-start gap-1 ${className}`}>
+      <label className="p-0 text-sm font-semibold text-foreground" htmlFor={id}>{label}</label>
       {children}
-      {hint && !error ? <p className="ui-hint" id={`${id}-hint`}>{hint}</p> : null}
-      {error ? <p className="ui-error" id={`${id}-error`}><AlertCircle size={16} aria-hidden="true" />{error}</p> : null}
+      {hint && !error ? <p className="m-0 text-sm text-muted-foreground" id={`${id}-hint`}>{hint}</p> : null}
+      {error ? <p className="m-0 flex items-start gap-1 text-sm text-destructive [&_svg]:mt-0.5 [&_svg]:shrink-0" id={`${id}-error`}><AlertCircle size={16} aria-hidden="true" />{error}</p> : null}
     </div>
   );
 }
@@ -53,8 +53,8 @@ export function SelectField({ label, hint, error, className, children, value, on
   const options = all.filter((option) => option.value !== "");
   const hidden = isLabelHidden || rest["aria-label"] != null;
   return (
-    <div className={`ui-field ${error ? "ui-field--error" : ""} ${className || ""}`}>
-      <span id={`${id}-label`} className={hidden ? "sr-only" : "ui-label"}>{label}</span>
+    <div className={`grid min-w-0 content-start gap-1 ${className || ""}`}>
+      <span id={`${id}-label`} className={hidden ? "sr-only" : "text-sm font-semibold text-foreground"}>{label}</span>
       <Picker
         label={label}
         value={String(value ?? "")}
@@ -65,8 +65,8 @@ export function SelectField({ label, hint, error, className, children, value, on
         className="w-full justify-between"
         onChange={(next) => onChange?.({ target: { value: next } })}
       />
-      {hint && !error ? <p className="ui-hint" id={`${id}-hint`}>{hint}</p> : null}
-      {error ? <p className="ui-error" id={`${id}-error`}><AlertCircle size={16} aria-hidden="true" />{error}</p> : null}
+      {hint && !error ? <p className="m-0 text-sm text-muted-foreground" id={`${id}-hint`}>{hint}</p> : null}
+      {error ? <p className="m-0 flex items-start gap-1 text-sm text-destructive [&_svg]:mt-0.5 [&_svg]:shrink-0" id={`${id}-error`}><AlertCircle size={16} aria-hidden="true" />{error}</p> : null}
     </div>
   );
 }
@@ -74,9 +74,9 @@ export function SelectField({ label, hint, error, className, children, value, on
 function Choice({ kind, label, hint, className = "", ...input }) {
   const id = useId();
   return (
-    <div className={`ui-choice ${className}`}>
-      <input className={`ui-check ui-check--${kind}`} type={kind} id={id} aria-describedby={hint ? `${id}-hint` : undefined} {...input} />
-      <label htmlFor={id}>{label}{hint ? <span className="ui-hint" id={`${id}-hint`}>{hint}</span> : null}</label>
+    <div className={`flex min-h-11 items-start gap-3 py-2 ${className}`}>
+      <input className={"mt-0.5 size-5 shrink-0 cursor-pointer accent-primary"} type={kind} id={id} aria-describedby={hint ? `${id}-hint` : undefined} {...input} />
+      <label htmlFor={id} className="grid flex-1 cursor-pointer gap-1">{label}{hint ? <span className="text-sm text-muted-foreground" id={`${id}-hint`}>{hint}</span> : null}</label>
     </div>
   );
 }
@@ -88,10 +88,10 @@ export const Radio = (props) => <Choice kind="radio" {...props} />;
 export function RadioGroup({ legend, error, children }) {
   const id = useId();
   return (
-    <fieldset className="ui-group" aria-describedby={error ? `${id}-error` : undefined}>
-      <legend className="ui-label">{legend}</legend>
+    <fieldset className="m-0 grid min-w-0 content-start gap-1 border-0 p-0" aria-describedby={error ? `${id}-error` : undefined}>
+      <legend className="p-0 text-sm font-semibold text-foreground">{legend}</legend>
       {children}
-      {error ? <p className="ui-error" id={`${id}-error`}><AlertCircle size={16} aria-hidden="true" />{error}</p> : null}
+      {error ? <p className="m-0 flex items-start gap-1 text-sm text-destructive [&_svg]:mt-0.5 [&_svg]:shrink-0" id={`${id}-error`}><AlertCircle size={16} aria-hidden="true" />{error}</p> : null}
     </fieldset>
   );
 }

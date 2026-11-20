@@ -30,11 +30,11 @@ export default function Challenge() {
   }
   useEffect(load, [id]);
 
-  if (state.loading && !state.data) return <div className="content"><Loading /></div>;
+  if (state.loading && !state.data) return <div className="mx-auto max-w-4xl"><Loading /></div>;
   if (state.error) {
     // 404, 409 and 410 are normal situations with a clear message, not failures to retry.
     const calm = [404, 409, 410].includes(state.status);
-    return <div className="content mx-auto grid max-w-2xl gap-4">
+    return <div className="mx-auto grid max-w-2xl gap-4">
       {calm ? <><h1 className="m-0 text-3xl leading-tight font-bold">{t("challenges.title")}</h1><p className="m-0" role="status">{state.error}</p><Button as={Link} variant="secondary" to="/challenges">{t("challenges.all")}</Button></> : <ErrorState message={state.error} onRetry={load} />}
     </div>;
   }
@@ -44,7 +44,7 @@ export default function Challenge() {
 
   if (data.played || data.result) {
     const done = Boolean(data.comparison);
-    return <div className="content mx-auto grid max-w-2xl gap-4">
+    return <div className="mx-auto grid max-w-2xl gap-4">
       <h1 className="m-0 text-3xl leading-tight font-bold">{data.title}</h1>
       <p className="m-0 text-muted-foreground">{fill("challenges.from", { name: data.from })}</p>
       <p className="m-0 text-lg">{fill("challenges.yourScore", { correct: data.result.correct, total: data.result.total })}</p>
@@ -83,7 +83,7 @@ export default function Challenge() {
     }
   }
 
-  return <div className="content mx-auto grid max-w-2xl gap-4">
+  return <div className="mx-auto grid max-w-2xl gap-4">
     <h1 className="m-0 text-3xl leading-tight font-bold">{data.title}</h1>
     <p className="m-0 text-muted-foreground">{fill("challenges.from", { name: data.from })} · {fill("challenges.progress", { number: index + 1, total: questions.length })}</p>
     <div className="text-xl leading-snug font-semibold sm:text-2xl"><RichText>{question.text}</RichText></div>

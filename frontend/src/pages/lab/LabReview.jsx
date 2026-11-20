@@ -108,7 +108,7 @@ export default function LabReview() {
     try { await api.retrySetBuild(id); load(); } catch (err) { setError(err.message); }
   }
 
-  if (error && !build) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
+  if (error && !build) return <div className="mx-auto max-w-4xl"><ErrorState message={error} onRetry={load} /></div>;
   if (!build) return <Loading />;
 
   const back = <div><Button as={Link} to="/lab" variant="tertiary" size="sm" icon={ArrowLeft}>Study Lab</Button></div>;

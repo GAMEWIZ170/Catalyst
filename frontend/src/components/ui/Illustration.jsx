@@ -30,5 +30,5 @@ const SCENES = {
 };
 
 export default function Illustration({ name = "study", className = "" }) {
-  return <svg className={`illustration ${className}`} viewBox="0 0 200 160" aria-hidden="true" focusable="false">{SCENES[name]}</svg>;
+  return <svg className={`illustration block h-auto text-foreground ${className}`} viewBox="0 0 200 160" aria-hidden="true" focusable="false">{SCENES[name]}</svg>;
 }

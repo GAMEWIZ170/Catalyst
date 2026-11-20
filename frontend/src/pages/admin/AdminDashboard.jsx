@@ -74,7 +74,7 @@ export default function AdminDashboard() {
 
   return <AdminLayout>
     <div className={adminHeading}><div><h1>Dashboard</h1>
-      <p className="muted">{computed ? `Worked out ${computed}. Days are UTC days.` : "Not worked out yet."}</p></div></div>
+      <p className="text-muted-foreground">{computed ? `Worked out ${computed}. Days are UTC days.` : "Not worked out yet."}</p></div></div>
     <StatusMessage message={error} error />
     {!summary && <EmptyState title="No numbers yet" description="Run npm run stats in the backend folder. It reads the event log and fills this page. Set it to run every night." />}
     {summary && <>
@@ -90,13 +90,13 @@ export default function AdminDashboard() {
 
       <section className={adminSection} aria-labelledby="trend-heading">
         <h2 id="trend-heading">Active students, last 30 days</h2>
-        {trend.length > 1 ? <Trend rows={trend} /> : <p className="muted">The trend appears once there are two days of numbers.</p>}
+        {trend.length > 1 ? <Trend rows={trend} /> : <p className="text-muted-foreground">The trend appears once there are two days of numbers.</p>}
       </section>
 
       <section className={adminSection} aria-labelledby="retention-heading">
         <h2 id="retention-heading">Retention by sign-up week</h2>
-        <p className="muted">The share of a week's new students who came back exactly 1, 7 and 30 days after signing up. "n/a" means that day has not happened yet.</p>
-        {summary.retention.length === 0 ? <p className="muted">No sign-ups in the event log yet.</p> : <div className={tableScroll}><table className={TABLE}>
+        <p className="text-muted-foreground">The share of a week's new students who came back exactly 1, 7 and 30 days after signing up. "n/a" means that day has not happened yet.</p>
+        {summary.retention.length === 0 ? <p className="text-muted-foreground">No sign-ups in the event log yet.</p> : <div className={tableScroll}><table className={TABLE}>
           <thead><tr><th scope="col">Week of</th><th scope="col">New students</th><th scope="col">Day 1</th><th scope="col">Day 7</th><th scope="col">Day 30</th></tr></thead>
           <tbody>{summary.retention.map((row) => <tr key={row.week}><th scope="row">{row.week}</th><td>{row.users}</td><td>{percent(row.d1)}</td><td>{percent(row.d7)}</td><td>{percent(row.d30)}</td></tr>)}</tbody>
         </table></div>}
@@ -107,20 +107,20 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),1fr))] gap-6">
           <div>
             <h3>Most completed</h3>
-            {summary.topLessons.length === 0 ? <p className="muted">No completed lessons yet.</p> : <ol className="mt-2 mb-0 grid gap-2 pl-6 [&_li_span:last-child]:block [&_li_span:last-child]:text-sm">{summary.topLessons.map((lesson) => <li key={lesson.lessonId}><span>{lesson.course && <strong>{lesson.course}</strong>} {lesson.title}</span><span className="muted">{lesson.completed} students</span></li>)}</ol>}
+            {summary.topLessons.length === 0 ? <p className="text-muted-foreground">No completed lessons yet.</p> : <ol className="mt-2 mb-0 grid gap-2 pl-6 [&_li_span:last-child]:block [&_li_span:last-child]:text-sm">{summary.topLessons.map((lesson) => <li key={lesson.lessonId}><span>{lesson.course && <strong>{lesson.course}</strong>} {lesson.title}</span><span className="text-muted-foreground">{lesson.completed} students</span></li>)}</ol>}
           </div>
           <div>
             <h3>Where students drop off</h3>
-            <p className="muted">Opened by 3 or more students, and not finished by most of them.</p>
-            {summary.dropOff.length === 0 ? <p className="muted">Nothing stands out yet.</p> : <ol className="mt-2 mb-0 grid gap-2 pl-6 [&_li_span:last-child]:block [&_li_span:last-child]:text-sm">{summary.dropOff.map((lesson) => <li key={lesson.lessonId}><span>{lesson.course && <strong>{lesson.course}</strong>} {lesson.title}</span><span className="muted">{lesson.leftPercent}% did not finish ({lesson.completed} of {lesson.opened})</span></li>)}</ol>}
+            <p className="text-muted-foreground">Opened by 3 or more students, and not finished by most of them.</p>
+            {summary.dropOff.length === 0 ? <p className="text-muted-foreground">Nothing stands out yet.</p> : <ol className="mt-2 mb-0 grid gap-2 pl-6 [&_li_span:last-child]:block [&_li_span:last-child]:text-sm">{summary.dropOff.map((lesson) => <li key={lesson.lessonId}><span>{lesson.course && <strong>{lesson.course}</strong>} {lesson.title}</span><span className="text-muted-foreground">{lesson.leftPercent}% did not finish ({lesson.completed} of {lesson.opened})</span></li>)}</ol>}
           </div>
         </div>
       </section>
 
       <section className={adminSection} aria-labelledby="ai-heading">
         <h2 id="ai-heading">AI use, last 14 days</h2>
-        <p className="muted">{`Each student: ${data.ai.limits.messages} companion messages and ${data.ai.limits.generations} drafts a day. Whole platform: ${data.ai.limits.global} requests a day, then "AI is resting until tomorrow". Days are UTC days.`}</p>
-        {data.ai.days.length === 0 ? <p className="muted">No AI use yet.</p> : <div className={tableScroll}><table className={TABLE}>
+        <p className="text-muted-foreground">{`Each student: ${data.ai.limits.messages} companion messages and ${data.ai.limits.generations} drafts a day. Whole platform: ${data.ai.limits.global} requests a day, then "AI is resting until tomorrow". Days are UTC days.`}</p>
+        {data.ai.days.length === 0 ? <p className="text-muted-foreground">No AI use yet.</p> : <div className={tableScroll}><table className={TABLE}>
           <thead><tr><th scope="col">Day</th><th scope="col">Students</th><th scope="col">Messages</th><th scope="col">Drafts</th><th scope="col">Tokens in / out</th><th scope="col">Resting</th></tr></thead>
           <tbody>{[...data.ai.days].reverse().map((row) => <tr key={row.day}><th scope="row">{row.day}</th><td>{row.students}</td><td>{row.messages}</td><td>{row.generations}</td><td>{row.inputTokens} / {row.outputTokens}</td><td>{row.resting || row.messages + row.generations >= data.ai.limits.global ? "Yes" : "No"}</td></tr>)}</tbody>
         </table></div>}
@@ -132,10 +132,10 @@ export default function AdminDashboard() {
           <thead><tr><th scope="col">What</th><th scope="col">Last 7 days</th><th scope="col">Last 30 days</th></tr></thead>
           <tbody>
             {[["Lessons completed", "lessonsCompleted"], ["Tests submitted", "testsSubmitted"], ["Study sets created", "set_created"], ["Study sets studied", "set_studied"], ["Challenges sent", "challenge_sent"], ["Challenges played", "challenge_played"]].map(([label, key]) => <tr key={key}><th scope="row">{label}</th><td>{summary.totals.last7[key] ?? 0}</td><td>{summary.totals.last30[key] ?? 0}</td></tr>)}
-            <tr><th scope="row">Achievements earned</th><td colSpan="2" className="muted">Not tracked yet</td></tr>
+            <tr><th scope="row">Achievements earned</th><td colSpan="2" className="text-muted-foreground">Not tracked yet</td></tr>
           </tbody>
         </table></div>
-        <p className="muted">Study sets and challenges show 0 until those features are built.</p>
+        <p className="text-muted-foreground">Study sets and challenges show 0 until those features are built.</p>
       </section>
     </>}
   </AdminLayout>;

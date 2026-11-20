@@ -25,16 +25,16 @@ export default function Search() {
     return () => { current = false; };
   }, [text, retry]);
 
-  return <div className="content student-page search-page">
+  return <div className="mx-auto max-w-4xl student-page search-page">
     <h1>{text.length >= 2 ? `Results for “${text}”` : "Search"}</h1>
     {text.length < 2 && <EmptyState icon={SearchIcon} title="Search lessons" description="Use the search field at the top of the page. Press / to jump to it." />}
     {error && <ErrorState message={error} onRetry={() => setRetry((value) => value + 1)} />}
     {!error && results && results.length === 0 && <EmptyState icon={SearchIcon} title="Nothing found" description={`No lessons match “${text}”. Try a different word.`} />}
-    {!error && results && results.length > 0 && <ul className="search-results" aria-label="Search results">
+    {!error && results && results.length > 0 && <ul className="m-0 mt-4 grid list-none gap-2 p-0 [&_li]:flex [&_li]:items-center [&_li]:justify-between [&_li]:gap-3 [&_li]:rounded-xl [&_li]:border [&_li]:bg-card [&_li]:px-4 [&_li]:py-3 [&_a]:grid [&_a]:min-h-11 [&_a]:flex-1 [&_a]:gap-0.5 [&_a]:text-inherit [&_a]:no-underline" aria-label="Search results">
       {results.map((item) => <li key={item.lessonId}>
         <Link to={`/lessons/${item.lessonId}`} state={{ from: `/courses/${item.courseId}` }}>
           <strong>{item.title}</strong>
-          <span className="muted">{item.course} · {item.unit}</span>
+          <span className="text-muted-foreground">{item.course} · {item.unit}</span>
         </Link>
       </li>)}
     </ul>}

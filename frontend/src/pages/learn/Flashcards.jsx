@@ -133,14 +133,14 @@ export default function Flashcards({ setMode = false }) {
     }
   }
 
-  if (error && !cards.length) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
+  if (error && !cards.length) return <div className="mx-auto max-w-4xl"><ErrorState message={error} onRetry={load} /></div>;
   if (!cards.length && !nothingToReview && !loaded) return <Loading />;
-  if (!cards.length && !nothingToReview) return <div className="content mx-auto grid max-w-2xl gap-5"><EmptyState as="h1" icon={Layers} title="No flashcards yet" description={setMode ? "Add cards to this set first." : "This lesson has no flashcards."} action={<Button as={Link} to={home} state={lessonState}>{homeLabel}</Button>} /></div>;
+  if (!cards.length && !nothingToReview) return <div className="mx-auto grid max-w-2xl gap-5"><EmptyState as="h1" icon={Layers} title="No flashcards yet" description={setMode ? "Add cards to this set first." : "This lesson has no flashcards."} action={<Button as={Link} to={home} state={lessonState}>{homeLabel}</Button>} /></div>;
   const back = <div><Button as={Link} to={home} state={lessonState} variant="tertiary" size="sm" icon={ArrowLeft}>{homeLabel}</Button></div>;
-  if (nothingToReview) return <div className="content mx-auto grid max-w-2xl gap-5">{back}<EmptyState as="h1" icon={Layers} title="No cards to review" description="You have rated every card as confident." action={<Button as={Link} to={home} state={lessonState}>{homeLabel}</Button>} /></div>;
+  if (nothingToReview) return <div className="mx-auto grid max-w-2xl gap-5">{back}<EmptyState as="h1" icon={Layers} title="No cards to review" description="You have rated every card as confident." action={<Button as={Link} to={home} state={lessonState}>{homeLabel}</Button>} /></div>;
   if (finished) {
     const toRevisit = summary.total - summary.confident;
-    return <div className="content mx-auto grid max-w-2xl gap-5">
+    return <div className="mx-auto grid max-w-2xl gap-5">
       <section className="grid justify-items-center gap-3 text-center">
         <h1 className="m-0 text-3xl leading-tight font-bold">Deck finished</h1>
         <p className="m-0 text-lg">Confident on {summary.confident} of {summary.total}{toRevisit > 0 ? `, ${toRevisit} to revisit` : ""}</p>
@@ -159,7 +159,7 @@ export default function Flashcards({ setMode = false }) {
     { separator: true },
     { label: homeLabel, icon: ArrowLeft, onSelect: () => navigate(home, { state: lessonState }) }
   ];
-  return <div className="content mx-auto grid max-w-2xl gap-5">
+  return <div className="mx-auto grid max-w-2xl gap-5">
     {back}
     <div className="flex items-center gap-3 rounded-pill border border-border bg-card py-1 pr-1 pl-4">
       <span className="rounded-pill bg-muted px-3 py-1 text-sm font-semibold">{filter ? "Review" : "All cards"}</span>
@@ -179,7 +179,7 @@ export default function Flashcards({ setMode = false }) {
       </div>
       <RatingTiles enabled={shown} saving={saving} onRate={rate} />
       <p className="m-0 text-center text-sm text-muted-foreground" aria-live="polite">{saving ? "Saving your answer..." : shown ? "Keys 1, 2 and 3. Cards you mark Unsure or Don't know come back in your review list." : "Flip the card, then rate how well you knew it."}</p>
-      {error && <p className="form-error" role="alert">{error}</p>}
+      {error && <p className="m-0 rounded-md border border-destructive bg-destructive/10 p-3 text-destructive" role="alert">{error}</p>}
     </article>
   </div>;
 }

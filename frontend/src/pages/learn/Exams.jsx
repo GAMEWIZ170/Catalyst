@@ -62,7 +62,7 @@ export default function Exams() {
     try { await api.deleteMyExam(target.id); await load(); } catch (err) { setError(err.message); }
   }
 
-  if (error && !exams) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
+  if (error && !exams) return <div className="mx-auto max-w-4xl"><ErrorState message={error} onRetry={load} /></div>;
   if (!exams) return <Loading />;
   const row = (exam, past) => <li key={exam.id} className="flex items-center gap-2 border-b border-border py-3 last:border-b-0">
     <div className="grid min-w-0 flex-1 gap-0.5">
@@ -76,7 +76,7 @@ export default function Exams() {
   const close = () => setForm(null);
   const openForm = () => { setProblem(""); setForm(blank()); };
 
-  return <div className="content mx-auto grid max-w-3xl gap-5">
+  return <div className="mx-auto grid max-w-3xl gap-5">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <h1 className="m-0 text-3xl leading-tight font-bold">My exams</h1>
       <Button icon={Plus} onClick={openForm}>Add exam</Button>

@@ -91,7 +91,7 @@ export default function QuestionTypeFields({ question, setQuestion }) {
   if (question.type === "multi_select") {
     const picked = question.correctIndexes || [];
     return <div className="option-editor"><h3>Options</h3>
-      <p className="muted">Tick every correct option. A student must pick exactly those to get it right.</p>
+      <p className="text-muted-foreground">Tick every correct option. A student must pick exactly those to get it right.</p>
       {question.options.map((option, index) => <div className={optionRow} key={index}>
         <TextField label={`Option ${index + 1}`} maxLength="300" value={option.text || ""} onChange={(event) => set({ options: move(question.options, index, (item) => ({ ...item, text: event.target.value })) })} />
         <Checkbox label="Correct" checked={picked.includes(index)} onChange={() => set({ correctIndexes: picked.includes(index) ? picked.filter((item) => item !== index) : [...picked, index] })} />
@@ -120,7 +120,7 @@ export default function QuestionTypeFields({ question, setQuestion }) {
 
   if (question.type === "matching") {
     return <div className="option-editor"><h3>Pairs</h3>
-      <p className="muted">Students see the left items and a shuffled list of the right items.</p>
+      <p className="text-muted-foreground">Students see the left items and a shuffled list of the right items.</p>
       {question.pairs.map((pair, index) => <div className={optionRow} key={index}>
         <TextField label={`Left ${index + 1}`} maxLength="200" value={pair.left} onChange={(event) => set({ pairs: move(question.pairs, index, (item) => ({ ...item, left: event.target.value })) })} />
         <TextField label={`Right ${index + 1}`} maxLength="200" value={pair.right} onChange={(event) => set({ pairs: move(question.pairs, index, (item) => ({ ...item, right: event.target.value })) })} />
@@ -132,7 +132,7 @@ export default function QuestionTypeFields({ question, setQuestion }) {
 
   if (question.type === "ordering") {
     return <div className="option-editor"><h3>Items in the correct order</h3>
-      <p className="muted">Enter them first to last. Students see them shuffled.</p>
+      <p className="text-muted-foreground">Enter them first to last. Students see them shuffled.</p>
       {question.items.map((item, index) => <div className={optionRow} key={index}>
         <TextField label={`Item ${index + 1}`} maxLength="200" value={item} onChange={(event) => set({ items: question.items.map((value, i) => (i === index ? event.target.value : value)) })} />
         <Button variant="tertiary" type="button" disabled={question.items.length <= 2} onClick={() => set({ items: question.items.filter((_, i) => i !== index) })}>Remove</Button>
@@ -146,7 +146,7 @@ export default function QuestionTypeFields({ question, setQuestion }) {
     const change = (index, patch) => set({ equation: { species: move(species, index, (item) => ({ ...item, ...patch })) } });
     const side = (name) => species.filter((item) => item.side === name).map((item) => `${Number(item.coefficient) === 1 ? "" : item.coefficient}${item.formula.replace(/\$/g, "")}`).join(" + ");
     return <div className="option-editor"><h3>Equation</h3>
-      <p className="muted">Write each formula the way you would inside \ce{"{}"}, for example H2O or Fe2O3. Give the lowest whole-number coefficients. Students fill in the numbers.</p>
+      <p className="text-muted-foreground">Write each formula the way you would inside \ce{"{}"}, for example H2O or Fe2O3. Give the lowest whole-number coefficients. Students fill in the numbers.</p>
       {species.map((item, index) => <div className={optionRow} key={index}>
         <TextField label={`Formula ${index + 1}`} maxLength="40" value={item.formula} onChange={(event) => change(index, { formula: event.target.value })} />
         <div className="field"><span className={uiLabel}>Side</span><div className={chipRow} role="radiogroup" aria-label="Side" style={{ margin: 0 }}>{[["reactant","Reactant"],["product","Product"]].map(([value, text]) => <button type="button" role="radio" aria-checked={item.side === value} className={chip} aria-pressed={item.side === value} key={value} onClick={() => change(index, { side: value })}>{text}</button>)}</div></div>

@@ -82,7 +82,7 @@ export default function Courses() {
   const ready = !loading && !error;
   const tileClass = "grid content-start gap-1 rounded-lg border border-border bg-card p-4 text-foreground no-underline transition-colors duration-150 hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
-  return <div className="content mx-auto grid max-w-4xl gap-6">
+  return <div className="mx-auto grid max-w-4xl gap-6">
     <h1 className="m-0 text-3xl leading-tight font-bold">Home</h1>
     {isStudent && user.hasAccess === false && <p className="m-0 rounded-lg bg-muted p-4" role="status">Your access has ended. You can still look around, but lessons, tests and flashcards are locked until your subscription is renewed.</p>}
     {loading && <Loading />}
@@ -108,7 +108,7 @@ export default function Courses() {
       <h2 id="courses-title" className="m-0 text-xl font-semibold">{mine.length ? "Your courses" : "Courses"}</h2>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-4">
         {listed.map((course) => <Link className={tileClass} to={`/courses/${course._id}`} key={course._id} {...nearToPrefetch(() => prefetchCourse(course._id))}>
-          <span className="text-sm font-semibold text-brand-ink">{course.code}{course.isFree && <span className="count-chip"> Free</span>}</span>
+          <span className="text-sm font-semibold text-brand-ink">{course.code}{course.isFree && <span className="rounded-pill bg-muted px-2 py-1 text-sm text-muted-foreground"> Free</span>}</span>
           <strong className="text-lg leading-snug">{course.title}</strong>
           <CourseByline course={course} />
           {course.description && <span className="line-clamp-2 text-sm text-muted-foreground">{course.description}</span>}
@@ -123,7 +123,7 @@ export default function Courses() {
 
 // Placeholder shapes in the page's own column, so the layout does not jump when content arrives.
 export function Loading() {
-  return <div className="content">
+  return <div className="mx-auto max-w-4xl">
     <SkeletonGroup label="Loading">
       <Skeleton variant="title" />
       <Skeleton />
@@ -136,7 +136,7 @@ export function Loading() {
 export function ErrorState({ message, onRetry }) {
   // A student whose subscription has ended gets a clear explanation instead of a retry button.
   if (String(message).startsWith(ACCESS_ENDED)) {
-    return <div className="error-state"><strong>Your access has ended</strong><p>{message}</p><Button as={Link} variant="secondary" to="/courses">Back to courses</Button></div>;
+    return <div className="mb-4 rounded-md border border-warning bg-warning/10 p-4 [&_p]:mt-0 [&_strong]:text-destructive"><strong>Your access has ended</strong><p>{message}</p><Button as={Link} variant="secondary" to="/courses">Back to courses</Button></div>;
   }
-  return <div className="error-state"><strong>We couldn’t load this.</strong><p>{message}</p>{onRetry && <Button variant="secondary" onClick={onRetry}>Retry</Button>}</div>;
+  return <div className="mb-4 rounded-md border border-warning bg-warning/10 p-4 [&_p]:mt-0 [&_strong]:text-destructive"><strong>We couldn’t load this.</strong><p>{message}</p>{onRetry && <Button variant="secondary" onClick={onRetry}>Retry</Button>}</div>;
 }

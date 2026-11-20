@@ -50,7 +50,7 @@ export default function ThemeToggle() {
   const dark = theme === "dark";
   return (
     <button
-      className="theme-toggle"
+      className="theme-toggle inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-md border border-input bg-transparent p-0 text-muted-foreground [&_svg]:size-5"
       type="button"
       onClick={toggleTheme}
       aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}

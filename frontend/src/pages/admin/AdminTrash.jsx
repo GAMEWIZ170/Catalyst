@@ -52,7 +52,7 @@ export default function AdminTrash() {
     <div className={adminHeading}>
       <div>
         <h1>Trash</h1>
-        <p className="muted">Deleted content waits here until you restore it. Restored items come back unpublished, at the end of their list.</p>
+        <p className="text-muted-foreground">Deleted content waits here until you restore it. Restored items come back unpublished, at the end of their list.</p>
       </div>
     </div>
     <StatusMessage message={error || message} error={Boolean(error)} />
@@ -64,7 +64,7 @@ export default function AdminTrash() {
         <div className="grid min-w-0 justify-items-start gap-1 [&_strong]:max-w-full [&_strong]:[overflow-wrap:anywhere]">
           <Badge>{TYPE_LABELS[item.type]}</Badge>
           <strong>{item.title}</strong>
-          <span className="muted">{item.parentTitle ? `In ${TYPE_LABELS[item.parentType].toLowerCase()} "${item.parentTitle}" · ` : ""}Deleted {formatDate(item.deletedAt)}</span>
+          <span className="text-muted-foreground">{item.parentTitle ? `In ${TYPE_LABELS[item.parentType].toLowerCase()} "${item.parentTitle}" · ` : ""}Deleted {formatDate(item.deletedAt)}</span>
           {item.blocked && <span className="text-sm font-semibold text-warning">Restore the {TYPE_LABELS[item.parentType].toLowerCase()} first.</span>}
         </div>
         <Button variant="secondary" disabled={item.blocked} loading={busy === String(item.id)} onClick={() => restore(item)}>{busy === String(item.id) ? "Restoring..." : "Restore"}</Button>

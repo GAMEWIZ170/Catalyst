@@ -85,7 +85,7 @@ export default function CourseOutline() {
   }
 
   useEffect(load, [id]);
-  if (error) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
+  if (error) return <div className="mx-auto max-w-4xl"><ErrorState message={error} onRetry={load} /></div>;
   if (!course) return <Loading />;
 
   const total = course.progress?.totalLessons || 0;
@@ -98,7 +98,7 @@ export default function CourseOutline() {
   course.units.forEach((unit, u) => unit.lessons.forEach((lesson, l) => {
     if (!nextLesson && !lesson.completed) { nextLesson = lesson; nextLabel = `${u + 1}.${l + 1}`; }
   }));
-  return <div className="content mx-auto grid max-w-3xl gap-5">
+  return <div className="mx-auto grid max-w-3xl gap-5">
     <div><Button as={Link} to="/courses" variant="tertiary" size="sm" icon={ArrowLeft}>Back to courses</Button></div>
     <header className="grid gap-2">
       <p className="m-0 text-sm font-semibold text-brand-ink">{course.code}</p>

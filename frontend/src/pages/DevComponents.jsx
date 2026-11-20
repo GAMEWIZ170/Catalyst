@@ -6,7 +6,7 @@ import {
 } from "../components/ui";
 
 function Section({ title, children }) {
-  return <section className="dev-section"><h2>{title}</h2>{children}</section>;
+  return <section className="grid grid-cols-1 gap-4 [&>h2]:m-0 [&>h2]:border-b [&>h2]:pb-2"><h2>{title}</h2>{children}</section>;
 }
 
 // Hidden page, only built in development: every shared component in every state. Not linked from the app.
@@ -23,8 +23,8 @@ export default function DevComponents() {
   }
 
   return (
-    <main className="dev-page">
-      <header className="dev-bar">
+    <main className="mx-auto grid max-w-6xl grid-cols-1 gap-12 px-4 pt-6 pb-16">
+      <header className="flex flex-wrap items-end gap-4 [&_h1]:m-0 [&_h1]:basis-full">
         <h1>Components</h1>
         <SelectField label="Mode" value={theme} onChange={(event) => changeTheme(event.target.value)}>
           <option value="light">light</option>
@@ -33,26 +33,26 @@ export default function DevComponents() {
       </header>
 
       <Section title="Buttons">
-        <div className="button-row">
+        <div className="flex flex-wrap gap-3">
           <Button>Primary</Button>
           <Button variant="secondary">Secondary</Button>
           <Button variant="tertiary">Tertiary</Button>
           <Button variant="danger" icon={Trash2}>Delete lesson</Button>
         </div>
-        <div className="button-row">
+        <div className="flex flex-wrap gap-3">
           <Button icon={Plus}>With icon</Button>
           <Button loading>Saving</Button>
           <Button disabled>Disabled</Button>
           <Button variant="secondary" disabled>Disabled</Button>
         </div>
-        <div className="button-row button-row--stack">
+        <div className="flex flex-wrap gap-3 max-[479px]:*:basis-full">
           <Button icon={BookOpen}>Start the Protons, neutrons and electrons lesson</Button>
           <Button variant="secondary">Back to course</Button>
         </div>
       </Section>
 
       <Section title="Inputs">
-        <div className="dev-grid">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))] gap-4">
           <TextField label="Email" type="email" placeholder="you@example.com" hint="We never share your email." />
           <TextField label="Course code" defaultValue="CHEM113" />
           <TextField label="Password" type="password" error="Use at least 8 characters." defaultValue="short" />
@@ -60,7 +60,7 @@ export default function DevComponents() {
           <SelectField label="Unit"><option>Atomic structure</option><option>Stoichiometry</option></SelectField>
           <TextArea label="Explanation" hint="Formulas go between dollar signs." />
         </div>
-        <div className="dev-grid">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))] gap-4">
           <div>
             <Checkbox label="Remind me to study" hint="One message a day, at most." checked={agree} onChange={(event) => setAgree(event.target.checked)} />
             <Checkbox label="Disabled option" disabled />
@@ -73,7 +73,7 @@ export default function DevComponents() {
       </Section>
 
       <Section title="Card">
-        <div className="dev-grid">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))] gap-4">
           <Card>
             <CardHeader><h3>General Chemistry I</h3></CardHeader>
             <CardBody><p>Atoms, bonding, stoichiometry and the periodic table.</p><Progress value={40} label="Course progress" showLabel /></CardBody>
@@ -86,7 +86,7 @@ export default function DevComponents() {
       </Section>
 
       <Section title="Badges">
-        <div className="dev-row">
+        <div className="flex flex-wrap items-center gap-3">
           <Badge>Not started</Badge>
           <Badge tone="accent" icon={Layers}>Up next</Badge>
           <Badge tone="success" icon={Check}>Passed</Badge>
@@ -117,7 +117,7 @@ export default function DevComponents() {
       </Section>
 
       <Section title="Dialog and toast">
-        <div className="button-row">
+        <div className="flex flex-wrap gap-3">
           <Button variant="secondary" onClick={() => setOpen(true)}>Open dialog</Button>
           <Button variant="secondary" onClick={() => toast({ tone: "success", message: "Lesson saved." })}>Success toast</Button>
           <Button variant="secondary" onClick={() => toast({ tone: "error", message: "Could not save. Check your connection and try again." })}>Error toast</Button>

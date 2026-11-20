@@ -20,11 +20,11 @@ export default function Topics() {
   }
   useEffect(load, []);
 
-  if (error) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
+  if (error) return <div className="mx-auto max-w-4xl"><ErrorState message={error} onRetry={load} /></div>;
   if (!data) return <Loading />;
-  const back = <Link className="back-link" to="/home"><ArrowLeft size={16} aria-hidden="true" />Back to home</Link>;
+  const back = <Link className="mb-4 inline-flex min-h-11 items-center gap-1 py-2 font-semibold text-brand-ink no-underline" to="/home"><ArrowLeft size={16} aria-hidden="true" />Back to home</Link>;
   if (!data.topics.length && !data.sources.length && !data.years.length) {
-    return <div className="content student-page">{back}<EmptyState as="h1" title="No topics yet" description="Practice by topic appears here once questions are tagged." action={<Button as={Link} variant="secondary" to="/home">Back to home</Button>} /></div>;
+    return <div className="mx-auto max-w-4xl student-page">{back}<EmptyState as="h1" title="No topics yet" description="Practice by topic appears here once questions are tagged." action={<Button as={Link} variant="secondary" to="/home">Back to home</Button>} /></div>;
   }
 
   function start(event) {
@@ -36,7 +36,7 @@ export default function Topics() {
     navigate(`/practice/topic?${query}`, { state: { from: "/topics" } });
   }
 
-  return <div className="content student-page">
+  return <div className="mx-auto max-w-4xl student-page">
     {back}
     <h1>Practise by topic</h1>
     <Card>
@@ -53,8 +53,8 @@ export default function Topics() {
           <option value="">Any year</option>
           {data.years.map((item) => <option value={item.value} key={item.value}>{item.value} ({item.count})</option>)}
         </SelectField>}
-        <p className="muted">You get up to 20 questions from every lesson, in random order. Pick at least one filter.</p>
-        <div className="button-row button-row--stack"><Button type="submit" disabled={!topic && !source && !year}>Start practice</Button></div>
+        <p className="text-muted-foreground">You get up to 20 questions from every lesson, in random order. Pick at least one filter.</p>
+        <div className="flex flex-wrap gap-3 max-[479px]:*:basis-full"><Button type="submit" disabled={!topic && !source && !year}>Start practice</Button></div>
       </form>
     </Card>
   </div>;

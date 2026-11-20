@@ -28,7 +28,7 @@ export default function Me() {
       </Link>
     </li>)}
   </ul>;
-  return <div className="content mx-auto grid max-w-3xl gap-5">
+  return <div className="mx-auto grid max-w-3xl gap-5">
     <div className="flex items-center gap-3">
       <Avatar avatar={user?.avatar} name={user?.name} size={52} />
       <h1 className="m-0 min-w-0 flex-1 truncate text-3xl leading-tight font-bold">{user?.name}</h1>

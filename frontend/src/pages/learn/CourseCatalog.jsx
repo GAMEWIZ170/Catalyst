@@ -28,21 +28,21 @@ export default function CourseCatalog() {
 
   const choose = (slug) => setParams(slug ? { category: slug } : {}, { replace: true });
 
-  return <div className="content student-page catalog-page">
+  return <div className="mx-auto max-w-4xl student-page catalog-page">
     <h1>Courses</h1>
-    {categories.length > 1 && <div className="chip-row" role="group" aria-label="Filter by category">
-      <button type="button" className="chip" aria-pressed={!category} onClick={() => choose("")}>All</button>
-      {categories.map((item) => <button type="button" className="chip" key={item.slug} aria-pressed={category === item.slug} onClick={() => choose(item.slug)}>{item.name}</button>)}
+    {categories.length > 1 && <div className="my-4 flex flex-wrap gap-2" role="group" aria-label="Filter by category">
+      <button type="button" className="min-h-11 cursor-pointer rounded-pill border border-input bg-card px-4 font-sans text-sm text-foreground aria-pressed:border-primary aria-pressed:bg-primary/15 aria-pressed:font-semibold aria-pressed:text-brand-ink" aria-pressed={!category} onClick={() => choose("")}>All</button>
+      {categories.map((item) => <button type="button" className="min-h-11 cursor-pointer rounded-pill border border-input bg-card px-4 font-sans text-sm text-foreground aria-pressed:border-primary aria-pressed:bg-primary/15 aria-pressed:font-semibold aria-pressed:text-brand-ink" key={item.slug} aria-pressed={category === item.slug} onClick={() => choose(item.slug)}>{item.name}</button>)}
     </div>}
     {loading && <Loading />}
     {error && <ErrorState message={error} onRetry={load} />}
     {!loading && !error && !courses.length && <EmptyState illustration={<Illustration name="empty" />} title="No courses here yet" description="Check back soon." />}
-    {!loading && !error && courses.length > 0 && <div className="home-courses">
-      {courses.map((course) => <Card as={Link} className="home-course" to={`/courses/${course._id}`} key={course._id} {...nearToPrefetch(() => prefetchCourse(course._id))}>
-        <span className="home-course-code">{course.code}{course.isFree && <span className="count-chip"> Free</span>}</span>
-        <strong className="home-course-title">{course.title}</strong>
+    {!loading && !error && courses.length > 0 && <div className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(min(100%,20rem),1fr))] gap-4">
+      {courses.map((course) => <Card as={Link} className="min-w-0 text-inherit no-underline transition-[border-color,transform] duration-150 hover:border-primary motion-safe:[@media(hover:hover)]:hover:-translate-y-px [overflow-wrap:anywhere]" to={`/courses/${course._id}`} key={course._id} {...nearToPrefetch(() => prefetchCourse(course._id))}>
+        <span className="text-sm text-muted-foreground">{course.code}{course.isFree && <span className="rounded-pill bg-muted px-2 py-1 text-sm text-muted-foreground"> Free</span>}</span>
+        <strong className="text-lg leading-tight font-semibold [overflow-wrap:anywhere]">{course.title}</strong>
         <CourseByline course={course} />
-        {course.description && <span className="muted home-course-desc">{course.description}</span>}
+        {course.description && <span className="text-muted-foreground [overflow-wrap:anywhere]">{course.description}</span>}
         {course.category && <Badge>{course.category.name}</Badge>}
       </Card>)}
     </div>}

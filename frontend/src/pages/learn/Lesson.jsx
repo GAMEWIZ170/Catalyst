@@ -23,7 +23,7 @@ function formatBytes(bytes) {
 
 // Shown while the lesson loads, so the page has its shape before the text arrives.
 function LessonSkeleton() {
-  return <div className="content">
+  return <div className="mx-auto max-w-4xl">
     <div className="max-w-[68ch]">
       <SkeletonGroup label="Loading lesson">
         <Skeleton variant="title" />
@@ -147,7 +147,7 @@ export default function Lesson() {
     }
   }
 
-  if (error) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
+  if (error) return <div className="mx-auto max-w-4xl"><ErrorState message={error} onRetry={load} /></div>;
   if (!lesson) return <LessonSkeleton />;
 
   const savedLesson = savedOverride ?? lesson.saved;
@@ -191,7 +191,7 @@ export default function Lesson() {
   const goTo = (lessonId) => navigate(`/lessons/${lessonId}`, { state: { from } });
   const primaryLabel = { test: "Take the test", deck: "Practise flashcards", done: doneMessage || "Mark as done" }[nextStep];
 
-  return <div className="content lesson-hub">
+  return <div className="mx-auto max-w-4xl lesson-hub">
     <Link className="mb-4 inline-flex min-h-11 items-center gap-1 py-2 font-semibold" to={from}><ArrowLeft size={16} aria-hidden="true" />{preview ? "Back to editor" : "Back to course"}</Link>
     {preview && <PreviewBanner published={lesson.isPublished} visible={lesson.visibleToStudents} />}
     <div className={`grid grid-cols-[minmax(0,1fr)] gap-6 ${unit ? "min-[60rem]:grid-cols-[16rem_minmax(0,1fr)] min-[60rem]:gap-x-12" : ""}`}>

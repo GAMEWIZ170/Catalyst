@@ -25,7 +25,7 @@ export default function ShortcutHelp() {
   }, []);
 
   return <Dialog open={open} onClose={() => setOpen(false)} title="Keyboard shortcuts" actions={<Button variant="secondary" onClick={() => setOpen(false)}>Close</Button>}>
-    <dl className="shortcut-list">
+    <dl className="m-0 mb-4 grid gap-3 [&_dd]:m-0 [&_div]:flex [&_div]:items-baseline [&_div]:gap-3 [&_dt]:flex-[0_0_6rem] [&_kbd]:rounded-md [&_kbd]:border [&_kbd]:border-input [&_kbd]:bg-muted [&_kbd]:px-2 [&_kbd]:py-0.5 [&_kbd]:font-sans [&_kbd]:text-sm">
       {LISTS[kind].map(([keys, what]) => <div key={keys}><dt><kbd>{keys}</kbd></dt><dd>{what}</dd></div>)}
     </dl>
   </Dialog>;

@@ -44,18 +44,18 @@ export default function LessonHistory({ lessonId, onRestored }) {
   if (!versions && !error) return <Loading />;
   return <section className={adminSection}>
     <div className={sectionHeading}><h2>History</h2></div>
-    <p className="muted">Each save that changes the title, explanation, image or video keeps the text it replaced. The newest 50 are kept. Restoring saves the current text first, so you can undo a restore too.</p>
+    <p className="text-muted-foreground">Each save that changes the title, explanation, image or video keeps the text it replaced. The newest 50 are kept. Restoring saves the current text first, so you can undo a restore too.</p>
     <StatusMessage message={error} error />
     {versions && versions.length === 0 && <EmptyState title="No earlier versions yet" description="They appear here after you save a change to this lesson." />}
     {versions && versions.length > 0 && <ul className="my-4 grid list-none gap-3 p-0">
       {versions.map((version) => <li className="grid grid-cols-1 items-start gap-2 rounded-md border border-border bg-card p-4 min-[601px]:grid-cols-[minmax(0,1fr)_auto]" key={version._id}>
         <div className="grid min-w-0 gap-1">
           <strong>{version.title}</strong>
-          <span className="muted">Replaced {formatDate(version.createdAt)} at {timeOf(version.createdAt)} by {version.savedBy}{version.reason === "restore" ? " (a restore)" : ""}</span>
+          <span className="text-muted-foreground">Replaced {formatDate(version.createdAt)} at {timeOf(version.createdAt)} by {version.savedBy}{version.reason === "restore" ? " (a restore)" : ""}</span>
           {open === version._id
             ? <pre className="m-0 max-h-96 overflow-auto rounded-[6px] bg-muted p-3 font-[inherit] whitespace-pre-wrap [overflow-wrap:anywhere]">{version.explanation}</pre>
             : <span className="[overflow-wrap:anywhere]">{version.excerpt}{version.explanation.length > version.excerpt.length ? "..." : ""}</span>}
-          {(version.hasImage || version.videoId) && <span className="muted">{[version.hasImage && "Has an image", version.videoId && "Has a video"].filter(Boolean).join(" · ")}</span>}
+          {(version.hasImage || version.videoId) && <span className="text-muted-foreground">{[version.hasImage && "Has an image", version.videoId && "Has a video"].filter(Boolean).join(" · ")}</span>}
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="tertiary" type="button" aria-expanded={open === version._id} onClick={() => setOpen(open === version._id ? null : version._id)}>{open === version._id ? "Hide text" : "Show full text"}</Button>

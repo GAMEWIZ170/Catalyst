@@ -89,10 +89,10 @@ export default function AiDrafts({ setId, kind: fixedKind = null, onSaved = null
   }
 
   const canGenerate = !busy && (source !== "paste" || pasted.trim().length >= 40);
-  return <section className="ai-drafts" aria-labelledby="ai-heading">
+  return <section className="mt-5 grid gap-4 [&_h2]:m-0 [&_h3]:m-0 [&_p]:m-0" aria-labelledby="ai-heading">
     {!fixedKind && <h2 id="ai-heading">Make drafts with AI</h2>}
-    <p className="muted">The AI reads the text you choose and writes drafts for you to edit. It can make mistakes, so check each one before you save. Free beta, fair-use limits apply.</p>
-    <div className="ai-form">
+    <p className="text-muted-foreground">The AI reads the text you choose and writes drafts for you to edit. It can make mistakes, so check each one before you save. Free beta, fair-use limits apply.</p>
+    <div className="grid max-w-xl items-end gap-3">
       {!fixedKind && <SelectField label="Make" value={kind} onChange={(event) => { setKind(event.target.value); setResult(null); }}>
         {KINDS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
       </SelectField>}
@@ -104,18 +104,18 @@ export default function AiDrafts({ setId, kind: fixedKind = null, onSaved = null
       {source === "paste" && <TextArea label="Paste your text (at least 40 characters)" rows={6} value={pasted} onChange={(event) => { setPasted(event.target.value); setPart(0); }} />}
       <Button onClick={() => generate(source === "paste" || result ? part : 0)} disabled={!canGenerate} icon={Sparkles}>{busy && !result ? "Working…" : "Make drafts"}</Button>
     </div>
-    <p className="settings-status" role="alert">{problem}</p>
+    <p className="mt-4 mb-0 min-h-6 font-semibold text-brand-ink" role="alert">{problem}</p>
 
-    {result && <div className="ai-results">
+    {result && <div className="grid gap-4">
       <h3>Drafts</h3>
-      <p className="muted" aria-live="polite">{result.cached ? "These are saved drafts from earlier, so no AI was used. " : ""}Edit or remove anything, then save.{result.parts > 1 ? ` Your text has ${result.parts} parts. This is part ${part + 1}.` : ""}</p>
-      {result.parts > 1 && <div className="button-row">
+      <p className="text-muted-foreground" aria-live="polite">{result.cached ? "These are saved drafts from earlier, so no AI was used. " : ""}Edit or remove anything, then save.{result.parts > 1 ? ` Your text has ${result.parts} parts. This is part ${part + 1}.` : ""}</p>
+      {result.parts > 1 && <div className="flex flex-wrap gap-3">
         <Button variant="secondary" disabled={busy || part === 0} onClick={() => generate(part - 1)}>Previous part</Button>
         <Button variant="secondary" disabled={busy || part >= result.parts - 1} onClick={() => generate(part + 1)}>Next part</Button>
       </div>}
 
-      {result.kind === "cards" && <ul className="ai-list">
-        {result.rows.map((row, index) => <li key={row.key} className="ai-item">
+      {result.kind === "cards" && <ul className="m-0 grid list-none gap-4 p-0">
+        {result.rows.map((row, index) => <li key={row.key} className="grid justify-items-start gap-3 rounded-xl border bg-card p-4 [&>*]:w-full [&>*]:max-w-full [&>button]:w-auto">
           <TextArea label={`Card ${index + 1} front`} rows={2} maxLength={500} value={row.front} onChange={(event) => changeRow(index, { front: event.target.value })} />
           <TextArea label={`Card ${index + 1} back`} rows={2} maxLength={500} value={row.back} onChange={(event) => changeRow(index, { back: event.target.value })} />
           <Button variant="secondary" onClick={() => removeRow(index)} aria-label={`Remove card ${index + 1}`}>Remove</Button>
@@ -123,12 +123,12 @@ export default function AiDrafts({ setId, kind: fixedKind = null, onSaved = null
       </ul>}
 
       {result.kind === "questions" && <>
-        <ul className="ai-list">
-          {result.rows.map((row, index) => <li key={row.key} className="ai-item">
+        <ul className="m-0 grid list-none gap-4 p-0">
+          {result.rows.map((row, index) => <li key={row.key} className="grid justify-items-start gap-3 rounded-xl border bg-card p-4 [&>*]:w-full [&>*]:max-w-full [&>button]:w-auto">
             <TextArea label={`Question ${index + 1}`} rows={2} maxLength={1500} value={row.text} onChange={(event) => changeRow(index, { text: event.target.value })} />
-            <fieldset className="ai-options">
+            <fieldset className="m-0 grid min-w-0 gap-2 border-0 p-0">
               <legend>Options. Choose the right one.</legend>
-              {row.options.map((option, at) => <div className="ai-option" key={at}>
+              {row.options.map((option, at) => <div className="grid grid-cols-[auto_minmax(0,1fr)] items-end gap-3 [&_input[type=radio]]:mb-3 [&_input[type=radio]]:size-5 [&_input[type=radio]]:accent-primary" key={at}>
                 <input type="radio" name={`correct-${row.key}`} checked={row.correctIndex === at} onChange={() => changeRow(index, { correctIndex: at })} aria-label={`Option ${at + 1} is correct`} />
                 <TextField label={`Option ${at + 1}`} maxLength={200} value={option} onChange={(event) => changeRow(index, { options: row.options.map((item, i) => (i === at ? event.target.value : item)) })} />
               </div>)}
@@ -145,7 +145,7 @@ export default function AiDrafts({ setId, kind: fixedKind = null, onSaved = null
 
       {result.kind === "notes" && <TextArea label="Notes draft (## heading, - point)" rows={14} value={result.rows} onChange={(event) => setResult((current) => ({ ...current, rows: event.target.value }))} />}
 
-      <div className="button-row">
+      <div className="flex flex-wrap gap-3">
         <Button onClick={save} disabled={busy}>{busy ? "Saving…" : result.kind === "cards" ? "Save cards" : result.kind === "questions" ? "Save questions" : "Add to my notes"}</Button>
         <Button variant="secondary" onClick={() => setResult(null)} disabled={busy}>Discard drafts</Button>
       </div>

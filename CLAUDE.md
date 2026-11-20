@@ -24,13 +24,13 @@ Structure: course > unit > lesson. Tests can belong to a lesson, a unit or a cou
 - AI: Gemini (`backend/src/config/ai.js`). Free tiers only until production; never add a paid model or billing before students pay. Free-tier inputs may be used by Google, so the privacy page and the upload screen must say so. Keep the per-student and platform daily caps.
 - Themes: one gold brand palette with `data-theme` (light, dark), storage key `catalyst-theme`. Text on gold is always dark. No colour literals outside the tokens file and `Avatar.jsx`. Old screens still use `data-palette` (five palettes, key `catalyst-palette`) until ported; phase 6 removes it.
 
-- UI library: `components/ui` (Radix, Sonner, Motion, Tailwind tokens) and shadcn/ui. Astryx and StyleX were removed (18 November 2026). The old plain CSS layers (`@layer legacy`) still style screens that use old class names (auth pages, admin editors, community pages, lesson hub, some panels) until each is moved to Tailwind; do not add new rules there.
+- UI library: `components/ui` (Radix, Sonner, Motion, Tailwind tokens) and shadcn/ui. Astryx and StyleX were removed (18 November 2026). The old CSS layers are deleted (20 November 2026). Tokens and element defaults are in `styles/tokens.new.css`; everything else is Tailwind utilities.
 
 ## Layout and naming
 
 - Repo root: `C:\Users\Professor\Desktop\API\Catalyst` with `backend/` and `frontend/`.
 - Backend files: `x.models.js`, `x.controller.js`, `x.routes.js`, grouped by feature in `backend/src/modules/<feature>/`. Shared code is in `src/middlewares`, `src/utils` and `src/config`.
-- Frontend: `pages/` and `components/` are grouped by area (`auth`, `learn`, `lab`, `community`, `account`, `admin`). Global CSS is in numbered layers in `styles/global/`: the numbers are the cascade order.
+- Frontend: `pages/` and `components/` are grouped by area (`auth`, `learn`, `lab`, `community`, `account`, `admin`). Styles: `styles/app.css` (entry) and `styles/tokens.new.css` (tokens, font, element defaults). No per-screen CSS files.
 - Docs: `docs/ROADMAP.md` (roadmap, then expansion plan), `docs/archive/` (finished plans). `PRODUCT.md` and `DESIGN.md` stay in the root because the design skill reads them there.
 - Windows with PowerShell. Use PowerShell syntax in commands.
 

@@ -18,11 +18,11 @@ export default function VerifyBanner() {
     }
   }
 
-  return <div className="verify-banner" role="status">
+  return <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 border-b border-warning bg-warning/10 px-4 py-2 text-sm text-foreground" role="status">
     <span>Please verify your email ({user.email}). Check your inbox for the link.</span>
-    <button className="verify-banner-action" type="button" onClick={resend} disabled={state.busy}>
+    <button className="min-h-11 cursor-pointer border-0 bg-transparent px-2 font-[inherit] font-semibold text-brand-ink underline disabled:cursor-default disabled:opacity-60" type="button" onClick={resend} disabled={state.busy}>
       {state.busy ? "Sending..." : "Send the link again"}
     </button>
-    {state.message && <span className={state.failed ? "verify-banner-note verify-banner-note--error" : "verify-banner-note"}>{state.message}</span>}
+    {state.message && <span className={state.failed ? "text-destructive" : undefined}>{state.message}</span>}
   </div>;
 }

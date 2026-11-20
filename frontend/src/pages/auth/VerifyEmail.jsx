@@ -28,7 +28,7 @@ export default function VerifyEmail({ change = false }) {
   const home = user ? "/home" : "/login";
   const homeLabel = user ? "Go to courses" : "Log in";
 
-  if (state === "working") return <AuthLayout title={change ? "Confirming your new email" : "Verifying your email"} subtitle="One moment."><span className="spinner" aria-label="Loading" /></AuthLayout>;
+  if (state === "working") return <AuthLayout title={change ? "Confirming your new email" : "Verifying your email"} subtitle="One moment."><span className="mr-2 inline-block size-5 animate-spin rounded-full border-2 border-border border-t-primary motion-reduce:animate-none" aria-label="Loading" /></AuthLayout>;
   if (state === "done") return <AuthLayout title={change ? "Email changed" : "Email verified"} subtitle={change ? "Your new email is confirmed. Use it to log in from now on." : "Thank you. Your email is confirmed."}>
     <Button as={Link} block to={home}>{homeLabel}</Button>
   </AuthLayout>;

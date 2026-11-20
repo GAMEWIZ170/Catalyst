@@ -46,22 +46,22 @@ export default function Circles() {
     if (await run(() => api.createCircle({ name: name.trim(), goalDays: Number(goalDays) }), t("circles.created"))) setName("");
   }
 
-  if (state.loading && !state.circles.length && !state.friends.length) return <div className="content student-page"><Loading /></div>;
-  if (state.error && !state.circles.length) return <div className="content student-page"><ErrorState message={state.error} onRetry={load} /></div>;
+  if (state.loading && !state.circles.length && !state.friends.length) return <div className="mx-auto max-w-4xl student-page"><Loading /></div>;
+  if (state.error && !state.circles.length) return <div className="mx-auto max-w-4xl student-page"><ErrorState message={state.error} onRetry={load} /></div>;
 
   const invites = state.circles.filter((circle) => circle.status === "invited");
   const mine = state.circles.filter((circle) => circle.status === "joined");
 
-  return <div className="content student-page circles-page">
+  return <div className="mx-auto max-w-4xl student-page circles-page">
     <h1>{t("circles.title")}</h1>
-    <p className="muted">{t("circles.intro")}</p>
-    <p className="settings-status" role="alert">{problem}</p>
+    <p className="text-muted-foreground">{t("circles.intro")}</p>
+    <p className="mt-4 mb-0 min-h-6 font-semibold text-brand-ink" role="alert">{problem}</p>
 
-    {invites.length > 0 && <section className="settings-section" aria-labelledby="invites-heading">
+    {invites.length > 0 && <section className="mb-6 grid gap-3 [&_h2]:text-xl" aria-labelledby="invites-heading">
       <h2 id="invites-heading">{t("circles.invites")}</h2>
-      <ul className="friend-list">
-        {invites.map((circle) => <li key={circle.id} className="friend-row">
-          <span className="friend-name">{circle.name}</span>
+      <ul className="m-0 mb-3 grid list-none gap-2 p-0">
+        {invites.map((circle) => <li key={circle.id} className="flex flex-wrap items-center gap-3">
+          <span className="min-w-32 flex-1">{circle.name}</span>
           <Button disabled={busy} onClick={() => run(() => api.acceptCircle(circle.id), t("circles.joined"))}>{t("friends.accept")}</Button>
           <Button variant="secondary" disabled={busy} onClick={() => run(() => api.leaveCircle(circle.id))} aria-label={`${t("friends.decline")} ${circle.name}`}>{t("friends.decline")}</Button>
         </li>)}
@@ -70,19 +70,19 @@ export default function Circles() {
 
     {mine.map((circle) => {
       const invitable = state.friends.filter((friend) => !circle.members.some((member) => member.name === friend.name));
-      return <section className="settings-section" key={circle.id} aria-labelledby={`circle-${circle.id}`}>
+      return <section className="mb-6 grid gap-3 [&_h2]:text-xl" key={circle.id} aria-labelledby={`circle-${circle.id}`}>
         <h2 id={`circle-${circle.id}`}>{circle.name}</h2>
         {circle.progress
           ? <>
             <Progress value={Math.round((Math.min(circle.progress.done, circle.progress.target) / circle.progress.target) * 100)} label={t("circles.thisWeek")} />
-            <p className="muted">{fill("circles.progress", { done: circle.progress.done, target: circle.progress.target })}{circle.progress.met ? ` ${t("circles.met")}` : ""}</p>
+            <p className="text-muted-foreground">{fill("circles.progress", { done: circle.progress.done, target: circle.progress.target })}{circle.progress.met ? ` ${t("circles.met")}` : ""}</p>
           </>
-          : <p className="muted">{t("circles.waiting")}</p>}
-        <p className="muted">{fill("circles.goal", { days: circle.goalDays })}</p>
-        <ul className="friend-list">
-          {circle.members.map((member, index) => <li key={index} className="friend-row">
+          : <p className="text-muted-foreground">{t("circles.waiting")}</p>}
+        <p className="text-muted-foreground">{fill("circles.goal", { days: circle.goalDays })}</p>
+        <ul className="m-0 mb-3 grid list-none gap-2 p-0">
+          {circle.members.map((member, index) => <li key={index} className="flex flex-wrap items-center gap-3">
             <Avatar avatar={member.avatar} name={member.name} size={32} />
-            <span className="friend-name">{member.name}{member.you ? ` (${t("circles.you")})` : ""}{member.status === "invited" ? <span className="muted"> · {t("circles.invited")}</span> : null}</span>
+            <span className="min-w-32 flex-1">{member.name}{member.you ? ` (${t("circles.you")})` : ""}{member.status === "invited" ? <span className="text-muted-foreground"> · {t("circles.invited")}</span> : null}</span>
           </li>)}
         </ul>
         {circle.owner && circle.members.length < 6 && <InviteForm circle={circle} friends={invitable} busy={busy} onInvite={(friendship) => run(() => api.inviteToCircle(circle.id, friendship), t("circles.inviteSent"))} />}
@@ -90,7 +90,7 @@ export default function Circles() {
       </section>;
     })}
 
-    <section className="settings-section" aria-labelledby="new-circle-heading">
+    <section className="mb-6 grid gap-3 [&_h2]:text-xl" aria-labelledby="new-circle-heading">
       <h2 id="new-circle-heading">{t("circles.new")}</h2>
       <form className="settings-exam" onSubmit={createCircle}>
         <TextField label={t("circles.name")} value={name} onChange={(event) => setName(event.target.value)} maxLength={40} required />
@@ -106,7 +106,7 @@ export default function Circles() {
 // Pick one of your friends to invite. Friends are listed by display name only.
 function InviteForm({ circle, friends, busy, onInvite }) {
   const [friendship, setFriendship] = useState("");
-  if (!friends.length) return <p className="muted">{t("circles.noFriends")}</p>;
+  if (!friends.length) return <p className="text-muted-foreground">{t("circles.noFriends")}</p>;
   return <form className="settings-exam" onSubmit={(event) => { event.preventDefault(); if (friendship) onInvite(friendship); setFriendship(""); }}>
     <SelectField label={`${t("circles.invite")}: ${circle.name}`} value={friendship} onChange={(event) => setFriendship(event.target.value)}>
       <option value="">{t("circles.pick")}</option>

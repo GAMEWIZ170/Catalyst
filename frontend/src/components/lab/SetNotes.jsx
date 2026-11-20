@@ -12,7 +12,7 @@ import { Loading } from "../../pages/learn/Courses";
 const SAVE_DELAY = 1200;
 
 function ToolButton({ label, active, onClick, children }) {
-  return <button type="button" className={`note-tool${active ? " is-active" : ""}`} aria-label={label} title={label} aria-pressed={active} onClick={onClick}>{children}</button>;
+  return <button type="button" className={`inline-flex size-9 cursor-pointer items-center justify-center rounded-md border-0 hover:bg-muted ${active ? "bg-primary/15 text-brand-ink" : "bg-transparent text-foreground"}`} aria-label={label} title={label} aria-pressed={active} onClick={onClick}>{children}</button>;
 }
 
 // The notes of one set, written in a Tiptap editor with formulas (KaTeX with mhchem). Saves by itself a moment after typing stops.
@@ -24,7 +24,7 @@ export default function SetNotes({ setId }) {
     api.getSetNotes(setId).then(({ data }) => { if (live) setLoaded({ content: data.content }); }).catch((err) => { if (live) setError(err.message); });
     return () => { live = false; };
   }, [setId]);
-  if (error) return <p className="form-error" role="alert">{error}</p>;
+  if (error) return <p className="m-0 rounded-md border border-destructive bg-destructive/10 p-3 text-destructive" role="alert">{error}</p>;
   if (!loaded) return <Loading />;
   return <Editor setId={setId} initial={loaded.content} />;
 }
@@ -60,7 +60,7 @@ function Editor({ setId, initial }) {
       })
     ],
     content: initial || "",
-    editorProps: { attributes: { class: "note-editor", "aria-label": "Notes", role: "textbox", "aria-multiline": "true" } },
+    editorProps: { attributes: { class: "min-h-64 rounded-b-md border border-t-0 border-input bg-card p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&>:first-child]:mt-0 [&_blockquote]:mx-0 [&_blockquote]:border-l-[3px] [&_blockquote]:pl-3 [&_code]:rounded-sm [&_code]:bg-muted [&_code]:px-1", "aria-label": "Notes", role: "textbox", "aria-multiline": "true" } },
     onUpdate: () => {
       dirty.current = true;
       setStatus("Unsaved changes");
@@ -93,8 +93,8 @@ function Editor({ setId, initial }) {
 
   if (!editor) return <Loading />;
   const is = (name, attrs) => editor.isActive(name, attrs);
-  return <div className="note-wrap">
-    <div className="note-toolbar" role="toolbar" aria-label="Formatting">
+  return <div className="grid gap-0">
+    <div className="sticky top-16 z-[2] flex flex-wrap gap-1 rounded-t-md border border-input border-b-border bg-card p-1" role="toolbar" aria-label="Formatting">
       <ToolButton label="Bold" active={is("bold")} onClick={() => editor.chain().focus().toggleBold().run()}><Bold size={18} aria-hidden="true" /></ToolButton>
       <ToolButton label="Italic" active={is("italic")} onClick={() => editor.chain().focus().toggleItalic().run()}><Italic size={18} aria-hidden="true" /></ToolButton>
       <ToolButton label="Strikethrough" active={is("strike")} onClick={() => editor.chain().focus().toggleStrike().run()}><Strikethrough size={18} aria-hidden="true" /></ToolButton>
@@ -106,12 +106,12 @@ function Editor({ setId, initial }) {
       <ToolButton label={"Insert formula. Click a formula to change it. Examples: x^2 + 1 or \\ce{H2O}"} onClick={() => setFormula({ latex: "", pos: null })}><Sigma size={18} aria-hidden="true" /></ToolButton>
     </div>
     <EditorContent editor={editor} />
-    <p className="note-status" role="status">{status}</p>
+    <p className="m-0 mt-1 text-sm text-muted-foreground" role="status">{status}</p>
     <Dialog open={Boolean(formula)} onClose={() => setFormula(null)} title={formula?.pos == null ? "Insert a formula" : "Change the formula"} actions={<>
       <Button variant="secondary" type="button" onClick={() => setFormula(null)}>Cancel</Button>
       <Button type="submit" form="formula-form">{formula?.pos == null ? "Insert" : "Save"}</Button>
     </>}>
-      {formula && <form id="formula-form" className="form-stack" onSubmit={applyFormula}>
+      {formula && <form id="formula-form" className="mt-3 grid gap-4" onSubmit={applyFormula}>
         <TextField label="Formula" hint={"For example: x^2 + 1, or \\ce{CO2 + H2O <=> H2CO3}. Leave it empty to remove it."} maxLength="500" autoFocus value={formula.latex} onChange={(event) => setFormula({ ...formula, latex: event.target.value })} />
       </form>}
     </Dialog>

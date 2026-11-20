@@ -57,7 +57,7 @@ export default function LabSet() {
     }
   }
 
-  if (error && !set) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
+  if (error && !set) return <div className="mx-auto max-w-4xl"><ErrorState message={error} onRetry={load} /></div>;
   if (!set) return <Loading />;
 
   const details = [set.course && `${set.course.code}: ${set.course.title}`, set.topic].filter(Boolean).join(" · ");
@@ -73,7 +73,7 @@ export default function LabSet() {
     quizzes: <SetQuizzes setId={id} />
   };
 
-  return <div className="content mx-auto grid max-w-4xl gap-4">
+  return <div className="mx-auto grid max-w-4xl gap-4">
     <div><Button as={Link} to="/lab" variant="tertiary" size="sm" icon={ArrowLeft}>Study Lab</Button></div>
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="grid min-w-0 gap-1">

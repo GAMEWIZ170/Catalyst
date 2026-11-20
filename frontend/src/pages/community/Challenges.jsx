@@ -19,18 +19,18 @@ export default function Challenges() {
   }
   useEffect(load, []);
 
-  if (state.loading) return <div className="content student-page"><Loading /></div>;
-  if (state.error) return <div className="content student-page"><ErrorState message={state.error} onRetry={load} /></div>;
+  if (state.loading) return <div className="mx-auto max-w-4xl student-page"><Loading /></div>;
+  if (state.error) return <div className="mx-auto max-w-4xl student-page"><ErrorState message={state.error} onRetry={load} /></div>;
 
-  return <div className="content student-page">
+  return <div className="mx-auto max-w-4xl student-page">
     <h1>{t("challenges.title")}</h1>
-    <p className="muted">{t("challenges.intro")}</p>
+    <p className="text-muted-foreground">{t("challenges.intro")}</p>
     {state.items.length === 0
       ? <EmptyState title={t("challenges.emptyTitle")} description={t("challenges.emptyText")} action={<Button as={Link} to="/friends">{t("me.friends")}</Button>} />
-      : <ul className="friend-list">
-        {state.items.map((item) => <li key={item.id} className="friend-row">
-          <Link className="friend-name" to={`/challenge/${item.id}`}>{item.title}{item.with ? <span className="muted"> · {item.with}</span> : null}</Link>
-          <span className="muted">{t(STATUS[item.status])}{item.comparison ? ` · ${t(`challenges.${item.comparison.outcome}`)}` : ""}</span>
+      : <ul className="m-0 mb-3 grid list-none gap-2 p-0">
+        {state.items.map((item) => <li key={item.id} className="flex flex-wrap items-center gap-3">
+          <Link className="min-w-32 flex-1" to={`/challenge/${item.id}`}>{item.title}{item.with ? <span className="text-muted-foreground"> · {item.with}</span> : null}</Link>
+          <span className="text-muted-foreground">{t(STATUS[item.status])}{item.comparison ? ` · ${t(`challenges.${item.comparison.outcome}`)}` : ""}</span>
         </li>)}
       </ul>}
   </div>;

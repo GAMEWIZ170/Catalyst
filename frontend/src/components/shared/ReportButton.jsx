@@ -46,17 +46,17 @@ export default function ReportButton({ kind, target, open: controlledOpen, onOpe
     }
   }
 
-  return <div className="report-box">
+  return <div className="mt-4 flex flex-wrap items-center gap-2">
     {!controlled && <Button variant="tertiary" icon={Flag} onClick={() => { setError(""); setOpen(true); }}>Report a problem</Button>}
-    <span className="muted report-status" role="status">{sentFor === target ? "Report sent. Thank you." : ""}</span>
+    <span className="text-muted-foreground text-sm" role="status">{sentFor === target ? "Report sent. Thank you." : ""}</span>
     <Dialog open={open} onClose={close} title={kind === "lesson" ? "Report a problem with this lesson" : kind === "set" ? "Report this study set" : "Report a problem with this question"}>
-      <form className="form-stack" onSubmit={submit}>
+      <form className="mt-3 grid gap-4" onSubmit={submit}>
         <SelectField label="What is wrong?" value={category} onChange={(event) => setCategory(event.target.value)}>
           {CATEGORIES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
         </SelectField>
         <TextArea label="Tell us more (optional)" maxLength={500} rows={4} value={note} onChange={(event) => setNote(event.target.value)} />
-        {error && <p className="form-error" role="alert">{error}</p>}
-        <div className="dialog-actions">
+        {error && <p className="m-0 rounded-md border border-destructive bg-destructive/10 p-3 text-destructive" role="alert">{error}</p>}
+        <div className="mt-5 flex flex-wrap justify-end gap-3">
           <Button variant="secondary" type="button" onClick={close}>Cancel</Button>
           <Button type="submit" loading={busy}>Send report</Button>
         </div>

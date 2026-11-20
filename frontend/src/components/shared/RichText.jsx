@@ -93,7 +93,7 @@ function Formula({ source, block, stored }) {
     return () => { active = false; };
   }, [source, stored, known]);
   if (!html) return <span>{block ? `$$${source}$$` : `$${source}$`}</span>;
-  return <span className={`rich-formula ${block ? "rich-formula--block" : ""}`} {...(block ? { tabIndex: 0, role: "group", "aria-label": "Formula (scrolls sideways)" } : {})} dangerouslySetInnerHTML={{ __html: html }} />;
+  return <span className={`inline-block max-w-full overflow-x-auto overflow-y-hidden py-[0.1em] align-middle ${block ? "!my-3 !mx-auto !block text-center" : ""}`} {...(block ? { tabIndex: 0, role: "group", "aria-label": "Formula (scrolls sideways)" } : {})} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
 // math: the server's stored formulas for this text, [{ s: formula, b: block?, h: html }]. Optional.
@@ -101,7 +101,7 @@ function Formula({ source, block, stored }) {
 export default function RichText({ children = "", className = "", math }) {
   const parts = useMemo(() => tokenize(String(children)), [children]);
   const stored = useMemo(() => new Map((math || []).map((entry) => [`${entry.b ? "b" : "i"}:${entry.s}`, entry.h])), [math]);
-  return <span className={`rich-text ${className}`.trim()}>{parts.map((part, index) => part.type === "text"
+  return <span className={`[overflow-wrap:anywhere] ${className}`.trim()}>{parts.map((part, index) => part.type === "text"
     ? <span key={index}>{part.value.split("\n").map((line, lineIndex) => <span key={lineIndex}>{line}{lineIndex < part.value.split("\n").length - 1 && <br />}</span>)}</span>
     : <Formula key={index} source={part.value} block={part.type === "block"} stored={stored.get(`${part.type === "block" ? "b" : "i"}:${part.value}`)} />)}</span>;
 }

@@ -231,7 +231,7 @@ export default function AdminTestEditor() {
   return <div className="min-h-[calc(100dvh-72px)] px-4 pt-6 pb-12"><div className="mx-auto max-w-[960px]">
     <Breadcrumbs items={trail} />
     <div className={adminHeading}>
-      <div><InlineRename as="h1" name={test.title} onSave={rename} /><p className="muted">{test.scope === "true_false" ? "True or false" : `${test.scope[0].toUpperCase()}${test.scope.slice(1)} test`} · {plural(questions.length, "question")}</p></div>
+      <div><InlineRename as="h1" name={test.title} onSave={rename} /><p className="text-muted-foreground">{test.scope === "true_false" ? "True or false" : `${test.scope[0].toUpperCase()}${test.scope.slice(1)} test`} · {plural(questions.length, "question")}</p></div>
       <div className={headingActions}>
         <Button as={Link} variant="secondary" to={`/admin/preview/tests/${id}`} state={{ from: location.pathname }}>Preview as student</Button>
         <Button as={Link} variant="secondary" to={`/admin/tests/${id}/import`} state={{ from: location.pathname }}>Import CSV</Button>
@@ -261,7 +261,7 @@ export default function AdminTestEditor() {
     </section>
     {question && <aside className={adminSection}>
       <div className={sectionHeading}><h2>{question._id ? "Edit question" : "Add question"}</h2><Button variant="tertiary" type="button" onClick={() => { setQuestion(null); setOriginalQuestion(null); }}>Close</Button></div>
-      <fieldset className="ui-fieldset" disabled={Boolean(question._id)}><div className="field"><span className={uiLabel}>Question type</span><div className={chipRow} role="radiogroup" aria-label="Question type" style={{ margin: 0 }}>{Object.entries(TYPE_LABELS).map(([value, label]) => <button type="button" role="radio" aria-checked={question.type === value} className={chip} aria-pressed={question.type === value} key={value} onClick={() => setQuestion({ ...question, type: value, ...typeDefaults(value) })}>{label}</button>)}</div></div>{question._id && <p className="muted">A question's type cannot be changed.</p>}</fieldset>
+      <fieldset disabled={Boolean(question._id)}><div className="field"><span className={uiLabel}>Question type</span><div className={chipRow} role="radiogroup" aria-label="Question type" style={{ margin: 0 }}>{Object.entries(TYPE_LABELS).map(([value, label]) => <button type="button" role="radio" aria-checked={question.type === value} className={chip} aria-pressed={question.type === value} key={value} onClick={() => setQuestion({ ...question, type: value, ...typeDefaults(value) })}>{label}</button>)}</div></div>{question._id && <p className="text-muted-foreground">A question's type cannot be changed.</p>}</fieldset>
       <TextArea label="Question text" maxLength="1500" rows="5" value={question.text} onChange={(event) => setQuestion({ ...question, text: event.target.value })} hint={`${question.text.length}/1500`} />
       <FormulaHelp /><div className="preview-box"><RichText>{question.text}</RichText></div>
       <ImageField label="Question image" value={question.image} onChange={(image) => setQuestion({ ...question, image })} />

@@ -111,7 +111,7 @@ export default function Exam() {
   const questions = attempt?.questions || [];
   const unanswered = useMemo(() => questions.filter((question) => !answers[question._id]).length, [questions, answers]);
 
-  if (error && !attempt && !result) return <div className="content"><ErrorState message={error} onRetry={load} /></div>;
+  if (error && !attempt && !result) return <div className="mx-auto max-w-4xl"><ErrorState message={error} onRetry={load} /></div>;
   if (!attempt && !result) return <Loading />;
 
   if (result) return <div className="mx-auto grid max-w-2xl gap-5 px-4 py-6">

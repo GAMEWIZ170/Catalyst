@@ -36,9 +36,9 @@ export default function SetSharing({ set, onChange }) {
   }
 
   const shared = set.visibility !== "private";
-  return <section className="set-sharing" aria-labelledby="sharing-heading">
+  return <section className="my-4 grid gap-3 rounded-xl border bg-card p-4 [&_h2]:m-0 [&_p]:m-0" aria-labelledby="sharing-heading">
     <h2 id="sharing-heading">Sharing</h2>
-    <form className="set-sharing-form" onSubmit={save}>
+    <form className="grid max-w-md items-end gap-3" onSubmit={save}>
       <SelectField label="Who can see this set" value={visibility} onChange={(event) => setVisibility(event.target.value)} hint="Your uploaded material is never shared.">
         <option value="private">Only me</option>
         <option value="link">Anyone with the link</option>
@@ -49,9 +49,9 @@ export default function SetSharing({ set, onChange }) {
       <Button type="submit" variant="secondary" disabled={busy || visibility === (set.communityStatus === "pending" || set.communityStatus === "approved" ? "community" : set.visibility) && !message}>{busy ? "Saving…" : "Save sharing"}</Button>
     </form>
     {STATUS_TEXT[set.communityStatus] && <p role="status">{STATUS_TEXT[set.communityStatus]}{set.communityStatus === "rejected" && set.reviewNote ? ` Note from the reviewer: ${set.reviewNote}` : ""}</p>}
-    <p className="settings-status" role="alert">{problem}</p>
-    <p className="muted" role="status">{message}</p>
-    {set.communityStatus === "approved" && <p className="muted">{set.studied} studied · {set.saved} saved · {set.copied} copied</p>}
+    <p className="mt-4 mb-0 min-h-6 font-semibold text-brand-ink" role="alert">{problem}</p>
+    <p className="text-muted-foreground" role="status">{message}</p>
+    {set.communityStatus === "approved" && <p className="text-muted-foreground">{set.studied} studied · {set.saved} saved · {set.copied} copied</p>}
     {shared && <ShareButton url={`${window.location.origin}/s/s/${set.id}`} title={set.title} text={`${set.title}: a study set on Catalyst.`} />}
   </section>;
 }
