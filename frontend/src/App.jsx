@@ -65,10 +65,9 @@ function PageFallback() {
 // Start a page's data requests while its code is still downloading, instead of after it.
 // The api cache hands the same request to the page when it mounts, so nothing is fetched twice.
 const warmers = {
-  courses: () => { api.getHome().catch(() => {}); },
   course: ({ id }) => { api.getCourse(id).catch(() => {}); },
   lesson: ({ id }) => { api.getLessonHub(id).catch(() => {}); },
-  progress: () => { api.getProgressOverview().catch(() => {}); },
+  progress: () => { api.getProgressSummary().catch(() => {}); },
   test: ({ id }) => { api.getTest(id).catch(() => {}); },
   flashcards: ({ id }) => { api.getLessonFlashcards(id, "").catch(() => {}); }
 };
@@ -99,7 +98,7 @@ export default function App() {
     <Route path="/confirm-email" element={<VerifyEmail change />} />
     <Route path="/privacy" element={<Privacy />} />
     <Route path="/terms" element={<Terms />} />
-    <Route path="/home" element={<ProtectedPage warm="courses"><Courses /></ProtectedPage>} />
+    <Route path="/home" element={<ProtectedPage><Courses /></ProtectedPage>} />
     <Route path="/courses" element={<ProtectedPage><CourseCatalog /></ProtectedPage>} />
     <Route path="/courses/:id" element={<ProtectedPage warm="course"><CourseOutline /></ProtectedPage>} />
     <Route path="/lessons/:id" element={<ProtectedPage warm="lesson"><Lesson /></ProtectedPage>} />

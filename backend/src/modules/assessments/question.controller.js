@@ -8,7 +8,8 @@ const { findVisibleTest } = require("../../utils/visibility");
 const { questionForAdmin } = require("../../utils/serializers");
 const { recordAnswer } = require("./mistake.controller");
 const mastery = require("../../utils/mastery");
-const { grade, correctAnswerOf } = require("../../utils/grading");
+const { correctAnswerOf } = require("../../utils/grading");
+const { gradeAnswer } = require("../../utils/gradeAnswer");
 const { recordStat } = require("../../utils/questionStats");
 const { dayKey } = require("../../utils/day");
 
@@ -60,8 +61,13 @@ const checkAnswer = async (req, res, next) => {
     if (typeof answer !== "string") {
       return res.status(400).json({ message: "Please provide an answer" });
     }
-    const { isCorrect, unitWrong } = grade(question, answer);
+    const { isCorrect, unitWrong, marking, selfMarked, needsSelfMark } = await gradeAnswer(question, answer, { userId: req.user.id });
     const correctAnswer = correctAnswerOf(question);
+    // A short answer the AI could not mark: show the model answer and let the student mark it. Nothing is recorded
+    // until they send it again with their own mark.
+    if (needsSelfMark) {
+      return res.status(200).json({ data: { isCorrect: false, needsSelfMark: true, correctAnswer, explanation: question.explanation, explanationImage: question.explanationImage, workedSolution: question.workedSolution || [] } });
+    }
     const wasMistake = await recordAnswer(req.user.id, question._id, isCorrect, req.user.timeZone);
     if (!inSet) await recordStat(question, answer, isCorrect);
     // XP is for official content only (a student's own quiz could be farmed). First try = never answered before.
@@ -78,7 +84,7 @@ const checkAnswer = async (req, res, next) => {
       else if (wasMistake) await mastery.record(req.user.id, test.lesson._id, { type: "review" }, req.user.timeZone);
     }
     return res.status(200).json({
-      data: { isCorrect, ...(unitWrong ? { unitWrong: true } : {}), correctAnswer, explanation: question.explanation, explanationImage: question.explanationImage, workedSolution: question.workedSolution || [] }
+      data: { isCorrect, ...(unitWrong ? { unitWrong: true } : {}), ...(marking ? { marking } : {}), ...(selfMarked ? { selfMarked: true } : {}), correctAnswer, explanation: question.explanation, explanationImage: question.explanationImage, workedSolution: question.workedSolution || [] }
     });
   } catch (error) {
     next(error);

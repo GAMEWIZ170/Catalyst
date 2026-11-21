@@ -1,4 +1,5 @@
-const PARTS = [
+// The four flashcard states with their label and colour. Also used by the Progress screen's set bars.
+export const PARTS = [
   ["confident", "Confident", "bg-rate-good"],
   ["unsure", "Unsure", "bg-rate-hard"],
   ["unknown", "Don't know", "bg-rate-again"],

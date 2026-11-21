@@ -25,4 +25,20 @@ const calculateStreak = (days, timeZone) => {
   return streak;
 };
 
+// The longest streak ever, by the same rule: active days count, one missed day between two active days is forgiven,
+// two missed days in a row start a new run.
+const longestStreak = (days) => {
+  const sorted = [...new Set(days)].sort();
+  let best = 0;
+  let run = 0;
+  let previous = null;
+  for (const day of sorted) {
+    run = previous && day <= shiftDay(previous, 2) ? run + 1 : 1;
+    if (run > best) best = run;
+    previous = day;
+  }
+  return best;
+};
+
 module.exports = calculateStreak;
+module.exports.longestStreak = longestStreak;

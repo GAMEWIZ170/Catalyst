@@ -55,7 +55,7 @@ const getAiUsage = async (req, res, next) => {
     const days = Math.min(90, Math.max(1, parseInt(req.query.days, 10) || 30));
     const today = new Date().toISOString().slice(0, 10);
     const since = shiftDay(today, -(days - 1));
-    const sums = { messages: { $sum: "$messages" }, generations: { $sum: "$generations" }, builds: { $sum: "$builds" }, requests: { $sum: "$requests" }, inputTokens: { $sum: "$inputTokens" }, outputTokens: { $sum: "$outputTokens" } };
+    const sums = { messages: { $sum: "$messages" }, generations: { $sum: "$generations" }, builds: { $sum: "$builds" }, marks: { $sum: "$marks" }, requests: { $sum: "$requests" }, inputTokens: { $sum: "$inputTokens" }, outputTokens: { $sum: "$outputTokens" } };
     const [rows, platform] = await Promise.all([
       AiUsage.aggregate([
         { $match: { day: { $gte: since }, user: { $ne: null } } },

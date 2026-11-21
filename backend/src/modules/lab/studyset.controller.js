@@ -338,13 +338,14 @@ const getQuiz = async (req, res, next) => {
   }
 };
 
-// Before the shared question handlers run: the quiz (or the question's quiz) must be the student's own, only plain
-// multiple choice and true or false are allowed, and a quiz holds a limited number of questions.
+// Before the shared question handlers run: the quiz (or the question's quiz) must be the student's own, only multiple
+// choice, true or false, fill in the blank and short answer are allowed, and a quiz holds a limited number of questions.
+const SET_TYPES = ["mcq", "true_false", "fill_blank", "short_answer"];
 const ownQuizInBody = async (req, res, next) => {
   try {
     const test = await ownQuiz(req.body.test, req.user.id);
     if (!test) return notFound(res, "Quiz");
-    if (!["mcq", "true_false"].includes(req.body.type)) return res.status(400).json({ message: "Study set quizzes use multiple choice or true or false questions" });
+    if (!SET_TYPES.includes(req.body.type)) return res.status(400).json({ message: "Study set quizzes use multiple choice, true or false, fill in the blank or short answer questions" });
     if ((await Question.countDocuments({ test: test._id, deletedAt: null })) >= MAX_QUESTIONS) return res.status(409).json({ message: `A quiz can hold up to ${MAX_QUESTIONS} questions` });
     next();
   } catch (error) {

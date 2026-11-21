@@ -356,7 +356,7 @@ const offlineBundle = async (req, res, next) => {
       Test.find({ set: set._id, deletedAt: null, isPublished: true }).sort({ order: 1 }).lean()
     ]);
     const [questions, progress] = await Promise.all([
-      Question.find({ test: { $in: tests.map((test) => test._id) }, deletedAt: null, type: { $in: ["mcq", "true_false"] } }).sort({ order: 1 }).lean(),
+      Question.find({ test: { $in: tests.map((test) => test._id) }, deletedAt: null, type: { $in: ["mcq", "true_false", "fill_blank", "short_answer"] } }).sort({ order: 1 }).lean(),
       FlashcardProgress.find({ user: req.user.id, flashcard: { $in: cards.map((card) => card._id) } }).select("flashcard confidence").lean()
     ]);
     const confidence = new Map(progress.map((item) => [String(item.flashcard), item.confidence]));
@@ -366,7 +366,10 @@ const offlineBundle = async (req, res, next) => {
       return {
         _id: full._id, type: full.type, text: full.text, order: full.order, explanation: full.explanation || "",
         options: (full.options || []).map((option) => ({ _id: option._id, text: option.text })),
-        correctOption: full.correctOption || null, correctIndex: full.correctIndex, correctAnswer: full.correctAnswer || null
+        correctOption: full.correctOption || null, correctIndex: full.correctIndex, correctAnswer: full.correctAnswer || null,
+        // fill_blank is graded on the device like on the server (case and extra spaces ignored). short_answer cannot be
+        // marked by the AI offline, so the device shows the model answer and key points and the student marks it.
+        acceptedAnswers: full.acceptedAnswers || [], modelAnswer: full.modelAnswer || "", keyPoints: full.keyPoints || []
       };
     };
     return res.status(200).json({

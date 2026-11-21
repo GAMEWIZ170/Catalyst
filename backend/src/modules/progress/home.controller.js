@@ -3,12 +3,7 @@ const Unit = require("../courses/unit.models");
 const Lesson = require("../courses/lesson.models");
 const Progress = require("./progress.models");
 const Position = require("./position.models");
-const StudyTime = require("./studytime.models");
-const User = require("../auth/user.models");
-const { dayKey, weekStart } = require("../../utils/day");
-const { loadActiveDays } = require("./progress.controller");
 const { attachMeta } = require("../../utils/courseMeta");
-const { awardXp } = require("../../utils/xp");
 
 // STUDENT: the home screen in one call. Every published course with this student's progress and the
 // next lesson to open, so the screen does not fetch each course tree one after another.
@@ -20,14 +15,10 @@ const getHome = async (req, res, next) => {
       .select("code title description category authors isFree")
       .sort({ code: 1 })
       .lean());
-    const today = dayKey(req.user.timeZone);
-    const [units, doneRows, positions, goalUser, studied, lessonsToday] = await Promise.all([
+    const [units, doneRows, positions] = await Promise.all([
       Unit.find({ course: { $in: courses.map((course) => course._id) }, deletedAt: null }).select("course order").sort({ order: 1 }).lean(),
       Progress.find({ user: req.user.id, completed: true }).select("lesson").lean(),
-      Position.find({ user: req.user.id }).select("course lesson kind position total updatedAt").lean(),
-      User.findById(req.user.id).select("dailyGoal weeklyGoal").lean(),
-      StudyTime.findOne({ user: req.user.id, day: today }).select("seconds").lean(),
-      Progress.countDocuments({ user: req.user.id, completedDays: today })
+      Position.find({ user: req.user.id }).select("course lesson kind position total updatedAt").lean()
     ]);
     const lessons = await Lesson.find({ unit: { $in: units.map((unit) => unit._id) }, isPublished: true, deletedAt: null })
       .select("unit title order").sort({ order: 1 }).lean();
@@ -67,24 +58,8 @@ const getHome = async (req, res, next) => {
       });
       return { ...course, progress: { completedLessons: completed, totalLessons: total }, next, last };
     });
-    // Today's progress toward the student's own goal. Kind "none" means no bar is shown.
-    const kind = goalUser?.dailyGoal?.kind || "none";
-    const target = kind === "minutes" ? goalUser?.dailyGoal?.minutes || 10 : 1;
-    const doneSoFar = kind === "minutes" ? Math.floor((studied?.seconds || 0) / 60) : lessonsToday;
-    const goal = { kind, target, done: doneSoFar, met: kind !== "none" && doneSoFar >= target };
-    // The goal bar is where a met goal is first seen, so the XP for it is given here. Once per day.
-    if (goal.met) await awardXp(req.user.id, "daily_goal", { timeZone: req.user.timeZone, key: dayKey(req.user.timeZone) });
-    // The weekly goal counts study days this week (Monday to Sunday). Missed days never take progress away, and
-    // the rest of the week is rest. Met once, it stays met for the week.
-    const weeklyDays = goalUser?.weeklyGoal?.days || 0;
-    let weekly = null;
-    if (weeklyDays > 0) {
-      const monday = weekStart(today);
-      const thisWeek = new Set((await loadActiveDays(req.user.id)).filter((day) => day >= monday && day <= today));
-      weekly = { target: weeklyDays, done: thisWeek.size, met: thisWeek.size >= weeklyDays };
-      if (weekly.met) await awardXp(req.user.id, "weekly_goal", { timeZone: req.user.timeZone, key: monday });
-    }
-    return res.status(200).json({ count: data.length, data, goal, weekly });
+    // Study goals (daily and weekly) are paused: no goal bars and no goal XP. The saved settings stay on the user for later.
+    return res.status(200).json({ count: data.length, data });
   } catch (error) {
     next(error);
   }

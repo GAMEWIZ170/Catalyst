@@ -6,7 +6,8 @@ const Flashcard = require("../flashcards/flashcard.models");
 const Material = require("./material.models");
 const studentMaterial = require("../../utils/studentMaterial");
 const { studentQuestion } = require("../../utils/serializers");
-const { grade, correctAnswerOf } = require("../../utils/grading");
+const { correctAnswerOf } = require("../../utils/grading");
+const { gradeAnswer } = require("../../utils/gradeAnswer");
 const { findTestQuestionCounts, findVisibleLesson, findVisibleTest } = require("../../utils/visibility");
 
 // "Preview as student": the same shapes a student gets, but drafts are included and nothing is ever written.
@@ -78,9 +79,9 @@ const previewAnswer = async (req, res, next) => {
     const question = await Question.findOne({ _id: req.params.id, deletedAt: null }).lean();
     if (!question) return res.status(404).json({ message: "Question not found" });
     if (typeof req.body.answer !== "string") return res.status(400).json({ message: "Please provide an answer" });
-    const { isCorrect, unitWrong } = grade(question, req.body.answer);
+    const { isCorrect, unitWrong, marking, needsSelfMark } = await gradeAnswer(question, req.body.answer, { userId: req.user.id });
     return res.status(200).json({
-      data: { isCorrect, ...(unitWrong ? { unitWrong: true } : {}), correctAnswer: correctAnswerOf(question), explanation: question.explanation, explanationImage: question.explanationImage, workedSolution: question.workedSolution || [] }
+      data: { isCorrect, ...(unitWrong ? { unitWrong: true } : {}), ...(marking ? { marking } : {}), ...(needsSelfMark ? { needsSelfMark: true } : {}), correctAnswer: correctAnswerOf(question), explanation: question.explanation, explanationImage: question.explanationImage, workedSolution: question.workedSolution || [] }
     });
   } catch (error) {
     next(error);

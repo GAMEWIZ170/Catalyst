@@ -9,6 +9,7 @@ const aiUsageSchema = new mongoose.Schema({
   messages: { type: Number, default: 0 },                                 // study companion messages
   generations: { type: Number, default: 0 },                              // drafts made in a study set
   builds: { type: Number, default: 0 },                                   // whole sets built from material or a topic
+  marks: { type: Number, default: 0 },                                    // short answers marked by the AI
   requests: { type: Number, default: 0 },                                 // every real call to the AI provider
   inputTokens: { type: Number, default: 0 },
   outputTokens: { type: Number, default: 0 },

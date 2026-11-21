@@ -8,7 +8,7 @@ import { PreviewBanner } from "../../components/learn/PreviewBits";
 import WorkedSolution from "../../components/learn/WorkedSolution";
 import { Correct, QuestionInput } from "../../components/learn/QuestionInputs";
 import { Button, EmptyState, Illustration, ProgressDots } from "../../components/ui";
-import ScoreBar from "../../components/learn/ScoreBar";
+import QuizSummary from "../../components/learn/QuizSummary";
 import QuizOption from "../../components/learn/QuizOption";
 import useUnsavedChanges from "../../hooks/useUnsavedChanges";
 import { api } from "../../api/client";
@@ -48,7 +48,7 @@ export default function Test() {
   const [answers, setAnswers] = useState([]);
   const [feedback, setFeedback] = useState(null);
   const [missed, setMissed] = useState([]);
-  const [showMissed, setShowMissed] = useState(false);
+  const [reviewed, setReviewed] = useState([]); // every answered question, for the summary at the end
   const [result, setResult] = useState(null);
   const [challengeProblem, setChallengeProblem] = useState("");
   const [error, setError] = useState("");
@@ -56,7 +56,6 @@ export default function Test() {
   const [busy, setBusy] = useState(false);
   const [hintFor, setHintFor] = useState(null); // id of the question whose hint is open
   const feedbackHeading = useRef(null);
-  const missedRef = useRef(null);
   const backTo = location.state?.from || (preview ? `/admin/tests/${id}` : "/home");
   const backState = location.state?.courseFrom ? { from: location.state.courseFrom } : undefined;
   const backLabel = preview ? "Back to editor" : isMistakes || isTopic ? "Back" : `Back to ${backTo.startsWith("/lessons/") ? "lesson" : "course"}`;
@@ -85,7 +84,7 @@ export default function Test() {
 
   // Keys 1 to 4 pick an answer. True is 1, False is 2. Enter checks the answer, then moves on.
   const enterAction = useRef(null);
-  enterAction.current = feedback ? continueQuestion : checkAnswer;
+  enterAction.current = feedback ? (feedback.needsSelfMark ? null : continueQuestion) : checkAnswer;
   useEffect(() => {
     if (phase !== "question" || !test) return undefined;
     const question = test.questions[index];
@@ -116,7 +115,7 @@ export default function Test() {
     setFeedback(null);
     setAnswers([]);
     setMissed([]);
-    setShowMissed(false);
+    setReviewed([]);
   }
   // Saving is idempotent on the server; the list here only tracks what was saved during this test.
   const [savedQuestions, setSavedQuestions] = useState(() => new Set());
@@ -132,18 +131,30 @@ export default function Test() {
     }
   }
   function selectAnswer(value) { if (!feedback) setChosen(value); }
+  // Sends one answer and keeps the result for the summary. A short answer the AI could not mark comes back with
+  // needsSelfMark: nothing is recorded yet, and the student marks it with selfMark below.
+  async function sendAnswer(answer) {
+    const current = test.questions[index];
+    const response = dataOf(await (preview ? api.previewAnswer(current._id, answer) : api.answerQuestion(current._id, answer)));
+    if (!response.needsSelfMark) {
+      setAnswers((items) => [...items.filter((item) => item.questionId !== current._id), { questionId: current._id, answer }]);
+      const entry = { id: current._id, number: index + 1, text: current.text, question: current, answer, isCorrect: response.isCorrect, correct: response.correctAnswer, explanation: response.explanation, workedSolution: response.workedSolution, marking: response.marking };
+      setMissed((items) => [...items.filter((item) => item.id !== current._id), ...(response.isCorrect ? [] : [entry])]);
+      setReviewed((items) => [...items.filter((item) => item.id !== current._id), entry]);
+    }
+    setFeedback(response);
+  }
   async function checkAnswer() {
     if (chosen === null || busy) return;
     setBusy(true);
+    try { await sendAnswer(chosen); } catch (err) { setError(err.message); }
+    setBusy(false);
+  }
+  async function selfMark(gotIt) {
+    setBusy(true);
     try {
-      const current = test.questions[index];
-      const response = dataOf(await (preview ? api.previewAnswer(current._id, chosen) : api.answerQuestion(current._id, chosen)));
-      setAnswers((items) => [...items.filter((item) => item.questionId !== current._id), { questionId: current._id, answer: chosen }]);
-      setMissed((items) => {
-        const rest = items.filter((item) => item.id !== current._id);
-        return response.isCorrect ? rest : [...rest, { id: current._id, number: index + 1, text: current.text, correct: response.correctAnswer, question: current, explanation: response.explanation, workedSolution: response.workedSolution }];
-      });
-      setFeedback(response);
+      const { text } = JSON.parse(chosen);
+      await sendAnswer(JSON.stringify({ text, self: gotIt }));
     } catch (err) { setError(err.message); }
     setBusy(false);
   }
@@ -187,10 +198,6 @@ export default function Test() {
   async function tryAgain() {
     if (!subset) await load(); // a mistakes queue may have changed; a normal test is fetched fresh
     start();
-  }
-  function reviewMistakes() {
-    setShowMissed(true);
-    window.setTimeout(() => missedRef.current?.focus(), 0);
   }
 
   if (error && !test) return <div className="mx-auto max-w-4xl"><ErrorState message={error} onRetry={load} /></div>;
@@ -247,7 +254,6 @@ export default function Test() {
         <Illustration name="done" className="w-40 text-foreground" />
         <p className="m-0 text-6xl leading-none font-bold tabular-nums" id="score-heading"><span className="sr-only">Your score: </span>{result.score}%</p>
         <p className="m-0 text-lg">{result.correct} of {result.total} correct. {scoreMessage(result.score)}</p>
-        <ScoreBar correct={result.correct} total={result.total} />
         {!result.practice && <p className="m-0 text-sm text-muted-foreground">Best score {result.bestScore}% · Attempts {result.attempts}</p>}
         {needsPass && <p className={`m-0 flex items-center gap-2 rounded-pill px-4 py-2 font-semibold ${result.passed ? "bg-success/15" : "bg-warning/15"}`} role="status">
           {result.passed ? <CheckCircle2 size={16} aria-hidden="true" /> : <TriangleAlert size={16} aria-hidden="true" />}
@@ -256,24 +262,12 @@ export default function Test() {
         {challengeProblem && <p className="m-0 text-destructive" role="alert">{challengeProblem}</p>}
         <div className="flex flex-wrap justify-center gap-2">
           {missed.length > 0 && !practice && <Button variant="secondary" onClick={practiseMissed}>Practise the ones I missed</Button>}
-          {missed.length > 0 && !showMissed && <Button variant="secondary" onClick={reviewMistakes}>Review mistakes</Button>}
           {!practice && !result.practice && <Button variant="secondary" onClick={challengeFriend}>{t("challenges.create")}</Button>}
           <Button variant={passed || missed.length === 0 ? "secondary" : "tertiary"} onClick={tryAgain}>Try again</Button>
           <Button as={Link} variant={passed || !needsPass ? "primary" : "secondary"} to={backTo} state={backState}>{backLabel}</Button>
         </div>
-        {missed.length > 0 && showMissed && <div className="grid w-full gap-2 text-left" ref={missedRef} tabIndex="-1">
-          <h2 className="m-0 text-xl font-semibold">{missed.length} to review</h2>
-          {missed.map((item) => <details key={item.id} open className="rounded-lg border border-border bg-card p-4">
-            <summary className="cursor-pointer font-semibold">Question {item.number}</summary>
-            <div className="mt-3 grid gap-2">
-              <div className="text-lg font-semibold"><RichText>{item.text}</RichText></div>
-              <div className="rounded-md bg-card/60 p-3"><strong>Correct answer:</strong> <Correct question={item.question} correct={item.correct} /></div>
-              {item.explanation && <RichText>{item.explanation}</RichText>}
-              <WorkedSolution steps={item.workedSolution} />
-            </div>
-          </details>)}
-        </div>}
       </section>
+      {reviewed.length > 0 && <QuizSummary items={[...reviewed].sort((a, b) => a.number - b.number)} canAsk={!preview} />}
     </div>;
   }
 
@@ -315,9 +309,17 @@ export default function Test() {
       {!feedback && question.hint && (hintFor === question._id
         ? <aside className="grid gap-1 rounded-lg bg-muted p-4 text-sm" aria-label="Hint"><strong>Hint</strong><RichText>{question.hint}</RichText></aside>
         : <div><Button variant="tertiary" onClick={() => setHintFor(question._id)}>Show hint</Button></div>)}
-      {feedback && <section className={`grid gap-3 rounded-lg border p-4 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-200 ${feedback.isCorrect ? "border-success/60 bg-success/10" : "border-warning/60 bg-warning/10"}`} aria-live="polite">
+      {feedback?.needsSelfMark && <section className="grid gap-3 rounded-lg border border-border bg-muted p-4" aria-live="polite">
+        <h2 tabIndex="-1" ref={feedbackHeading} className="m-0 text-lg font-semibold">Mark your own answer</h2>
+        <p className="m-0 text-sm text-muted-foreground">The AI cannot mark answers right now. Compare yours with the model answer.</p>
+        <div className="rounded-md bg-card p-3"><strong>Model answer:</strong> <Correct question={question} correct={feedback.correctAnswer} /></div>
+        <div className="flex flex-wrap gap-2"><Button loading={busy} onClick={() => selfMark(true)}>I got it</Button><Button variant="secondary" disabled={busy} onClick={() => selfMark(false)}>I missed it</Button></div>
+      </section>}
+      {feedback && !feedback.needsSelfMark && <section className={`grid gap-3 rounded-lg border p-4 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 motion-safe:duration-200 ${feedback.isCorrect ? "border-success/60 bg-success/10" : "border-warning/60 bg-warning/10"}`} aria-live="polite">
         <h2 tabIndex="-1" ref={feedbackHeading} className="m-0 flex items-center gap-2 text-lg font-semibold">{feedback.isCorrect ? <CheckCircle2 size={20} className="text-success" aria-hidden="true" /> : <TriangleAlert size={20} className="text-warning" aria-hidden="true" />}{feedback.isCorrect ? "Correct" : "Not quite"}</h2>
         {feedback.unitWrong && <p className="m-0">The number is right, but the unit is not.</p>}
+        {feedback.marking?.feedback && <p className="m-0">{feedback.marking.feedback}</p>}
+        {feedback.selfMarked && <p className="m-0 text-sm text-muted-foreground">You marked this one yourself.</p>}
         {!feedback.isCorrect && <div className="rounded-md bg-card/60 p-3"><strong>Correct answer:</strong> <Correct question={question} correct={correct} /></div>}
         <RichText>{feedback.explanation}</RichText>
         {feedback.explanationImage?.url && <ResponsiveImage image={feedback.explanationImage} sizes="(max-width: 600px) 100vw, 600px" />}
@@ -328,7 +330,7 @@ export default function Test() {
         <div>{!preview && <ReportButton key={question._id} kind="question" target={question._id} />}</div>
         {!feedback
           ? <Button disabled={chosen === null} loading={busy} onClick={checkAnswer}>Check</Button>
-          : <Button loading={busy} onClick={continueQuestion}>{isLast ? "Finish test" : "Continue"}</Button>}
+          : !feedback.needsSelfMark && <Button loading={busy} onClick={continueQuestion}>{isLast ? "Finish test" : "Continue"}</Button>}
       </div>
       {error && <p className="m-0 rounded-md border border-destructive bg-destructive/10 p-3 text-destructive" role="alert">{error}</p>}
     </div>

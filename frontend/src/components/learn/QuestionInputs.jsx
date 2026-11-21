@@ -19,6 +19,7 @@ export function QuestionInput({ question, onAnswer, disabled, onEnter }) {
     case "numeric": return <NumericInput question={question} onAnswer={onAnswer} disabled={disabled} enter={enter} />;
     case "multi_select": return <MultiSelectInput question={question} onAnswer={onAnswer} disabled={disabled} />;
     case "fill_blank": return <FillBlankInput onAnswer={onAnswer} disabled={disabled} enter={enter} />;
+    case "short_answer": return <ShortAnswerInput onAnswer={onAnswer} disabled={disabled} />;
     case "matching": return <MatchingInput question={question} onAnswer={onAnswer} disabled={disabled} />;
     case "ordering": return <OrderingInput question={question} onAnswer={onAnswer} disabled={disabled} />;
     case "balancing": return <BalancingInput question={question} onAnswer={onAnswer} disabled={disabled} enter={enter} />;
@@ -52,6 +53,16 @@ function MultiSelectInput({ question, onAnswer, disabled }) {
       <RichText>{option.text}</RichText>{option.image?.url && <ResponsiveImage image={option.image} sizes="(max-width: 600px) 80vw, 300px" />}
     </QuizOption>)}
   </fieldset>;
+}
+
+// A written answer of 1 to 3 sentences. Sent as JSON { text }; the server's AI marks it against the key points.
+function ShortAnswerInput({ onAnswer, disabled }) {
+  const [value, setValue] = useState("");
+  return <label className={FIELD}>Your answer
+    <textarea className={`${INPUT} min-h-28 resize-y py-2`} rows={4} maxLength={900} value={value} disabled={disabled}
+      onChange={(event) => { setValue(event.target.value); onAnswer(event.target.value.trim() ? JSON.stringify({ text: event.target.value.trim() }) : null); }} />
+    <span className="text-xs font-normal text-muted-foreground">Answer in 1 to 3 sentences. It is marked on the key ideas, not the exact words.</span>
+  </label>;
 }
 
 function FillBlankInput({ onAnswer, disabled, enter }) {
@@ -148,9 +159,27 @@ export function CorrectAnswer({ type, correct }) {
     case "multi_select": return <ul className="m-0 grid list-none gap-1 p-0">{correct.map((option) => <li key={option._id}><RichText>{option.text}</RichText></li>)}</ul>;
     case "numeric": return <span>{correct.value}{correct.unit ? ` ${correct.unit}` : ""}{correct.tolerance ? ` (± ${correct.tolerance}${correct.toleranceKind === "percent" ? "%" : ""})` : ""}</span>;
     case "fill_blank": return <span>{correct.join(" or ")}</span>;
+    case "short_answer": return <span className="grid gap-1"><RichText>{correct.modelAnswer}</RichText>
+      <span className="text-sm text-muted-foreground">Key points: {correct.keyPoints.join(" · ")}</span></span>;
     case "matching": return <ul className="m-0 grid list-none gap-1 p-0">{correct.map((pair, index) => <li key={index}><RichText>{`${pair.left} → ${pair.right}`}</RichText></li>)}</ul>;
     case "ordering": return <ol className="m-0 grid gap-1 pl-5">{correct.map((item, index) => <li key={index}><RichText>{item}</RichText></li>)}</ol>;
     default: return null;
+  }
+}
+
+// What the student answered, as plain text (for the review list and for telling the AI tutor). Empty when there is no
+// simple way to say it (matching, ordering and balancing are shown as right or wrong only).
+export function answerText(question, answer) {
+  if (answer == null) return "";
+  const json = () => { try { return JSON.parse(answer); } catch { return null; } };
+  switch (question.type) {
+    case "mcq": return question.options.find((option) => option._id === answer)?.text || "";
+    case "true_false": return answer === "true" ? "True" : "False";
+    case "fill_blank": return String(answer);
+    case "short_answer": return json()?.text || String(answer);
+    case "numeric": { const value = json(); return value ? `${value.value}${value.unit ? ` ${value.unit}` : ""}` : ""; }
+    case "multi_select": { const ids = json() || []; return question.options.filter((option) => ids.includes(option._id)).map((option) => option.text).join("; "); }
+    default: return "";
   }
 }
 

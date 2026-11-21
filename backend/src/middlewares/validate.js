@@ -112,7 +112,7 @@ const validateGenerate = validateWith(Joi.object({
 }));
 
 // "general" is a chat that is not tied to a lesson or set, so it has no id.
-const aiContext = Joi.object({ kind: Joi.string().valid("lesson", "set", "general").required(), id: Joi.when("kind", { is: "general", then: Joi.forbidden(), otherwise: objectId.required() }) }).required();
+const aiContext = Joi.object({ kind: Joi.string().valid("lesson", "set", "question", "general").required(), id: Joi.when("kind", { is: "general", then: Joi.forbidden(), otherwise: objectId.required() }) }).required();
 const validateAiChat = validateWith(Joi.object({
   context: aiContext,
   messages: Joi.array().items(Joi.object({
@@ -182,6 +182,14 @@ const validateSetUnitUpdate = validateWith(Joi.object({ title: structureTitle.re
 const validateSetLesson = validateWith(Joi.object({ title: structureTitle }));
 const validateSetLessonUpdate = validateWith(Joi.object({ title: structureTitle, content: noteContent, unit: objectId }).min(1));
 const validateStructureOrder = validateWith(Joi.object({ ids: Joi.array().items(objectId.required()).min(1).max(100).unique().required() }));
+
+// GET /progress/summary?year=2026. Checks the query (not the body). A missing year means this year.
+const validateProgressYear = (req, res, next) => {
+  const { error, value } = Joi.object({ year: Joi.number().integer().min(2020).max(2100) }).validate(req.query, { stripUnknown: true });
+  if (error) return res.status(400).json({ message: error.details[0].message });
+  req.progressYear = value.year;
+  next();
+};
 
 const validateStudyTime = validateWith(Joi.object({ seconds: Joi.number().integer().min(1).max(120).required() }));
 
@@ -306,7 +314,7 @@ const optionFields = Joi.object({
 }).or("text", "image");
 const questionFields = {
   test: objectId,
-  type: Joi.string().valid("mcq", "true_false", "multi_select", "numeric", "fill_blank", "matching", "ordering", "balancing"),
+  type: Joi.string().valid("mcq", "true_false", "multi_select", "numeric", "fill_blank", "matching", "ordering", "balancing", "short_answer"),
   text: Joi.string().trim().max(1500),
   image: optionalImage,
   options: Joi.array().items(optionFields).max(6),
@@ -320,6 +328,8 @@ const questionFields = {
     unit: Joi.string().trim().allow("").max(30)
   }),
   acceptedAnswers: Joi.array().items(Joi.string().trim().min(1).max(200)).min(1).max(20),
+  modelAnswer: Joi.string().trim().min(1).max(1000),
+  keyPoints: Joi.array().items(Joi.string().trim().min(1).max(200)).min(1).max(6),
   pairs: Joi.array().items(Joi.object({ left: Joi.string().trim().min(1).max(200).required(), right: Joi.string().trim().min(1).max(200).required() })).min(2).max(8),
   items: Joi.array().items(Joi.string().trim().min(1).max(200)).min(2).max(8),
   equation: Joi.object({
@@ -397,6 +407,7 @@ const validateExamSave = validateWith(Joi.object({
   flags: Joi.array().items(objectId).max(200)
 }));
 const validateAnswer = validateWith(Joi.object({ answer: Joi.string().trim().min(1).max(1000).required() }));
+const validateExamSelfMark = validateWith(Joi.object({ questionId: objectId.required(), gotIt: Joi.boolean().required() }));
 const validateReport = validateWith(Joi.object({
   kind: Joi.string().valid("question", "lesson", "set").required(),
   target: objectId.required(),
@@ -523,6 +534,8 @@ module.exports = {
   validatePosition,
   validatePreferences,
   validateStudyTime,
+  validateProgressYear,
+  validateExamSelfMark,
   validateEvent,
   validateSet,
   validateSetUpdate,

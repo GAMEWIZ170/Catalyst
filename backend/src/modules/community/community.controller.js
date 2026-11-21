@@ -211,13 +211,18 @@ const copy = async (req, res, next) => {
     if (note?.content) await SetNote.create({ set: made._id, content: note.content });
     for (const test of tests) {
       const newTest = await Test.create({ scope: "set", set: made._id, setUnit: newUnit.get(String(test.setUnit)) || null, title: test.title, isPublished: true });
-      const questions = await Question.find({ test: test._id, deletedAt: null, type: { $in: ["mcq", "true_false"] } }).sort({ order: 1 }).lean();
+      const questions = await Question.find({ test: test._id, deletedAt: null, type: { $in: ["mcq", "true_false", "fill_blank", "short_answer"] } }).sort({ order: 1 }).lean();
       for (const [index, question] of questions.entries()) {
         const doc = new Question({ test: newTest._id, type: question.type, text: question.text, order: index + 1, explanation: question.explanation || "" });
         if (question.type === "mcq") {
           doc.options = question.options.map((option) => ({ text: option.text }));
           const at = question.options.findIndex((option) => String(option._id) === String(question.correctOption));
           doc.correctOption = doc.options[Math.max(0, at)]._id;
+        } else if (question.type === "fill_blank") {
+          doc.acceptedAnswers = question.acceptedAnswers;
+        } else if (question.type === "short_answer") {
+          doc.modelAnswer = question.modelAnswer;
+          doc.keyPoints = question.keyPoints;
         } else {
           doc.correctAnswer = question.correctAnswer;
         }

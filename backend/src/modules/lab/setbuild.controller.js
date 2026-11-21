@@ -137,9 +137,14 @@ const quizFor = async (setId, unit) => {
 const addQuestions = async (test, questions) => {
   let order = (await Question.countDocuments({ test: test._id })) + 1;
   for (const item of questions) {
-    const doc = new Question({ test: test._id, type: "mcq", text: item.text, order: order++, explanation: item.explanation || "" });
-    doc.options = item.options.map((text) => ({ text }));
-    doc.correctOption = doc.options[item.correctIndex]._id;
+    const type = item.type || "mcq";
+    const doc = new Question({ test: test._id, type, text: item.text, order: order++, explanation: item.explanation || "" });
+    if (type === "fill_blank") doc.acceptedAnswers = item.answers;
+    else if (type === "short_answer") { doc.modelAnswer = item.modelAnswer; doc.keyPoints = item.keyPoints; }
+    else {
+      doc.options = item.options.map((text) => ({ text }));
+      doc.correctOption = doc.options[item.correctIndex]._id;
+    }
     await doc.save();
   }
 };

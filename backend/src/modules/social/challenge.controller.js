@@ -5,7 +5,7 @@ const User = require("../auth/user.models");
 const Notification = require("./notification.models");
 const { findVisibleTest } = require("../../utils/visibility");
 const { studentQuestion } = require("../../utils/serializers");
-const { grade } = require("../../utils/grading");
+const { gradeAnswer, GRADE_FIELDS } = require("../../utils/gradeAnswer");
 const { logEvent } = require("../../utils/events");
 const { awardXp } = require("../../utils/xp");
 const { areFriends, displayNameOf } = require("../../utils/friends");
@@ -124,14 +124,14 @@ const submitChallenge = async (req, res, next) => {
     if (role === "friend" && !challenge.results.some((row) => same(row.user, challenge.creator))) return res.status(409).json({ message: "Your friend has not played yet" });
 
     const questions = await Question.find({ _id: { $in: challenge.questions }, deletedAt: null })
-      .select("type correctOption correctOptions correctAnswer numeric acceptedAnswers pairs items equation").lean();
+      .select(GRADE_FIELDS).lean();
     if (!questions.length) return res.status(409).json({ message: "This challenge has no questions left" });
     const given = new Map(req.body.answers.map((row) => [row.questionId, row.answer]));
-    let correct = 0;
-    for (const question of questions) {
+    const marks = await Promise.all(questions.map((question) => {
       const answer = given.get(String(question._id));
-      if (answer !== undefined && grade(question, answer).isCorrect) correct++;
-    }
+      return answer === undefined ? { isCorrect: false } : gradeAnswer(question, answer, { userId: req.user.id });
+    }));
+    const correct = marks.filter((mark) => mark.isCorrect).length;
     const result = { user: req.user.id, correct, total: questions.length };
 
     // One atomic step, so a second submit (or a second friend) cannot slip in between the check and the save.

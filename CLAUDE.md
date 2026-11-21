@@ -52,7 +52,7 @@ Structure: course > unit > lesson. Tests can belong to a lesson, a unit or a cou
 ## Domain rules (do not break these)
 
 - Grading is server-side only. Students never receive `correctOption`, `correctAnswer`, `explanation` or `explanationImage` before they answer.
-- Question types: `mcq` or `true_false`. For MCQ the admin sends options without ids plus `correctIndex`; the server stores option ids and the correct option id.
+- Question types: `mcq`, `true_false`, `multi_select`, `numeric`, `fill_blank`, `matching`, `ordering`, `balancing` and `short_answer` (AI-marked on the server against `modelAnswer` and `keyPoints`). Study set quizzes allow `mcq`, `true_false`, `fill_blank` and `short_answer`. For MCQ the admin sends options without ids plus `correctIndex`; the server stores option ids and the correct option id. Grade only through `utils/gradeAnswer.js`.
 - Soft deletes with `deletedAt`. A deleted or unpublished parent makes children return 404.
 - A lesson completes by passing its test, finishing a flashcard deck, or Mark as done. Mark as done works only when the lesson has no test with questions and no published flashcards. Unit and course tests never complete a lesson.
 - Empty tests return 409 on submit. Streaks count UTC days.

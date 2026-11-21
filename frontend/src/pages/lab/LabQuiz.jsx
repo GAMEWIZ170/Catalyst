@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { AlertCircle, ArrowLeft, CheckCircle2, Circle, ListChecks, MoreHorizontal, Pencil, Plus, ToggleLeft, Trash2, X } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle2, Circle, ListChecks, MoreHorizontal, NotebookPen, Pencil, Plus, TextCursorInput, ToggleLeft, Trash2, X } from "lucide-react";
 import { api } from "../../api/client";
 import { Button, Dialog, DropdownMenu, EditableTitle, EmptyState, Segmented } from "../../components/ui";
 import { ErrorState, Loading } from "../learn/Courses";
 
-const blank = (type) => ({ id: null, type, text: "", options: ["", ""], correct: 0, truth: "true", explanation: "" });
+const blank = (type) => ({ id: null, type, text: "", options: ["", ""], correct: 0, truth: "true", answers: "", modelAnswer: "", keyPoints: "", explanation: "" });
+const lines = (text) => text.split("\n").map((line) => line.trim()).filter(Boolean);
+const TYPE_NAMES = { mcq: "Multiple choice", true_false: "True or false", fill_blank: "Fill in the blank", short_answer: "Short answer" };
 const field = "w-full resize-y rounded-lg border border-input bg-card p-3 font-sans text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 const input = "min-h-11 w-full min-w-0 rounded-md border border-input bg-card px-3 font-sans text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
-// One quiz of a study set. A question is added by choosing its type from two cards, then filling it in a dialog.
+// One quiz of a study set. A question is added by choosing its type from four cards, then filling it in a dialog.
 // The right answer is chosen by tapping it.
 export default function LabQuiz() {
   const { testId } = useParams();
@@ -30,7 +32,8 @@ export default function LabQuiz() {
     setForm({
       id: question._id, type: question.type, text: question.text,
       options: question.type === "mcq" ? question.options.map((option) => option.text) : ["", ""],
-      correct: question.correctIndex ?? 0, truth: question.correctAnswer || "true", explanation: question.explanation || ""
+      correct: question.correctIndex ?? 0, truth: question.correctAnswer || "true", explanation: question.explanation || "",
+      answers: (question.acceptedAnswers || []).join("\n"), modelAnswer: question.modelAnswer || "", keyPoints: (question.keyPoints || []).join("\n")
     });
   }
 
@@ -38,8 +41,9 @@ export default function LabQuiz() {
     setSaving(true);
     setProblem("");
     const base = { text: form.text.trim(), explanation: form.explanation.trim() };
-    const body = form.type === "mcq"
-      ? { ...base, options: form.options.map((text) => ({ text: text.trim() })), correctIndex: form.correct }
+    const body = form.type === "mcq" ? { ...base, options: form.options.map((text) => ({ text: text.trim() })), correctIndex: form.correct }
+      : form.type === "fill_blank" ? { ...base, acceptedAnswers: lines(form.answers) }
+      : form.type === "short_answer" ? { ...base, modelAnswer: form.modelAnswer.trim(), keyPoints: lines(form.keyPoints) }
       : { ...base, correctAnswer: form.truth };
     try {
       if (form.id) await api.updateSetQuestion(form.id, body);
@@ -67,7 +71,12 @@ export default function LabQuiz() {
   if (!quiz) return <Loading />;
   const set = (patch) => setForm({ ...form, ...patch });
   const mcq = form?.type === "mcq";
-  const valid = form?.type && form.text.trim() && (!mcq || (form.options.length >= 2 && form.options.every((option) => option.trim())));
+  const typeReady = !form?.type ? false
+    : mcq ? form.options.length >= 2 && form.options.every((option) => option.trim())
+    : form.type === "fill_blank" ? lines(form.answers).length > 0
+    : form.type === "short_answer" ? Boolean(form.modelAnswer.trim()) && lines(form.keyPoints).length >= 1 && lines(form.keyPoints).length <= 6
+    : true;
+  const valid = form?.type && form.text.trim() && typeReady;
   const close = () => setForm(null);
   const typeCard = "grid min-h-28 cursor-pointer content-center justify-items-center gap-1 rounded-lg border border-input bg-card p-4 text-center font-sans text-foreground transition-colors duration-150 hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
@@ -87,7 +96,7 @@ export default function LabQuiz() {
         {quiz.questions.map((question) => <li key={question._id} className="flex items-center gap-2 border-b border-border py-2 last:border-b-0">
           <button type="button" onClick={() => edit(question)} className="grid min-w-0 flex-1 cursor-pointer gap-0.5 rounded-md border-0 bg-transparent p-2 text-left font-sans text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring">
             <span className="line-clamp-2 font-semibold">{question.text}</span>
-            <span className="text-sm text-muted-foreground">{question.type === "mcq" ? `Multiple choice, ${question.options.length} options` : "True or false"}</span>
+            <span className="text-sm text-muted-foreground">{question.type === "mcq" ? `Multiple choice, ${question.options.length} options` : TYPE_NAMES[question.type] || "Question"}</span>
           </button>
           <DropdownMenu
             trigger={<Button variant="tertiary" size="sm" aria-label="Question options"><MoreHorizontal size={18} aria-hidden="true" /></Button>}
@@ -104,10 +113,12 @@ export default function LabQuiz() {
       {form && !form.type && <div className="grid grid-cols-2 gap-3">
         <button type="button" className={typeCard} onClick={() => setForm(blank("mcq"))}><ListChecks size={28} aria-hidden="true" /><strong>Multiple choice</strong><span className="text-sm text-muted-foreground">Pick the right answer</span></button>
         <button type="button" className={typeCard} onClick={() => setForm(blank("true_false"))}><ToggleLeft size={28} aria-hidden="true" /><strong>True or false</strong><span className="text-sm text-muted-foreground">A statement</span></button>
+        <button type="button" className={typeCard} onClick={() => setForm(blank("fill_blank"))}><TextCursorInput size={28} aria-hidden="true" /><strong>Fill in the blank</strong><span className="text-sm text-muted-foreground">Type the missing word</span></button>
+        <button type="button" className={typeCard} onClick={() => setForm(blank("short_answer"))}><NotebookPen size={28} aria-hidden="true" /><strong>Short answer</strong><span className="text-sm text-muted-foreground">Explain in a few sentences</span></button>
       </div>}
       {form?.type && <div className="grid gap-4">
         {problem && <p className="m-0 flex items-center gap-2 text-destructive" role="alert"><AlertCircle size={16} aria-hidden="true" />{problem}</p>}
-        <textarea aria-label="Question" autoFocus placeholder={"Question (formulas work: $x^2$ or $\\ce{H2O}$)"} rows={3} maxLength={1500} className={field} value={form.text} onChange={(event) => set({ text: event.target.value })} />
+        <textarea aria-label="Question" autoFocus placeholder={form.type === "fill_blank" ? "Sentence with a blank, for example: Water boils at ____ °C." : "Question (formulas work: $x^2$ or $\\ce{H2O}$)"} rows={3} maxLength={1500} className={field} value={form.text} onChange={(event) => set({ text: event.target.value })} />
         {mcq && <div className="grid gap-2">
           <p className="m-0 text-sm text-muted-foreground">Tap the circle next to the right answer.</p>
           {form.options.map((option, index) => <div key={index} className="flex items-center gap-2">
@@ -125,7 +136,12 @@ export default function LabQuiz() {
           </div>)}
           {form.options.length < 6 && <div><Button variant="tertiary" size="sm" icon={Plus} onClick={() => set({ options: [...form.options, ""] })}>Add option</Button></div>}
         </div>}
-        {!mcq && <Segmented label="The answer is" value={form.truth} onChange={(truth) => set({ truth })} options={[{ value: "true", label: "True" }, { value: "false", label: "False" }]} />}
+        {form.type === "true_false" && <Segmented label="The answer is" value={form.truth} onChange={(truth) => set({ truth })} options={[{ value: "true", label: "True" }, { value: "false", label: "False" }]} />}
+        {form.type === "fill_blank" && <textarea aria-label="Accepted answers" placeholder={"Accepted answers, one per line (case does not matter)"} rows={3} className={field} value={form.answers} onChange={(event) => set({ answers: event.target.value })} />}
+        {form.type === "short_answer" && <>
+          <textarea aria-label="Model answer" placeholder="Model answer: what a top answer says, in 1 to 3 sentences" rows={3} maxLength={1000} className={field} value={form.modelAnswer} onChange={(event) => set({ modelAnswer: event.target.value })} />
+          <textarea aria-label="Key points" placeholder={"Key points a right answer must make, one per line (1 to 6). The AI marks answers on these."} rows={3} className={field} value={form.keyPoints} onChange={(event) => set({ keyPoints: event.target.value })} />
+        </>}
         <textarea aria-label="Explanation" placeholder="Explanation shown after answering (optional)" rows={2} maxLength={4000} className={field} value={form.explanation} onChange={(event) => set({ explanation: event.target.value })} />
       </div>}
     </Dialog>

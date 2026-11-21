@@ -37,7 +37,7 @@ const gcd = (a, b) => (b ? gcd(b, a % b) : a);
 
 const questionSchema = new mongoose.Schema({
   test: { type: mongoose.Schema.Types.ObjectId, ref: "Test", required: true },
-  type: { type: String, enum: ["mcq", "true_false", "multi_select", "numeric", "fill_blank", "matching", "ordering", "balancing"], required: true },
+  type: { type: String, enum: ["mcq", "true_false", "multi_select", "numeric", "fill_blank", "matching", "ordering", "balancing", "short_answer"], required: true },
   text: { type: String, required: true, trim: true, maxlength: 1500 },
   image: { type: imageSchema, default: null },
   options: { type: [optionSchema], default: [] },
@@ -49,6 +49,9 @@ const questionSchema = new mongoose.Schema({
   numeric: { type: numericSchema, default: null },
   // fill_blank: every accepted answer. Case and extra spaces are ignored.
   acceptedAnswers: { type: [{ type: String, trim: true, maxlength: 200 }], default: [] },
+  // short_answer: a model answer and the key points a right answer must make. Marked by the AI on the server.
+  modelAnswer: { type: String, default: "", trim: true, maxlength: 1000 },
+  keyPoints: { type: [{ type: String, trim: true, maxlength: 200 }], default: [] },
   // matching: each left item and the right item it goes with.
   pairs: { type: [pairSchema], default: [] },
   // ordering: the items in their correct order. Students see them shuffled.
@@ -130,6 +133,10 @@ questionSchema.pre("validate", function () {
   if (type === "fill_blank") {
     if (!this.acceptedAnswers.length || this.acceptedAnswers.some((answer) => !answer)) this.invalidate("acceptedAnswers", "Add at least one accepted answer");
     if (this.acceptedAnswers.length > 20) this.invalidate("acceptedAnswers", "At most 20 accepted answers");
+  }
+  if (type === "short_answer") {
+    if (!this.modelAnswer) this.invalidate("modelAnswer", "A short answer question needs a model answer");
+    if (!this.keyPoints.length || this.keyPoints.length > 6 || this.keyPoints.some((point) => !point)) this.invalidate("keyPoints", "Add 1 to 6 key points");
   }
   if (type === "matching") {
     if (this.pairs.length < 2 || this.pairs.length > 8 || this.pairs.some((pair) => !pair.left || !pair.right)) {

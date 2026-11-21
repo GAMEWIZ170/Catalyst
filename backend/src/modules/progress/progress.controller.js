@@ -8,10 +8,13 @@ const Test = require("../assessments/test.models");
 const Question = require("../assessments/question.models");
 const { findVisibleLesson } = require("../../utils/visibility");
 const calculateStreak = require("../../utils/streak");
-const Course = require("../courses/course.models");
+const { longestStreak } = require("../../utils/streak");
+const { levelFor } = require("../../utils/xp");
+const User = require("../auth/user.models");
+const StudySet = require("../lab/studyset.models");
+const Flashcard = require("../flashcards/flashcard.models");
 const Position = require("./position.models");
 const StudyTime = require("./studytime.models");
-const { buildCourseOutline } = require("../../utils/courseOutline");
 const mastery = require("../../utils/mastery");
 
 const { dayKey } = require("../../utils/day");
@@ -93,16 +96,78 @@ const getStreak = async (req, res, next) => {
   }
 };
 
-// The progress screen in one call: finished lessons, the streak and every course outline.
-const getOverview = async (req, res, next) => {
+// The Progress screen in one call: streaks, the activity heatmap for one year, level, and how each of the student's own
+// study sets is going. Courses are not part of it. Every day count comes from loadActiveDays, the same list as the streak.
+const getSummary = async (req, res, next) => {
   try {
-    const [progress, streak, courses] = await Promise.all([
-      Progress.find({ user: req.user.id }).select("lesson completed score completedAt -_id").lean(),
-      loadStreak(req.user.id, req.user.timeZone),
-      Course.find({ isPublished: true, deletedAt: null }).select("_id").sort({ code: 1 }).lean()
+    const userId = req.user.id;
+    const today = dayKey(req.user.timeZone);
+    const thisYear = Number(today.slice(0, 4));
+    const year = Math.min(req.progressYear || thisYear, thisYear);
+
+    const [activeDays, me, sets] = await Promise.all([
+      loadActiveDays(userId),
+      User.findById(userId).select("xp").lean(),
+      StudySet.find({ owner: userId, deletedAt: null }).select("title lastStudiedAt updatedAt").sort({ updatedAt: -1 }).limit(100).lean()
     ]);
-    const outlines = await Promise.all(courses.map((course) => buildCourseOutline(course._id, req.user.id)));
-    return res.status(200).json({ data: { progress, streak, courses: outlines.filter(Boolean) } });
+
+    // Activities per day in the chosen year, and the first year with any activity (for the year switcher).
+    const days = {};
+    let firstYear = thisYear;
+    for (const day of activeDays) {
+      const dayYear = Number(day.slice(0, 4));
+      if (dayYear < firstYear) firstYear = dayYear;
+      if (dayYear === year) days[day] = (days[day] || 0) + 1;
+    }
+
+    const setIds = sets.map((set) => set._id);
+    const [cards, quizzes] = await Promise.all([
+      Flashcard.find({ set: { $in: setIds }, deletedAt: null }).select("_id set").lean(),
+      Test.find({ set: { $in: setIds }, deletedAt: null }).select("_id set").lean()
+    ]);
+    const [ratings, results] = await Promise.all([
+      FlashcardProgress.find({ user: userId, flashcard: { $in: cards.map((card) => card._id) } }).select("flashcard confidence due lastReviewedAt").lean(),
+      TestResult.find({ user: userId, test: { $in: quizzes.map((quiz) => quiz._id) }, attempts: { $gt: 0 } }).select("test bestScore").lean()
+    ]);
+
+    const setOfCard = new Map(cards.map((card) => [String(card._id), String(card.set)]));
+    const setOfQuiz = new Map(quizzes.map((quiz) => [String(quiz._id), String(quiz.set)]));
+    const now = new Date();
+    const bySet = new Map(sets.map((set) => [String(set._id), {
+      id: String(set._id), title: set.title, cards: 0, confident: 0, unsure: 0, unknown: 0, unrated: 0, due: 0, bestQuiz: null,
+      lastStudiedAt: set.lastStudiedAt || null
+    }]));
+    for (const card of cards) bySet.get(String(card.set)).cards += 1;
+    for (const row of ratings) {
+      const entry = bySet.get(setOfCard.get(String(row.flashcard)));
+      if (!entry) continue;
+      entry[row.confidence] += 1;
+      if (row.due && row.due <= now) entry.due += 1;
+      if (row.lastReviewedAt && (!entry.lastStudiedAt || row.lastReviewedAt > entry.lastStudiedAt)) entry.lastStudiedAt = row.lastReviewedAt;
+    }
+    for (const result of results) {
+      const entry = bySet.get(setOfQuiz.get(String(result.test)));
+      if (entry && (entry.bestQuiz === null || result.bestScore > entry.bestQuiz)) entry.bestQuiz = result.bestScore;
+    }
+    const setRows = [...bySet.values()].map((entry) => ({ ...entry, unrated: entry.cards - entry.confident - entry.unsure - entry.unknown }));
+    // Most recently studied first; sets never studied keep their last-edited order at the end.
+    setRows.sort((a, b) => (b.lastStudiedAt ? new Date(b.lastStudiedAt) : 0) - (a.lastStudiedAt ? new Date(a.lastStudiedAt) : 0));
+
+    return res.status(200).json({
+      data: {
+        streak: calculateStreak(activeDays, req.user.timeZone),
+        completedToday: activeDays.includes(today),
+        longestStreak: longestStreak(activeDays),
+        today,
+        year,
+        firstYear,
+        activeDaysInYear: Object.keys(days).length,
+        days,
+        level: levelFor(me?.xp || 0),
+        xp: me?.xp || 0,
+        sets: setRows
+      }
+    });
   } catch (error) {
     next(error);
   }
@@ -139,4 +204,4 @@ const addStudyTime = async (req, res, next) => {
   }
 };
 
-module.exports = { markLessonDone, getMyProgress, getStreak, getOverview, loadStreak, loadActiveDays, savePosition, addStudyTime };
+module.exports = { markLessonDone, getMyProgress, getStreak, getSummary, loadStreak, loadActiveDays, savePosition, addStudyTime };

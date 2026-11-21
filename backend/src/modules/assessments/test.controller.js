@@ -7,7 +7,7 @@ const TestResult = require("./testresult.models");
 const Progress = require("../progress/progress.models");
 const { findVisibleTest, parentIsAvailable } = require("../../utils/visibility");
 const { studentQuestion, questionForAdmin } = require("../../utils/serializers");
-const { grade } = require("../../utils/grading");
+const { gradeAnswer, GRADE_FIELDS } = require("../../utils/gradeAnswer");
 const mastery = require("../../utils/mastery");
 const setMastery = require("../../utils/setMastery");
 
@@ -39,13 +39,15 @@ const getTest = async (req, res, next) => {
 };
 
 // Records one finished attempt: the test result, lesson completion and mastery. Shared by normal tests and timed mock exams.
-const recordResult = async (userId, test, score, timeZone) => {
+// countAttempt false: the same attempt was re-scored (a timed exam's short answer marked by the student), so it is
+// not a new attempt.
+const recordResult = async (userId, test, score, timeZone, { countAttempt = true } = {}) => {
   const result = await TestResult.findOneAndUpdate(
     { user: userId, test: test._id },
     {
       $max: { bestScore: score },
       $set: { lastScore: score },
-      $inc: { attempts: 1 },
+      $inc: { attempts: countAttempt ? 1 : 0 },
       $setOnInsert: { completedAt: new Date() },
       $addToSet: { completedDays: dayKey(timeZone) }
     },
@@ -86,17 +88,18 @@ const submitTest = async (req, res, next) => {
     const test = await findVisibleTest(req.params.id, req.user.id);
     if (!test) return res.status(404).json({ message: "Test not found" });
     const questions = await Question.find({ test: test._id, deletedAt: null })
-      .select("type correctOption correctOptions correctAnswer numeric acceptedAnswers pairs items equation")
+      .select(GRADE_FIELDS)
       .lean();
     if (!questions.length) {
       return res.status(409).json({ message: "This test has no questions yet" });
     }
     const given = new Map(req.body.answers.map((answer) => [answer.questionId, answer.answer]));
-    let correct = 0;
-    for (const question of questions) {
+    // Short answers marked while answering are cached, so this re-check costs no new AI call for them.
+    const marks = await Promise.all(questions.map((question) => {
       const answer = given.get(question._id.toString());
-      if (answer !== undefined && grade(question, answer).isCorrect) correct++;
-    }
+      return answer === undefined ? { isCorrect: false } : gradeAnswer(question, answer, { userId: req.user.id });
+    }));
+    const correct = marks.filter((mark) => mark.isCorrect).length;
     const total = questions.length;
     const score = total === 0 ? 100 : Math.round((correct / total) * 100);
     const { result, passPercent, passed } = await recordResult(req.user.id, test, score, req.user.timeZone);

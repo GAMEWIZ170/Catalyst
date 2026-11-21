@@ -4,7 +4,8 @@ const Question = require("./question.models");
 const User = require("../auth/user.models");
 const { findVisibleTest } = require("../../utils/visibility");
 const { studentQuestion } = require("../../utils/serializers");
-const { grade, correctAnswerOf } = require("../../utils/grading");
+const { correctAnswerOf } = require("../../utils/grading");
+const { gradeAnswer } = require("../../utils/gradeAnswer");
 const { recordResult } = require("./test.controller");
 const { recordAnswer } = require("./mistake.controller");
 const { recordStat } = require("../../utils/questionStats");
@@ -37,15 +38,22 @@ const cleanAnswers = (given, questions) => {
 // Marks the exam, records the result like a normal test, and stores the full review on the attempt.
 const finish = async (attempt, test, questions, answers) => {
   let correct = 0;
-  const review = questions.map((question) => {
+  const graded = await Promise.all(questions.map((question) => {
     const answer = answers[question._id.toString()];
-    const graded = answer === undefined ? { isCorrect: false } : grade(question, answer);
-    if (graded.isCorrect) correct++;
+    return answer === undefined ? { isCorrect: false } : gradeAnswer(question, answer, { userId: attempt.user });
+  }));
+  const review = questions.map((question, index) => {
+    const answer = answers[question._id.toString()];
+    const mark = graded[index];
+    if (mark.isCorrect) correct++;
     return {
       question: studentQuestion(question),
       yourAnswer: answer ?? null,
-      isCorrect: graded.isCorrect,
-      ...(graded.unitWrong ? { unitWrong: true } : {}),
+      isCorrect: mark.isCorrect,
+      ...(mark.unitWrong ? { unitWrong: true } : {}),
+      ...(mark.marking ? { marking: mark.marking } : {}),
+      // A short answer the AI could not mark at hand-in: the results screen shows the model answer and the student marks it.
+      ...(mark.needsSelfMark ? { needsSelfMark: true } : {}),
       correctAnswer: correctAnswerOf(question),
       explanation: question.explanation,
       explanationImage: question.explanationImage,
@@ -83,6 +91,36 @@ const submitAttempt = async (attempt, test, finalAnswers, finalFlags) => {
   const result = await finish(attempt, test, questions, answers);
   await ExamAttempt.updateOne({ _id: attempt._id }, { $set: { answers, flags: attempt.flags, result } });
   return result;
+};
+
+// STUDENT: mark one short answer in a handed-in exam that the AI could not mark. Body { questionId, gotIt }.
+// Only allowed for a review item flagged needsSelfMark, once. The score, best score and lesson progress follow.
+const selfMark = async (req, res, next) => {
+  try {
+    const attempt = await findOwn(req, res);
+    if (!attempt) return;
+    if (!attempt.submittedAt || !attempt.result) return res.status(409).json({ message: "Hand in the exam first" });
+    const { questionId, gotIt } = req.body;
+    const review = attempt.result.review || [];
+    const item = review.find((row) => String(row.question._id) === String(questionId));
+    if (!item || !item.needsSelfMark) return res.status(409).json({ message: "This answer does not need your mark" });
+    const test = await findVisibleTest(attempt.test, req.user.id);
+    if (!test) return res.status(404).json({ message: "Test not found" });
+    item.needsSelfMark = false;
+    item.selfMarked = true;
+    item.isCorrect = gotIt;
+    const correct = review.filter((row) => row.isCorrect).length;
+    const total = review.length;
+    const score = Math.round((correct / total) * 100);
+    const { result, passPercent, passed } = await recordResult(req.user.id, test, score, req.user.timeZone, { countAttempt: false });
+    if (test.scope !== "set" && gotIt) await recordAnswer(req.user.id, item.question._id, true, req.user.timeZone);
+    attempt.result = { ...attempt.result, review, score, correct, total, bestScore: result.bestScore, attempts: result.attempts, passPercent, passed };
+    attempt.markModified("result");
+    await attempt.save();
+    return res.status(200).json({ data: attempt.result });
+  } catch (error) {
+    next(error);
+  }
 };
 
 // STUDENT: start a timed exam, or pick up the one already running. No answers or feedback are sent.
@@ -155,4 +193,4 @@ const submit = async (req, res, next) => {
   }
 };
 
-module.exports = { start, save, submit };
+module.exports = { start, save, submit, selfMark };

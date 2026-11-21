@@ -106,6 +106,8 @@ const correctAnswerOf = (question) => {
       return question.items;
     case "balancing":
       return question.equation.species.map((item) => item.coefficient);
+    case "short_answer":
+      return { modelAnswer: question.modelAnswer, keyPoints: question.keyPoints };
     default:
       return null;
   }

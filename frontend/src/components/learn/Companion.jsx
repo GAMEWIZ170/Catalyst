@@ -13,7 +13,8 @@ const CATEGORIES = [["wrong_answer", "It is wrong"], ["unclear", "It is unclear"
 // shows where each answer came from, and never gives the final answer to a test item. Nothing is kept on the server:
 // the last few turns are sent with each message. It is not placed on test or exam screens, and the server refuses it
 // while a timed quiz or exam is running.
-export default function Companion({ kind, id, initialTurns = [], onTurns }) {
+// `starters` ([{ label, message }]) and `intro` replace the default suggestion chips and line, for example on a quiz summary.
+export default function Companion({ kind, id, initialTurns = [], onTurns, starters, intro }) {
   const { toast } = useToast();
   const [status, setStatus] = useState(null);
   const [turns, setTurns] = useState(initialTurns);          // { role, content, sources?, flagged? }
@@ -97,9 +98,9 @@ export default function Companion({ kind, id, initialTurns = [], onTurns }) {
       <div className="grid gap-4">
         {turns.length === 0 && <div className="grid justify-items-center gap-3 py-4 text-center">
           <h3 className="m-0 font-display text-xl font-semibold">How can I help?</h3>
-          <p className="m-0 text-sm text-muted-foreground">{kind === "general" ? "Open a lesson or set to chat about it with the text in view." : `I use this ${kind === "lesson" ? "lesson" : "set"} when it helps.`} I give hints, not final answers, on graded questions.</p>
+          <p className="m-0 text-sm text-muted-foreground">{intro || <>{kind === "general" ? "Open a lesson or set to chat about it with the text in view." : `I use this ${kind === "lesson" ? "lesson" : "set"} when it helps.`} I give hints, not final answers, on graded questions.</>}</p>
           <div className="flex flex-wrap justify-center gap-2">
-            {(kind === "general" ? ["Explain a topic simply", "Help me make a study plan"] : [`What is this ${kind === "lesson" ? "lesson" : "set"} about?`, "Quiz me with one question", "Create a study plan for me"]).map((label) => <button key={label} type="button" disabled={busy || resting || noneLeft} onClick={() => send(null, label)} className="rounded-pill border border-border px-3 py-1.5 text-sm hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring">{label}</button>)}
+            {(starters || (kind === "general" ? ["Explain a topic simply", "Help me make a study plan"] : [`What is this ${kind === "lesson" ? "lesson" : "set"} about?`, "Quiz me with one question", "Create a study plan for me"]).map((label) => ({ label, message: label }))).map(({ label, message }) => <button key={label} type="button" disabled={busy || resting || noneLeft} onClick={() => send(null, message)} className="rounded-pill border border-border px-3 py-1.5 text-sm hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring">{label}</button>)}
           </div>
         </div>}
         {turns.map((turn, index) => turn.role === "user"

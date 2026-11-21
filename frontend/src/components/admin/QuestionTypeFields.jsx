@@ -10,7 +10,8 @@ export const TYPE_LABELS = {
   fill_blank: "Fill in the blank",
   matching: "Matching",
   ordering: "Ordering",
-  balancing: "Equation balancing"
+  balancing: "Equation balancing",
+  short_answer: "Short answer (AI-marked)"
 };
 
 const blankOption = () => ({ text: "", image: null });
@@ -22,6 +23,7 @@ export function typeDefaults(type) {
     case "multi_select": return { options: [blankOption(), blankOption(), blankOption()], correctIndexes: [] };
     case "numeric": return { options: [], numeric: { value: "", tolerance: "0", toleranceKind: "absolute", unit: "" } };
     case "fill_blank": return { options: [], acceptedAnswers: [""] };
+    case "short_answer": return { options: [], modelAnswer: "", keyPoints: [""] };
     case "matching": return { options: [], pairs: [{ left: "", right: "" }, { left: "", right: "" }] };
     case "ordering": return { options: [], items: ["", ""] };
     case "balancing": return { options: [], equation: { species: [{ formula: "", side: "reactant", coefficient: "1" }, { formula: "", side: "product", coefficient: "1" }] } };
@@ -44,6 +46,9 @@ export function typeProblem(question) {
       return Number.isFinite(Number(question.numeric?.value)) && String(question.numeric?.value).trim() !== "" ? "" : "Enter the correct value as a number.";
     case "fill_blank":
       return filled(question.acceptedAnswers).length ? "" : "Add at least one accepted answer.";
+    case "short_answer":
+      if (!String(question.modelAnswer || "").trim()) return "Write a model answer.";
+      return filled(question.keyPoints).length >= 1 && filled(question.keyPoints).length <= 6 ? "" : "Add 1 to 6 key points.";
     case "matching":
       return question.pairs.length >= 2 && question.pairs.every((pair) => pair.left.trim() && pair.right.trim()) ? "" : "Add at least 2 pairs and fill in both sides of each.";
     case "ordering":
@@ -71,6 +76,8 @@ export function typeBody(question) {
       return { numeric: { value: Number(question.numeric.value), tolerance: Number(question.numeric.tolerance) || 0, toleranceKind: question.numeric.toleranceKind, unit: question.numeric.unit.trim() } };
     case "fill_blank":
       return { acceptedAnswers: filled(question.acceptedAnswers) };
+    case "short_answer":
+      return { modelAnswer: String(question.modelAnswer).trim(), keyPoints: filled(question.keyPoints) };
     case "matching":
       return { pairs: question.pairs.map((pair) => ({ left: pair.left.trim(), right: pair.right.trim() })) };
     case "ordering":
@@ -115,6 +122,13 @@ export default function QuestionTypeFields({ question, setQuestion }) {
   if (question.type === "fill_blank") {
     return <div className="option-editor"><h3>Accepted answers</h3>
       <TextArea label="Accepted answers" rows="4" value={(question.acceptedAnswers || []).join("\n")} onChange={(event) => set({ acceptedAnswers: event.target.value.split("\n") })} hint="One per line. Case and extra spaces are ignored." />
+    </div>;
+  }
+
+  if (question.type === "short_answer") {
+    return <div className="option-editor"><h3>Marking</h3>
+      <TextArea label="Model answer" rows="3" maxLength="1000" value={question.modelAnswer || ""} onChange={(event) => set({ modelAnswer: event.target.value })} hint="What a top answer says, in 1 to 3 sentences. Shown to students after they answer." />
+      <TextArea label="Key points" rows="4" value={(question.keyPoints || []).join("\n")} onChange={(event) => set({ keyPoints: event.target.value.split("\n") })} hint="One per line, 1 to 6. The AI marks an answer right only when it makes every key point." />
     </div>;
   }
 

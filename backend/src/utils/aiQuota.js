@@ -3,7 +3,7 @@ const { defaultModel, findModel } = require("../config/ai");
 
 // Fair use while the AI is a free beta with low limits (Phase X6.4, widened for the study companion).
 //   per student, per UTC day: AI_DAILY_BUILDS (default 3) whole-set builds, AI_DAILY_MESSAGES (default 30) companion
-//   messages and AI_DAILY_GENERATIONS (default 9) single drafts
+//   messages, AI_DAILY_GENERATIONS (default 9) single drafts and AI_DAILY_MARKS (default 60) short answers marked
 //   whole platform, per UTC day: AI_GLOBAL_DAILY (default 1000) calls to the provider, and a "resting" flag the moment
 //   the provider says its free daily allowance is used up. Both end with "AI is resting until tomorrow".
 // One build is ONE of the student's builds but several provider calls (one for the outline, one per lesson), so the
@@ -14,14 +14,15 @@ const limits = () => ({
   messages: int(process.env.AI_DAILY_MESSAGES, 30),
   generations: int(process.env.AI_DAILY_GENERATIONS, 9),
   builds: int(process.env.AI_DAILY_BUILDS, 3),
+  marks: int(process.env.AI_DAILY_MARKS, 60),
   global: int(process.env.AI_GLOBAL_DAILY, 1000)
 });
 
-const FIELD = { message: "messages", generation: "generations", build: "builds" };
+const FIELD = { message: "messages", generation: "generations", build: "builds", mark: "marks" };
 const today = () => new Date().toISOString().slice(0, 10);
 
 // Calls made today. Rows written before `requests` existed only have the two older counters.
-const platformUsed = (row) => Math.max(row.requests || 0, (row.messages || 0) + (row.generations || 0));
+const platformUsed = (row) => Math.max(row.requests || 0, (row.messages || 0) + (row.generations || 0) + (row.marks || 0));
 const isResting = (row, max) => Boolean(row && (row.resting || platformUsed(row) >= max.global));
 
 // Counts one request against the student's day and the platform's day, unless a limit is reached.
@@ -79,7 +80,8 @@ const status = async (userId) => {
     messagesLeft: Math.max(0, max.messages - (mine?.messages || 0)),
     generationsLeft: Math.max(0, max.generations - (mine?.generations || 0)),
     buildsLeft: Math.max(0, max.builds - (mine?.builds || 0)),
-    limits: { messages: max.messages, generations: max.generations, builds: max.builds }
+    marksLeft: Math.max(0, max.marks - (mine?.marks || 0)),
+    limits: { messages: max.messages, generations: max.generations, builds: max.builds, marks: max.marks }
   };
 };
 

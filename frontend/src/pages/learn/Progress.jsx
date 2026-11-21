@@ -1,83 +1,74 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Zap } from "lucide-react";
+import { CalendarDays, Sparkles, Trophy, Zap } from "lucide-react";
 import { api } from "../../api/client";
-import { Button, EmptyState, Progress as Bar } from "../../components/ui";
+import { Button, EmptyState } from "../../components/ui";
+import ActivityHeatmap from "../../components/progress/ActivityHeatmap";
+import SetProgress from "../../components/progress/SetProgress";
+import CardsDonut from "../../components/progress/CardsDonut";
 import { ErrorState, Loading } from "./Courses";
 
-export default function Progress() {
-  const [data, setData] = useState(null);
-  const [error, setError] = useState("");
-
-  function load() {
-    setError("");
-    // One call returns the finished lessons, the streak and every course outline.
-    api.getProgressOverview()
-      .then(({ data }) => setData({ progress: data.progress || [], streak: data.streak, trees: data.courses || [] }))
-      .catch((err) => setError(err.message));
-  }
-
-  useEffect(load, []);
-
-  if (error) return <div className="mx-auto max-w-4xl"><ErrorState message={error} onRetry={load} /></div>;
-  if (!data) return <Loading />;
-  const { progress, streak, trees } = data;
-  const completed = progress.filter((item) => item.completed);
-  const average = completed.length ? Math.round(completed.reduce((sum, item) => sum + (item.score || 0), 0) / completed.length) : null;
-  // Test scores: lessons passed with a score, plus unit and course tests that have a best score.
-  const scores = trees.flatMap((tree) => [
-    ...tree.units.flatMap((unit) => [
-      ...unit.lessons.filter((lesson) => lesson.completed && lesson.testCount > 0 && lesson.score != null).map((lesson) => ({ id: lesson._id, title: lesson.title, score: lesson.score })),
-      ...(unit.tests || []).filter((test) => test.bestScore != null).map((test) => ({ id: test._id, title: test.title, score: test.bestScore }))
-    ]),
-    ...(tree.tests || []).filter((test) => test.bestScore != null).map((test) => ({ id: test._id, title: test.title, score: test.bestScore }))
-  ]);
-  const panel = "grid gap-3 rounded-lg border border-border bg-card p-5";
-  const h2 = "m-0 text-xl font-semibold";
-  const row = "m-0 grid list-none gap-2 p-0";
-  const rowItem = "flex items-baseline justify-between gap-3";
-  const notStarted = trees.filter((tree) => !isStarted(tree));
-  return <div className="mx-auto grid max-w-3xl gap-5">
-    <h1 className="m-0 text-3xl leading-tight font-bold">Your progress</h1>
-    <div className="grid gap-3 sm:grid-cols-3">
-      <Stat label="Current streak" value={`${streak.streak} ${streak.streak === 1 ? "day" : "days"}`} detail={streak.completedToday ? "Studied today" : "Not yet today"} icon={<Zap size={18} aria-hidden="true" />} />
-      <Stat label="Lessons completed" value={completed.length} />
-      <Stat label="Average score" value={average === null ? "No scores yet" : `${average}%`} />
-    </div>
-    {trees.length === 0 && <EmptyState title="No courses to show yet" description="Your progress will appear here once a course is open." action={<Button as={Link} variant="secondary" to="/home">Back to home</Button>} />}
-    {trees.filter(isStarted).map((tree) => <section key={tree._id} className={panel} aria-labelledby={`progress-${tree._id}`}>
-      <h2 id={`progress-${tree._id}`} className={h2}>{tree.code} · {tree.title}</h2>
-      <div className="grid gap-3">
-        {tree.units.map((unit, index) => {
-          const done = unit.lessons.filter((lesson) => lesson.completed).length;
-          const percent = unit.lessons.length ? Math.round((done / unit.lessons.length) * 100) : 0;
-          return <div key={unit._id} className="grid gap-1.5">
-            <div className={rowItem}><span>Unit {index + 1} · {unit.title}</span><span className="shrink-0 text-sm text-muted-foreground tabular-nums">{done} of {unit.lessons.length}</span></div>
-            <Bar value={percent} label={`Unit ${index + 1} progress`} />
-          </div>;
-        })}
-      </div>
-    </section>)}
-    {notStarted.length > 0 && <section className={panel} aria-labelledby="not-started-title">
-      <h2 id="not-started-title" className={h2}>Not started</h2>
-      <ul className={row}>{notStarted.slice(0, 4).map((tree) => <li key={tree._id} className={rowItem}><span>{tree.title}</span><span className="shrink-0 text-sm text-muted-foreground tabular-nums">0 of {tree.units.reduce((sum, unit) => sum + unit.lessons.length, 0)}</span></li>)}</ul>
-      {notStarted.length > 4 && <p className="m-0"><Link to="/courses">Browse all {trees.length} courses</Link></p>}
-    </section>}
-    <section className={panel} aria-labelledby="scores-title">
-      <h2 id="scores-title" className={h2}>Test scores</h2>
-      {scores.length ? <ul className={row}>{scores.map((item) => <li key={item.id} className={rowItem}><span>{item.title}</span><strong className="tabular-nums">{item.score}%</strong></li>)}</ul>
-        : <p className="m-0 text-muted-foreground">No scores yet. Pass a lesson test and it shows up here.</p>}
-    </section>
-    <div><Button as={Link} variant="secondary" to="/courses">Go to your courses</Button></div>
-  </div>;
+// A warm line under the title that follows how the student is doing. It never scolds.
+function greeting({ streak, completedToday, activeDaysInYear }) {
+  if (completedToday && streak > 1) return `${streak} days in a row. Keep it going.`;
+  if (completedToday) return "You studied today. Nice work.";
+  if (streak > 0) return `Study today to make it ${streak + 1} days.`;
+  if (activeDaysInYear > 0) return "Welcome back. Pick up where you left off.";
+  return "Your study story starts here.";
 }
 
-const isStarted = (tree) => tree.units.some((unit) => unit.lessons.some((lesson) => lesson.completed));
+// Progress: streaks, level, a year of activity and how each study set is going. One call (GET /progress/summary).
+export default function Progress() {
+  const [data, setData] = useState(null);
+  const [year, setYear] = useState(null);
+  const [loadingYear, setLoadingYear] = useState(false);
+  const [error, setError] = useState("");
 
-function Stat({ label, value, detail, icon }) {
-  return <section className="grid content-start gap-1 rounded-lg border border-border bg-card p-4">
-    <span className="flex items-center gap-1.5 text-sm text-muted-foreground">{icon}{label}</span>
-    <strong className="text-2xl leading-tight">{value}</strong>
-    {detail && <small className="text-sm text-muted-foreground">{detail}</small>}
-  </section>;
+  function load(nextYear = year) {
+    setError("");
+    if (data) setLoadingYear(true);
+    api.getProgressSummary(nextYear)
+      .then(({ data: summary }) => { setData(summary); setYear(summary.year); })
+      .catch((err) => setError(err.message))
+      .finally(() => setLoadingYear(false));
+  }
+
+  useEffect(() => { load(null); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (error && !data) return <div className="mx-auto max-w-3xl"><ErrorState message={error} onRetry={() => load()} /></div>;
+  if (!data) return <Loading />;
+
+  const { streak, longestStreak, activeDaysInYear, level, sets } = data;
+  const stats = [
+    { icon: Zap, label: "Current streak", value: `${streak} ${streak === 1 ? "day" : "days"}`, detail: data.completedToday ? "Studied today" : "One rest day never breaks it" },
+    { icon: Trophy, label: "Longest streak", value: `${longestStreak} ${longestStreak === 1 ? "day" : "days"}` },
+    { icon: CalendarDays, label: `Active days in ${data.year}`, value: activeDaysInYear },
+    { icon: Sparkles, label: "Level", value: level.level, bar: Math.round((level.into / level.next) * 100), detail: `${level.into} / ${level.next} XP to level ${level.level + 1}` }
+  ];
+
+  // minmax(0, 1fr): the column never grows to fit the year grid, so on a phone the grid swipes inside its card instead.
+  return <div className="mx-auto grid max-w-3xl grid-cols-[minmax(0,1fr)] gap-6">
+    <div className="grid gap-1">
+      <h1 className="m-0 text-3xl leading-tight font-bold">Your progress</h1>
+      <p className="m-0 text-muted-foreground">{greeting(data)}</p>
+    </div>
+
+    <ul className="m-0 grid list-none grid-cols-2 gap-3 p-0 md:grid-cols-4">
+      {stats.map(({ icon: Icon, label, value, detail, bar }) => <li key={label} className="grid content-start gap-1 rounded-xl bg-muted/60 p-4">
+        <span className="flex items-center gap-1.5 text-sm text-muted-foreground"><Icon size={16} className="text-brand-ink" aria-hidden="true" />{label}</span>
+        <strong className="text-2xl leading-tight tabular-nums">{value}</strong>
+        {bar !== undefined && <span className="h-1.5 overflow-hidden rounded-pill bg-background" aria-hidden="true"><span className="block h-full rounded-pill bg-primary" style={{ width: `${bar}%` }} /></span>}
+        {detail && <small className="text-xs text-muted-foreground">{detail}</small>}
+      </li>)}
+    </ul>
+
+    <ActivityHeatmap year={data.year} firstYear={data.firstYear} today={data.today} days={data.days} loading={loadingYear} onYear={(next) => load(next)} />
+    {error && <p className="m-0 text-sm text-destructive" role="alert">{error}</p>}
+
+    <section className="grid gap-3" aria-labelledby="sets-title">
+      <h2 id="sets-title" className="m-0 text-lg font-semibold">Your sets</h2>
+      {sets.length ? <><CardsDonut sets={sets} /><SetProgress sets={sets} /></>
+        : <EmptyState title="No study sets yet" description="Make a set from your notes and its progress shows up here." action={<Button as={Link} to="/lab">Make your first set</Button>} />}
+    </section>
+  </div>;
 }

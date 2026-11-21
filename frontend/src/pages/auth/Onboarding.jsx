@@ -4,9 +4,8 @@ import { api } from "../../api/client";
 import { useAuth } from "../../context/AuthContext";
 import { Button, Radio, RadioGroup, TextField } from "../../components/ui";
 import { ErrorState, Loading } from "../learn/Courses";
-import { GOALS } from "../../utils/goals";
 
-// Three short steps for a new student: course, exam date, daily goal. Every step after the first can be skipped.
+// Two short steps for a new student: course, then exam date (optional). The daily goal step is paused with goals.
 export default function Onboarding() {
   const { user, updatePreferences } = useAuth();
   const navigate = useNavigate();
@@ -14,7 +13,6 @@ export default function Onboarding() {
   const [courses, setCourses] = useState(null);
   const [courseId, setCourseId] = useState("");
   const [examDate, setExamDate] = useState("");
-  const [goal, setGoal] = useState("none");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const leaving = useRef(false); // saving flips user.onboarded, which must not trigger the redirect below
@@ -35,10 +33,9 @@ export default function Onboarding() {
     setError("");
     leaving.current = true;
     try {
-      const chosen = GOALS.find((item) => item.key === goal);
       await updatePreferences(skipAll
         ? { onboarded: true }
-        : { onboarded: true, examDate: examDate || null, goalKind: chosen.kind, ...(chosen.minutes ? { goalMinutes: chosen.minutes } : {}) });
+        : { onboarded: true, examDate: examDate || null });
       if (!skipAll && courseId) {
         // Straight to the first lesson of the chosen course.
         const outline = (await api.getCourse(courseId)).data;
@@ -58,7 +55,7 @@ export default function Onboarding() {
   if (!courses) return <Loading />;
 
   return <div className="mx-auto max-w-4xl onboarding">
-    <p className="text-muted-foreground" aria-live="polite">Step {step} of 3</p>
+    <p className="text-muted-foreground" aria-live="polite">Step {step} of 2</p>
     {step === 1 && <section aria-labelledby="ob-title">
       <h1 id="ob-title">Choose your course</h1>
       {courses.length === 0
@@ -75,21 +72,10 @@ export default function Onboarding() {
       <h1 id="ob-title">When is your exam?</h1>
       <p className="text-muted-foreground">Optional. It helps us keep your plan in view.</p>
       <TextField label="Exam date" type="date" value={examDate} onChange={(event) => setExamDate(event.target.value)} />
-      <div className="flex flex-wrap gap-3 max-[479px]:*:basis-full">
-        <Button onClick={() => setStep(3)}>{examDate ? "Next" : "Skip this step"}</Button>
-        <Button variant="tertiary" onClick={() => setStep(1)}>Back</Button>
-      </div>
-    </section>}
-    {step === 3 && <section aria-labelledby="ob-title">
-      <h1 id="ob-title">Set a daily goal</h1>
-      <p className="text-muted-foreground">Optional. Your streak counts any study day, with or without a goal.</p>
-      <RadioGroup legend="Daily goal">
-        {GOALS.map((item) => <Radio key={item.key} name="goal" label={item.label} checked={goal === item.key} onChange={() => setGoal(item.key)} />)}
-      </RadioGroup>
       {error && <p className="m-0 rounded-md border border-destructive bg-destructive/10 p-3 text-destructive" role="alert">{error}</p>}
       <div className="flex flex-wrap gap-3 max-[479px]:*:basis-full">
         <Button loading={busy} onClick={() => finish(false)}>{courseId ? "Start my first lesson" : "Finish"}</Button>
-        <Button variant="tertiary" disabled={busy} onClick={() => setStep(2)}>Back</Button>
+        <Button variant="tertiary" disabled={busy} onClick={() => setStep(1)}>Back</Button>
       </div>
     </section>}
   </div>;
