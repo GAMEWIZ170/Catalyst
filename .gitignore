@@ -7,4 +7,5 @@ graphify-out/
 .playwright-mcp/
 .claude/skills/
 .claude/agents/
+.claude/settings.json
 docs/references/
