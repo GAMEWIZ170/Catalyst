@@ -1,64 +1,66 @@
-# Catalyst Application Documentation
+# Catalyst
 
-Catalyst is a full-stack learning platform. The backend exposes a versioned REST API backed by MongoDB, and the frontend provides student learning pages plus an administrator content workspace.
+Catalyst is a full-stack, low-cost learning platform for university students (starting with CHEM113). Students study structured courses (`Course > Unit > Lesson`), take server-graded tests, review flashcards, read lesson materials, and track progress and daily streaks. An in-app admin builder lets the owner create and publish all content.
 
-## Repository layout
+## Repository Layout
 
 ```text
 Catalyst/
-├── backend/
+├── backend/                  # TypeScript Modular Monolith API (Express 5 + MongoDB + Zod + Vitest)
 │   ├── package.json
-│   └── src/
-│       ├── config/
-│       ├── controllers/
-│       ├── middlewares/
-│       ├── models/
-│       ├── routes/
-│       ├── utils/
-│       ├── app.js
-│       └── server.js
-├── frontend/
+│   ├── tsconfig.json
+│   ├── vitest.config.ts
+│   ├── README.md             # Detailed backend architecture, env vars, and API reference
+│   ├── src/
+│   │   ├── config/           # Fail-fast env validation, DB, Pino logger, Cloudinary, avatars
+│   │   ├── shared/           # Errors, middlewares, types, reusable utilities
+│   │   ├── modules/          # Vertical feature modules (auth, courses, assessments, ...)
+│   │   ├── routes.ts         # /health, /ready, and /api/v1 mounting
+│   │   ├── app.ts            # Express app factory
+│   │   └── server.ts         # Server bootstrap & graceful shutdown
+│   └── tests/                # Vitest unit & Supertest integration tests
+├── frontend/                 # React + Vite SPA (plain CSS with design tokens, KaTeX + mhchem)
 │   ├── package.json
 │   ├── vite.config.js
+│   ├── README.md             # Detailed frontend documentation
 │   └── src/
 ├── .gitignore
-└── APPLICATION.md
+├── PRODUCT.md
+├── DESIGN.md
+└── README.md
 ```
 
 ## Prerequisites
 
-- Node.js and npm
-- MongoDB
-- A backend `.env` file based on `backend/.env.example`
+- **Node.js** (LTS / v20+) and **npm**
+- **MongoDB** (local or MongoDB Atlas)
+- A `backend/.env` file created from [`backend/.env.example`](./backend/.env.example)
 
-Never commit `.env` files or real credentials. The repository ignores environment files, dependency folders, and frontend build output.
+Never commit `.env` files or real credentials. See [`.gitignore`](./.gitignore) for ignored secret, build, cache, and test artifacts.
 
 ## Configuration
 
-### Backend
-
-Create `backend/.env`:
+### Backend (`backend/.env`)
 
 ```env
-PORT=5000
-MONGODB_URI=your_mongodb_connection_string
-JWT_SECRET=replace_with_a_long_random_secret
-JWT_EXPIRES_IN=your_token_duration
+PORT=3000
 NODE_ENV=development
 CLIENT_URL=http://localhost:5173
+MONGODB_URI=mongodb://127.0.0.1:27017/catalyst_dev
+JWT_SECRET=replace_with_at_least_32_random_characters
+JWT_EXPIRES_IN=7d
+CLOUDINARY_URL=cloudinary://<api_key>:<api_secret>@<cloud_name>
 ```
 
-`CLIENT_URL` must match the browser origin used by the frontend. The backend defaults to port `5000` when `PORT` is not set.
+`CLIENT_URL` must match the browser origin of the frontend. The backend defaults to port `3000`, which matches the Vite dev proxy in [`frontend/vite.config.js`](./frontend/vite.config.js). Full configuration options are documented in [`backend/README.md`](./backend/README.md).
 
-### Frontend
+### Frontend (`frontend/.env`)
 
-For local development, leave `VITE_API_URL` empty in `frontend/.env`. The frontend calls `/api/v1`, and Vite proxies those requests to the backend target configured in [`frontend/vite.config.js`](./frontend/vite.config.js).
+Leave `VITE_API_URL` empty for local development—the frontend calls `/api/v1` and Vite proxies those requests to `http://127.0.0.1:3000`. For separate production hosting, set `VITE_API_URL` to your deployed API base URL ending in `/api/v1`.
 
-The current proxy target is `http://localhost:3000`; either run the backend on port `3000` or change the proxy target to the backend port. For separate deployment, set `VITE_API_URL` to the deployed API base URL ending in `/api/v1`.
+## Installation & Startup
 
-## Installation and startup
-
-Install dependencies:
+Install dependencies in each workspace:
 
 ```powershell
 cd backend
@@ -68,136 +70,45 @@ cd ..\frontend
 npm install
 ```
 
-Run the backend:
+Run the backend (Terminal 1):
 
 ```powershell
 cd backend
 npm run dev
 ```
 
-Run the frontend in a second terminal:
+Run the frontend (Terminal 2):
 
 ```powershell
 cd frontend
 npm run dev
 ```
 
-Build the frontend:
+## Verification & Builds
+
+Backend checks (from `backend/`):
 
 ```powershell
-cd frontend
+npm run typecheck   # Strict TypeScript check
+npm run build       # Compile src/ -> dist/
+npm test            # Run Vitest unit & integration tests
+```
+
+Frontend build check (from `frontend/`):
+
+```powershell
 npm run build
 ```
 
-## Backend API
+## Documentation
 
-All API routes are prefixed with `/api/v1`.
+- Backend architecture, env reference, and module roadmap: [`backend/README.md`](./backend/README.md)
+- Frontend structure and conventions: [`frontend/README.md`](./frontend/README.md)
+- Product scope and principles: [`PRODUCT.md`](./PRODUCT.md)
+- Visual design system and palettes: [`DESIGN.md`](./DESIGN.md)
 
-### Authentication
+## Common Issues
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| POST | `/auth/register` | Register a student and issue an HTTP-only cookie |
-| POST | `/auth/login` | Authenticate and issue an HTTP-only cookie |
-| POST | `/auth/logout` | Clear the authentication cookie |
-| GET | `/auth/me` | Return the authenticated user |
-
-### Student learning
-
-| Method | Endpoint | Purpose |
-|---|---|---|
-| GET | `/courses` | List published courses |
-| GET | `/courses/:id` | Return a course outline and the current user's completion state |
-| GET | `/lessons/:id` | Return a published lesson and questions without answers |
-| POST | `/questions/:id/answer` | Check one answer |
-| POST | `/lessons/:id/complete` | Grade a lesson and save the user's best score |
-| GET | `/progress` | Return the current user's progress records |
-| GET | `/progress/streak` | Return the current daily streak |
-
-### Admin
-
-All admin endpoints require authentication and the `admin` role.
-
-| Method | Endpoint | Purpose |
-|---|---|---|
-| GET | `/admin/courses` | List active courses, units, and lessons for content management |
-| POST/PUT/DELETE | `/admin/courses[/:id]` | Manage courses |
-| POST/PUT/DELETE | `/admin/units[/:id]` | Manage units |
-| POST/GET/PUT/DELETE | `/admin/lessons[/:id]` | Manage lessons and load full admin lesson details |
-| POST/PUT/DELETE | `/admin/questions[/:id]` | Manage questions |
-| GET | `/admin/users` | List users with pagination |
-
-## Data hierarchy
-
-Learning content follows this hierarchy:
-
-```text
-Course
-└── Unit
-    └── Lesson
-        └── Question
-```
-
-Courses and content use soft deletion. Student-facing endpoints exclude deleted records and also verify that parent records remain visible. Admin creation validates that each parent exists and is not deleted.
-
-## Authentication and authorization
-
-- Authentication uses JWTs stored in an HTTP-only `token` cookie.
-- The frontend sends cookies with every API request.
-- `authenticate` protects signed-in routes.
-- `authorizeRole("admin")` protects the admin route group.
-- Passwords are hashed with bcrypt.
-- Helmet, CORS, JSON parsing, cookie parsing, request logging, and rate limiting are configured in [`backend/src/app.js`](./backend/src/app.js).
-
-## Validation and rate limiting
-
-Joi middleware validates request bodies before controllers process them. Invalid identifiers and malformed payloads return client errors instead of reaching database operations.
-
-The backend includes:
-
-- A general IP-based request limiter.
-- A stricter limiter for login and registration attempts.
-- An authenticated-user limiter for answer submissions.
-
-## Frontend responsibilities
-
-The React frontend:
-
-- Restores sessions through `/auth/me`.
-- Provides registration, login, logout, course browsing, lesson completion, and progress views.
-- Sends answer submissions and displays grading feedback.
-- Provides an admin content workflow in parent-to-child order: course, unit, lesson, question.
-- Uses the Vite proxy locally and a configurable `VITE_API_URL` for separate hosting.
-
-Detailed frontend usage is documented in [`frontend/README.md`](./frontend/README.md).
-
-## Verification
-
-The frontend production build can be checked with:
-
-```powershell
-cd frontend
-npm run build
-```
-
-The backend currently has no automated application test suite configured. Manual verification should cover registration, login, admin authorization, content creation, student browsing, answer grading, lesson completion, progress, streaks, and logout.
-
-## Common issues
-
-### `npm run dev` cannot find `package.json`
-
-The project has separate package manifests. Run backend commands from `backend/` and frontend commands from `frontend/`; there is no root-level package manifest.
-
-### `Failed to fetch`
-
-Check that:
-
-1. MongoDB is available.
-2. The backend process is running.
-3. The Vite proxy target matches the backend port.
-4. `CLIENT_URL` matches the frontend origin.
-5. Browser cookies are allowed for the current origin.
-
-### Content does not appear for students
-
-Student routes show published, non-deleted courses and lessons only. Create the hierarchy in order and publish the relevant records.
+- **`npm run dev` cannot find `package.json`:** Run commands inside `backend/` or `frontend/`—each has its own `package.json`.
+- **`Failed to fetch` in browser:** Confirm MongoDB is running, the backend is running on port `3000`, `CLIENT_URL` matches `http://localhost:5173`, and cookies are enabled.
+- **Invalid environment configuration on boot:** The backend validates `backend/.env` at startup and prints the exact missing or malformed variable names.
