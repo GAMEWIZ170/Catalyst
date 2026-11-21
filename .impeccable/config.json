@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "frontend/src/styles/global/14-study-lab.css"
+        ],
+        "createdAt": "2026-11-14T20:15:17.490Z",
+        "reason": "assistant: L3935 is the neutral grey (--line) blockquote rule in the note editor, existing code not touched this session; standard quote styling, not an accent card stripe"
+      }
+    ]
+  }
+}
