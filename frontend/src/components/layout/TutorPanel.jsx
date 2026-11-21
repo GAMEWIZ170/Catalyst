@@ -6,7 +6,7 @@ import Companion from "../learn/Companion";
 import { useTutor } from "../../context/TutorContext";
 import { cn } from "@/lib/utils";
 
-// Wide screens (1024 px and up): the tutor docks on the right and pushes the page. Smaller screens: it is a sheet
+// Wide screens (1024 px and up): the tutor floats above the Chat button in the bottom-right corner. Smaller screens: it is a sheet
 // that slides up from the bottom over a dimmed page. One Companion either way, so the chat is never lost on resize.
 export function useWide() {
   const query = "(min-width: 1024px)";
@@ -31,7 +31,7 @@ function writeChats(key, list) {
   try { localStorage.setItem(storeKey(key), JSON.stringify(list)); } catch { /* a full or blocked store only means chats are not remembered */ }
 }
 
-// The always-visible Chat button on the right edge (floating on small screens). It opens the tutor for the page the student is on.
+// The floating Chat button on small screens (desktop has its own floating button in TutorPanel). It opens the tutor for the page the student is on.
 function SideButton({ round = false }) {
   const { open, setOpen } = useTutor();
   return <button type="button" aria-expanded={open} aria-label={open ? "Close tutor" : "Open tutor"} onClick={() => setOpen(!open)}
@@ -45,6 +45,13 @@ export default function TutorPanel() {
   const { target, open, setOpen } = useTutor();
   const wide = useWide();
   const closeRef = useRef(null);
+  // Desktop: when the panel closes (X, Escape or the Chat button), focus goes back to the Chat button.
+  const fabRef = useRef(null);
+  const wasOpen = useRef(open);
+  useEffect(() => {
+    if (wide && wasOpen.current && !open) fabRef.current?.focus();
+    wasOpen.current = open;
+  }, [open, wide]);
   const targetKey = target ? target.kind + ":" + target.id : "general";
   const [chats, setChats] = useState([]);
   // n changes whenever a different chat is opened, which gives the Companion a fresh start with these turns.
@@ -103,15 +110,25 @@ export default function TutorPanel() {
 
   if (wide) {
     return <>
+      {/* The panel floats just above the Chat button (56 px button + 24 px edge + 12 px gap) and grows out of it. */}
       <AnimatePresence initial={false}>
-      {open && <motion.aside key="dock" aria-label="Tutor" className="my-2 flex shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card"
-        initial={{ width: 0, opacity: 0 }} animate={{ width: 400, opacity: 1 }} exit={{ width: 0, opacity: 0 }} transition={{ duration: 0.2, ease: "easeOut" }}>
-        <div className="flex h-full w-[400px] flex-col">{body}</div>
+      {open && <motion.aside key="popover" id="tutor-panel" aria-label="Tutor"
+        className="fixed right-6 bottom-[5.75rem] z-30 flex h-[min(640px,calc(100dvh-8rem))] w-[min(400px,calc(100vw-3rem))] origin-bottom-right flex-col overflow-hidden rounded-xl border border-border bg-card shadow-xl"
+        initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 8 }} transition={{ duration: 0.18, ease: "easeOut" }}>
+        {body}
       </motion.aside>}
-    </AnimatePresence>
-      <div className="m-2 flex w-20 shrink-0 flex-col items-center justify-end rounded-2xl border border-border bg-card pb-6">
-        <SideButton />
-      </div>
+      </AnimatePresence>
+      <motion.button ref={fabRef} type="button" aria-label={open ? "Close tutor" : "Open tutor"} title={open ? "Close tutor" : "Ask the tutor"}
+        aria-expanded={open} aria-controls="tutor-panel" onClick={() => setOpen(!open)}
+        className="fixed right-6 bottom-6 z-30 grid size-14 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg transition-shadow hover:shadow-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} transition={{ duration: 0.15, ease: "easeOut" }}>
+        <AnimatePresence initial={false} mode="popLayout">
+          <motion.span key={open ? "close" : "chat"} className="grid place-items-center"
+            initial={{ opacity: 0, rotate: -45, scale: 0.8 }} animate={{ opacity: 1, rotate: 0, scale: 1 }} exit={{ opacity: 0, rotate: 45, scale: 0.8 }} transition={{ duration: 0.15, ease: "easeOut" }}>
+            {open ? <X size={24} aria-hidden="true" /> : <MessageCircle size={24} aria-hidden="true" />}
+          </motion.span>
+        </AnimatePresence>
+      </motion.button>
     </>;
   }
 

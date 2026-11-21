@@ -7,6 +7,7 @@ const en = {
   "nav.review": "Review",
   "nav.lab": "Study Lab",
   "nav.me": "Me",
+  "nav.progress": "Progress",
   "nav.admin": "Admin",
   "nav.collapse": "Collapse menu",
   "nav.expand": "Expand menu",

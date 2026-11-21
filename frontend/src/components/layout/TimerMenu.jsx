@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Minus, Play, Plus, Settings, Square, Timer } from "lucide-react";
+import { Minus, Play, Plus, Square, Timer } from "lucide-react";
 import { formatClock, useTimer } from "../../context/TimerContext";
 import { t } from "../../i18n";
 import { iconButton, quickPanel } from "./topbarStyles";
@@ -18,13 +17,13 @@ const PRESETS = [15, 25, 50, 90];
 export function TimerButton({ buttonRef, open, onClick }) {
   const { timer, remainingMs } = useTimer();
   const running = timer && !timer.done;
-  return <button ref={buttonRef} className={cn(iconButton, "w-auto min-w-11 gap-1 px-2", running && "border-primary text-brand-ink")} type="button" aria-label={running ? `${t("timer.label")}, ${formatClock(remainingMs)} left` : t("timer.label")} title={t("timer.label")} aria-expanded={open} aria-controls="timer-panel" onClick={onClick}>
+  return <button ref={buttonRef} className={cn(iconButton, "w-auto min-w-11 gap-1 px-2", running && "bg-muted text-brand-ink")} type="button" aria-label={running ? `${t("timer.label")}, ${formatClock(remainingMs)} left` : t("timer.label")} title={t("timer.label")} aria-expanded={open} aria-controls="timer-panel" onClick={onClick}>
     <Timer size={18} aria-hidden="true" />
     {running && <span className="text-sm font-semibold tabular-nums max-[640px]:text-xs" aria-hidden="true">{formatClock(remainingMs)}</span>}
   </button>;
 }
 
-// The popover: a big countdown, length chips (15, 25, 50, 90 and Custom), one Start button, and a gear for the default lengths.
+// The popover: a big countdown, length chips (15, 25, 50, 90 and Custom), one Start button.
 export function TimerPanel({ onNavigate }) {
   const { timer, remainingMs, lengths, start, cancel } = useTimer();
   const running = timer && !timer.done;
@@ -36,7 +35,6 @@ export function TimerPanel({ onNavigate }) {
   return <div className={`${quickPanel} justify-items-stretch text-center`} id="timer-panel" role="dialog" aria-label={t("timer.label")}>
     <div className="flex items-center justify-between">
       <h2 className="m-0 text-sm font-semibold">{t("timer.label")}</h2>
-      <Link className={iconButton} to="/settings?tab=study" onClick={onNavigate} aria-label={t("timer.lengths")} title={t("timer.lengths")}><Settings size={18} aria-hidden="true" /></Link>
     </div>
 
     {running && <>
