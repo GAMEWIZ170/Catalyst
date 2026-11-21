@@ -1,8 +1,3 @@
-// Use public DNS for this Node process. The local network's DNS times out on the
-// SRV/TXT lookups that a mongodb+srv:// connection string needs.
-const dns = require("node:dns");
-dns.setServers(["8.8.8.8", "1.1.1.1"]);
-
 require("dotenv").config();
 
 
